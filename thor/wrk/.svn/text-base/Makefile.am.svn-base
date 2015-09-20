@@ -1,0 +1,32 @@
+bin_PROGRAMS      = thor h_rnd optics tst_field get_SRM
+
+thor_SOURCES      = thor.cc
+
+h_rnd_SOURCES     = h_rnd.cc
+
+optics_SOURCES    = optics.cc
+
+tst_field_SOURCES = tst_field.cc
+
+get_SRM_SOURCES   = get_SRM.cc
+
+#nsga2_SOURCES     = nsga2.cc
+
+#fit_cell_SOURCES  = fit_cell.cc
+
+LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
+	  -L$(NUM_REC)/lib -lnum_rec \
+	  -lstdc++ -lgfortran
+#          -lg2c 
+#	  -lstdc++ -ltermcap -ldl \
+#	  -L$(HOME)/R-2.8.1/src/main -L$(HOME)/R-2.8.1/lib
+#          -lR -lRblas -lRlapack
+#	  -L$(HOME)/readline-5.0
+#	  -lreadline -lhistory
+
+INCLUDES = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc -I$(HOME)/R-2.8.1/include
+#           -I$(HOME)/gcc-4.4.0/include
+#           -I/usr/include/c++/3.3.6
+CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend
+#CXXFLAGS = -g -Wl,-stack_size -Wl,0x40000000 -O2 -Wall -Wno-non-template-friend
+UNLIMIT_RESOURCES = datasize memorysize stacksize

@@ -1,0 +1,33 @@
+# input files
+in_dir       /home/bengtsson/projects/in/
+flat_file    /home/bengtsson/Thor-2.0/thor/wrk/Jun_2012/baseline/
+#ae_file      Align_Err/AlignErr.dat
+#fe_file      Field_Err/baseline_09-20-10.txt
+#ap_file      Aper/Apertures.dat
+# flags
+freq_map      true 50 30 25 2064 20e-3 5e-3 3e-2
+DA_bare       true
+# parameters
+s_cut         1.0    // truncate gaussian distribution at 1 sigma
+n_stat        20
+n_scale       2
+n_orbit       3
+#bpm_names     PH1SP01 PH2SP01 PM1SP01 PL2SP01 PL1SP01
+bpm_names     BPM
+#h_corrs       CXSQ1HSP01 CXH2SP01 CXM1SP01 CXM1G4C30B CXL2SP01 CXL1SP01 CXSQ2HSP01 CXM1G4C01B CXH1SP01
+h_corrs       CHV
+#v_corrs       CYSQ1HSP01 CYH2SP01 CYM1SP01 CYM1G4C30B CYL2SP01 CYL1SP01 CYSQ2HSP01 CYM1G4C01B CYH1SP01
+v_corrs       CHV
+gs            GS
+ge            GE
+#
+n_lin         0
+#qt            SQ
+disp_wave_y   0e-3
+VDweight      1e3
+HVweight      1e0
+VHweight      1e0
+#
+N_calls       0
+N_steps       10
+ID_quads      qh1sp01 qh2sp01 qh3sp01 ql1sp01 ql2sp01 ql3sp01

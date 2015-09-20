@@ -1,0 +1,33 @@
+Warning: no access to tty (Bad file descriptor).
+Thus no job control in this shell.
+
+initializing TPSA library: no = 8, nv = 7, nd = 3, ndpt = 5, eps = 1.000000e-25
+
+reading machine file: flat_file.dat
+
+rdmfile: read 964 elements, C = 263.98600
+
+******************************************************************************
+
+  dPcommon     =  1.000e-08  dPparticle   =  0.000e+00  Energy [GeV] = 3.000
+  MaxAmplx [m] = -1.000e+01  MaxAmply [m] = -1.000e+01  RFAccept [%] = ±0.00
+  MatMeth      =  FALSE      Cavity_On    =  FALSE      Radiation_On = FALSE     
+  bpm          =    0        qt           =   0         Chambre_On   = FALSE     
+  hcorr        =    0        vcorr        =   0
+
+  alphac       =   3.6266151748843547e-04
+  nux          =  11.0542302201089999      nuz  =   5.3700453109442297
+  ksix         =   0.665999                ksiz =   0.666001
+
+  OneTurn matrix:
+
+matrix:
+   9.425287e-01   6.594771e+00   0.000000e+00   0.000000e+00  -1.645559e-05   0.000000e+00
+  -1.693439e-02   9.424876e-01   0.000000e+00   0.000000e+00  -4.329904e-06   0.000000e+00
+   0.000000e+00   0.000000e+00  -6.846696e-01   2.497454e+00   0.000000e+00   0.000000e+00
+   0.000000e+00   0.000000e+00  -2.126610e-01  -6.848397e-01   0.000000e+00   0.000000e+00
+   0.000000e+00   0.000000e+00   0.000000e+00   0.000000e+00   1.000000e+00   0.000000e+00
+  -4.359724e-06  -1.304554e-05   0.000000e+00   0.000000e+00   9.573756e-02   1.000000e+00
+fmapdp
+ lieinit: calling daini
+ daini:           8           7

@@ -1,0 +1,17 @@
+bin_PROGRAMS      = thor optics tst_field
+
+thor_SOURCES      = thor.cc
+
+optics_SOURCES    = optics.cc
+
+tst_field_SOURCES = tst_field.cc
+
+LIBS     = -L$(THOR_LIB)/thor/lib -lthor -L$(NUM_REC)/lib -lnum_rec \
+	   -L/usr/lib/gcc-lib/i586-mandriva-linux-gnu/3.3.6 -lstdc++ -lg2c
+#	   -L/usr/lib/gcc/i586-mandriva-linux-gnu/4.1.1 -lstdc++
+INCLUDES = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc \
+           -I/usr/include/c++/3.3.6
+FFLAGS   = -g -O2 -Wall -fbounds-check
+CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend
+#CXXFLAGS = -g -Wl,-stack,100000000 -O2 -Wall -Wno-non-template-friend
+UNLIMIT_RESOURCES = datasize memorysize stacksize

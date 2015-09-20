@@ -1,0 +1,68 @@
+8
+
+dir
+13
+file:///home/bengtsson/svnrepo/trunk/Thor-2.0/thor
+file:///home/bengtsson/svnrepo
+
+
+
+2010-05-14T19:42:00.166281Z
+13
+bengtsson
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+1f48b772-6d47-4c56-b496-d1191255f087
+
+Makefile.in
+file
+
+
+
+
+2010-05-14T19:43:59.000000Z
+0242ec846837b102a7052a3c20684dad
+2010-05-14T19:42:00.166281Z
+13
+bengtsson
+
+wrk
+dir
+
+lib
+dir
+
+src
+dir
+
+bin
+dir
+
+inc
+dir
+
+Makefile.am
+file
+
+
+
+
+2010-05-14T19:43:59.000000Z
+89dfaf38955b314e3912e1ee2af5c733
+2010-05-14T19:42:00.166281Z
+13
+bengtsson
+has-props
+

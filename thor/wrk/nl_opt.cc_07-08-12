@@ -1,0 +1,1260 @@
+#define NO 7
+
+#include "thor_lib.h"
+
+int no_tps = NO;
+
+
+extern double        b2_max;
+extern tps           K, g;
+extern ss_vect<tps>  Map, A0, A1, Map_res;
+
+const int   max_ind = 10;
+
+bool          h[max_ind][max_ind][max_ind][max_ind][max_ind], fit_chrm;
+int           n_prm, prms[n_prm_max], bns[n_prm_max], n_cell;
+int           check_range, adj_tune, adj_chrom, n_steps, n_iter, sext_scheme;
+long int      beta_loc1, beta_loc2, beta_loc3, beta_loc4, rseed;
+double        Jx, Jy, delta, beta1[2], beta2[2], beta3[2], beta4[2];
+double        b3s[n_prm_max], chi2 = 0e0;
+double        nu0[2], eps_nu, ksi1[2], eps_ksi;
+double        nu_x_min, nu_x_max, nu_y_min, nu_y_max;
+double        bnL_max[mpole_max];
+double        scl_dnu, scl_ksi1, scl_ksi2, scl_ksi_nl;
+double        scl_dnuddelta, scl_dnudJ, step;
+ss_vect<tps>  Id_scl, map1, map2;
+ofstream      sext_out;
+
+
+const double  A_max[] = {20e-3, 7.5e-3}, delta_max = 3e-2;
+
+
+ss_vect<tps> get_A_nl(const tps g)
+{
+  int           j;
+  tps           gn;
+  ss_vect<tps>  Id, A_nl;
+
+  Id.identity();  A_nl = Id;
+  for (j = 3; j <= no_tps; j++) {
+    gn = Take(g, j); A_nl = A_nl*LieExp(gn, Id);
+  }
+
+//  return FExpo(g, Id, 3, no_tps, -1);
+
+  return A_nl;
+}
+
+
+ss_vect<tps> get_A_nl_inv(const tps g)
+{
+  int           j;
+  tps           gn;
+  ss_vect<tps>  Id, A_nl_inv;
+
+  Id.identity();  A_nl_inv = Id;
+  for (j = no_tps; j >= 3; j--) {
+    gn = Take(g, j); A_nl_inv = A_nl_inv*LieExp(-gn, Id);
+  }
+
+//  return FExpo(-g, Id, 3, no_tps, 1);
+
+  return A_nl_inv;
+}
+
+
+void prt_h(const tps &H, const double J_max, const double delta)
+{
+  int           i, j;
+  ss_vect<tps>  ps;
+  ofstream      of;
+  
+  file_wr(of, "h.dat");
+  of << "#  J_x    J_y    ||h||" << endl;
+  ps.zero(); ps[delta_] = delta;
+  for (i = -n_steps; i <= n_steps; i++) {
+    ps[x_] = i*sqrt(2.0*J_max)/n_steps;
+    for (j = -n_steps; j <= n_steps; j++) {
+      ps[y_] = j*sqrt(2.0*J_max)/n_steps;
+      of << scientific << setprecision(2)
+	 << setw(10) << ps[x_].cst() << setw(10) << ps[y_].cst()
+//	 << setw(10) << (H*ps).cst() << endl;
+	 << setw(10) << ((K-Take(K, 2))*ps).cst() << endl;
+    }
+    of << endl;
+  }
+  of.close();
+}
+
+
+void select_h(void)
+{
+  int  i, j, k, l, m;
+
+  for (i = 0; i <= no_tps-1; i++)
+    for (j = 0; j <= no_tps-1; j++)
+      for (k = 0; k <= no_tps-1; k++)
+	for (l = 0; l <= no_tps-1; l++)
+	  for (m = 0; m <= no_tps-1; m++)
+	    if (false)
+	      h[i][j][k][l][m] = true;
+	    else
+	      if (i+j+k+l <= 4)
+		// enable all non-chromatic driving terms
+		h[i][j][k][l][m] = (m == 0)? true : false;
+
+  // linear chromaticity
+  h[1][1][0][0][1] = true; h[0][0][1][1][1] = true;
+
+  // 2nd order amplitude dependent tune shift
+  h[2][2][0][0][0] = true; h[1][1][1][1][0] = true; h[0][0][2][2][0] = true;
+
+  // 4th order amplitude dependent tune shift
+  // balance nonlinear terms
+  h[3][3][0][0][0] = true; h[2][2][1][1][0] = true;
+  h[0][0][3][3][0] = true; h[1][1][2][2][0] = true;
+
+  // 6th order amplitude dependent tune shift
+  h[4][4][0][0][0] = true; h[0][0][4][4][0] = true;
+  h[3][3][1][1][0] = true; h[1][1][3][3][0] = true;
+  h[2][2][2][2][0] = true;
+
+  if (true) {
+    // nonlinear chromaticity
+    for (m = 2; m <= no_tps-3; m++) {
+      h[1][1][0][0][m] = true; h[0][0][1][1][m] = true;
+    }
+
+    // balance nonlinear terms
+//    h[1][1][0][0][3] = false; h[0][0][1][1][3] = false;
+//    h[1][1][0][0][5] = false; h[0][0][1][1][5] = false;
+  }
+
+  if (true) {
+    // amplitude dependent chromaticity
+
+    for (m = 1; m <= no_tps-5; m++) {
+      h[2][2][0][0][m] = true; h[0][0][2][2][m] = true;
+      h[1][1][1][1][m] = true;
+    }
+
+    for (m = 1; m <= no_tps-7; m++) {
+      h[3][3][0][0][m] = true; h[0][0][3][3][m] = true;
+      h[2][2][1][1][m] = true; h[1][1][2][2][m] = true;
+    }
+  }
+
+  // exclude tune
+  h[1][1][0][0][0] = false; h[0][0][1][1][0] = false;
+
+  // exclude delta dependence of pathlength
+  for (m = 2; m <= no_tps-1; m++)
+    h[0][0][0][0][m] = false;
+
+  if (true) {
+    // higher order dispersion
+    for (m = 2; m <= no_tps-2; m++) {
+      h[1][0][0][0][m] = true; h[0][1][0][0][m] = true;
+    }
+
+    // delta dependance of the beta functions
+    for (m = 1; m <= no_tps-3; m++) {
+      h[2][0][0][0][m] = true; h[0][2][0][0][m] = true;
+      h[0][0][2][0][m] = true; h[0][0][0][2][m] = true;
+    }
+  }
+}
+
+tps Int(const tps &a, const int k)
+{
+  char    name[11];
+  int     j, n, jj[ss_dim], ibuf1[bufsize], ibuf2[bufsize];
+  double  rbuf[bufsize];
+  tps     b;
+
+  a.exprt(rbuf, ibuf1, ibuf2, name); n = (int)rbuf[0];
+
+  for (j = 0; j < n; j++) {
+    dehash_(no_tps, ss_dim, ibuf1[j], ibuf2[j], jj);
+
+    if (jj[k-1] != 0) rbuf[j+1] /= jj[k-1] + 1e0;
+
+    hash_(no_tps, ss_dim, jj, ibuf1[j], ibuf2[j]);
+  }
+
+  b.imprt(n, rbuf, ibuf1, ibuf2);
+
+  return b*tps(0e0, k);
+}
+
+
+tps dacfu1(const tps &a, double (*func)(const int []))
+{
+  char    name[11];
+  int     j, n, jj[ss_dim], ibuf1[bufsize], ibuf2[bufsize];
+  double  rbuf[bufsize];
+  tps     b;
+
+  a.exprt(rbuf, ibuf1, ibuf2, name); n = (int)rbuf[0];
+
+  for (j = 0; j < n; j++) {
+    dehash_(no_tps, ss_dim, ibuf1[j], ibuf2[j], jj);
+
+     rbuf[j+1] *= (*func)(jj);
+
+    hash_(no_tps, ss_dim, jj, ibuf1[j], ibuf2[j]);
+  }
+
+  b.imprt(n, rbuf, ibuf1, ibuf2);
+
+  return b;
+}
+
+
+double f_prm1(const int jj[])
+{
+  int     k, n;
+  double  f;
+
+  n = 0;
+  for (k = 0; k < 2*nd_tps; k++)
+    n += jj[k];
+
+  f = ((n == no_tps) && (jj[ss_dim-1] == 0))? 0e0 : 1e0;
+
+ return f;
+}
+
+
+double f_prm2(const int jj[])
+{
+  double  f;
+
+  f = ((jj[delta_] == 0)&& ((jj[ss_dim-1] == 0) || (jj[ss_dim-1] == 1)))?
+    1e0 : 0e0;
+
+ return f;
+}
+
+
+tps get_nu2(const tps &K)
+{
+  tps           dnudJ[2][3], dnu2[3], jacob, nu2;
+  ss_vect<tps>  nus, dnus[2], ps_max, ps0;
+
+  nus = dHdJ(K); dnus[X_] = dHdJ(nus[0]); dnus[Y_] = dHdJ(nus[1]);
+
+  dnudJ[X_][X_] = dnus[X_][3];
+  dnudJ[X_][Y_] = dnus[X_][4];
+  dnudJ[X_][2]  = Der(nus[0], 5);
+
+  dnudJ[Y_][X_] = dnus[Y_][3];
+  dnudJ[Y_][Y_] = dnus[Y_][4];
+  dnudJ[Y_][2]  = Der(nus[1], 5);
+
+  ps0.zero();
+
+  dnu2[0] = dnudJ[X_][X_]*dnudJ[Y_][Y_] - dnudJ[X_][Y_]*dnudJ[Y_][X_];
+  dnu2[1] = dnudJ[X_][X_]*dnudJ[Y_][2] - dnudJ[X_][2]*dnudJ[Y_][X_];
+  dnu2[2] = dnudJ[X_][Y_]*dnudJ[Y_][2] - dnudJ[X_][2]*dnudJ[Y_][Y_];
+
+  nu2 = (Int(tps(0e0, 2)*nu2, 1)+Int(tps(0e0, 1)*nu2, 2))/2e0;
+  ps_max.identity(); ps_max[x_] = sqrt(2e0*Jx); ps_max[px_] = sqrt(2e0*Jx);
+  nu2 = nu2*ps_max - nu2*ps0;
+
+  nu2 = (Int(tps(0e0, 4)*nu2, 3)+Int(tps(0e0, 3)*nu2, 4))/2e0;
+  ps_max.identity(); ps_max[y_] = sqrt(2e0*Jy); ps_max[py_] = sqrt(2e0*Jy);
+  nu2 = nu2*ps_max - nu2*ps0;
+
+  nu2 = Int(nu2, 5);
+  ps_max.identity(); ps_max[delta_] = delta;
+  nu2 = nu2*ps_max - nu2*ps0;
+
+  return nu2;
+}
+
+
+double get_twoJy0(const double twoJx, const double a[][3])
+{
+  double  twoJy0, u;
+
+  u =
+    sqr(a[0][1]+a[1][1]*twoJx)
+    - 4e0*a[0][2]*(a[0][0]+a[1][0]*twoJx+a[2][0]*sqr(twoJx));
+
+  if (u >= 0e0) {
+    twoJy0 = (-a[0][1]-a[1][1]*twoJx-sqrt(u))/(2e0*a[0][2]);
+
+    if (twoJy0 < 0e0)
+      twoJy0 = (-a[0][1]-a[1][1]*twoJx+sqrt(u))/(2e0*a[0][2]);
+  } else
+    twoJy0 = NAN;
+
+  return twoJy0;
+}
+
+
+void get_nu2(const tps &K, tps nu2[])
+{
+  int           i, j;
+  double        Jx1, Jy1, delta1, a[3][3];
+  tps           K1, dnudJ[2][3], jacob, twoJx, u, twoJy0;
+  ss_vect<tps>  Id, nus, dnus[2], ps_max, ps0, A;
+  ofstream      outf;
+
+  const int     n_step = 25;
+
+  Id.identity();
+
+  K1 = dacfu1(K, f_prm1);
+
+  nus = dHdJ(K1); dnus[X_] = dHdJ(nus[0]); dnus[Y_] = dHdJ(nus[1]);
+
+  dnudJ[X_][X_] = dnus[X_][3];
+  dnudJ[X_][Y_] = dnus[X_][4];
+  dnudJ[X_][2]  = Der(nus[0], 5);
+
+  dnudJ[Y_][X_] = dnus[Y_][3];
+  dnudJ[Y_][Y_] = dnus[Y_][4];
+  dnudJ[Y_][2]  = Der(nus[1], 5);
+
+
+  jacob = dnudJ[X_][X_]*dnudJ[Y_][Y_] - dnudJ[X_][Y_]*dnudJ[Y_][X_];
+
+  a[0][0] = h_ijklm(jacob, 0, 0, 0, 0, 0);
+  a[1][0] = h_ijklm(jacob, 1, 1, 0, 0, 0);
+  a[0][1] = h_ijklm(jacob, 0, 0, 1, 1, 0);
+  a[2][0] = h_ijklm(jacob, 2, 2, 0, 0, 0);
+  a[0][2] = h_ijklm(jacob, 0, 0, 2, 2, 0);
+  a[1][1] = h_ijklm(jacob, 1, 1, 1, 1, 0);
+
+  if (no_tps == 7) {
+    twoJx = Id[x_]*Id[px_];
+
+    u =
+      sqr(a[0][1]+a[1][1]*twoJx)
+      - 4e0*a[0][2]*(a[0][0]+a[1][0]*twoJx+a[2][0]*sqr(twoJx));
+
+    if (u.cst() >= 0e0) {
+      twoJy0 = (-a[0][1]-a[1][1]*twoJx-sqrt(u))/(2e0*a[0][2]);
+      if (twoJy0.cst() < 0e0)
+	twoJy0 = (-a[0][1]-a[1][1]*twoJx+sqrt(u))/(2e0*a[0][2]);
+    } else
+      twoJy0 = -1e0;
+  } else
+    twoJy0 = -1e0;
+
+  if (true) {
+    if (no_tps == 7) {
+      outf.open("get_nu2_1.out");
+      ps_max.zero();
+      for (i = 0; i <= 25; i++) {
+	Jx1 = i*Jx/n_step;
+	ps_max[x_] = sqrt(2e0*Jx1); ps_max[px_] = sqrt(2e0*Jx1);
+
+	outf << scientific << setprecision(5)
+	     << setw(13) << 2e0*Jx1
+	     << setw(13) << (twoJy0*ps_max).cst()
+	     << setw(13) << get_twoJy0(2e0*Jx1, a)
+	     << endl;
+      }
+      outf.close();
+    }
+
+    outf.open("get_nu2_2.out");
+    ps_max.zero();
+    for (i = 0; i <= 25; i++) {
+      Jx1 = i*Jx/n_step;
+      ps_max[x_] = sqrt(2e0*Jx1); ps_max[px_] = sqrt(2e0*Jx1);
+      for (j = 0; j <= 25; j++) {
+	Jy1 = j*Jy/n_step;
+	ps_max[y_] = sqrt(2e0*Jy1); ps_max[py_] = sqrt(2e0*Jy1);
+
+	outf << scientific << setprecision(5)
+	     << setw(13) << Jx1 << setw(13) << 2e0*Jy1
+	     << setw(13) << (jacob*ps_max).cst() << endl;
+      }
+      outf << endl;
+    }
+    outf.close();
+
+    outf.open("get_nu2_3.out");
+    ps_max.zero();
+    for (i = 0; i <= 25; i++) {
+      delta1 = i*Jx/n_step;
+      ps_max[delta_] = delta1;
+      for (j = 0; j <= 25; j++) {
+	Jx1 = j*Jx/n_step;
+	ps_max[x_] = sqrt(2e0*Jx1); ps_max[px_] = sqrt(2e0*Jx1);
+
+	outf << scientific << setprecision(5)
+	     << setw(13) << delta1 << setw(13) << 2e0*Jx1
+	     << setw(13) << (jacob*ps_max).cst() << endl;
+      }
+      outf << endl;
+    }
+    outf.close();
+
+    outf.open("get_nu2_4.out");
+    ps_max.zero();
+    for (i = 0; i <= 25; i++) {
+      delta1 = i*Jx/n_step;
+      ps_max[x_] = delta1;
+      for (j = 0; j <= 25; j++) {
+	Jy1 = j*Jy/n_step;
+	ps_max[y_] = sqrt(2e0*Jy1); ps_max[py_] = sqrt(2e0*Jy1);
+
+	outf << scientific << setprecision(5)
+	     << setw(13) << 2e0*delta1 << setw(13) << 2e0*Jy1
+	     << setw(13) << (jacob*ps_max).cst() << endl;
+      }
+      outf << endl;
+    }
+    outf.close();
+  }
+
+  nu2[0] = (Int(tps(0e0, 4)*jacob, 3)+Int(tps(0e0, 3)*jacob, 4))/2e0;
+
+  ps0.identity(); ps0[y_] = 0e0; ps0[py_] = 0e0;
+  ps_max.identity(); ps_max[y_] = sqrt(2e0*Jy); ps_max[py_] = sqrt(2e0*Jy);
+
+  if (twoJy0 < 0e0)
+    nu2[0] = nu2[0]*ps_max - nu2[0]*ps0;
+  else {
+    A.identity(); A[y_] = sqrt(twoJy0); A[py_] = sqrt(twoJy0);
+
+    nu2[0] = (nu2[0]*A-nu2[0]*ps0) + (-nu2[0]*ps_max+nu2[0]*A);
+  }
+
+  nu2[0] = (Int(tps(0e0, 2)*nu2[0], 1)+Int(tps(0e0, 1)*nu2[0], 2))/2e0;
+
+  ps0.identity(); ps0[x_] = 0e0; ps0[px_] = 0e0;
+  ps_max.identity(); ps_max[x_] = sqrt(2e0*Jx); ps_max[px_] = sqrt(2e0*Jx);
+
+  nu2[0] = nu2[0]*ps_max - nu2[0]*ps0;
+
+  nu2[0] = Int(nu2[0], 5);
+
+  ps0.identity(); ps0[delta_] = 0e0;
+  ps_max.identity(); ps_max[delta_] = delta;
+
+  nu2[0] = nu2[0]*ps_max - nu2[0]*ps0;
+
+//   jacob = dnudJ[X_][X_]*dnudJ[Y_][2] - dnudJ[X_][2]*dnudJ[Y_][X_];
+
+//   nu2[1] = (Int(tps(0e0, 2)*jacob, 1)+Int(tps(0e0, 1)*jacob, 2))/2e0;
+
+//   ps0.identity(); ps0[x_] = 0e0; ps0[px_] = 0e0;
+//   ps_max.identity(); ps_max[x_] = sqrt(2e0*Jx); ps_max[px_] = sqrt(2e0*Jx);
+
+//   nu2[1] = nu2[1]*ps_max - nu2[1]*ps0;
+
+//   nu2[1] = Int(nu2[1], 5);
+
+//   ps0.identity(); ps0[delta_] = 0e0;
+//   ps_max.identity(); ps_max[delta_] = delta;
+
+//   nu2[1] = nu2[1]*ps_max - nu2[1]*ps0;
+
+
+//   jacob = dnudJ[X_][Y_]*dnudJ[Y_][2] - dnudJ[X_][2]*dnudJ[Y_][Y_];
+
+//   nu2[2] = (Int(tps(0e0, 4)*jacob, 3)+Int(tps(0e0, 3)*jacob, 4))/2e0;
+
+//   ps0.identity(); ps0[y_] = 0e0; ps0[py_] = 0e0;
+//   ps_max.identity(); ps_max[y_] = sqrt(2e0*Jy); ps_max[py_] = sqrt(2e0*Jy);
+
+//   nu2[2] = nu2[2]*ps_max - nu2[2]*ps0;
+
+//   nu2[2] = Int(nu2[2], 5);
+
+//   ps0.identity(); ps0[delta_] = 0e0;
+//   ps_max.identity(); ps_max[delta_] = delta;
+
+//   nu2[2] = nu2[2]*ps_max - nu2[2]*ps0;
+}
+
+
+void H_zero(const double prm_tol, const int n_max, const double scl,
+	    const bool prt_iter)
+{
+  const int     m_max = 500;  // max no of constraints
+
+  bool          first = true;
+  char          hs[m_max][max_str], str[max_str];
+  int           i, j, k, l, m, n, i1, m1 = 0;
+  double        L, dprm_max, scl_L = 0.0;
+  double        **A, *b, *w, **U, **V, *dbn, *bn, *bn_max, **A_inv;
+  tps           r, K_scl, K_re, K_im, K_re_scl;
+  tps           g_re, g_im, g_re_scl, g_im_scl, nu2[3];
+  ss_vect<tps>  Id_Fl, A1_inv, A_nl_inv;
+
+  const bool    prt    = true, mirror_sym = false;
+  const int     n_prt  = 9;
+  const double  scl_res = 0e0, scl1 = 10e0, scl2 = 50e0, scl3 = 5e0;
+
+  b = dvector(1, m_max); w = dvector(1, n_prm); dbn = dvector(1, n_prm);
+  bn = dvector(1, n_prm); bn_max = dvector(1, n_prm);
+  A = dmatrix(1, m_max, 1, n_prm); U = dmatrix(1, m_max, 1, n_prm);
+  V = dmatrix(1, n_prm, 1, n_prm);
+  A_inv = dmatrix(1, n_prm, 1, m_max);
+
+  for (i = 1; i <= n_prm; i++) {
+    if (prms[i-1] > 0) {
+      // Note, Jacobian is a function of multipole strengths
+      L = get_L(prms[i-1], 1);
+      if (L == 0.0) L = 1.0;
+      if (false && (strcmp(get_Name(prms[i-1]), "om1") == 0)) {
+	cout << endl;
+	cout << get_Name(prms[i-1]) << ": bnL_max set to 1.0" << endl;
+	bn_max[i] = 1.0/L; 
+      } else
+	bn_max[i] = bnL_max[bns[i-1]]/L; 
+    } else
+      bn_max[i] = ds_max;
+
+    bn[i] = get_bn_s(prms[i-1], 1, bns[i-1]);
+  }
+
+  if (first) {
+    // store initial sextupole strengths
+    first = false;
+    cout << endl;
+    cout << "initial b3s:" << endl;
+    for (i = 1; i <= n_prm; i++) {
+      b3s[i-1] = get_bnL_s(prms[i-1], 1, bns[i-1]);
+      cout << scientific << setprecision(3)
+	   << setw(11) << b3s[i-1] << setw(2) << bns[i-1] << endl;
+    }
+
+    select_h();
+  } else if (true) {
+    // initialize sextupoles
+    for (i = 1; i <= n_prm; i++)
+      set_bnL_s(prms[i-1], bns[i-1], b3s[i-1]);
+  }
+
+  n = 0;
+  do {
+    n++; n_iter++;
+    cout << endl;
+    for (i1 = 1; i1 <= n_prm; i1++) {
+      if (prms[i1-1] > 0)
+	set_bn_par(prms[i1-1], bns[i1-1], 7);
+      else
+	set_s_par(abs(prms[i1-1]), 7);
+
+      scl_L = (prms[i1-1] > 0)? 1e0 : scl_ds;
+
+//      Jx = 0.5; Jy = 0.5; delta = 1.0;
+
+      danot_(no_tps-1);
+
+      get_Map();
+
+      danot_(no_tps);
+
+      K = MapNorm(Map, g, A1, A0, Map_res, 1);
+
+      K_scl = K*Id_scl; CtoR(K_scl, K_re, K_im);
+      g = g*Id_scl; CtoR(g, g_re, g_im);
+
+      // mirror symmetric cell => g_re = 0
+      m1 = 0;
+
+      if (true) {
+	A[++m1][i1] = scl_L*h_ijklm_p(scl1*K_re, 2, 2, 0, 0, 0, 7);
+	if (i1 == n_prm) {
+	  sprintf(hs[m1-1], "K_22000");
+	  b[m1] = -h_ijklm(scl1*K_re, 2, 2, 0, 0, 0);
+	}
+
+	A[++m1][i1] = scl_L*h_ijklm_p(scl1*K_re, 0, 0, 2, 2, 0, 7);
+	if (i1 == n_prm) {
+	  sprintf(hs[m1-1], "K_00220");
+	  b[m1] = -h_ijklm(scl1*K_re, 0, 0, 2, 2, 0);
+	}
+
+	A[++m1][i1] = scl_L*h_ijklm_p(scl1*K_re, 1, 1, 1, 1, 0, 7);
+	if (i1 == n_prm) {
+	  sprintf(hs[m1-1], "K_11110");
+	  b[m1] = -h_ijklm(scl1*K_re, 1, 1, 1, 1, 0);
+	}
+
+
+	A[++m1][i1] = scl_L*h_ijklm_p(scl2*K_re, 1, 1, 0, 0, 2, 7);
+	if (i1 == n_prm) {
+	  sprintf(hs[m1-1], "K_11002");
+	  b[m1] = -h_ijklm(scl2*K_re, 1, 1, 0, 0, 2);
+	}
+
+
+	A[++m1][i1] = scl_L*h_ijklm_p(scl2*K_re, 0, 0, 1, 1, 2, 7);
+	if (i1 == n_prm) {
+	  sprintf(hs[m1-1], "K_00112");
+	  b[m1] = -h_ijklm(scl2*K_re, 0, 0, 1, 1, 2);
+	}
+
+
+	A[++m1][i1] = scl_L*h_ijklm_p(scl3*K_re, 1, 1, 0, 0, 3, 7);
+	if (i1 == n_prm) {
+	  sprintf(hs[m1-1], "K_11003");
+	  b[m1] = -h_ijklm(scl3*K_re, 1, 1, 0, 0, 3);
+	}
+
+
+	A[++m1][i1] = scl_L*h_ijklm_p(scl3*K_re, 0, 0, 1, 1, 3, 7);
+	if (i1 == n_prm) {
+	  sprintf(hs[m1-1], "K_00113");
+	  b[m1] = -h_ijklm(scl3*K_re, 0, 0, 1, 1, 3);
+	}
+
+	get_nu2(K, nu2);
+
+// 	nu2[0] *= 1e-6;
+	nu2[0] *= 1e-3;
+
+	A[++m1][i1] = scl_L*h_ijklm_p(nu2[0], 0, 0, 0, 0, 0, 7);
+	if (i1 == n_prm) {
+	  sprintf(hs[m1-1], "nu2    ");
+	  b[m1] = -h_ijklm(nu2[0], 0, 0, 0, 0, 0);
+	}
+      }
+
+// 	A[++m1][i1] = scl_L*h_ijklm_p(nu2[1], 0, 0, 0, 0, 0, 7);
+// 	sprintf(hs[m1-1], "nu2_xd ");
+// 	b[m1] = -h_ijklm(nu2[1], 0, 0, 0, 0, 0);
+
+// 	A[++m1][i1] = scl_L*h_ijklm_p(nu2[2], 0, 0, 0, 0, 0, 7);
+// 	sprintf(hs[m1-1], "nu2_yd ");
+// 	b[m1] = -h_ijklm(nu2[2], 0, 0, 0, 0, 0);
+
+      for (i = 0; i <= no_tps-1; i++)
+	for (j = 0; j <= no_tps-1; j++)
+	  for (k = 0; k <= no_tps-1; k++)
+	    for (l = 0; l <= no_tps-1; l++)
+	      for (m = 0; m <= no_tps-1; m++) {
+		if (i+j+k+l <= 3) {
+		  g_im_scl = g_im; g_re_scl = g_re;
+		} else {
+		  g_im_scl = scl*g_im; g_re_scl = scl*g_re;
+		}
+
+		if (i+j+k+l <= 2)
+		  K_re_scl = K_re;
+		else
+		  K_re_scl = scl*K_re;
+
+		if ((0 < i+j+k+l+m) && (i+j+k+l+m <= no_tps-1) &&
+		    h[i][j][k][l][m] &&
+		    ((fabs(h_ijklm(g_im_scl, i, j, k, l, m)) > 0.0) ||
+		     (fabs(h_ijklm(K_re_scl, i, j, k, l, m)) > 0.0))) {
+
+		  A[++m1][i1] =
+		    scl_L*scl_res*h_ijklm_p(g_im_scl, i, j, k, l, m, 7);
+
+		  if (m1 >= m_max) {
+		    cout << "m_max reached " << m1 << "(" << m_max << ")"
+			 << endl;
+		    exit(1);
+		  }
+
+		  if (is_h_ijklm(1, 1, 0, 0, 1, i, j, k, l, m))
+		    // horizontal linear chromaticity
+		    A[m1][i1] =
+		      scl_L*scl_ksi1
+		      *h_ijklm_p(K_re_scl, i, j, k, l, m, 7);
+		  else if (is_h_ijklm(0, 0, 1, 1, 1, i, j, k, l, m))
+		    // vertical linear chromaticity
+		    A[m1][i1] =
+		      scl_L*scl_ksi1
+		      *h_ijklm_p(K_re_scl, i, j, k, l, m, 7);
+		  else if (is_h_ijklm(2, 2, 0, 0, 0, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 2, 2, 0, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 1, 1, 0, i, j, k, l, m) ||
+			   is_h_ijklm(3, 3, 0, 0, 0, i, j, k, l, m) ||
+			   is_h_ijklm(2, 2, 1, 1, 0, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 2, 2, 0, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 3, 3, 0, i, j, k, l, m) ||
+			   is_h_ijklm(4, 4, 0, 0, 0, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 4, 4, 0, i, j, k, l, m) ||
+			   is_h_ijklm(3, 3, 1, 1, 0, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 3, 3, 0, i, j, k, l, m) ||
+			   is_h_ijklm(2, 2, 2, 2, 0, i, j, k, l, m))
+		    // amplitude dependent tune shift
+		    A[m1][i1] =
+		      scl_L*scl_dnu
+		      *h_ijklm_p(K_re_scl, i, j, k, l, m, 7);
+		  else if (is_h_ijklm(1, 1, 0, 0, 2, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 1, 1, 2, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 0, 0, 3, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 1, 1, 3, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 0, 0, 4, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 1, 1, 4, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 0, 0, 5, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 1, 1, 5, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 0, 0, 6, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 1, 1, 6, i, j, k, l, m))
+		    // nonlinear chromaticity
+		    A[m1][i1] =
+		      scl_L*scl_ksi_nl
+		      *h_ijklm_p(K_re_scl, i, j, k, l, m, 7);
+		  else if (is_h_ijklm(2, 2, 0, 0, 1, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 2, 2, 1, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 1, 1, 1, i, j, k, l, m) ||
+			   is_h_ijklm(2, 2, 0, 0, 2, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 2, 2, 2, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 1, 1, 2, i, j, k, l, m) ||
+			   is_h_ijklm(2, 2, 0, 0, 3, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 2, 2, 3, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 1, 1, 3, i, j, k, l, m) ||
+			   is_h_ijklm(2, 2, 0, 0, 4, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 2, 2, 4, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 1, 1, 4, i, j, k, l, m) ||
+			   is_h_ijklm(3, 3, 0, 0, 1, i, j, k, l, m) ||
+			   is_h_ijklm(2, 2, 1, 1, 1, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 2, 2, 1, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 3, 3, 1, i, j, k, l, m) ||
+			   is_h_ijklm(3, 3, 0, 0, 2, i, j, k, l, m) ||
+			   is_h_ijklm(2, 2, 1, 1, 2, i, j, k, l, m) ||
+			   is_h_ijklm(1, 1, 2, 2, 2, i, j, k, l, m) ||
+			   is_h_ijklm(0, 0, 3, 3, 2, i, j, k, l, m))
+		    // amplitude dependent chromaticity
+		    A[m1][i1] =
+		      scl_L*scl_ksi_nl
+		      *h_ijklm_p(K_re_scl, i, j, k, l, m, 7);
+		  else if (!mirror_sym)
+		    A[++m1][i1] =
+		      scl_L*scl_res*h_ijklm_p(g_re_scl, i, j, k, l, m, 7);
+
+		  if (i1 == n_prm) {
+                    sprintf(hs[m1-1], "h_%d%d%d%d%d", i, j, k, l, m);
+                    b[m1] = -scl_res*h_ijklm(g_im_scl, i, j, k, l, m);
+
+		    if (is_h_ijklm(1, 1, 0, 0, 1, i, j, k, l, m)) {
+		      // horizontal linear chromaticity
+		      b[m1] =
+			-scl_ksi1
+			*(n_cell*ksi1[X_]*M_PI*2.0*Jx*delta
+			  +h_ijklm(K_re_scl, i, j, k, l, m));
+		    } else if (is_h_ijklm(0, 0, 1, 1, 1, i, j, k, l, m)) {
+		      // vertical linear chromaticity
+		      b[m1] =
+			-scl_ksi1
+			*(n_cell*ksi1[Y_]*M_PI*2.0*Jy*delta
+			  +h_ijklm(K_re_scl, i, j, k, l, m));
+		    } else if (is_h_ijklm(2, 2, 0, 0, 0, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 2, 2, 0, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 1, 1, 0, i, j, k, l, m) ||
+			       is_h_ijklm(3, 3, 0, 0, 0, i, j, k, l, m) ||
+			       is_h_ijklm(2, 2, 1, 1, 0, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 2, 2, 0, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 3, 3, 0, i, j, k, l, m) ||
+			       is_h_ijklm(4, 4, 0, 0, 0, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 4, 4, 0, i, j, k, l, m) ||
+			       is_h_ijklm(3, 3, 1, 1, 0, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 3, 3, 0, i, j, k, l, m) ||
+			       is_h_ijklm(2, 2, 2, 2, 0, i, j, k, l, m)) {
+		      // amplitude dependent tune shift
+		      b[m1] = -scl_dnu*h_ijklm(K_re_scl, i, j, k, l, m);
+		    } else if (is_h_ijklm(1, 1, 0, 0, 2, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 1, 1, 2, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 0, 0, 3, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 1, 1, 3, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 0, 0, 4, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 1, 1, 4, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 0, 0, 5, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 1, 1, 5, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 0, 0, 6, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 1, 1, 6, i, j, k, l, m)) {
+		      // nonlinear chromaticity
+		      b[m1] =
+			-scl_ksi_nl*h_ijklm(K_re_scl, i, j, k, l, m);
+		    } else if (is_h_ijklm(2, 2, 0, 0, 1, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 2, 2, 1, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 1, 1, 1, i, j, k, l, m) ||
+			       is_h_ijklm(2, 2, 0, 0, 2, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 2, 2, 2, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 1, 1, 2, i, j, k, l, m) ||
+			       is_h_ijklm(2, 2, 0, 0, 3, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 2, 2, 3, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 1, 1, 3, i, j, k, l, m) ||
+			       is_h_ijklm(2, 2, 0, 0, 4, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 2, 2, 4, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 1, 1, 4, i, j, k, l, m) ||
+			       is_h_ijklm(3, 3, 0, 0, 1, i, j, k, l, m) ||
+			       is_h_ijklm(2, 2, 1, 1, 1, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 2, 2, 1, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 3, 3, 1, i, j, k, l, m) ||
+			       is_h_ijklm(3, 3, 0, 0, 2, i, j, k, l, m) ||
+			       is_h_ijklm(2, 2, 1, 1, 2, i, j, k, l, m) ||
+			       is_h_ijklm(1, 1, 2, 2, 2, i, j, k, l, m) ||
+			       is_h_ijklm(0, 0, 3, 3, 2, i, j, k, l, m)) {
+		      // amplitude dependent chromaticity
+		      b[m1] =
+			-scl_ksi_nl*h_ijklm(K_re_scl, i, j, k, l, m);
+		    } else if (!mirror_sym) {
+		      sprintf(hs[m1-2], "i_%d%d%d%d%d", i, j, k, l, m);
+		      b[m1-1] = -scl_res*h_ijklm(g_im_scl, i, j, k, l, m);
+		      sprintf(hs[m1-1], "r_%d%d%d%d%d", i, j, k, l, m);
+		      b[m1] = -scl_res*h_ijklm(g_re_scl, i, j, k, l, m);
+		    }
+		  }
+		}
+	      }
+
+      if (prms[i1-1] > 0)
+	clr_bn_par(prms[i1-1], bns[i1-1]);
+      else
+	clr_s_par(abs(prms[i1-1]));
+    }
+
+    if (prt) {
+      cout << endl;
+      cout << n << " Ax = b:" << endl;
+      cout << endl;
+      for (i = 1; i <= m1; i++) {
+	cout  << setw(3) << i << " " << hs[i-1];
+	for (j = 1; j <= n_prm; j++)
+	  cout << scientific << setprecision(2) << setw(10) << A[i][j];
+	cout << scientific << setprecision(2) << setw(10) << b[i] << endl;
+      }
+    }
+    
+    SVD_lim(m1, n_prm, A, b, bn_max, 1e-11, bn, dbn);
+
+    cout << endl;
+    cout << "dcorr. (int):" << endl;
+    dprm_max = 0.0;
+    for (i = 1; i <= n_prm; i++) {
+      if (prms[i-1] > 0) {
+	L = get_L(prms[i-1], 1);
+	if (L == 0.0) L = 1.0;
+	dprm_max = max(fabs(step*dbn[i]*L), dprm_max);
+	cout << scientific << setprecision(3) << setw(11) << step*dbn[i]*L;
+      } else {
+	dprm_max = max(fabs(step*scl_ds*dbn[i]), dprm_max);
+	cout << scientific << setprecision(3)
+	     << setw(11) << step*scl_ds*dbn[i];
+      }
+      if (i % n_prt == 0) cout << endl;
+    }
+    if (n_prm % n_prt != 0) cout << endl;
+
+    cout << endl;
+    cout << "corr.:" << endl;
+    for (i = 1; i <= n_prm; i++) {
+      set_dbn_s(prms[i-1], bns[i-1], step*dbn[i]);
+      bn[i] = get_bn_s(prms[i-1], 1, bns[i-1]);
+      cout << scientific << setprecision(3)
+	   << setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1]);
+      if (i % n_prt == 0) cout << endl;
+    }
+    if (n_prm % n_prt != 0) cout << endl;
+
+    if (prt_iter) {
+      sext_out << endl;
+      sext_out << "n = " << n_iter << ":" << endl;
+      for (i = 1; i <= n_prm; i++)
+	for (j = 1; j <= get_n_Kids(abs(prms[i-1])); j++) {
+	  if (prms[i-1] > 0) 
+	    sext_out << fixed << setprecision(7) 
+		     << setw(9) << get_Name(abs(prms[i-1]))
+		     << "(" << j << ") = "
+		     << setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1])
+		     << setw(2) << bns[i-1] << endl;
+	  else {
+	    sprintf(str, "du_%s", get_Name(abs(prms[i-1])));
+	    sext_out << fixed << setprecision(7) 
+		     << setw(9) << str << "(" << j << ") = "
+		     << setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1])
+		     << setw(2) << 0 << endl;
+	    sprintf(str, "dd_%s", get_Name(abs(prms[i-1])));
+	    sext_out << fixed << setprecision(7) 
+		      << setw(9) << str << "(" << j << ") = "
+		     << setw(11) << -get_bnL_s(prms[i-1], 1, bns[i-1])
+		     << setw(2) << 0 << endl;
+	  }
+	}
+      sext_out.flush();
+    }
+
+    cout << endl;
+    cout << scientific << setprecision(1)
+	 << setw(2) << n_iter << " chi2: " << chi2;
+
+    chi2 = 0.0;
+    for (i = 1; i <= m1; i++)
+      chi2 += sqr(b[i]);
+
+    cout << scientific << setprecision(1)
+	 << " -> " << chi2 << endl;
+  } while ((dprm_max > prm_tol) && (n < n_max));
+
+  if (!prt_iter) {
+    for (i = 1; i <= n_prm; i++)
+      for (j = 1; j <= get_n_Kids(abs(prms[i-1])); j++) {
+	sext_out << fixed << setprecision(7) 
+		 << setw(6) << get_Name(abs(prms[i-1])) << "(" << j << ") = "
+		 << setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1])
+		 << setw(2) << bns[i-1] << endl;
+      }
+    sext_out.flush();
+  }
+
+  free_dvector(b, 1, m_max); free_dvector(w, 1, n_prm);
+  free_dvector(dbn, 1, n_prm); free_dvector(bn, 1, n_prm);
+  free_dvector(bn_max, 1, n_prm);
+  free_dmatrix(A, 1, m_max, 1, n_prm);
+  free_dmatrix(U, 1, m_max, 1, n_prm); free_dmatrix(V, 1, n_prm, 1, n_prm);
+  free_dmatrix(A_inv, 1, n_prm, 1, m_max);
+}
+
+
+void no_mpoles(void)
+{
+  int j, k;
+
+  cout << endl;
+  cout << "zeroing multipoles" << endl;
+  cout << endl;
+  for (j = 0; j < n_elem; j++)
+    if (elem[j].kind == Mpole)
+      for (k = Sext; k < mpole_max; k++) {
+//	cout << "zeroing " << elem[j].Name << endl;
+	set_bn(elem[j].Fnum, elem[j].Knum, k, 0.0);
+      }
+}
+
+
+void get_prm(char *file_name)
+{
+  char      line[max_str];      
+  ifstream  prm_in;
+
+  file_rd(prm_in, file_name);
+
+  do
+    prm_in.getline(line, max_str);
+  while (strstr(line, "#") != NULL);
+
+  sscanf(line, "%*s %d %lf %lf %lf", &adj_tune, &nu0[X_], &nu0[Y_], &eps_nu);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %d %lf %lf %lf",
+	 &adj_chrom, &ksi1[X_], &ksi1[Y_], &eps_ksi);
+  fit_chrm = eps_ksi < 0.0; eps_ksi = fabs(eps_ksi);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %d", &check_range);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &nu_x_min);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &nu_x_max);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &nu_y_min);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &nu_y_max);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %d", &n_steps);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %d", &n_cell);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &ds_max);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &b2_max);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &bnL_max[Sext]);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &bnL_max[Oct]);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &bnL_max[Dec]);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &scl_dnu);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &scl_ksi1);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &scl_ksi2);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &scl_ksi_nl);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &scl_dnuddelta);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &scl_dnudJ);
+
+  prm_in.getline(line, max_str);
+  sscanf(line, "%*s %lf", &step);
+
+  cout << endl;
+  cout << fixed << setprecision(6)
+       << "fit_tune      = " << adj_tune
+       << ", nu0_x  = " << nu0[X_] << ", nu0_y  = " << nu0[Y_]
+       << scientific << setprecision(1) << ", eps_nu = " << eps_nu << endl;
+  cout << fixed << setprecision(6)
+       << "fit_chrom     = " << adj_chrom
+       << ", ksi0_x = " << ksi1[X_] << ", ksi0_y = " << ksi1[Y_]
+       << scientific << setprecision(1) << ", eps_ksi = " << eps_ksi << endl;
+  cout << "check_range   = " << check_range << endl;
+  cout << endl;
+  cout << fixed << setprecision(6)
+       << "n_steps   = " << n_steps
+       << ", nu_x_min = " << nu_x_min << ", nu_x_max = " << nu_x_max
+       << ", nu_y_min = " << nu_y_min << ", nu_y_max = " << nu_y_max << endl;
+  cout << endl;
+  cout << "n_cell        = " << n_cell << endl;
+  cout << fixed << setprecision(2)
+       << "ds_max        = " << ds_max << endl;
+  cout << fixed << setprecision(1)
+       << "b2_max        = " << b2_max << endl;
+  cout << fixed << setprecision(1)
+       << "b3L_max       = " << bnL_max[Sext] << endl;
+  cout << fixed << setprecision(1)
+       << "b4L_max       = " << bnL_max[Oct] << endl;
+  cout << fixed << setprecision(1)
+       << "b5L_max       = " << bnL_max[Dec] << endl;
+  cout << fixed << setprecision(1)
+       << "scl_dnu       = " << scl_dnu << endl;
+  cout << fixed << setprecision(1)
+       << "scl_ksi1      = " << scl_ksi1 << endl;
+  cout << fixed << setprecision(1)
+       << "scl_ksi2      = " << scl_ksi2 << endl;
+  cout << fixed << setprecision(1)
+       << "scl_ksi_nl    = " << scl_ksi_nl << endl;
+  cout << scientific << setprecision(1)
+       << "scl_dnuddelta = " << scl_dnuddelta << endl;
+  cout << scientific << setprecision(1)
+       << "scl_dnuddJ    = " << scl_dnudJ << endl;
+  cout << fixed << setprecision(2)
+       << "step          = " << step << endl;
+}
+
+
+void get_prms()
+{
+
+  n_prm = 0;
+
+  prms[n_prm] = get_Fnum("sl1"); bns[n_prm++] = Sext;
+  prms[n_prm] = get_Fnum("sl2"); bns[n_prm++] = Sext;
+  prms[n_prm] = get_Fnum("sl3"); bns[n_prm++] = Sext;
+
+  prms[n_prm] = get_Fnum("sh1"); bns[n_prm++] = Sext;
+  prms[n_prm] = get_Fnum("sh3"); bns[n_prm++] = Sext;
+  prms[n_prm] = get_Fnum("sh4"); bns[n_prm++] = Sext;
+
+  switch (sext_scheme) {
+  case 0:
+    prms[n_prm] = get_Fnum("sm1"); bns[n_prm++] = Sext;
+    prms[n_prm] = get_Fnum("sm2"); bns[n_prm++] = Sext;
+    prms[n_prm] = get_Fnum("sm3"); bns[n_prm++] = Sext;
+    break;
+  case 1:
+    prms[n_prm] = get_Fnum("sm1a"); bns[n_prm++] = Sext;
+    prms[n_prm] = get_Fnum("sm1b"); bns[n_prm++] = Sext;
+    prms[n_prm] = get_Fnum("sm2"); bns[n_prm++] = Sext;
+    break;
+  case 2:
+    prms[n_prm] = get_Fnum("sm1a"); bns[n_prm++] = Sext;
+    prms[n_prm] = get_Fnum("sm1b"); bns[n_prm++] = Sext;
+    prms[n_prm] = get_Fnum("sm2"); bns[n_prm++] = Sext;
+    prms[n_prm] = get_Fnum("sm3"); bns[n_prm++] = Oct;
+    break;
+  }
+
+  if (n_prm > n_prm_max) {
+    cout << "get_prms: n_prm_max exceeded " << n_prm << "(" << n_prm_max
+	 << ")" << endl;
+    exit(0);
+  }
+
+  cout << endl;
+  cout << "get_prms: no of multipole families " << n_prm << endl;
+}
+
+
+void chk_lat(double nu[], double ksi[])
+{
+  double        alpha1[2];
+  ss_vect<tps>  nus;
+
+//  get_Map();
+  get_COD(10, 1e-10, 0.0, true);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  nus = dHdJ(K); get_nu_ksi(nus, nu, ksi); get_ab(alpha1, beta1, 0);
+  cout << endl;
+  cout << fixed << setprecision(3)
+       << "alpha_x  = " << alpha1[X_] << ", alpha_y = " << alpha1[Y_]
+       << ", beta_x = " << beta1[X_] << ", beta_y  = " << beta1[Y_] << endl;
+  prt_nu(nus);
+}
+
+
+void fit_chrom(void)
+{
+  int k, n_b3, b3s[n_prm_max];
+
+  n_b3 = 0;
+  for (k = 0; k < n_prm; k++) {
+    if (bns[k] == Sext) {
+      n_b3++; b3s[n_b3-1] = prms[k];
+    }
+  }
+
+  // fit chromaticity
+  cavity_on = false;
+  fit_chrom(ksi1[X_], ksi1[Y_], n_b3, b3s, eps_ksi, true);
+//  fit_chrom1(0.0, 0.0, n_prm, prms, eps_ksi, true);
+}
+
+
+int main(int argc, char *argv[])
+{
+  int              k;
+  double           nu[2], ksi[2];
+  double           alpha[2], beta[2], scl;
+  tps              h_re, h_im, H, H_re, H_im, K_re, K_im, g_re, g_im;
+  ss_vect<tps>     nus;
+  ofstream         outf, K_out, nus_out;
+  ifstream         inf;
+
+  const int  n_step = 5;
+
+  danot_(no_tps-1);
+
+  rad_on    = false; H_exact        = false; totpath_on   = false;
+  cavity_on = false; quad_fringe_on = false; emittance_on = false;
+  IBS_on    = false;
+
+  rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
+
+  // initialize the symplectic integrator after energy has been defined
+  ini_si();
+
+  // disable from TPSALib- and LieLib log messages
+  idprset(-1);
+
+  sscanf(argv[2], "%d", &sext_scheme);
+
+  danot_(3);
+
+  if (true) chk_lat(nu, ksi);
+
+  get_ab(alpha, beta, 0);
+  cout << endl;
+  cout << fixed << setprecision(3)
+       << "alpha_x  = " << setw(6) << alpha[X_]
+       << ", alpha_y = " << setw(6) << alpha[Y_]
+       << ", beta_x = " << setw(6) << beta[X_]
+       << ", beta_y  = " << setw(6) << beta[Y_] << endl;
+
+  if (true) prt_alphac();
+
+  if (false) {
+    // no scaling
+    Jx = 0.5, Jy = 0.5, delta = 1.0;
+  } else {
+    Jx = sqr(A_max[X_])/(2.0*beta1[X_]); Jy = sqr(A_max[Y_])/(2.0*beta1[Y_]);
+    delta = delta_max;
+    // RHIC
+//    Jx = sqr(0.5e-3)/(2.0*beta1[X_]); Jy = sqr(0.5e-3)/(2.0*beta1[Y_]);
+//    delta = 1e-2;
+  }
+
+  Id_scl.identity();
+  Id_scl[x_] *= sqrt(2.0*Jx); Id_scl[px_] *= sqrt(2.0*Jx);
+  Id_scl[y_] *= sqrt(2.0*Jy); Id_scl[py_] *= sqrt(2.0*Jy);
+  Id_scl[delta_] *= delta;
+
+  get_prm("nl_opt.dat");
+
+  if (adj_chrom) {
+    n_prm = 0;
+    switch (sext_scheme) {
+    case 0:
+      prms[n_prm] = get_Fnum("sm1"); bns[n_prm++] = Sext;
+      prms[n_prm] = get_Fnum("sm2"); bns[n_prm++] = Sext;
+//       prms[n_prm] = get_Fnum("sm3"); bns[n_prm++] = Sext;
+      break;
+    case 1:
+      prms[n_prm] = get_Fnum("sm1a"); bns[n_prm++] = Sext;
+      prms[n_prm] = get_Fnum("sm1b"); bns[n_prm++] = Sext;
+      prms[n_prm] = get_Fnum("sm2");  bns[n_prm++] = Sext;
+      break;
+    case 2:
+      prms[n_prm] = get_Fnum("sm1a"); bns[n_prm++] = Sext;
+      prms[n_prm] = get_Fnum("sm1b"); bns[n_prm++] = Sext;
+      prms[n_prm] = get_Fnum("sm2");  bns[n_prm++] = Sext;
+//       prms[n_prm] = get_Fnum("sm3"); bns[n_prm++] = Sext;
+      break;
+    }
+
+    if (fit_chrm) {
+      danot_(3);
+      no_mpoles(); fit_chrom();
+    }
+
+    get_prms();
+
+    file_wr(sext_out, "sext.dat");
+
+    H_zero(eps_ksi, 100, 1e0, true);
+
+//     cout << endl;
+//     n_iter = 0;
+//     for (k = 0; k <= n_step; k++) {
+//       scl = (double)k/(double)n_step;
+//       cout << fixed << setprecision(3)
+// 	   << "scl = " << scl << endl;
+//       H_zero(-1e0, 5, scl, true);
+//     }
+
+    sext_out.close();
+  }
+
+
+  danot_(no_tps-1);
+
+  get_Map();
+
+  file_wr(outf, "map.dat"); outf << Map; outf.close();
+
+  danot_(no_tps);
+
+  if (true) Id_scl.identity();
+
+  CtoR(get_h()*Id_scl, h_re, h_im);
+  file_wr(outf, "h.dat"); outf << h_re; outf.close();
+
+  K = MapNorm(Map, g, A1, A0, Map_res, no_tps); CtoR(K*Id_scl, K_re, K_im);
+  file_wr(outf, "K.dat"); outf << K_re; outf.close();
+
+  nus = dHdJ(K);
+  file_wr(outf, "nus.dat"); outf << nus[3] << nus[4]; outf.close();
+
+  CtoR(get_H()*Id_scl, H_re, H_im);
+  file_wr(outf, "H.dat"); outf << H_re; outf.close();
+
+  CtoR(g*Id_scl, g_re, g_im);
+  file_wr(outf, "g.dat"); outf << g_im; outf.close();
+
+  get_Map();
+  cout << H;
+}
+

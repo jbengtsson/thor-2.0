@@ -1,0 +1,14 @@
+# Optimize dynamic aperture:
+#
+fit_tune       0 2.301 1.05 1e-5
+fit_chrom      1 0.14067 0.14267 -5e-10  # neg. to reset
+ds_max         0.20
+b2_max         3.0
+b3L_max        3.6
+b4L_max        5.0
+b5L_max        100.0
+scl_res        0e4
+scl_ksi1       1e0
+scl_dnu2_x     1e10
+scl_dnu2_y     1e10
+scl_dnu2_z     0e0

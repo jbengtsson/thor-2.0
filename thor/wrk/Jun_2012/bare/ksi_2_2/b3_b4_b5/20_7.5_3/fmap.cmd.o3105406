@@ -1,0 +1,31 @@
+
+initializing TPSA library: no = 8, nv = 7, nd = 3, ndpt = 5, eps = 1.000000e-25
+
+reading machine file: flat_file.dat
+
+rdmfile: read 193 elements, C = 52.79720
+
+******************************************************************************
+
+  dPcommon     =  1.000e-08  dPparticle   =  0.000e+00  Energy [GeV] = 3.000
+  MaxAmplx [m] = -1.000e+01  MaxAmply [m] = -1.000e+01  RFAccept [%] = ±0.00
+  MatMeth      =  FALSE      Cavity_On    =  FALSE      Radiation_On = FALSE     
+  bpm          =    0        qt           =   0         Chambre_On   = FALSE     
+  hcorr        =    0        vcorr        =   0
+
+  alphac       =   3.6277012000341931e-04
+  nux          =   2.2066663877023451      nuz  =   1.0786666592636558
+  ksix         =   0.138182                ksiz =   0.140967
+
+  OneTurn matrix:
+
+matrix:
+   2.689215e-01   1.885733e+01   0.000000e+00   0.000000e+00  -1.952439e-04   0.000000e+00
+  -4.919472e-02   2.689215e-01   0.000000e+00   0.000000e+00  -1.313808e-05   0.000000e+00
+   0.000000e+00   0.000000e+00   8.803118e-01   1.546822e+00   0.000000e+00   0.000000e+00
+   0.000000e+00   0.000000e+00  -1.454925e-01   8.803118e-01   0.000000e+00   0.000000e+00
+   0.000000e+00   0.000000e+00   0.000000e+00   0.000000e+00   1.000000e+00   0.000000e+00
+  -1.313808e-05  -1.952439e-04   0.000000e+00   0.000000e+00   1.915325e-02   1.000000e+00
+fmap
+ lieinit: calling daini
+ daini:           8           7

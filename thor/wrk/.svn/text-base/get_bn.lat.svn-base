@@ -1,0 +1,10 @@
+
+SL1: Sextupole, L = 0.200000, K =  -7.042389, N = 1, Method = Meth;
+SL2: Sextupole, L = 0.200000, K =  16.850828, N = 1, Method = Meth;
+SL3: Sextupole, L = 0.200000, K = -16.043645, N = 1, Method = Meth;
+SM1L: Sextupole, L = 0.200000, K = -10.568928, N = 1, Method = Meth;
+SM1R: Sextupole, L = 0.200000, K = -12.475881, N = 1, Method = Meth;
+SM2: Sextupole, L = 0.250000, K =  13.599749, N = 1, Method = Meth;
+SH1: Sextupole, L = 0.200000, K =  14.850975, N = 1, Method = Meth;
+SH3: Sextupole, L = 0.200000, K =  -5.964913, N = 1, Method = Meth;
+SH4: Sextupole, L = 0.200000, K =  -5.345951, N = 1, Method = Meth;

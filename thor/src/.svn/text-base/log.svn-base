@@ -1,0 +1,258 @@
+g77  -g -O2 -Wall -fbounds-check -i4 -mcmodel=large -c -o TPSALib.o `test -f '../../TPSA/TPSALib.f' || echo './'`../../TPSA/TPSALib.f
+../../TPSA/TPSALib.f:0: sorry, unimplemented: code model `large' not supported yet
+../../TPSA/TPSALib.f: In subroutine `dacop':
+In file included from ../../TPSA/TPSALib.f:1239:
+../../TPSA/TPSALib.f:1225: warning: unused variable 'invb'
+../../TPSA/TPSALib.f:1225: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:1225: warning: unused variable 'inob'
+../../TPSA/TPSALib.f:1225: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:1225: warning: unused variable 'ilmb'
+../../TPSA/TPSALib.f:1225: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:1225: warning: unused variable 'illb'
+../../TPSA/TPSALib.f:1225: warning: unused variable 'iif'
+../../TPSA/TPSALib.f: In subroutine `daadd':
+In file included from ../../TPSA/TPSALib.f:1331:
+../../TPSA/TPSALib.f:1327: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:1327: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:1327: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:1327: warning: unused variable 'illc'
+../../TPSA/TPSALib.f:1326: warning: unused variable 'jj1'
+../../TPSA/TPSALib.f:1326: warning: unused variable 'jj'
+../../TPSA/TPSALib.f:1326: warning: unused variable 'iz'
+../../TPSA/TPSALib.f:1326: warning: unused variable 'iu'
+../../TPSA/TPSALib.f:1326: warning: unused variable 'ipok'
+../../TPSA/TPSALib.f:1325: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:1325: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:1325: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:1325: warning: unused variable 'illa'
+../../TPSA/TPSALib.f:1325: warning: unused variable 'ii'
+../../TPSA/TPSALib.f:1325: warning: unused variable 'icz'
+../../TPSA/TPSALib.f:1325: warning: unused variable 'icu'
+../../TPSA/TPSALib.f:1325: warning: unused variable 'ic2'
+../../TPSA/TPSALib.f:1325: warning: unused variable 'ic1'
+../../TPSA/TPSALib.f:1325: warning: unused variable 'ic'
+../../TPSA/TPSALib.f: In subroutine `dasub':
+In file included from ../../TPSA/TPSALib.f:1370:
+../../TPSA/TPSALib.f:1366: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:1366: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:1366: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:1366: warning: unused variable 'illc'
+../../TPSA/TPSALib.f:1366: warning: unused variable 'idaadd'
+../../TPSA/TPSALib.f:1365: warning: unused variable 'jj1'
+../../TPSA/TPSALib.f:1365: warning: unused variable 'jj'
+../../TPSA/TPSALib.f:1365: warning: unused variable 'iz'
+../../TPSA/TPSALib.f:1365: warning: unused variable 'iu'
+../../TPSA/TPSALib.f:1365: warning: unused variable 'ipok'
+../../TPSA/TPSALib.f:1364: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:1364: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:1364: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:1364: warning: unused variable 'illa'
+../../TPSA/TPSALib.f:1364: warning: unused variable 'ii'
+../../TPSA/TPSALib.f:1364: warning: unused variable 'icz'
+../../TPSA/TPSALib.f:1364: warning: unused variable 'icu'
+../../TPSA/TPSALib.f:1364: warning: unused variable 'ic2'
+../../TPSA/TPSALib.f:1364: warning: unused variable 'ic1'
+../../TPSA/TPSALib.f:1364: warning: unused variable 'ic'
+../../TPSA/TPSALib.f: In subroutine `daexx':
+In file included from ../../TPSA/TPSALib.f:1436:
+../../TPSA/TPSALib.f:1427: warning: unused variable 'ipoc'
+../../TPSA/TPSALib.f:1427: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:1427: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:1427: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:1427: warning: unused variable 'illc'
+../../TPSA/TPSALib.f: In subroutine `daexxt':
+In file included from ../../TPSA/TPSALib.f:1471:
+../../TPSA/TPSALib.f:1459: warning: unused variable 'ipoc'
+../../TPSA/TPSALib.f:1459: warning: unused variable 'ipob'
+../../TPSA/TPSALib.f:1459: warning: unused variable 'ipoa'
+../../TPSA/TPSALib.f:1459: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:1459: warning: unused variable 'invb'
+../../TPSA/TPSALib.f:1459: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:1459: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:1459: warning: unused variable 'inob'
+../../TPSA/TPSALib.f:1458: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:1458: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:1458: warning: unused variable 'ilmb'
+../../TPSA/TPSALib.f:1458: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:1458: warning: unused variable 'illc'
+../../TPSA/TPSALib.f:1458: warning: unused variable 'illb'
+../../TPSA/TPSALib.f:1458: warning: unused variable 'illa'
+../../TPSA/TPSALib.f: In subroutine `dacex':
+In file included from ../../TPSA/TPSALib.f:1494:
+../../TPSA/TPSALib.f:1484: warning: unused variable 'ipoc'
+../../TPSA/TPSALib.f:1484: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:1484: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:1484: warning: unused variable 'inc'
+../../TPSA/TPSALib.f:1484: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:1484: warning: unused variable 'illc'
+../../TPSA/TPSALib.f: In subroutine `dacext':
+In file included from ../../TPSA/TPSALib.f:1523:
+../../TPSA/TPSALib.f:1511: warning: unused variable 'ipob'
+../../TPSA/TPSALib.f:1511: warning: unused variable 'ipoa'
+../../TPSA/TPSALib.f:1510: warning: unused variable 'invb'
+../../TPSA/TPSALib.f:1510: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:1510: warning: unused variable 'inob'
+../../TPSA/TPSALib.f:1510: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:1510: warning: unused variable 'ilmb'
+../../TPSA/TPSALib.f:1510: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:1510: warning: unused variable 'illb'
+../../TPSA/TPSALib.f:1510: warning: unused variable 'illa'
+../../TPSA/TPSALib.f: In subroutine `daexc':
+In file included from ../../TPSA/TPSALib.f:1552:
+../../TPSA/TPSALib.f:1540: warning: unused variable 'ipoc'
+../../TPSA/TPSALib.f:1540: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:1540: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:1540: warning: unused variable 'inc'
+../../TPSA/TPSALib.f:1540: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:1540: warning: unused variable 'illc'
+../../TPSA/TPSALib.f: In subroutine `daexct':
+In file included from ../../TPSA/TPSALib.f:1582:
+../../TPSA/TPSALib.f:1569: warning: unused variable 'ipob'
+../../TPSA/TPSALib.f:1569: warning: unused variable 'ipoa'
+../../TPSA/TPSALib.f:1569: warning: unused variable 'invb'
+../../TPSA/TPSALib.f:1568: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:1568: warning: unused variable 'inob'
+../../TPSA/TPSALib.f:1568: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:1568: warning: unused variable 'ilmb'
+../../TPSA/TPSALib.f:1568: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:1568: warning: unused variable 'illb'
+../../TPSA/TPSALib.f:1568: warning: unused variable 'illa'
+../../TPSA/TPSALib.f: In subroutine `damul':
+In file included from ../../TPSA/TPSALib.f:1622:
+../../TPSA/TPSALib.f:1611: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:1611: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:1611: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:1611: warning: unused variable 'illc'
+../../TPSA/TPSALib.f: In subroutine `damult':
+In file included from ../../TPSA/TPSALib.f:1670:
+../../TPSA/TPSALib.f:1659: warning: unused variable 'minv'
+../../TPSA/TPSALib.f: In subroutine `dadiv':
+In file included from ../../TPSA/TPSALib.f:1767:
+../../TPSA/TPSALib.f:1760: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:1760: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:1760: warning: unused variable 'incc'
+../../TPSA/TPSALib.f:1760: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:1760: warning: unused variable 'illc'
+../../TPSA/TPSALib.f: In subroutine `dasqr':
+In file included from ../../TPSA/TPSALib.f:1808:
+../../TPSA/TPSALib.f:1801: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:1801: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:1801: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:1801: warning: unused variable 'illc'
+../../TPSA/TPSALib.f: In subroutine `dasqrt':
+In file included from ../../TPSA/TPSALib.f:1852:
+../../TPSA/TPSALib.f:1843: warning: unused variable 'minv'
+../../TPSA/TPSALib.f: In subroutine `dacad':
+In file included from ../../TPSA/TPSALib.f:1956:
+../../TPSA/TPSALib.f:1948: warning: unused variable 'ipob'
+../../TPSA/TPSALib.f:1948: warning: unused variable 'ipoa'
+../../TPSA/TPSALib.f:1948: warning: unused variable 'invb'
+../../TPSA/TPSALib.f:1948: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:1948: warning: unused variable 'inob'
+../../TPSA/TPSALib.f:1948: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:1948: warning: unused variable 'ilmb'
+../../TPSA/TPSALib.f:1948: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:1948: warning: unused variable 'illb'
+../../TPSA/TPSALib.f:1948: warning: unused variable 'illa'
+../../TPSA/TPSALib.f: In subroutine `dacsu':
+In file included from ../../TPSA/TPSALib.f:1983:
+../../TPSA/TPSALib.f:1975: warning: unused variable 'ipob'
+../../TPSA/TPSALib.f:1975: warning: unused variable 'ipoa'
+../../TPSA/TPSALib.f:1975: warning: unused variable 'invb'
+../../TPSA/TPSALib.f:1975: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:1975: warning: unused variable 'inob'
+../../TPSA/TPSALib.f:1975: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:1975: warning: unused variable 'ilmb'
+../../TPSA/TPSALib.f:1975: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:1975: warning: unused variable 'illb'
+../../TPSA/TPSALib.f:1975: warning: unused variable 'illa'
+../../TPSA/TPSALib.f: In subroutine `dasuc':
+In file included from ../../TPSA/TPSALib.f:2010:
+../../TPSA/TPSALib.f:2002: warning: unused variable 'invb'
+../../TPSA/TPSALib.f:2002: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:2002: warning: unused variable 'inob'
+../../TPSA/TPSALib.f:2002: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:2002: warning: unused variable 'ilmb'
+../../TPSA/TPSALib.f:2002: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:2002: warning: unused variable 'illb'
+../../TPSA/TPSALib.f:2002: warning: unused variable 'illa'
+../../TPSA/TPSALib.f: In subroutine `dacmu':
+In file included from ../../TPSA/TPSALib.f:2043:
+../../TPSA/TPSALib.f:2033: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:2033: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:2033: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:2033: warning: unused variable 'illc'
+../../TPSA/TPSALib.f: In subroutine `dacmut':
+In file included from ../../TPSA/TPSALib.f:2087:
+../../TPSA/TPSALib.f:2072: warning: unused variable 'minv'
+../../TPSA/TPSALib.f: In subroutine `dacdi':
+In file included from ../../TPSA/TPSALib.f:2135:
+../../TPSA/TPSALib.f:2127: warning: unused variable 'invb'
+../../TPSA/TPSALib.f:2127: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:2127: warning: unused variable 'inob'
+../../TPSA/TPSALib.f:2127: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:2127: warning: unused variable 'ilmb'
+../../TPSA/TPSALib.f:2127: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:2127: warning: unused variable 'illb'
+../../TPSA/TPSALib.f:2127: warning: unused variable 'illa'
+../../TPSA/TPSALib.f: In subroutine `dadic':
+In file included from ../../TPSA/TPSALib.f:2173:
+../../TPSA/TPSALib.f:2164: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:2164: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:2164: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:2164: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:2164: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:2164: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:2164: warning: unused variable 'illc'
+../../TPSA/TPSALib.f:2164: warning: unused variable 'illa'
+../../TPSA/TPSALib.f: In subroutine `dacma':
+In file included from ../../TPSA/TPSALib.f:2223:
+../../TPSA/TPSALib.f:2213: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:2213: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:2213: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:2213: warning: unused variable 'illc'
+../../TPSA/TPSALib.f: In subroutine `dalin':
+In file included from ../../TPSA/TPSALib.f:2258:
+../../TPSA/TPSALib.f:2249: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:2249: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:2249: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:2249: warning: unused variable 'illc'
+../../TPSA/TPSALib.f: In subroutine `dalint':
+In file included from ../../TPSA/TPSALib.f:2305:
+../../TPSA/TPSALib.f:2292: warning: unused variable 'minv'
+../../TPSA/TPSALib.f: In subroutine `dafun':
+In file included from ../../TPSA/TPSALib.f:2464:
+../../TPSA/TPSALib.f:2453: warning: unused variable 'ipoc'
+../../TPSA/TPSALib.f:2453: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:2453: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:2453: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:2453: warning: unused variable 'illc'
+../../TPSA/TPSALib.f: In subroutine `dafunt':
+In file included from ../../TPSA/TPSALib.f:2497:
+../../TPSA/TPSALib.f:2483: warning: unused variable 'ipoc'
+../../TPSA/TPSALib.f:2483: warning: unused variable 'ipoa'
+../../TPSA/TPSALib.f:2483: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:2482: warning: unused variable 'inva'
+../../TPSA/TPSALib.f:2482: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:2482: warning: unused variable 'inoa'
+../../TPSA/TPSALib.f:2482: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:2482: warning: unused variable 'ilma'
+../../TPSA/TPSALib.f:2482: warning: unused variable 'illc'
+../../TPSA/TPSALib.f:2482: warning: unused variable 'illa'
+../../TPSA/TPSALib.f: In subroutine `ppush1':
+In file included from ../../TPSA/TPSALib.f:3491:
+../../TPSA/TPSALib.f:3481: warning: unused variable 'iv'
+../../TPSA/TPSALib.f: In subroutine `daexp':
+In file included from ../../TPSA/TPSALib.f:4484:
+../../TPSA/TPSALib.f:4480: warning: unused variable 'j'
+../../TPSA/TPSALib.f: In subroutine `dashift':
+In file included from ../../TPSA/TPSALib.f:4809:
+../../TPSA/TPSALib.f:4805: warning: unused variable 'c'
+../../TPSA/TPSALib.f:4804: warning: unused variable 'iunit'
+../../TPSA/TPSALib.f: In subroutine `dapac':
+In file included from ../../TPSA/TPSALib.f:5185:
+../../TPSA/TPSALib.f:5173: warning: unused variable 'invc'
+../../TPSA/TPSALib.f:5173: warning: unused variable 'inoc'
+../../TPSA/TPSALib.f:5173: warning: unused variable 'ilmc'
+../../TPSA/TPSALib.f:5173: warning: unused variable 'illc'
+make: *** [TPSALib.o] Error 1

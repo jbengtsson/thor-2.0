@@ -1,0 +1,29 @@
+Warning: no access to tty (Bad file descriptor).
+Thus no job control in this shell.
+
+initializing TPSA library: no = 1, nv = 6, eps = 1.000000e-25
+
+reading machine file: flat_file.dat
+
+rdmfile: read 193 elements, C = 52.79720
+
+Horizontal chromaticity:
+
+  n    Coeff.
+  0  2.211e+00+/-8.66e-11
+  1  8.555e-05+/-1.14e-08
+  2  1.449e+00+/-5.76e-07
+  3 -1.109e+02+/-4.78e-05
+  4  4.139e+03+/-6.83e-04
+  5 -7.960e+04+/-4.46e-02
+
+Vertical chromaticity:
+
+  n    Coeff.
+  0  1.074e+00+/-1.14e-12
+  1 -1.074e-04+/-1.51e-10
+  2  2.514e+00+/-7.60e-09
+  3 -4.269e+01+/-6.31e-07
+  4 -2.994e+02+/-9.02e-06
+  5  1.760e+03+/-5.88e-04
+

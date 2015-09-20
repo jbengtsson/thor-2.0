@@ -1,0 +1,487 @@
+#include <math.h>
+#include "tracy.h"
+       
+       
+/* Grammar:
+       
+     //DA { "B"egin, "D"efinition, "E"nd }
+       { "D"efinition, "V"ariable, "F"unction, "SUB"routine }
+       { "RI", "RE"al, "IN"teger, "DA" }
+       { "INTernal, "EXT"ernal, "COM", "FUN"ction }
+       { variable name } { order } { no of variables } { array size }
+*/     
+       
+void get_Axy(double z, double BoBrho, double kx, double ky, double kz,
+	     DAvect *x, DAvect *AxoBrho, DAvect *AyoBrho, long radia)
+{      
+       
+//DA  B D;
+//DA  D V DA EXT x 6 6 6 ;
+//DA  D V DA EXT AxoBrho 6 6 4 ; D V DA EXT AyoBrho 6 6 4 ;
+//DA  D V DA INT cx 6 6 ;        D V DA INT sx 6 6 ;
+//DA  D V RE INT kx ;            D V RE INT ky ; D V RE INT kz ;
+//DA  D V DA INT chy 6 6 ;       D V DA INT shy 6 6 ;
+//DA  D V RE INT sz ;            D V RE INT cz ;
+//DA  D V IN INT i ;
+//DA  D V RE INT BoBrho ;
+//DA  E D ;
+//DA{
+  DAvect  x[6];
+  DAvect  AxoBrho[4];
+  DAvect  AyoBrho[4];
+  DAvect  cx;
+  DAvect  sx;
+  DAvect  chy;
+  DAvect  shy;
+
+  DAvect  isdrda, iscrri, idao;
+  double  rscrri;
+
+
+  DAall(cx,       1, 'cx      ', 6, 6);
+  DAall(sx,       1, 'sx      ', 6, 6);
+  DAall(chy,      1, 'chy     ', 6, 6);
+  DAall(shy,      1, 'shy     ', 6, 6);
+//DA}
+       
+  int    i;
+  double cz;
+       
+//--------------------------------------------------------------------------
+//DA  cx = cos(kx*x[1]); sx = sin(kx*x[1]);                             //DA
+  DAcop(x[1], isdrda[1+idaa]);
+  DAcmu(isdrda[1+idaa], kx, isdrda[2+idaa]);
+  DAfun('cos ',isdrda[2+idaa], isdrda[3+idaa]);
+  DAcop(isdrda[3+idaa], cx);
+  DAcop(x[1], isdrda[1+idaa]);
+  DAcmu(isdrda[1+idaa], kx, isdrda[2+idaa]);
+  DAfun('sin ',isdrda[2+idaa], isdrda[3+idaa]);
+  DAcop(isdrda[3+idaa], sx);
+  for (i = 0; i <= 3; ++i) {
+//DA  AxoBrho[i] = 0.0; AyoBrho[i] = 0.0;                               //DA
+  rscrri(100) = 0.0;
+  DAcon(AxoBrho[i], rscrri(100));
+  rscrri(100) = 0.0;
+  DAcon(AyoBrho[i], rscrri(100));
+  }    
+  for (i = 1; i <= 1; ++i) {
+    /* the sum over harmonics assumes kx zero */
+//DA  chy = cosh(i*ky*x[3]); shy = sinh(i*ky*x[3]);                     //DA
+  DAcop(x[3], isdrda[1+idaa]);
+  rscrri[2+idaa] = i * ky;
+  DAcmu(isdrda[1+idaa], rscrri[2+idaa], isdrda[3+idaa]);
+  DAfun('cosh',isdrda[3+idaa], isdrda[4+idaa]);
+  DAcop(isdrda[4+idaa], chy);
+  DAcop(x[3], isdrda[1+idaa]);
+  rscrri[2+idaa] = i * ky;
+  DAcmu(isdrda[1+idaa], rscrri[2+idaa], isdrda[3+idaa]);
+  DAfun('sinh',isdrda[3+idaa], isdrda[4+idaa]);
+  DAcop(isdrda[4+idaa], shy);
+    sz = sin(i*kz*z);
+//DA  AxoBrho[0] = AxoBrho[0] + BoBrho/kz*cx*chy*sz;                    //DA
+  DAcop(AxoBrho[0], isdrda[1+idaa]);
+  rscrri[2+idaa] = BoBrho / kz;
+  DAcmu(cx, rscrri[2+idaa], isdrda[3+idaa]);
+  DAmul(isdrda[3+idaa], chy, isdrda[4+idaa]);
+  DAcmu(isdrda[4+idaa], sz, isdrda[5+idaa]);
+  DAadd(isdrda[1+idaa], isdrda[5+idaa], isdrda[6+idaa]);
+  DAcop(isdrda[6+idaa], AxoBrho[0]);
+//DA  AyoBrho[0] = AyoBrho[0] + BoBrho*kx/(ky*kz)*sx*shy*sz;            //DA
+  rscrri[1+idaa] = ky * kz;
+  DAcop(AyoBrho[0], isdrda[2+idaa]);
+  rscrri[3+idaa] = BoBrho * kx;
+  rscrri[4+idaa] = rscrri[3+idaa] / rscrri[1+idaa];
+  DAcmu(sx, rscrri[4+idaa], isdrda[5+idaa]);
+  DAmul(isdrda[5+idaa], shy, isdrda[6+idaa]);
+  DAcmu(isdrda[6+idaa], sz, isdrda[7+idaa]);
+  DAadd(isdrda[2+idaa], isdrda[7+idaa], isdrda[8+idaa]);
+  DAcop(isdrda[8+idaa], AyoBrho[0]);
+    /* derivatives with respect to x */                                 //DA
+//DA  AxoBrho[1] = AxoBrho[1] - BoBrho*kx/kz*sx*chy*sz;                 //DA
+  DAcop(AxoBrho[1], isdrda[1+idaa]);
+  rscrri[2+idaa] = BoBrho * kx;
+  rscrri[3+idaa] = rscrri[2+idaa] / kz;
+  DAcmu(sx, rscrri[3+idaa], isdrda[4+idaa]);
+  DAmul(isdrda[4+idaa], chy, isdrda[5+idaa]);
+  DAcmu(isdrda[5+idaa], sz, isdrda[6+idaa]);
+  DAsub(isdrda[1+idaa], isdrda[6+idaa], isdrda[7+idaa]);
+  DAcop(isdrda[7+idaa], AxoBrho[1]);
+//DA  AyoBrho[1] = AyoBrho[1] + BoBrho*(kx*kx)/(ky*kz)*cx*shy*sz;       //DA
+  rscrri[1+idaa] = kx * kx;
+  rscrri[2+idaa] = ky * kz;
+  DAcop(AyoBrho[1], isdrda[3+idaa]);
+  rscrri[4+idaa] = BoBrho * rscrri[1+idaa];
+  rscrri[5+idaa] = rscrri[4+idaa] / rscrri[2+idaa];
+  DAcmu(cx, rscrri[5+idaa], isdrda[6+idaa]);
+  DAmul(isdrda[6+idaa], shy, isdrda[7+idaa]);
+  DAcmu(isdrda[7+idaa], sz, isdrda[8+idaa]);
+  DAadd(isdrda[3+idaa], isdrda[8+idaa], isdrda[9+idaa]);
+  DAcop(isdrda[9+idaa], AyoBrho[1]);
+    /* derivatives with respect to y */
+//DA  AxoBrho[2] = AxoBrho[2] + BoBrho*ky/kz*cx*shy*sz;                 //DA
+  DAcop(AxoBrho[2], isdrda[1+idaa]);
+  rscrri[2+idaa] = BoBrho * ky;
+  rscrri[3+idaa] = rscrri[2+idaa] / kz;
+  DAcmu(cx, rscrri[3+idaa], isdrda[4+idaa]);
+  DAmul(isdrda[4+idaa], shy, isdrda[5+idaa]);
+  DAcmu(isdrda[5+idaa], sz, isdrda[6+idaa]);
+  DAadd(isdrda[1+idaa], isdrda[6+idaa], isdrda[7+idaa]);
+  DAcop(isdrda[7+idaa], AxoBrho[2]);
+//DA  AyoBrho[2] = AyoBrho[2] + BoBrho*kx/kz*sx*chy*sz;                 //DA
+  DAcop(AyoBrho[2], isdrda[1+idaa]);
+  rscrri[2+idaa] = BoBrho * kx;
+  rscrri[3+idaa] = rscrri[2+idaa] / kz;
+  DAcmu(sx, rscrri[3+idaa], isdrda[4+idaa]);
+  DAmul(isdrda[4+idaa], chy, isdrda[5+idaa]);
+  DAcmu(isdrda[5+idaa], sz, isdrda[6+idaa]);
+  DAadd(isdrda[1+idaa], isdrda[6+idaa], isdrda[7+idaa]);
+  DAcop(isdrda[7+idaa], AyoBrho[2]);
+       
+    if (globval.radiation) {
+      cz = cos(kz*z);
+      /* derivatives with respect to z */
+//DA    AxoBrho[3] = AxoBrho[3] + BoBrho*cx*chy*cz;                     //DA
+  DAcop(AxoBrho[3], isdrda[1+idaa]);
+  DAcmu(cx, BoBrho, isdrda[2+idaa]);
+  DAmul(isdrda[2+idaa], chy, isdrda[3+idaa]);
+  DAcmu(isdrda[3+idaa], cz, isdrda[4+idaa]);
+  DAadd(isdrda[1+idaa], isdrda[4+idaa], isdrda[5+idaa]);
+  DAcop(isdrda[5+idaa], AxoBrho[3]);
+//DA    AyoBrho[3] = AyoBrho[3] + BoBrho*kx/ky*sx*shy*cz;               //DA
+  DAcop(AyoBrho[3], isdrda[1+idaa]);
+  rscrri[2+idaa] = BoBrho * kx;
+  rscrri[3+idaa] = rscrri[2+idaa] / ky;
+  DAcmu(sx, rscrri[3+idaa], isdrda[4+idaa]);
+  DAmul(isdrda[4+idaa], shy, isdrda[5+idaa]);
+  DAcmu(isdrda[5+idaa], cz, isdrda[6+idaa]);
+  DAadd(isdrda[1+idaa], isdrda[6+idaa], isdrda[7+idaa]);
+  DAcop(isdrda[7+idaa], AyoBrho[3]);
+    }  
+  }    
+       
+  DAdal(shy,      1);
+  DAdal(chy,      1);
+  DAdal(sx,       1);
+  DAdal(cx,       1);
+//DA  dadal
+}      
+       
+       
+void etwigg(long nstep, double len, double lambda, double BoBrho,
+	    double kx, DAvect *map, double crad, long pthlen, long radia)
+{      
+  int    i;
+  double hodp, b[3], h;
+  double z, b2, d1, d2, x2;
+  double a11, a12, a21, a22, c11, c12, c21, c22, dp, xf[6];
+  double ky, kz, xp, yp;
+  double det, AxoBrho[4], AyoBrho[4];                                   //DA
+       
+  const double zero = 0.0;
+       
+//DA  B D;
+ ### ERROR, UNKNOWN COMMAND dB
+//DA  D V DA EXT map 6 6 6 ;
+//DA  D V RE INT x_ ;            D V RE INT px_ ;
+//DA  D V RE INT y_ ;            D V RE INT py_ ;
+//DA  D V RE INT delta_ ;        D V RE INT ct_ ;
+//DA  D V DA INT AxoBrho 6 6 4 ; D V DA INT AyoBrho 6 6 4 ;             //DA
+//DA  D V DA INT dp 6 6 ;        D V DA INT hodp 6 6 ; D V RE INT h ;
+//DA  D V DA INT a11 6 6 ;       D V DA INT a12 6 6 ;
+//DA  D V DA INT a21 6 6 ;       D V DA INT a22 6 6 ;
+//DA  D V DA INT det 6 6 ;
+//DA  D V DA INT d1 6 6 ;        D V DA INT d2 6 6 ;
+//DA  D V DA INT c11 6 6 ;       D V DA INT c12 6 6 ;
+//DA  D V DA INT c21 6 6 ;       D V DA INT c22 6 6 ;
+//DA  D V DA INT x2 6 6 ;
+//DA  D V DA INT xp 6 6 ;        D V DA INT yp 6 6 ;
+//DA  D V DA INT xf 6 6 6 ;
+//DA  D V DA INT B 6 6 3 ;       D V DA INT B2 6 6 ;
+//DA  D F RI get_Axy 9 ;
+//DA  D F DA B2perp 5 ;
+//DA  D F RI pow 2 ;
+//DA  D V RE INT crad ;
+//DA  E D ;
+//DA{
+  DAvect  x[6];
+  DAvect  AxoBrho[4];
+  DAvect  AyoBrho[4];
+  DAvect  cx;
+  DAvect  sx;
+  DAvect  chy;
+  DAvect  shy;
+  DAvect  map[6];
+  DAvect  AxoBrho[4];
+  DAvect  AyoBrho[4];
+  DAvect  dp;
+  DAvect  hodp;
+  DAvect  a11;
+  DAvect  a12;
+  DAvect  a21;
+  DAvect  a22;
+  DAvect  det;
+  DAvect  d1;
+  DAvect  d2;
+  DAvect  c11;
+  DAvect  c12;
+  DAvect  c21;
+  DAvect  c22;
+  DAvect  x2;
+  DAvect  xp;
+  DAvect  yp;
+  DAvect  xf[6];
+  DAvect  B[3];
+  DAvect  B2;
+
+  DAvect  isdrda, iscrri, idao;
+  double  rscrri;
+
+
+  DAall(cx,       1, 'cx      ', 6, 6);
+  DAall(sx,       1, 'sx      ', 6, 6);
+  DAall(chy,      1, 'chy     ', 6, 6);
+  DAall(shy,      1, 'shy     ', 6, 6);
+  DAall(AxoBrho,  4, 'AxoBrho ', 6, 6);
+  DAall(AyoBrho,  4, 'AyoBrho ', 6, 6);
+  DAall(dp,       1, 'dp      ', 6, 6);
+  DAall(hodp,     1, 'hodp    ', 6, 6);
+  DAall(a11,      1, 'a11     ', 6, 6);
+  DAall(a12,      1, 'a12     ', 6, 6);
+  DAall(a21,      1, 'a21     ', 6, 6);
+  DAall(a22,      1, 'a22     ', 6, 6);
+  DAall(det,      1, 'det     ', 6, 6);
+  DAall(d1,       1, 'd1      ', 6, 6);
+  DAall(d2,       1, 'd2      ', 6, 6);
+  DAall(c11,      1, 'c11     ', 6, 6);
+  DAall(c12,      1, 'c12     ', 6, 6);
+  DAall(c21,      1, 'c21     ', 6, 6);
+  DAall(c22,      1, 'c22     ', 6, 6);
+  DAall(x2,       1, 'x2      ', 6, 6);
+  DAall(xp,       1, 'xp      ', 6, 6);
+  DAall(yp,       1, 'yp      ', 6, 6);
+  DAall(xf,       6, 'xf      ', 6, 6);
+  DAall(B,        3, 'B       ', 6, 6);
+  DAall(B2,       1, 'B2      ', 6, 6);
+//DA}
+       
+  /* first order symplectic integrator for wiggler using expanded Hamiltonian*/
+       
+  kz = M_PI*2.0/lambda; ky = sqrt(pow(kz, 2) + pow(kx, 2));
+  h = len/nstep; z = 0.0;
+  for (i = 1; i <= nstep; ++i) {
+    get_Axy(z, BoBrho, kx, ky, kz, &map[1], AxoBrho, AyoBrho, radia);   //DA
+       
+//--------------------------------------------------------------------------
+//DA  dp = map[5] + 1.0; hodp = h/dp;                                   //DA
+  DAcop(map[5], isdrda[1+idaa]);
+  DAcad(isdrda[1+idaa], 1.0, isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], dp);
+  DAdic(dp, h, isdrda[1+idaa]);
+  DAcop(isdrda[1+idaa], hodp);
+//DA  a11 = hodp*AxoBrho[1]; a12 = hodp*AyoBrho[1];                     //DA
+  DAcop(AxoBrho[1], isdrda[1+idaa]);
+  DAmul(hodp, isdrda[1+idaa], isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], a11);
+  DAcop(AyoBrho[1], isdrda[1+idaa]);
+  DAmul(hodp, isdrda[1+idaa], isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], a12);
+//DA  a21 = hodp*AxoBrho[2]; a22 = hodp*AyoBrho[2];                     //DA
+  DAcop(AxoBrho[2], isdrda[1+idaa]);
+  DAmul(hodp, isdrda[1+idaa], isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], a21);
+  DAcop(AyoBrho[2], isdrda[1+idaa]);
+  DAmul(hodp, isdrda[1+idaa], isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], a22);
+//DA  det = 1.0 - a11 - a22 + a11*a22 - a12*a21;                        //DA
+  DAmul(a11, a22, isdrda[1+idaa]);
+  DAmul(a12, a21, isdrda[2+idaa]);
+  DAsuc(a11, 1.0, isdrda[3+idaa]);
+  DAsub(isdrda[3+idaa], a22, isdrda[4+idaa]);
+  DAadd(isdrda[4+idaa], isdrda[1+idaa], isdrda[5+idaa]);
+  DAsub(isdrda[5+idaa], isdrda[2+idaa], isdrda[6+idaa]);
+  DAcop(isdrda[6+idaa], det);
+//DA  d1 = hodp*AxoBrho[0]*AxoBrho[1]; d2 = hodp*AxoBrho[0]*AxoBrho[2]; //DA
+  DAcop(AxoBrho[0], isdrda[1+idaa]);
+  DAcop(AxoBrho[1], isdrda[2+idaa]);
+  DAmul(hodp, isdrda[1+idaa], isdrda[3+idaa]);
+  DAmul(isdrda[3+idaa], isdrda[2+idaa], isdrda[4+idaa]);
+  DAcop(isdrda[4+idaa], d1);
+  DAcop(AxoBrho[0], isdrda[1+idaa]);
+  DAcop(AxoBrho[2], isdrda[2+idaa]);
+  DAmul(hodp, isdrda[1+idaa], isdrda[3+idaa]);
+  DAmul(isdrda[3+idaa], isdrda[2+idaa], isdrda[4+idaa]);
+  DAcop(isdrda[4+idaa], d2);
+//DA  c11 = (1.0-a22)/det; c12 = a12/det;                               //DA
+  DAsuc(a22, 1.0, isdrda[1+idaa]);
+  DAdiv(isdrda[1+idaa], det, isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], c11);
+  DAdiv(a12, det, isdrda[1+idaa]);
+  DAcop(isdrda[1+idaa], c12);
+//DA  c21 = a21/det; c22 = (1.0-a11)/det;                               //DA
+  DAdiv(a21, det, isdrda[1+idaa]);
+  DAcop(isdrda[1+idaa], c21);
+  DAsuc(a11, 1.0, isdrda[1+idaa]);
+  DAdiv(isdrda[1+idaa], det, isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], c22);
+//DA  x2 = c11*(map[2]-d1) + c12*(map[4]-d2);                           //DA
+  DAcop(map[2], isdrda[1+idaa]);
+  DAcop(map[4], isdrda[2+idaa]);
+  DAsub(isdrda[1+idaa], d1, isdrda[3+idaa]);
+  DAsub(isdrda[2+idaa], d2, isdrda[4+idaa]);
+  DAmul(c11, isdrda[3+idaa], isdrda[5+idaa]);
+  DAmul(c12, isdrda[4+idaa], isdrda[6+idaa]);
+  DAadd(isdrda[5+idaa], isdrda[6+idaa], isdrda[7+idaa]);
+  DAcop(isdrda[7+idaa], x2);
+       
+//DA  map[4] = c21*(map[2]-d1) + c22*(map[4]-d2); map[2] = x2;          //DA
+  DAcop(map[2], isdrda[1+idaa]);
+  DAcop(map[4], isdrda[2+idaa]);
+  DAsub(isdrda[1+idaa], d1, isdrda[3+idaa]);
+  DAsub(isdrda[2+idaa], d2, isdrda[4+idaa]);
+  DAmul(c21, isdrda[3+idaa], isdrda[5+idaa]);
+  DAmul(c22, isdrda[4+idaa], isdrda[6+idaa]);
+  DAadd(isdrda[5+idaa], isdrda[6+idaa], isdrda[7+idaa]);
+  DAcop(isdrda[7+idaa], map[4]);
+  DAcop(x2, map[2]);
+//DA  map[1] = map[1] + hodp*(map[2]-AxoBrho[0]);                       //DA
+  DAcop(map[2], isdrda[1+idaa]);
+  DAcop(AxoBrho[0], isdrda[2+idaa]);
+  DAsub(isdrda[1+idaa], isdrda[2+idaa], isdrda[3+idaa]);
+  DAcop(map[1], isdrda[4+idaa]);
+  DAmul(hodp, isdrda[3+idaa], isdrda[5+idaa]);
+  DAadd(isdrda[4+idaa], isdrda[5+idaa], isdrda[6+idaa]);
+  DAcop(isdrda[6+idaa], map[1]);
+//DA  map[3] = map[3] + hodp*map[4];                                    //DA
+  DAcop(map[3], isdrda[1+idaa]);
+  DAcop(map[4], isdrda[2+idaa]);
+  DAmul(hodp, isdrda[2+idaa], isdrda[3+idaa]);
+  DAadd(isdrda[1+idaa], isdrda[3+idaa], isdrda[4+idaa]);
+  DAcop(isdrda[4+idaa], map[3]);
+//DA  map[6] = map[6] + h*(((map[2]-AxoBrho[0])/dp)**2                  //DA
+//DA           +((map[4]-AyoBrho[0])/dp)**2)/2.0;                       //DA
+  DAcop(map[2], isdrda[1+idaa]);
+  DAcop(AxoBrho[0], isdrda[2+idaa]);
+  DAcop(map[4], isdrda[3+idaa]);
+  DAcop(AyoBrho[0], isdrda[4+idaa]);
+  DAsub(isdrda[1+idaa], isdrda[2+idaa], isdrda[5+idaa]);
+  DAsub(isdrda[3+idaa], isdrda[4+idaa], isdrda[6+idaa]);
+  DAdiv(isdrda[5+idaa], dp, isdrda[7+idaa]);
+  DAdiv(isdrda[6+idaa], dp, isdrda[8+idaa]);
+  DAexc(isdrda[7+idaa], 2, isdrda[9+idaa]);
+  DAexc(isdrda[8+idaa], 2, isdrda[10+idaa]);
+  DAadd(isdrda[9+idaa], isdrda[10+idaa], isdrda[11+idaa]);
+  DAcop(map[6], isdrda[12+idaa]);
+  DAcmu(isdrda[11+idaa], h, isdrda[13+idaa]);
+  DAcdi(isdrda[13+idaa], 2.0, isdrda[14+idaa]);
+  DAadd(isdrda[12+idaa], isdrda[14+idaa], isdrda[15+idaa]);
+  DAcop(isdrda[15+idaa], map[6]);
+       
+    if (pthlen == 1)
+//DA    map[6] = map[6] + h;                                            //DA
+  DAcop(map[6], isdrda[1+idaa]);
+  DAcad(isdrda[1+idaa], h, isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], map[6]);
+       
+    if (globval.radiation) {
+//DA    xp = x[px_]/dp; yp = x[py_]/dp;                                 //DA
+  DAcop(x[p], isdrda[1+idaa]);
+  DAdiv(isdrda[1+idaa], dp, isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], xp);
+  DAcop(x[p], isdrda[1+idaa]);
+  DAdiv(isdrda[1+idaa], dp, isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], yp);
+//DA    B[0] = -AyoBrho[3]; B[1] = AxoBrho[3];                          //DA
+  DAcop(AyoBrho[3], isdrda[1+idaa]);
+  DAcmu(isdrda[1+idaa], -ONE, isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], B[0]);
+  DAcop(AxoBrho[3], isdrda[1+idaa]);
+  DAcop(isdrda[1+idaa], B[1]);
+//DA    B[2] = AyoBrho[1] - AxoBrho[2];                                 //DA
+  DAcop(AyoBrho[1], isdrda[1+idaa]);
+  DAcop(AxoBrho[2], isdrda[2+idaa]);
+  DAsub(isdrda[1+idaa], isdrda[2+idaa], isdrda[3+idaa]);
+  DAcop(isdrda[3+idaa], B[2]);
+//DA    B2 = B2perp(0.0, B[0], x[x_], xp, yp);                          //DA
+  DAcop(B[0], isdrda[1+idaa]);
+  DAcop(x[x], isdrda[2+idaa]);
+      idao = idaa +     3
+  DAcop(B2perp[0.0,isdrda[+idaa],isdrda[+idaa],xp,yp], isdrda[3+idaa
+  ]);
+      idao = idaa -     3
+  DAcop(isdrda[3+idaa], B2);
+//DA    xf[py_] = -(crad)*pow(dp, 2)*B2                                 //DA
+//DA              *((pow(xp, 2)+pow(yp, 2))/2.0+1.0);                   //DA
+      idao = idaa +     1
+  rscrri[1+idaa] = pow[xp,2];
+      idao = idaa -     1
+      idao = idaa +     2
+  rscrri[2+idaa] = pow[yp,2];
+      idao = idaa -     2
+  rscrri[3+idaa] = rscrri[1+idaa] + rscrri[2+idaa];
+  rscrri[4+idaa] = rscrri[3+idaa] / 2.0;
+  rscrri[5+idaa] = rscrri[4+idaa] + 1.0;
+      idao = idaa +     6
+  rscrri[6+idaa] = pow[dp,2];
+      idao = idaa -     6
+  rscrri[7+idaa] = -ONE * crad;
+  rscrri[8+idaa] = rscrri[7+idaa] * rscrri[6+idaa];
+  DAcmu(B2, rscrri[8+idaa], isdrda[9+idaa]);
+  DAcmu(isdrda[9+idaa], rscrri[5+idaa], isdrda[10+idaa]);
+  DAcop(isdrda[10+idaa], xf[py]);
+      /* good in large machine: conservation of the dx/dz and dy/dz */
+//DA    xf[x_] = xp*xf[py_]; xf[y_] = yp*xf[py_];                       //DA
+  DAcop(xf[py], isdrda[1+idaa]);
+  DAmul(xp, isdrda[1+idaa], isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], xf[x_]);
+  DAcop(xf[py], isdrda[1+idaa]);
+  DAmul(yp, isdrda[1+idaa], isdrda[2+idaa]);
+  DAcop(isdrda[2+idaa], xf[y_]);
+//DA    x[px_] = x[px_] + h*xf[x_]; x[py_] = x[py_] + h*xf[y_];         //DA
+  DAcop(x[p], isdrda[1+idaa]);
+  DAcop(xf[x_], isdrda[2+idaa]);
+  DAcmu(isdrda[2+idaa], h, isdrda[3+idaa]);
+  DAadd(isdrda[1+idaa], isdrda[3+idaa], isdrda[4+idaa]);
+  DAcop(isdrda[4+idaa], x[p]);
+  DAcop(x[p], isdrda[1+idaa]);
+  DAcop(xf[y_], isdrda[2+idaa]);
+  DAcmu(isdrda[2+idaa], h, isdrda[3+idaa]);
+  DAadd(isdrda[1+idaa], isdrda[3+idaa], isdrda[4+idaa]);
+  DAcop(isdrda[4+idaa], x[p]);
+//DA    x[delta_] = x[delta_] + h*xf[py_];                              //DA
+  DAcop(x[d], isdrda[1+idaa]);
+  DAcop(xf[py], isdrda[2+idaa]);
+  DAcmu(isdrda[2+idaa], h, isdrda[3+idaa]);
+  DAadd(isdrda[1+idaa], isdrda[3+idaa], isdrda[4+idaa]);
+  DAcop(isdrda[4+idaa], x[d]);
+    }  
+       
+    z += h;
+  }    
+       
+  DAdal(B2,       1);
+  DAdal(B,        3);
+  DAdal(xf,       6);
+  DAdal(yp,       1);
+  DAdal(xp,       1);
+  DAdal(x2,       1);
+  DAdal(c22,      1);
+  DAdal(c21,      1);
+  DAdal(c12,      1);
+  DAdal(c11,      1);
+  DAdal(d2,       1);
+  DAdal(d1,       1);
+  DAdal(det,      1);
+  DAdal(a22,      1);
+  DAdal(a21,      1);
+  DAdal(a12,      1);
+  DAdal(a11,      1);
+  DAdal(hodp,     1);
+  DAdal(dp,       1);
+  DAdal(AyoBrho,  4);
+  DAdal(AxoBrho,  4);
+  DAdal(shy,      1);
+  DAdal(chy,      1);
+  DAdal(sx,       1);
+  DAdal(cx,       1);
+//DA  dadal
+}      

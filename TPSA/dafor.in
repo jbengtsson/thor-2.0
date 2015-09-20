@@ -1,0 +1,24 @@
+*FOX  B D ;
+*FOX  D V DA EXT SEPX NORD NVAR ; D V DA EXT SEPY NORD NVAR ;
+*FOX  D V DA INT SIGXY NORD NVAR ; D V DA INT EXPFAC NORD NVAR ;
+*FOX  D F RE DARE 1 ;
+*FOX  E D ;
+*FOX{
+      INTEGER SEPX    
+      INTEGER SEPY    
+      INTEGER SIGXY   
+      INTEGER EXPFAC  
+ 
+      CALL DAKEY('FOX V2.1')
+      CALL DAALL(SIGXY   ,1,'SIGXY     ',NORD,NVAR)
+       CALL DAALL(EXPFAC  ,1,'EXPFAC    ',NORD,NVAR)
+*FOX}
+
+
+*FOX    X=SEPX*SEPX+SEPY*SEPY ;                                         *FOX
+
+
+*FOX{
+      CALL DADAL(EXPFAC  ,1)
+      CALL DADAL(SIGXY   ,1)
+*FOX}

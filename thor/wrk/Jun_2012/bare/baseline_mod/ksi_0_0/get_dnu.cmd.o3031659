@@ -1,0 +1,161 @@
+Warning: no access to tty (Bad file descriptor).
+Thus no job control in this shell.
+
+initializing TPSA library: no = 1, nv = 6, eps = 1.000000e-25
+
+get_param: param.dat
+
+# input files
+in_dir       /home/bengtsson/projects/in/
+flat_file    /home/bengtsson/Thor-2.0/thor/wrk/Jun_2012/baseline_mod/
+
+reading machine file: /home/bengtsson/Thor-2.0/thor/wrk/Jun_2012/baseline_mod/flat_file.dat
+
+rdmfile: read 193 elements, C = 52.79720
+#ae_file      Align_Err/AlignErr.dat
+#fe_file      Field_Err/baseline_09-20-10.txt
+#ap_file      Aper/Apertures.dat
+# flags
+freq_map      true 50 30 25 2064 20e-3 5e-3 3e-2
+DA_bare       true
+# parameters
+s_cut         1.0    // truncate gaussian distribution at 1 sigma
+
+setrancut: cut set to 1.0
+n_stat        20
+n_scale       2
+n_orbit       3
+#bpm_names     PH1SP01 PH2SP01 PM1SP01 PL2SP01 PL1SP01
+bpm_names     BPM
+#h_corrs       CXSQ1HSP01 CXH2SP01 CXM1SP01 CXM1G4C30B CXL2SP01 CXL1SP01 CXSQ2HSP01 CXM1G4C01B CXH1SP01
+h_corrs       CHV
+#v_corrs       CYSQ1HSP01 CYH2SP01 CYM1SP01 CYM1G4C30B CYL2SP01 CYL1SP01 CYSQ2HSP01 CYM1G4C01B CYH1SP01
+v_corrs       CHV
+gs            GS
+ge            GE
+#
+n_lin         0
+#qt            SQ
+disp_wave_y   0e-3
+VDweight      1e3
+HVweight      1e0
+VHweight      1e0
+#
+N_calls       0
+N_steps       10
+ID_quads      qh1sp01 qh2sp01 qh3sp01 ql1sp01 ql2sp01 ql3sp01
+
+ini_COD_corr: n_bpm = 12, n_hcorr = 12, n_vcorr = 12
+
+******************************************************************************
+
+  dPcommon     =  1.000e-08  dPparticle   =  0.000e+00  Energy [GeV] = 3.000
+  MaxAmplx [m] = -1.000e+01  MaxAmply [m] = -1.000e+01  RFAccept [%] = ±0.00
+  MatMeth      =  FALSE      Cavity_On    =  FALSE      Radiation_On = FALSE     
+  bpm          =    0        qt           =   0         Chambre_On   = FALSE     
+  hcorr        =    0        vcorr        =   0
+
+  alphac       =   3.6277012000341974e-04
+  nux          =   2.2108470655569215      nuz  =   1.0739932024701808
+  ksix         =  -0.000000                ksiz =  -0.000000
+
+  OneTurn matrix:
+
+matrix:
+   2.435313e-01   1.858759e+01   0.000000e+00   0.000000e+00  -1.943788e-04   0.000000e+00
+  -5.060863e-02   2.435313e-01   0.000000e+00   0.000000e+00  -1.300417e-05   0.000000e+00
+   0.000000e+00   0.000000e+00   8.938606e-01   1.437846e+00   0.000000e+00   0.000000e+00
+   0.000000e+00   0.000000e+00  -1.398016e-01   8.938606e-01   0.000000e+00   0.000000e+00
+   0.000000e+00   0.000000e+00   0.000000e+00   0.000000e+00   1.000000e+00   0.000000e+00
+  -1.300417e-05  -1.943788e-04   0.000000e+00   0.000000e+00   1.915325e-02   1.000000e+00
+
+Emittance:
+
+Energy loss per turn [keV]:     U0          = -19.1
+Synchronous phase [deg]:        phi0        = 180 - 0.22
+RF bucket height [%]:           delta_RF    = 4.69
+
+Equilibrium emittance [m.rad]:  eps_x       = 2.118e-09, eps_y  = 4.942e-38, eps_z  = 2.762e-07
+Bunch length [mm]:              sigma_s     = 0.538
+Momentum spread:                sigma_delta = 5.135e-04
+Partition numbers:              J_x         = 0.998,     J_y    = 1.000,     J_z    = 2.002
+Damping times [msec]:           tau_x       = 55.5,      tau_y  = 55.3,      tau_z  = 27.6
+
+alphac:                         alphac      = 3.6277e-04
+
+Fractional tunes:               nu_x        = 0.21086, nu_y   = 0.07400, nu_z   = 0.99709
+                                1-nu_x      = 0.78914, 1-nu_y = 0.92600, 1-nu_z = 0.00291
+
+sigmas:                         sigma_x     = 201.5 microns, sigma_px    =  10.5 urad
+                                sigma_y     =   0.0 microns, sigma_py    =   0.0 urad
+                                sigma_s     =  0.54 mm,      sigma_delta = 5.14e-04
+
+Beam ellipse twist [rad]:       tw = 0.000
+                   [deg]:       tw = 0.000
+
+******************************************************************************
+
+  dPcommon     =  1.000e-08  dPparticle   =  0.000e+00  Energy [GeV] = 3.000
+  MaxAmplx [m] = -1.000e+01  MaxAmply [m] = -1.000e+01  RFAccept [%] = ±4.69
+  MatMeth      =  FALSE      Cavity_On    =  FALSE      Radiation_On = FALSE     
+  bpm          =    0        qt           =   0         Chambre_On   = FALSE     
+  hcorr        =    0        vcorr        =   0
+
+  alphac       =   3.6277012000341974e-04
+  nux          =   2.2108470655569215      nuz  =   1.0739932024701808
+  ksix         =  -0.000000                ksiz =  -0.000000
+
+  OneTurn matrix:
+
+matrix:
+   2.435313e-01   1.858759e+01   0.000000e+00   0.000000e+00  -1.943788e-04   0.000000e+00
+  -5.060863e-02   2.435313e-01   0.000000e+00   0.000000e+00  -1.300417e-05   0.000000e+00
+   0.000000e+00   0.000000e+00   8.938606e-01   1.437846e+00   0.000000e+00   0.000000e+00
+   0.000000e+00   0.000000e+00  -1.398016e-01   8.938606e-01   0.000000e+00   0.000000e+00
+   0.000000e+00   0.000000e+00   0.000000e+00   0.000000e+00   1.000000e+00   0.000000e+00
+  -1.300417e-05  -1.943788e-04   0.000000e+00   0.000000e+00   1.915325e-02   1.000000e+00
+
+Emittance:
+
+Energy loss per turn [keV]:     U0          = -19.1
+Synchronous phase [deg]:        phi0        = 180 - 0.22
+RF bucket height [%]:           delta_RF    = 4.69
+
+Equilibrium emittance [m.rad]:  eps_x       = 2.118e-09, eps_y  = 4.942e-38, eps_z  = 2.762e-07
+Bunch length [mm]:              sigma_s     = 0.538
+Momentum spread:                sigma_delta = 5.135e-04
+Partition numbers:              J_x         = 0.998,     J_y    = 1.000,     J_z    = 2.002
+Damping times [msec]:           tau_x       = 55.5,      tau_y  = 55.3,      tau_z  = 27.6
+
+alphac:                         alphac      = 3.6277e-04
+
+Fractional tunes:               nu_x        = 0.21086, nu_y   = 0.07400, nu_z   = 0.99709
+                                1-nu_x      = 0.78914, 1-nu_y = 0.92600, 1-nu_z = 0.00291
+
+sigmas:                         sigma_x     = 201.5 microns, sigma_px    =  10.5 urad
+                                sigma_y     =   0.0 microns, sigma_py    =   0.0 urad
+                                sigma_s     =  0.54 mm,      sigma_delta = 5.14e-04
+
+Beam ellipse twist [rad]:       tw = 0.000
+                   [deg]:       tw = 0.000
+
+Horizontal chromaticity:
+
+  n    Coeff.
+  0  2.211e+00+/-1.71e-10
+  1  1.997e-04+/-2.25e-08
+  2 -7.979e+00+/-1.13e-06
+  3 -8.614e+01+/-9.41e-05
+  4  6.469e+03+/-1.35e-03
+  5 -1.147e+05+/-8.78e-02
+
+Vertical chromaticity:
+
+  n    Coeff.
+  0  1.074e+00+/-2.78e-11
+  1 -2.925e-04+/-3.67e-09
+  2 -2.076e+00+/-1.85e-07
+  3  3.831e+01+/-1.53e-05
+  4  6.887e+02+/-2.19e-04
+  5 -2.594e+04+/-1.43e-02
+

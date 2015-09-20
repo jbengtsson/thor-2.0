@@ -1,0 +1,91 @@
+# This is an example printcap insert for Ghostscript printers
+# You will probably want either to change the names for each printer
+# below (first line for each device) to something more sensible, or
+# to add additional name entries (eg cdjcolor for cdj500.24)
+# The example is shown set up for parallel printers - you will need
+# to alter the entries for different or networked remote printer,
+# eg. a remote network printer would have a line something like:
+#    :lp=:rm=artemis:rp=LPT1:
+# for a PC called artemis, replacing the serial port settings
+#
+# NB/ This is only an example - it is unlikely to be complete or exactly
+# correct for your system, but is designed to illustrate filter names 
+# corresponding to the accompanying bsd-if print filter
+#
+# Entry for device bjt600.32
+bjt600.32|Ghostscript device bjt600.32:\
+    :lp=/dev/lp1:\
+    :sd=/var/spool/bjt600:\
+    :lf=/var/spool/bjt600/logfile:\
+    :af=/var/spool/bjt600/acct:\
+    :if=/usr/share/ghostscript/filt/direct/bjt600.32/gsif:\
+    :mx#0:sf:sh:rs:
+# Entry for device bjc600.32
+bjc600.32|Ghostscript device bjc600.32:\
+    :lp=/dev/lp1:\
+    :sd=/var/spool/bjc600:\
+    :lf=/var/spool/bjc600/logfile:\
+    :af=/var/spool/bjc600/acct:\
+    :if=/usr/share/ghostscript/filt/direct/bjc600.32/gsif:\
+    :mx#0:sf:sh:rs:
+# Entry for device bjc600.24
+bjc600.24|Ghostscript device bjc600.24:\
+    :lp=/dev/lp1:\
+    :sd=/var/spool/bjc600:\
+    :lf=/var/spool/bjc600/logfile:\
+    :af=/var/spool/bjc600/acct:\
+    :if=/usr/share/ghostscript/filt/direct/bjc600.24/gsif:\
+    :mx#0:sf:sh:rs:
+# Entry for device bjc600.24.3
+bjc600.24.3|Ghostscript device bjc600.24.3:\
+    :lp=/dev/lp1:\
+    :sd=/var/spool/bjc600:\
+    :lf=/var/spool/bjc600/logfile:\
+    :af=/var/spool/bjc600/acct:\
+    :if=/usr/share/ghostscript/filt/direct/bjc600.24.3/gsif:\
+    :mx#0:sf:sh:rs:
+# Entry for device bjc600.16
+bjc600.16|Ghostscript device bjc600.16:\
+    :lp=/dev/lp1:\
+    :sd=/var/spool/bjc600:\
+    :lf=/var/spool/bjc600/logfile:\
+    :af=/var/spool/bjc600/acct:\
+    :if=/usr/share/ghostscript/filt/direct/bjc600.16/gsif:\
+    :mx#0:sf:sh:rs:
+# Entry for device bjc600.8
+bjc600.8|Ghostscript device bjc600.8:\
+    :lp=/dev/lp1:\
+    :sd=/var/spool/bjc600:\
+    :lf=/var/spool/bjc600/logfile:\
+    :af=/var/spool/bjc600/acct:\
+    :if=/usr/share/ghostscript/filt/direct/bjc600.8/gsif:\
+    :mx#0:sf:sh:rs:
+# Entry for device bjc600.8.1
+bjc600.8.1|Ghostscript device bjc600.8.1:\
+    :lp=/dev/lp1:\
+    :sd=/var/spool/bjc600:\
+    :lf=/var/spool/bjc600/logfile:\
+    :af=/var/spool/bjc600/acct:\
+    :if=/usr/share/ghostscript/filt/direct/bjc600.8.1/gsif:\
+    :mx#0:sf:sh:rs:
+# Entry for device bjc600.1
+bjc600.1|Ghostscript device bjc600.1:\
+    :lp=/dev/lp1:\
+    :sd=/var/spool/bjc600:\
+    :lf=/var/spool/bjc600/logfile:\
+    :af=/var/spool/bjc600/acct:\
+    :if=/usr/share/ghostscript/filt/direct/bjc600.1/gsif:\
+    :mx#0:sf:sh:rs:
+# Entry for raw device bjc600.raw
+bjc600.raw|Raw output device bjc600:\
+    :lp=/dev/lp1:\
+:sd=/var/spool/bjc600/raw:\
+    :mx#0:sf:sh:rs:
+# Entry for device bjc600 (output to bjc600.raw)
+bjc600|Ghostscript device bjc600:\
+    :lp=/dev/null:\
+    :sd=/var/spool/bjc600:\
+    :lf=/var/spool/bjc600/logfile:\
+    :af=/var/spool/bjc600/acct:\
+    :if=/usr/share/ghostscript/filt/indirect/bjc600/gsif:\
+    :mx#0:sf:sh:rs:

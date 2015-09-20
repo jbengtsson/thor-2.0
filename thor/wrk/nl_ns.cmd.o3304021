@@ -1,0 +1,86 @@
+
+TPSA_Ini: no = 6, nv = 7, eps = 1e-25
+
+reading machine file: flat_file.dat
+
+no of elements:             270
+circumference [m]:    52.797200
+Energy [GeV]:              3.00
+
+reading machine file: flat_file.dat
+
+no of elements:             270
+circumference [m]:    52.797200
+Energy [GeV]:              3.00
+
+ini_si
+
+numeric_limits<double>::max_exponent = 1024
+numeric_limits<double>::max_exponent = -1021
+
+get_COD: 1, Err = 0.000e+00 (1.000e-10)
+dx:  0.000e+00  0.000e+00  0.000e+00  0.000e+00  0.000e+00  0.000e+00
+x:  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+
+alpha_x  = -0.000, alpha_y = 0.000, beta_x = 20.728, beta_y  = 3.379
+ nu_x = 0.2117236403836606,  nu_y = 0.0858027663185677, alphac =  3.6277854582917593e-04
+ksi_x =  1.3641566250840231e-01, ksi_y =  1.4082631309749830e-01
+
+alpha_x  = -0.000, alpha_y =  0.000, beta_x = 20.728, beta_y  =  3.379
+
+alphac =  3.628e-04 + -2.386e-04*delta +  0.000e+00*delta^2
+
+Fixed points to O(3): 0, 152.03%
+
+Fixed points to O(4): 0, -nan%, -nan%
+
+fit_tune      = 0, nu0_x  = 2.301000, nu0_y  = 1.050000, eps_nu = 1.0e-05
+fit_chrom     = 1, ksi0_x = 0.140670, ksi0_y = 0.142670, eps_ksi = 5.0e-10, fit_chrm = 1
+
+ds_max        = 0.20
+b2_max        = 3.0
+b3L_max       = 3.6
+b4L_max       = 5.0
+b5L_max       = 100.0
+scl_res       = 0.0
+scl_ksi1      = 1.0e+00
+scl_ksi2      = 1.0e+10
+scl_nl        = 1.0e+10
+scl_fold1     = 0.0e+00
+scl_fold2     = 0.0e+00
+scl_fold3     = 0.0e+00
+scl_flip      = 0.0e+00
+
+zeroing multipoles
+
+
+fit_chrom: ksi_x =  0.14067, ksi_y =  0.14267
+ksi_x = -6.55384, ksi_y = -2.65861
+
+singular values:
+ 1.154e+00
+ 2.300e-01
+-0.000e+00 (zeroed)
+
+ksi_x =  0.14067, ksi_y =  0.14267
+
+get_prm: no of multipole families 9
+
+initial b3Ls:
+  0.000e+00 3
+  0.000e+00 3
+  0.000e+00 3
+  0.000e+00 3
+  0.000e+00 3
+  0.000e+00 3
+ -2.755e+00 3
+ -2.192e+00 3
+  3.541e+00 3
+
+ daini:             6           7
+ lieinit:           6           7
+ lieinit:           3           7
+ lieinit:           4           7
+ lieinit:           7           7
+ ERROR, NOCUT =            7  EXCEEDS NOMAX =            6
+   ERR DANOT 

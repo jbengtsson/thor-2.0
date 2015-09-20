@@ -1,0 +1,41 @@
+8
+
+dir
+13
+file:///home/bengtsson/svnrepo/trunk/Thor-2.0/thor/lib
+file:///home/bengtsson/svnrepo
+
+
+
+2010-05-14T19:42:00.166281Z
+13
+bengtsson
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+1f48b772-6d47-4c56-b496-d1191255f087
+
+libthor.a
+file
+
+
+
+
+2010-05-14T19:43:57.000000Z
+84468b9f1913df88492085aa7ac29941
+2010-05-14T19:42:00.166281Z
+13
+bengtsson
+has-props
+

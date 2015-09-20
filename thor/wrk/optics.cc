@@ -1,0 +1,383 @@
+#define NO 7
+
+#include "thor_lib.h"
+
+int  no_tps   = NO,
+     ndpt_tps = 5;
+
+
+long int      beta_loc1, beta_loc2, beta_loc3;
+double        beta1[2], beta2[2], beta3[2];
+
+
+void get_emittance1(void)
+{
+  int           i;
+  double        U0, C, eps[3], part_numb[3], tau[3], nu[3], rad[3];
+  double        alpha_c, alpha_z, beta_z, sigma_s, sigma_delta;
+
+//  danot_(2);
+
+  C = elem[n_elem-1].S;
+
+  // compute one-turn map for damped system
+  rad_on = true; emittance_on = true; cavity_on = true; totpath_on = false;
+
+  get_COD(10, 1e-10, 0.0, true); K = MapNorm(Map, g, A1, A0, Map_res, 1);
+
+  U0 = 1e9*E0*dE;
+
+  // compute imaginary part of eigenvalues
+  gettura_(nu, rad);
+
+  // compute diffusion coefficients for the invariants (obtained from A1)
+  // A1 = [Re(v_i) Im(v_i), , ], i = 1, 2, 3
+  A1 += fixed_point; A1.propagate(1, n_elem); A1 -= A1.cst();
+
+  for (i = 0; i < 3; i++) {
+    // compute emittances
+    eps[i] = -D_[i].cst()/(4.0*rad[i]);
+    // compute partition numbers
+    part_numb[i] = 2.0*(1.0+fixed_point[delta_])*rad[i]/dE;
+    // compute damping times
+    tau[i] = -C/(clight*rad[i]);
+    if (nu[i] < 0.0) nu[i] += 1.0;
+  }
+
+  // undamped system
+  rad_on = false; emittance_on = false;
+
+  get_COD(10, 1e-10, 0.0, true); K = MapNorm(Map, g, A1, A0, Map_res, 1);
+
+  // Note, [x, p_x, y, p_y, ct, delta] for 6-dim dynamics
+
+  alpha_c = Map[ct_][delta_]/C;
+
+  // longitudinal alpha and beta
+  alpha_z = -A1[ct_][ct_]*A1[delta_][ct_] - A1[ct_][delta_]*A1[delta_][delta_];
+  beta_z = sqr(A1[ct_][ct_]) + sqr(A1[ct_][delta_]);
+
+  // bunch length
+  sigma_s = sqrt(beta_z*eps[Z_]);
+  sigma_delta = sqrt(eps[Z_]*(1.0+sqr(alpha_z))/beta_z);
+
+  cout << endl;
+  cout << scientific << setprecision(3)
+       << "momentum comp.:       alpha_c     = "
+       << setw(9) << alpha_c << endl;
+  cout << fixed << setprecision(1)
+       << "dE per turn [keV]:    U0          = "
+       << setw(9) << 1e-3*U0 << endl;
+  cout << fixed << setprecision(3)
+       << "part. numbers:        J_x         = " << setw(9) << part_numb[X_]
+       << ",     J_y = " << setw(9) << part_numb[Y_]
+       << ",    J_z = " << setw(9) << part_numb[Z_] << endl;
+  cout << scientific << setprecision(3)
+       << "emittance [m.rad]:    eps_x       = " << setw(9) << eps[X_]
+       << ",   eps_y = " << setw(9) << eps[Y_]
+       << ",  eps_z = " << setw(9) << eps[Z_] << endl;
+  cout << scientific << setprecision(3)
+       << "bunch length [mm]:    sigma_s     = "
+       << setw(9) << 1e3*sigma_s << endl;
+  cout << scientific << setprecision(3)
+       << "momentum spread:      sigma_delta = "
+       << setw(9) << sigma_delta << endl;
+  cout << endl;
+  cout << fixed << setprecision(1)
+       << "damping times [msec]:  tau_x      = " << setw(9) << 1e3*tau[X_]
+       << ",   tau_y = "  << setw(9)<< 1e3*tau[Y_]
+       << ",  tau_z = " << setw(9) << 1e3*tau[Z_] << endl;
+  cout << fixed << setprecision(5)
+       << "fractional tunes:      nu_x       = " << setw(9) << nu[X_]
+       << ",    nu_y = " << setw(9) << nu[Y_]
+       << ",   nu_z = " << setw(9) << nu[Z_] << endl;
+  cout << fixed << setprecision(5)
+       << "                       1-nu_x     = " << setw(9) << 1.0-nu[X_]
+       << ",  1-nu_y = " << setw(9) << 1.0-nu[Y_]
+       << ", 1-nu_z = " << setw(9) << 1.0-nu[Z_] << endl;
+}
+
+
+void chk_lat(double nu[], double ksi[])
+{
+  double        alpha1[2];
+  ss_vect<tps>  nus;
+
+//  get_Map();
+  get_COD(10, 1e-10, 0.0, true);
+  cout << Map;
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  nus = dHdJ(K); get_nu_ksi(nus, nu, ksi); get_ab(alpha1, beta1, 0);
+  cout << endl;
+  cout << fixed << setprecision(3)
+       << "alpha_x  = " << alpha1[X_] << ", alpha_y = " << alpha1[Y_]
+       << ", beta_x = " << beta1[X_] << ", beta_y  = " << beta1[Y_] << endl;
+  prt_nu(nus);
+}
+
+
+void get_locs()
+{
+  double  alpha1[2], alpha2[2], alpha3[2];
+
+  beta_loc1 = get_loc(get_Fnum("mp"), 1); get_ab(alpha1, beta1, beta_loc1);
+  beta_loc2 = get_loc(get_Fnum("ss"), 1); get_ab(alpha2, beta2, beta_loc2);
+  beta_loc3 = get_loc(get_Fnum("ls"), 1); get_ab(alpha3, beta3, beta_loc3);
+
+  cout << endl;
+  cout << fixed << setprecision(3)
+       << "alpha1_x  = " << setw(6) << alpha1[X_]
+       << ", alpha1_y = " << setw(6) << alpha1[Y_]
+       << ", beta1_x = " << setw(6) << beta1[X_]
+       << ", beta1_y  = " << setw(6) << beta1[Y_]
+       << endl;
+  cout << fixed << setprecision(3)
+       << "alpha2_x  = " << setw(6) << alpha2[X_]
+       << ", alpha2_y = " << setw(6) << alpha2[Y_]
+       << ", beta2_x = " << setw(6) << beta2[X_]
+	   << ", beta2_y  = " << setw(6) << beta2[Y_]
+       << endl;
+  cout << fixed << setprecision(3)
+       << "alpha3_x  = " << setw(6) << alpha3[X_]
+       << ", alpha3_y = " << setw(6) << alpha3[Y_]
+       << ", beta3_x = " << setw(6) << beta3[X_]
+       << ", beta3_y  = " << setw(6) << beta3[Y_]
+       << endl;
+}
+
+
+void fit_dba(const double beta1_x, const double beta1_y, const int k1,
+	     const double beta2_x, const double beta2_y, const int k2,
+	     const double beta3_x, const double beta3_y, const int k3,
+	     const double nu_x, const double nu_y,
+	     const int n_b2, const int b2s[],
+	     const double eps, const bool prt)
+{
+  // Periodic solution: [nu_x, nu_y, beta_x, beta_y]
+
+  int           i, j;
+  long int      k;
+  double        **A, *b, *b2_lim, *b2, *db2, step;
+  double        nu_fract[2], dnu[2];
+  double        deta1[2], detap1[2], dalpha1[2], dbeta1[2];
+  double        dbeta2[2], dbeta3[2], db2_max;
+  tps           ab1[2], ab2[2], ab3[2], dnu1[2], dnu2[2], dnu3[2];
+  ss_vect<tps>  nus, dnus, Mk;
+  ofstream      quad_out;
+
+  const bool    debug  = true;
+  const int     m      = 10;
+  const double  s_cut  = 1e-4, step0 = 0.7;
+  const double  scl_beta_mp_y = scl_beta_mp*1e-3;
+  const double  scl_beta_ss = scl_beta_mp*1e-3, scl_beta_ls = scl_beta_mp*1e-3;
+  const double  db2_tol = 1e-4;
+
+  b = dvector(1, m); b2_lim = dvector(1, n_b2);
+  b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
+  A = dmatrix(1, m, 1, n_b2);
+
+  nu_fract[X_] = fract(nu_x); nu_fract[Y_] = fract(nu_y);
+  cout << endl;
+  cout << fixed << setprecision(5)
+       << "fit_tune: nu_x = " << nu_fract[X_] << ", nu_y = " << nu_fract[Y_]
+       << endl;
+  cout << fixed << setprecision(5)
+       << "beta1_x = " << setw(8) << beta1_x
+       << ", beta1_y = " << setw(8) << beta1_y << endl;
+  cout << fixed << setprecision(5)
+       << "beta2_x = " << setw(8) << beta2_x
+       << ", beta2_y = " << setw(8) << beta2_y << endl;
+  cout << fixed << setprecision(5)
+       << "beta3_x = " << setw(8) << beta3_x
+       << ", beta3_y = " << setw(8) << beta3_y << endl;
+
+  for (i = 1; i <= n_b2; i++) {
+    if (b2s[i-1] > 0) {
+      b2_lim[i] = b2_max; b2[i] = get_bn(b2s[i-1], 1, Quad);
+    } else {
+      b2_lim[i] = ds_max;
+      k = get_loc(abs(b2s[i-1]), 1) - 1; b2[i] = get_L(elem[k-1].Fnum, 1);
+    }
+  }
+
+  danot_(3);
+
+  get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+  get_ab(ab1, dnu1, k1); get_ab(ab2, dnu2, k2); get_ab(ab3, dnu3, k3);
+
+  dnu[X_]     =  nus[3].cst() - nu_fract[X_];
+  dnu[Y_]     =  nus[4].cst() - nu_fract[Y_];
+
+  deta1[X_]   = -h_ijklm(ab1[X_], 0, 1, 0, 0, 0);
+  detap1[X_]  = -h_ijklm(ab1[Y_], 0, 0, 0, 1, 0);
+
+  dalpha1[X_] = -h_ijklm(ab1[X_], 0, 1, 0, 0, 0);
+  dalpha1[Y_] = -h_ijklm(ab1[Y_], 0, 0, 0, 1, 0);
+  dbeta1[X_]  =  h_ijklm(ab1[X_], 1, 0, 0, 0, 0) - beta1_x;
+  dbeta1[Y_]  =  h_ijklm(ab1[Y_], 0, 0, 1, 0, 0) - beta1_y;
+
+  dbeta2[X_]  =  h_ijklm(ab2[X_], 1, 0, 0, 0, 0) - beta2_x;
+  dbeta2[Y_]  =  h_ijklm(ab2[Y_], 0, 0, 1, 0, 0) - beta2_y;
+  dbeta3[X_]  =  h_ijklm(ab3[X_], 1, 0, 0, 0, 0) - beta3_x;
+  dbeta3[Y_]  =  h_ijklm(ab3[Y_], 0, 0, 1, 0, 0) - beta3_y;
+
+  db2_max = 1e30;
+
+  while (((fabs(dnu[X_]) > eps) || (fabs(dnu[Y_]) > eps)) &&
+	 (db2_max > db2_tol)) {
+    step = step0;
+    for (i = 1; i <= n_b2; i++) {
+      for (j = 1; j <= get_n_Kids(abs(b2s[i-1])); j++)
+	if (b2s[i-1] > 0)
+	  set_bn_par(b2s[i-1], j, Quad, 7);
+	else
+	  set_s_par(abs(b2s[i-1]), j, 7);
+
+      get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+      get_ab(ab1, dnu1, k1); get_ab(ab2, dnu2, k2); get_ab(ab3, dnu3, k3);
+
+      A[1][i]  = -h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
+      A[2][i]  = -h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
+      A[3][i]  =  scl_alpha_mp*h_ijklm_p(ab1[X_], 0, 1, 0, 0, 0, 7);
+      A[4][i]  =  scl_alpha_mp*h_ijklm_p(ab1[Y_], 0, 0, 0, 1, 0, 7);
+      A[5][i]  = -scl_beta_mp*h_ijklm_p(ab1[X_], 1, 0, 0, 0, 0, 7);
+      A[6][i]  = -scl_beta_mp_y*h_ijklm_p(ab1[Y_], 0, 0, 1, 0, 0, 7);
+      A[7][i]  = -scl_beta_ss*h_ijklm_p(ab2[X_], 1, 0, 0, 0, 0, 7);
+      A[8][i]  = -scl_beta_ss*h_ijklm_p(ab2[Y_], 0, 0, 1, 0, 0, 7);
+      A[9][i]  = -scl_beta_ls*h_ijklm_p(ab3[X_], 1, 0, 0, 0, 0, 7);
+      A[10][i] = -scl_beta_ls*h_ijklm_p(ab3[Y_], 0, 0, 1, 0, 0, 7);
+
+      if (b2s[i-1] < 0)
+	for (j = 1; j <= m; j++)
+	  A[j][i] *= scl_ds;
+
+      for (j = 1; j <= get_n_Kids(abs(b2s[i-1])); j++)
+	if (b2s[i-1] > 0)
+	  clr_bn_par(b2s[i-1], j, Quad);
+	else
+	  clr_s_par(abs(b2s[i-1]), j);
+    }
+
+    b[1] = dnu[X_];                  b[2] = dnu[Y_];
+    b[3] = scl_alpha_mp*dalpha1[X_]; b[4] = scl_alpha_mp*dalpha1[Y_];
+    b[5] = scl_beta_mp*dbeta1[X_];   b[6] = scl_beta_mp_y*dbeta1[Y_];
+    b[7] = scl_beta_ss*dbeta2[X_];   b[8] = scl_beta_ss*dbeta2[Y_];
+    b[9] = scl_beta_ls*dbeta3[X_];   b[10] = scl_beta_ls*dbeta3[Y_];
+
+    SVD_lim(m, n_b2, A, b, b2_lim, s_cut, b2, db2);
+
+    db2_max = 0.0;
+    for (i = 1; i <= n_b2; i++) {
+      set_dbn_s(b2s[i-1], Quad, step*db2[i]);
+      b2[i] = get_bn_s(b2s[i-1], 1, Quad);
+      db2_max = max(step*db2[i], db2_max);
+    }
+
+    get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1);
+
+    while (!stable) {
+      // roll back
+      for (i = 1; i <= n_b2; i++) {
+	set_dbn_s(b2s[i-1], Quad, -step*db2[i]);
+	b2[i] = get_bn_s(b2s[i-1], 1, Quad);
+      }
+
+      step /= 2.0;
+      cout << endl;
+      cout << scientific << setprecision(3) << "step = " << step << endl;
+
+      for (i = 1; i <= n_b2; i++) {
+	set_dbn_s(b2s[i-1], Quad, step*db2[i]);
+	b2[i] = get_bn_s(b2s[i-1], 1, Quad);
+      }
+	
+      get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1);
+    }
+      
+    nus = dHdJ(K);
+    get_ab(ab1, dnu1, k1); get_ab(ab2, dnu2, k2); get_ab(ab3, dnu3, k3);
+
+    dnu[X_]     =  nus[3].cst() - nu_fract[X_];
+    dnu[Y_]     =  nus[4].cst() - nu_fract[Y_];
+    dalpha1[X_] = -h_ijklm(ab1[X_], 0, 1, 0, 0, 0);
+    dalpha1[Y_] = -h_ijklm(ab1[Y_], 0, 0, 0, 1, 0);
+    dbeta1[X_]  =  h_ijklm(ab1[X_], 1, 0, 0, 0, 0) - beta1_x;
+    dbeta1[Y_]  =  h_ijklm(ab1[Y_], 0, 0, 1, 0, 0) - beta1_y;
+    dbeta2[X_]  =  h_ijklm(ab2[X_], 1, 0, 0, 0, 0) - beta2_x;
+    dbeta2[Y_]  =  h_ijklm(ab2[Y_], 0, 0, 1, 0, 0) - beta2_y;
+    dbeta3[X_]  =  h_ijklm(ab3[X_], 1, 0, 0, 0, 0) - beta3_x;
+    dbeta3[Y_]  =  h_ijklm(ab3[Y_], 0, 0, 1, 0, 0) - beta3_y;
+    
+    if (debug) {
+      cout << endl;
+      cout << " Ax = b:" << endl;
+      cout << endl;
+      for (j = 1; j <= n_b2; j++)
+	if (j == 1)
+	  cout << setw(8) << j;
+	else
+	  cout << setw(11) << j;
+      cout << endl;
+      for (i = 1; i <= m; i++) {
+	cout << setw(2) << i;
+	for (j = 1; j <= n_b2; j++)
+	  cout << scientific << setprecision(3) << setw(11) << A[i][j];
+	cout << scientific << setprecision(3) << setw(11) << b[i] << endl;
+      }
+	
+      cout << endl;
+      cout << fixed << setprecision(5)
+	   << "dnu_x = " << dnu[X_] << ", dnu_y = " << dnu[Y_] << endl;
+      cout << fixed << setprecision(5)
+	   << "dbeta1_x = " << setw(8) << dbeta1[X_]
+	   << ", dbeta1_y = " << setw(8) << dbeta1[Y_]
+	   << ", dalpha1_x = " << setw(8) << dalpha1[X_]
+	   << ", dalpha1_y = " << setw(8) << dalpha1[Y_] << endl;
+      cout << fixed << setprecision(5)
+	   << "dbeta2_x = " << setw(8) << dbeta2[X_]
+	   << ", dbeta2_y = " << setw(8) << dbeta2[Y_] << endl;
+      cout << fixed << setprecision(5)
+	   << "dbeta3_x = " << setw(8) << dbeta3[X_]
+	   << ", dbeta3_y = " << setw(8) << dbeta3[Y_] << endl;
+    }
+   
+    cout << endl;
+    cout << fixed << setprecision(5)
+	 << "nu_x = " << nus[3].cst() << ", nu_y = " << nus[4].cst() << endl;
+  }
+
+  if (prt) {
+    quad_out.open("fit_dba.dat", ios::out);
+    quad_out << endl;
+    quad_out << "n = 1:" << endl;
+    for (i = 1; i <= n_b2; i++)
+      for (j = 1; j <= get_n_Kids(abs(b2s[i-1])); j++)
+	if (b2s[i-1] > 0)
+	  quad_out << fixed << setprecision(7) 
+		   << setw(6) << get_Name(b2s[i-1]) << "(" << j << ") = "
+		   << setw(11) << get_bnL(b2s[i-1], j, Quad)
+		   << setw(2) << Quad << endl;
+	else {
+	  k = get_loc(abs(b2s[i-1]), j) - 1;
+	  quad_out << fixed << setprecision(7) 
+		   << setw(6) << get_Name(elem[k-1].Fnum) << "(" << j << ") = "
+		   << setw(11) << get_L(elem[k-1].Fnum, j)
+		   << setw(3) << -Quad << endl;
+	  quad_out << fixed << setprecision(7) 
+		   << setw(6) << get_Name(elem[k+1].Fnum) << "(" << j << ") = "
+		   << setw(11) << get_L(elem[k+1].Fnum, j)
+		   << setw(3) << -Quad << endl;
+	}
+    quad_out.close();
+  }
+
+  free_dvector(b, 1, m);
+  free_dvector(b2_lim, 1, n_b2); free_dvector(b2, 1, n_b2);
+  free_dvector(db2, 1, n_b2);
+  free_dmatrix(A, 1, m, 1, n_b2);
+}
+
+
+int main()
+{
+}

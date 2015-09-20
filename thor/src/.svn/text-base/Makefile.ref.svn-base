@@ -1,0 +1,12 @@
+lib_LIBRARIES = libthor.a
+
+libthor_a_SOURCES = thor_lib.cc \
+                    ../../TPSA/TPSALib.f ../../TPSA/LieLib.f
+
+INCLUDES = -I../inc -I$(NUM_REC)/inc \
+	   -I/usr/include/c++/3.3.6
+
+FFLAGS   = -g -O2 -Wall -fbounds-check
+CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend
+#CXXFLAGS = -g -Wl,-stack,100000000 -O2 -Wall -Wno-non-template-friend
+UNLIMIT_RESOURCES = datasize memorysize stacksize
