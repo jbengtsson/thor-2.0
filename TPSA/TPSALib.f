@@ -511,9 +511,6 @@
 !
 
       subroutine daallno(ic,l,ccc)
-
-      use iso_c_binding
-
       implicit none
       integer i,ind,l,ndanum,no,nv
       double precision x
@@ -626,9 +623,6 @@
       return
       end
       subroutine daall(ic,l,ccc,no,nv)
-
-      use iso_c_binding
-
       implicit none
       integer i,ind,l,ndanum,no,nv
       double precision x
@@ -656,7 +650,6 @@
       logical incnda
       character c*10,ccc*10
 !
-      write(*, *) ic(1), l,'|', ccc, '|', len(ccc), no, nv
       ind = 1
 
       do i=1,l
@@ -2483,9 +2476,6 @@
       end
 !
       subroutine dafun(cf,ina,inc)
-
-      use iso_c_binding
-
       implicit none
       integer illc,ilmc,ina,inc,incc,inoc,invc
       integer(4) ipoc
@@ -4525,9 +4515,6 @@
       END
 *
       SUBROUTINE DAEXP(ina, r, ic1, ic2, name)
-
-      use iso_c_binding
-
       implicit none
       character         name*10
       integer           ina, ic1, ic2, i, lh, k, jj

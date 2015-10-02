@@ -48,7 +48,7 @@ void daexp(const int &intptr, double rbuf[], int ibuf1[], int ibuf2[],
 	   char name[name_len_for])
 {
 
-  daexp_(intptr, rbuf, ibuf1, ibuf2, name); name[10] = '\0';
+  daexp_(intptr, rbuf, ibuf1, ibuf2, name, name_len_for); name[10] = '\0';
 }
 
 
@@ -103,8 +103,7 @@ void TPSAEps(const double eps)
 tps::tps(void)
 {
   if (!ini_tps) TPSA_Ini();
-//  printf("tpsa_name: |%s|, %lu\n", tpsa_name, sizeof(tpsa_name));
-  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim); dacon_(intptr, 0.0);
+  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for); dacon_(intptr, 0.0);
   if (debug_tpsa)
     cout << "tps(void):                        "
 	 << ", intptr = " << intptr << endl;
@@ -114,8 +113,7 @@ tps::tps(const double r)
 {
 
   if (!ini_tps) TPSA_Ini();
-  printf("tpsa_name: |%s|, %lu\n", tpsa_name, sizeof(tpsa_name));
-//  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim); dacon_(intptr, r);
+  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for); dacon_(intptr, r);
   if (debug_tpsa)
     cout << "tps(const double r):              "
 	 << ", intptr = " << intptr << endl;
@@ -125,7 +123,7 @@ tps::tps(const double r, const int i)
 {
 
   if (!ini_tps) TPSA_Ini();
-  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
+  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for);
   if (i == 0)
     dacon_(intptr, r);
   else
@@ -139,7 +137,7 @@ tps::tps(const tps &x) {
 
   if (!ini_tps) TPSA_Ini();
   intptr = 0;
-  daall_(intptr, 1, tpsa_name, no_tps, ss_dim); dacop_(x.intptr, intptr);
+  daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for); dacop_(x.intptr, intptr);
   if (debug_tpsa)
     cout << "tps(const tps &x):                "
 	 << ", intptr = " << intptr << endl;
@@ -179,7 +177,7 @@ void tps::pook(const int jj[], const double r)
 { dapok_(intptr, jj, r); }
 
 void tps::exprt(double rbuf[], int ibuf1[], int ibuf2[], char *name) const
-{ daexp_(intptr, rbuf, ibuf1, ibuf2, name); }
+{ daexp_(intptr, rbuf, ibuf1, ibuf2, name, name_len_for); }
 
 void tps::imprt(const int n, double rbuf[],
 		const int ibuf1[], const int ibuf2[])
@@ -219,7 +217,7 @@ tps sqrt(const tps &a)
 {
   tps  b;
 
-  dafun_("SQRT", a.intptr, b.intptr);
+  dafun_("SQRT", a.intptr, b.intptr, name_len_for);
   return b;
 }
 
@@ -243,7 +241,7 @@ tps exp(const tps &a)
 {
   tps  b;
 
-  dafun_("EXP ", a.intptr, b.intptr);
+  dafun_("EXP ", a.intptr, b.intptr, name_len_for);
   return b;
 }
 
@@ -251,7 +249,7 @@ tps log(const tps &a)
 {
   tps  b;
 
-  dafun_("LOG ", a.intptr, b.intptr);
+  dafun_("LOG ", a.intptr, b.intptr, name_len_for);
   return b;
 }
 
@@ -341,7 +339,7 @@ tps asin(const tps &a)
 {
   tps  b;
 
-  dafun_("ASIN", a.intptr, b.intptr);
+  dafun_("ASIN", a.intptr, b.intptr, name_len_for);
   return b;
 }
 
@@ -351,7 +349,7 @@ tps atan(const tps &a)
 {
   tps  b;
 
-  dafun_("ATAN", a.intptr, b.intptr);
+  dafun_("ATAN", a.intptr, b.intptr, name_len_for);
   return b;
 }
 

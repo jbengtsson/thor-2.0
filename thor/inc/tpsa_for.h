@@ -6,8 +6,9 @@
 extern "C" {
   // Interfact to FORTRAN TPSA-library
   void daini_(const int &, const int &, const int &);
+  // GFORTRAN: string lengths are passed after all the arguents.
   void daall_(int &, const int &, const char [],
-          const int &, const int &);
+          const int &, const int &, const int &);
   void dadal_(int &, const int &);
   void dacon_(int &, const double &);
   void davar_(int &, const double &, const int &);
@@ -21,7 +22,8 @@ extern "C" {
   void dacmu_(const int &, const double &, int &);
   // dacdi <=> dacmu(a, 1/r, b)
   //void dadic_(const int &, const double &, int &);
-  void dafun_(const char [], const int &, int &);
+  // GFORTRAN: string lengths are passed after all the arguents.
+  void dafun_(const char [], const int &, int &, const int &);
   void dader_(const int &, const int &, int &);
   void datra_(const int &, const int &, int &);
   void danot_(const int &);
@@ -40,7 +42,8 @@ extern "C" {
   void daimp_(const double [], const int [], const int [], int &);
   void dainv_(const int [], const int &, int [], const int &);
   void dapin_(const int [], const int &, int [], const int &, const int []);
-  void daexp_(const int &, double [], int [], int [], char []);
+  // GFORTRAN: string lengths are passed after all the arguents.
+  void daexp_(const int &, double [], int [], int [], char [], const int &);
   void dacct_(const int [], const int &, const int [], const int &,
           int [], const int &);
 
