@@ -298,7 +298,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
 	     const double corr_max[], const double s_cut, double *corr0,
 	     double *dcorr)
 {
-  int     i, j, k, n_sing, max_ind = 0, sgn, max_sgn = 0, n1, mpn, mn_max;
+  int     i, j, k, n_sing, max_ind = 0, sgn, max_sgn = 0, n1, mpn;
   double  **U, **U_tp, **V, **AtU_inv, **n0_tp, n_norm;
   double  **U_m, **V_m, **U_m_tp, **N_m;
   double  *w, *w_m, *dUb, *Ub0, *b_m, *p_m, *b_ext;
@@ -308,7 +308,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   const bool    prt = false;
   const double  eps = 1e-10;
 
-  mpn = m + n; mn_max = max(m, n);
+  mpn = m + n;
 
   if (prt) {
     cout << endl;
@@ -1179,12 +1179,10 @@ bool get_COD(const int i_max, const double eps, const double delta,
 	     const bool prt)
 {
   bool             cod;
-  int              n_dim, n_iter, j, jj[ss_dim], no;
+  int              n_dim, n_iter, j, jj[ss_dim];
   double           dx_abs = 0.0;
   ss_vect<double>  x1, dx;
   ss_vect<tps>     I, dx0;
-
-  no = no_tps;
 
   // danot_(1);
 

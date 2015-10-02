@@ -37,20 +37,20 @@
 !
 !     THE PARAMETERS USED BELOW HAVE THE FOLLOWING MEANING:
 !
-!     A,B:                NAME OF INPUT DA VECTORS   (INTEGER)
-!     C:                  NAME OF OUTPUT DA VECTOR   (INTEGER)
-!     X,Y:                NAME OF INPUT DA MATRIX    (INTEGER(...))
-!     Z:                  NAME OF OUTPUT DA MATRIX   (INTEGER(...))
+!     A,B:                NAME OF INPUT DA VECTORS   (integer)
+!     C:                  NAME OF OUTPUT DA VECTOR   (integer)
+!     X,Y:                NAME OF INPUT DA MATRIX    (integer(...))
+!     Z:                  NAME OF OUTPUT DA MATRIX   (integer(...))
 !
 !     F:                  NAME OF A DA FUNCTION      (CHARACTER*4)
 !     G:                  NAME OF EXTERNAL FUNCTION  (DOUBLE PRECISION)
-!     JJ:                 ARRAY OF EXPONENTS         (INTEGER(20))
-!     O:                  ORDER                      (INTEGER)
-!     N:                  NUMBER OF VARIABLES        (INTEGER)
-!     I,J,K:              INTEGER NUMBER             (INTEGER
+!     JJ:                 ARRAY OF EXPONENTS         (integer(20))
+!     O:                  ORDER                      (integer)
+!     N:                  NUMBER OF VARIABLES        (integer)
+!     I,J,K:              integer NUMBER             (integer
 !     R,RA,RB:            REAL NUMBERS               (DOUBLE PRECISION)
 !     H:                  ARRAY OF LENGTH LH         (DOUBLE PRECISION)
-!     U:                  OUTPUT UNIT NUMBER         (INTEGER)
+!     U:                  OUTPUT UNIT NUMBER         (integer)
 !     T:                  COMMENT TEXT               (CHARACTER*10)
 !
 !
@@ -115,8 +115,8 @@
 !     DAINF: RETURNS INFOS ABOUT A DA VECTOR PREVIOUSLY DECLARED
 !     DAPAC: PACKS DA VECTORS
 !     DACHK: CHECKS IF DA VECTORS HAVE COMPATIBLE ATTRIBUTES
-!     DCODE: TRANSFORMS DIGITS IN A CERTAIN BASE TO A DECIMAL INTEGER
-!     NCODE: EXTRACTS DIGITS IN A CERTAIN BASE FROM A DECIMAL INTEGER
+!     DCODE: TRANSFORMS DIGITS IN A CERTAIN BASE TO A DECIMAL integer
+!     NCODE: EXTRACTS DIGITS IN A CERTAIN BASE FROM A DECIMAL integer
 !
 !
 !     FURTHER WISHES
@@ -145,11 +145,11 @@
 !     DANAME:   NAME OF DA VECTOR
 !
 !     CC:       STACK OF DOUBLE PRECISON COEFFICIENTS
-!     I1:       FIRST CHARACTERISTIC INTEGER (CF DAINI)
-!     I2:       SECOND CHARACTERISTIC INTEGER (CF DAINI)
+!     I1:       FIRST CHARACTERISTIC integer (CF DAINI)
+!     I2:       SECOND CHARACTERISTIC integer (CF DAINI)
 !
-!     IE1:      CHARACTERISTIC INTEGER 1 OF UNPACKED REPRESENTATION (CF DAINI)
-!     IE2:      CHARACTERISTIC INTEGER 2 OF UNPACKED REPRESENTATION (CF DAINI)
+!     IE1:      CHARACTERISTIC integer 1 OF UNPACKED REPRESENTATION (CF DAINI)
+!     IE2:      CHARACTERISTIC integer 2 OF UNPACKED REPRESENTATION (CF DAINI)
 !     IEO:      ORDER OF ENTRY IN UNPACKED REPRESENTATION
 !     IA1:      REVERSE TO IE1 (CF DAINI)
 !     IA2:      REVERSE TO IE2 (CF DAINI)
@@ -175,7 +175,7 @@
       implicit none
       integer i,iall,ibase,ic1,ic2,icmax,io1,io2,iout,iunit,j,jd,jj,jjj,&
      &jjjj,jl,js,k,n,no,nv
-      integer(8) nn
+      integer(4) nn
 !     *****************************
 !
 !     THIS SUBROUTINE SETS UP THE MAJOR ORDERING AND ADDRESSING ARRAYS IN
@@ -386,7 +386,8 @@
       write(6,*)'ARRAY SETUP DONE, BEGIN PRINTING'
 !
       iout = 32
-      open(iout,file='DAINI.DAT',status='NEW')
+!      open(iout,file='DAINI.DAT',status='NEW')
+      open(iout,file='DAINI.DAT',status='UNKNOWN')
 !CRAY OPEN(IOUT,FILE='DAINI',STATUS='UNKNOWN',FORM='FORMATTED')          *CRAY
 !CRAY REWIND IOUT                                                        *CRAY
 !
@@ -508,7 +509,11 @@
 !   11         0         0
 !   12        10        34   NOMAX = 3,  NVMAX = 4, NMMAX = 35
 !
+
       subroutine daallno(ic,l,ccc)
+
+      use iso_c_binding
+
       implicit none
       integer i,ind,l,ndanum,no,nv
       double precision x
@@ -621,6 +626,9 @@
       return
       end
       subroutine daall(ic,l,ccc,no,nv)
+
+      use iso_c_binding
+
       implicit none
       integer i,ind,l,ndanum,no,nv
       double precision x
@@ -648,6 +656,7 @@
       logical incnda
       character c*10,ccc*10
 !
+      write(*, *) ic(1), l,'|', ccc, '|', len(ccc), no, nv
       ind = 1
 
       do i=1,l
@@ -792,7 +801,7 @@
       subroutine davar(ina,ckon,i)
       implicit none
       integer i,ibase,ic1,ic2,illa,ilma,ina,inoa,inva
-      integer(8) ipoa
+      integer(4) ipoa
       double precision ckon
 !     ****************************
 !
@@ -853,7 +862,7 @@
       subroutine dacon(ina,ckon)
       implicit none
       integer illa,ilma,ina,inoa,inva
-      integer(8) ipoa
+      integer(4) ipoa
       double precision ckon
 !     **************************
 !
@@ -943,7 +952,7 @@
       implicit none
       integer ibase,ic,ic1,ic2,icu,icz,ii1,ikk,illa,ilma,ina,           &
      &inoa,inva,jj,jj1,mchk
-      integer(8) ipoa, iu, iz, i, ipek
+      integer(4) ipoa, iu, iz, i, ipek
       double precision cjj
 !     ****************************
 !
@@ -1056,7 +1065,7 @@
       implicit none
       integer ic,ic1,ic2,icu,icz,illa,ilma,ina,inoa,inva,               &
      &jj,jj1,mchk
-      integer(8) i, ii, ipoa, iu, iz, ipok
+      integer(4) i, ii, ipoa, iu, iz, ipok
       double precision cjj
 !     ****************************
 !
@@ -1206,7 +1215,7 @@
       subroutine daclr(inc)
       implicit none
       integer illc,ilmc,inc,inoc,invc
-      integer(8) i, ipoc
+      integer(4) i, ipoc
 !     *********************
 !
 !     THIS SUBROUTINE SETS ALL THE STACK SPACE RESERVED FOR VARIABLE
@@ -1229,7 +1238,7 @@
       subroutine dacop(ina,inb)
       implicit none
       integer iif,illa,illb,ilma,ilmb,ina,inb,inoa,inob,inva,invb
-      integer(8) ia, ib, ipoa, ipob
+      integer(4) ia, ib, ipoa, ipob
 !     *************************
 !
 !     THIS SUBROUTINE COPIES THE DA VECTOR A TO THE DA VECTOR B
@@ -1276,7 +1285,7 @@
       subroutine datrashn(idif,ina,inbb)
       implicit none
       integer i,ia,idif,illa,ilma,ina,inb,inbb,inoa,inva
-      integer(8) ipoa
+      integer(4) ipoa
       double precision rr
 !     *************************
 !
@@ -1332,7 +1341,7 @@
       integer i,ic,ic1,ic2,icu,icz,ii,illa,ilma,ina,inoa,inva,          &
      &ipok,iu,iz,jj,jj1
       integer idaadd,illc,ilmc,inb,inc,inoc,invc
-      integer(8) ipoc, ipoa, ipob 
+      integer(4) ipoc, ipoa, ipob
 
       include "TPSALib_prm.f"
 
@@ -1371,7 +1380,7 @@
       integer i,ic,ic1,ic2,icu,icz,ii,illa,ilma,inoa,inva,ina,          &
      &ipoa,ipok,iu,iz,jj,jj1
       integer idaadd,illc,ilmc,inb,inc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
 
       include "TPSALib_prm.f"
 
@@ -1433,7 +1442,7 @@
       subroutine daexx(ina,inb,inc)
       implicit none
       integer illc,ilmc,ina,inaa,inb,inbb,inc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
 
       include "TPSALib_prm.f"
 
@@ -1466,7 +1475,7 @@
       implicit none
       integer idaexx,illa,illb,illc,ilma,ilmb,ilmc,ina,inb,inc,inoa,    &
      &inob,inoc,inva,invb,invc
-      integer(8) ipoa,ipob,ipoc
+      integer(4) ipoa,ipob,ipoc
 !     ******************************
 !
 !     THIS SUBROUTINE EXPONENTIATES INA WITH INB
@@ -1492,7 +1501,7 @@
       subroutine dacex(ina,ckon,inb)
       implicit none
       integer illc,ilmc,ina,inb,inc,incc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
       double precision ckon
 
       include "TPSALib_prm.f"
@@ -1519,7 +1528,7 @@
       subroutine dacext(ina,ckon,inb)
       implicit none
       integer idacex,illa,illb,ilma,ilmb,ina,inb,inoa,inob,inva,invb
-      integer(8) ipoa,ipob
+      integer(4) ipoa,ipob
       double precision ckon
 !     ******************************
 !
@@ -1549,7 +1558,7 @@
       subroutine daexc(ina,ckon,inb)
       implicit none
       integer illc,ilmc,ina,inb,inc,incc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
       double precision ckon
 
       include "TPSALib_prm.f"
@@ -1579,7 +1588,7 @@
       implicit none
       integer i,ic,idaexc,illa,illb,ilma,ilmb,ina,inb,inoa,inob,inva,   &
      &invb
-      integer(8) ipoa, ipob
+      integer(4) ipoa, ipob
       double precision ckon,xic
 
       include "TPSALib_prm.f"
@@ -1622,7 +1631,7 @@
       subroutine damul(ina,inb,inc)
       implicit none
       integer illc,ilmc,ina,inb,inc,incc,inoc,invc
-      integer(8) ipoc, ipoa, ipob
+      integer(4) ipoc, ipoa, ipob
 !     *****************************
 !
 !     THIS SUBROUTINE PERFORMS A DA MULTIPLICATION OF THE DA VECTORS A AND B.
@@ -1671,7 +1680,7 @@
       integer i,i1ia,i2ia,illa,illb,illc,ilma,ilmb,ilmc,ina,            &
      &inb,inc,inoa,inoc,inva,invb,invc,ioffb,ipno,                      &
      &ipos,minv,noff,noib,nom
-      integer(8) inob, ia, ib, ic, ipoa, ipob, ipoc
+      integer(4) inob, ia, ib, ic, ipoa, ipob, ipoc
       double precision ccia,ccipoa,ccipob
 !     *****************************
 !
@@ -1773,7 +1782,7 @@
       implicit none
       integer idadiv  ,inb
       integer illc,ilmc,ina,inc,incc,inoc,invc
-      integer(8) ipoa, ipob, ipoc
+      integer(4) ipoa, ipob, ipoc
 !     *************************
 !
 !     THIS SUBROUTINE SQUARES THE VECTOR A AND STORES THE RESULT IN C.
@@ -1815,7 +1824,7 @@
       subroutine dasqr(ina,inc)
       implicit none
       integer illc,ilmc,ina,inc,incc,inoc,invc
-      integer(8) ipoa, ipoc
+      integer(4) ipoa, ipoc
 !     *************************
 !
 !     THIS SUBROUTINE SQUARES THE VECTOR A AND STORES THE RESULT IN C.
@@ -1858,7 +1867,7 @@
       integer i,i1ia,i2ia,ib1,illa,illc,ilma,ilmc,ina,inc,              &
      &inoc,inva,invc,ioffa,ioffb,ipno,ipos,                             &
      &minv,noff,noia,noib,nom
-      integer(8) ia, ib, ic, inoa, ipoa, ipoc
+      integer(4) ia, ib, ic, inoa, ipoa, ipoc
       double precision ccia,ccipoa
 !     *************************
 !
@@ -2018,7 +2027,7 @@
       subroutine dasuc(ina,ckon,inb)
       implicit none
       integer illa,illb,ilma,ilmb,ina,inb,inoa,inob,inva,invb
-      integer(8) ipoa, ipob
+      integer(4) ipoa, ipob
       double precision ckon
 !     ******************************
 !
@@ -2050,13 +2059,13 @@
       subroutine dacmu(ina,ckon,inc)
       implicit none
       integer illc,ilmc,ina,inc,incc,inoc,invc
-      integer(8) ipoa, ipoc
+      integer(4) ipoa, ipoc
       double precision ckon
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE INTEGER E.
+!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE integer E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -2090,13 +2099,13 @@
       implicit none
       integer i,illa,illb,ilma,ilmb,ina,inb,inoa,inob,inva,invb,        &
      &minv
-      integer(8) ia, ib, ipoa, ipob
+      integer(4) ia, ib, ipoa, ipob
       double precision ckon
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE INTEGER E.
+!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE integer E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -2146,7 +2155,7 @@
       subroutine dacdi(ina,ckon,inb)
       implicit none
       integer illa,illb,ilma,ilmb,ina,inb,inoa,inob,inva,invb
-      integer(8) ipoa,ipob
+      integer(4) ipoa,ipob
       double precision ckon
 !     ******************************
 !
@@ -2184,7 +2193,7 @@
       subroutine dadic(ina,ckon,inc)
       implicit none
       integer idadic,illa,illc,ilma,ilmc,ina,inc,inoa,inoc,inva,invc
-      integer(8) ipoa, ipoc
+      integer(4) ipoa, ipoc
       double precision ckon,zero
 !     ******************************
 !
@@ -2233,7 +2242,7 @@
       subroutine dacma(ina,inb,bfac,inc)
       implicit none
       integer idacma,illc,ilmc,ina,inb,inc,inoc,invc
-      integer(8) ipoc, ipob, ipoa
+      integer(4) ipoc, ipob, ipoa
       double precision bfac
 !     **********************************
 !
@@ -2270,7 +2279,7 @@
       subroutine dalin(ina,afac,inb,bfac,inc)
       implicit none
       integer illc,ilmc,ina,inb,inc,incc,inoc,invc
-      integer(8) ipoc, ipob, ipoa
+      integer(4) ipoc, ipob, ipoa
       double precision afac,bfac
 !     ***************************************
 !
@@ -2314,7 +2323,7 @@
       integer i,iamax,ibmax,icmax,illa,illb,illc,ilma,ilmb,             &
      &ilmc,ina,inb,inc,inoa,inob,inoc,inva,invb,invc,                   &
      &ismax,ismin,ja,jb,minv,mchk
-      integer(8) ia, ib, ic, is, ipoa, ipob, ipoc
+      integer(4) ia, ib, ic, is, ipoa, ipob, ipoc
       double precision afac,bfac,ccc,copf
 !     ***************************************
 !
@@ -2474,9 +2483,12 @@
       end
 !
       subroutine dafun(cf,ina,inc)
+
+      use iso_c_binding
+
       implicit none
       integer illc,ilmc,ina,inc,incc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
 !     ****************************
 !
 !     THIS SUBROUTINE COMPUTES THE FUNCTION CF OF THE DA VECTOR A
@@ -2507,7 +2519,7 @@
       implicit none
       integer i,illa,illc,ilma,ilmc,ina,inc,ind,inoa,inoc,inon,inva,    &
      &invc,ipow,iscr,jj,lfun,no
-      integer(8) ipoa, ipoc
+      integer(4) ipoa, ipoc
       double precision a0,a1,a2,a3,a4,a5,ca,e1,                         &
      &e2,ea,era,p,ra,rpi4,sa,scr,                                       &
      &t,xf
@@ -3014,7 +3026,7 @@
       subroutine daabs(ina,anorm)
       implicit none
       integer illa,ilma,ina,inoa,inva
-      integer(8) i, ipoa 
+      integer(4) i, ipoa
       double precision anorm
 !     ***************************
 !
@@ -3036,7 +3048,7 @@
       subroutine daabs2(ina,anorm)
       implicit none
       integer illa,ilma,ina,inoa,inva,ipoa
-      integer(8) i
+      integer(4) i
       double precision anorm
 !     ***************************
 !
@@ -3079,7 +3091,7 @@
       subroutine dapos(ina,inb)
       implicit none
       integer illa,illb,ilma,ilmb,ina,inb,inoa,inob,inva,invb
-      integer(8)  ia, ib, ipoa, ipob
+      integer(4)  ia, ib, ipoa, ipob
 !     *************************
 !
 !     THIS SUBROUTINE MAKES THE SIGNS OF ALL THE COEFFICIENTS OF A POSITIVE
@@ -3118,7 +3130,7 @@
       subroutine dacct(ma,ia,mb,ib,mc,ic)
       implicit none
       integer i,ia,ib,ic,ij,illc,ilmc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
 !     ***********************************
 !
 !     THIS SUBROUTINE PERFORMS A CONCATENATION MA = MB o MC
@@ -3152,7 +3164,7 @@
       implicit none
       integer i,ia,ib,ic,iia,iib,iic,illa,illb,illc,ilma,ilmb,ilmc,inoa,&
      &inob,inoc,inva,invb,invc,iv,jl,jv
-      integer(8) ipoa,ipob,ipoc
+      integer(4) ipoa,ipob,ipoc
       double precision ccf
 !     ***********************************
 !
@@ -3163,7 +3175,7 @@
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
 !
-!      INTEGER MON(LNO+1),ICC(LNV),MB(*),MC(*),MA(*)
+!      integer MON(LNO+1),ICC(LNV),MB(*),MC(*),MA(*)
 !ETIENNE
 !      integer mon(lno+1),icc(lno),mb(*),mc(*),ma(*)
       integer mon(lno+1),icc(lnv),mb(*),mc(*),ma(*)
@@ -3241,14 +3253,14 @@
       implicit none
       integer ib,ic,ic1,ic2,ichk,ii,iib,iic,illb,illc,                  &
      &ilmb,ilmc,inob,inoc,invb,invc,j,jl,jnon,nterm,ntermf
-      integer(8) i, ibi, ib1, icc, ipob, ipoc
+      integer(4) i, ibi, ib1, icc, ipob, ipoc
       double precision apek,bbijj,chkjj
 !     *****************************
 !
 !     THIS SUBROUTINE IS USED FOR CONCATENATION AND TRACKING OF VECTORS
 !     THROUGH A DA MAP. IT COMPUTES THE TREE THAT HAS TO BE TRANSVERSED
 !     MB IS THE DA MATRIX WITH IA TERMS. THE OUTPUT MC IS A CA MATRIX WHICH
-!     CONTAINS COEFFICIENTS AND CONTROL INTEGERS USED FOR THE TRAVERSAL.
+!     CONTAINS COEFFICIENTS AND CONTROL integerS USED FOR THE TRAVERSAL.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -3546,7 +3558,7 @@
       subroutine dainv(ma,ia,mb,ib)
       implicit none
       integer i,ia,ib,ij,illb,ilmb,inob,invb
-      integer(8) ipob
+      integer(4) ipob
       double precision x
 !     *****************************
 !
@@ -3597,7 +3609,7 @@
       implicit none
       integer i,ia,ib,ie,ier,illa,illb,ilma,ilmb,inoa,inob,inva,invb,   &
      &j,k,nocut0
-      integer(8) ipoa, ipob
+      integer(4) ipoa, ipob
       double precision aa,ai,amjj,amsjj,prod
 !     *****************************
 !
@@ -3627,10 +3639,10 @@
 !
       if(ia.ne.ib) then
         write(6,*)'ERROR IN DAINV, IA .NE. IB'
-        call dadeb(31,'ERR DAINV',1)
+        call dadeb(31,'ERR DAINV ',1)
       elseif(ia.ne.inva.or.ib.ne.invb) then
         write(6,*)'ERROR IN DAINV, IA.NE.INVA.OR.IB.NE.INVB'
-        call dadeb(31,'ERR DAINV',1)
+        call dadeb(31,'ERR DAINV ',1)
       endif
 !
 !     ALLOCATING LOCAL VECTORS
@@ -3667,7 +3679,7 @@
 !
       if(ier.eq.132) then
         write(6,*)'ERROR IN ROUTINE DAINV'
-        call dadeb(31,'ERR DAINV',1)
+        call dadeb(31,'ERR DAINV ',1)
       endif
 !
       ier = 0
@@ -3792,7 +3804,7 @@
 !
       parameter (nmax = 400, tiny = 1.0e-20)
       dimension a(np,np), indx(np), vv(nmax)
-      ier=0.
+      ier=0
       d=1.d0
       do i=1,n
         aamax=0.d0
@@ -3902,7 +3914,7 @@
       subroutine dapin(ma,ia,mb,ib,jx)
       implicit none
       integer i,ia,ib,ij,illb,ilmb,inob,invb
-      integer(8) ipob
+      integer(4) ipob
       double precision x
 !     *****************************
 !
@@ -3952,7 +3964,7 @@
       subroutine dapint(ma,ia,mb,ib,jind)
       implicit none
       integer i,ia,ib,illa,ilma,inoa,inva,k
-      integer(8) ipoa
+      integer(4) ipoa
 !     **********************************
 !
 !     THIS SUBROUTINE PERFORMS A PARTIAL INVERSION OF THE ROWS MARKED WITH
@@ -4007,7 +4019,7 @@
       subroutine dader(idif,ina,inc)
       implicit none
       integer idif,illc,ilmc,ina,inc,incc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
 !     ******************************
 !
 !     THIS SUBROUTINE COMPUTES THE DERIVATIVE WITH RESPECT TO VARIABLE I
@@ -4035,7 +4047,7 @@
       implicit none
       integer ibase,ic,ider1,ider1s,ider2,ider2s,idif,iee,ifac,illa,    &
      &illc,ilma,ilmc,ina,inc,inoa,inoc,inva,invc,jj
-      integer(8) i, ipoa, ipoc
+      integer(4) i, ipoa, ipoc
       double precision rr,x,xdivi
 !     ******************************
 !
@@ -4167,7 +4179,7 @@
       subroutine dacfuR(ina,fun,inc)
       implicit none
       integer illc,ilmc,ina,inc,incc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
       double complex fun
       external fun
 !     *****************************
@@ -4199,7 +4211,7 @@
       implicit none
       integer i,illa,illc,ilma,ilmc,ina,inc,inoa,inoc,inva,invc,        &
      &j
-      integer(8) ia, ic, ipoa, ipoc
+      integer(4) ia, ic, ipoa, ipoc
       double precision cfac,rr
       double COMPLEX fun
       external fun
@@ -4271,7 +4283,7 @@
       subroutine dacfu(ina,fun,inc)
       implicit none
       integer illc,ilmc,ina,inc,incc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
       double precision fun
       external fun
 !     *****************************
@@ -4305,7 +4317,7 @@
       subroutine dacfuI(ina,fun,inc)
       implicit none
       integer illc,ilmc,ina,inc,incc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
       double complex fun
       external fun
 !     *****************************
@@ -4337,7 +4349,7 @@
       implicit none
       integer i,illa,illc,ilma,ilmc,ina,inc,inoa,inoc,inva,invc,        &
      &j
-      integer(8) ia, ic, ipoa, ipoc
+      integer(4) ia, ic, ipoa, ipoc
       double precision cfac,rr
       double COMPLEX fun
       external fun
@@ -4411,7 +4423,7 @@
       implicit none
       integer i,ia,ic,illa,illc,ilma,ilmc,ina,inc,inoa,inoc,inva,invc,  &
      &j
-      integer(8) ipoa, ipoc
+      integer(4) ipoa, ipoc
       double precision cfac,fun,rr
       external fun
 !     *****************************
@@ -4483,7 +4495,7 @@
       SUBROUTINE DAIMP(r, ic1, ic2, ina)
       implicit none
       integer           ic1, ic2, ina, lh
-      integer(8) i, ic
+      integer(4) i, ic
       double precision  r
 *     **************************
 *
@@ -4513,10 +4525,13 @@
       END
 *
       SUBROUTINE DAEXP(ina, r, ic1, ic2, name)
+
+      use iso_c_binding
+
       implicit none
       character         name*10
       integer           ina, ic1, ic2, i, lh, k, jj
-      integer(8)        ic
+      integer(4)        ic
       double precision  r
 *     **************************
 *
@@ -4564,7 +4579,7 @@
       subroutine dapri(ina,iunit)
       implicit none
       integer iii,illa,ilma,ina,inoa,inva,ioa,iout,ipoa,iunit,j,k
-      integer(8) i, ii
+      integer(4) i, ii
 !     ***************************
 !       Frank
 !     THIS SUBROUTINE PRINTS THE DA VECTOR INA TO UNIT IUNIT.
@@ -4663,7 +4678,7 @@
 !-----------------------------------------------------------------------------
 !
       integer iii,illa,ilma,ina,inoa,inva,ioa,iout,iunit,j,k
-      integer(8) i, ii, ipoa
+      integer(4) i, ii, ipoa
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
 !-----------------------------------------------------------------------------9
@@ -4970,7 +4985,7 @@
       implicit none
       integer i,iche,ii,ii1,ii2,iin,illa,ilma,ina,inoa,inva,io,io1,     &
      &iunit,iwarin,iwarno,iwarnv,j,nno
-      integer(8) ic, ipoa
+      integer(4) ic, ipoa
       double precision c
 !       Frank
       include "TPSALib_prm.f"
@@ -5194,7 +5209,7 @@
       subroutine dainf(inc,inoc,invc,ipoc,ilmc,illc)
       implicit none
       integer illc,ilmc,inc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
 !     **********************************************
 !
 !     THIS SUBROUTINE SEARCHES THE NUMBER OF DA VECTOR C
@@ -5221,7 +5236,7 @@
       subroutine dapac(inc)
       implicit none
       integer illc,ilmc,inc,inoc,invc
-      integer(8) i, ic, ipoc
+      integer(4) i, ic, ipoc
       double precision ccc
 !     ************************
 !
@@ -5316,7 +5331,7 @@
       subroutine damch(iaa,ia)
       implicit none
       integer i,ia,iaa,illa,ilma,ino1,inoi,inv1,invi
-      integer(8) ipoa
+      integer(4) ipoa
 !     ************************
 !
 !     THIS SUBROUTINE CHECKS IF THE IA VECTORS IN THE MATRIX IA HAVE
@@ -5406,7 +5421,7 @@
       implicit none
       integer ibase,ider1,ider1s,ider2,ider2s,idif,iee,ifac,illa,       &
      &illc,ilma,ilmc,ina,inc,inoa,inoc,inva,invc,jj
-      integer(8) i, ic, ipoa, ipoc
+      integer(4) i, ic, ipoa, ipoc
       double precision x,xdivi
 !     ******************************
 !
@@ -5595,7 +5610,7 @@
       subroutine daswap(j1,j2,inb)
       implicit none
       integer ic1,ic2,illb,ilmb,inb,inob,invb,j1,j2,jj,k1,k2
-      integer(8) ia, ic, ipob
+      integer(4) ia, ic, ipob
 !     *************************
 !
 !     SWAP A DA VECTOR
@@ -5636,7 +5651,7 @@
       implicit none
       integer i,illa,illb,ilma,ilmb,ina,inb,inoa,inob,inva,invb,        &
      &ja,jb,nd2
-      integer(8) ia, ib, ipoa, ipob
+      integer(4) ia, ib, ipoa, ipob
       double precision anorm,gau
 !     ***************************
 !
@@ -5671,13 +5686,13 @@
       subroutine daran(ina,cm,xran)
       implicit none
       integer illa,ilma,ina,inoa,inva
-      integer(8) i, ipoa
+      integer(4) i, ipoa
       double precision bran,cm,xran
 !     ************************
 !
 !     THIS SUBROUTINE FILLS THE DA VECTOR A WITH RANDOM ENTRIES.
 !     FOR CM > 0, THE VECTOR IS FILLED WITH REALS,
-!     FOR CM < 0, THE VECTOR IS FILLED WITH SINGLE DIGIT INTEGERS
+!     FOR CM < 0, THE VECTOR IS FILLED WITH SINGLE DIGIT integerS
 !     ABS(CM) IS THE FILLING FACTOR
 !
 !-----------------------------------------------------------------------------1
@@ -5748,12 +5763,12 @@
       subroutine danorm2(ina,inc)
       implicit none
       integer illc,ilmc,ina,inc,incc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE INTEGER E.
+!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE integer E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -5776,12 +5791,12 @@
       subroutine danorm2t(ina,inb)
       implicit none
       integer illa,illb,ilma,ilmb,ina,inb,inoa,inob,inva,invb
-      integer(8) ia, ib, ipoa, ipob
+      integer(4) ia, ib, ipoa, ipob
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE INTEGER E.
+!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE integer E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -5818,12 +5833,12 @@
       subroutine danormr(ina,inc)
       implicit none
       integer illc,ilmc,ina,inc,incc,inoc,invc
-      integer(8) ipoc
+      integer(4) ipoc
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE INTEGER E.
+!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE integer E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -5846,12 +5861,12 @@
       subroutine danormrt(ina,inb)
       implicit none
       integer illa,illb,ilma,ilmb,ina,inb,inoa,inob,inva,invb
-      integer(8) ia, ib, ipoa, ipob
+      integer(4) ia, ib, ipoa, ipob
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE INTEGER E.
+!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE integer E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -5897,7 +5912,7 @@
       implicit none
       integer i,i56,ien,ihp,illa,ilma,ina,inoa,inva,ioa,iout,           &
      &j
-      integer(8) ipoa, ii
+      integer(4) ipoa, ii
       double precision result
 !     *************************************
 !
@@ -5978,7 +5993,7 @@
       implicit none
       integer i,i56,ii1,ii2,iin,illa,ilma,ina,inoa,inva,io,io1,ip,      &
      &iwarin,iwarno,iwarnv,j
-      integer(8) ipoa, ic
+      integer(4) ipoa, ic
       double precision zfeld
 !     *************************************
 !
@@ -6057,7 +6072,7 @@
       double precision function dare(ina)
       implicit none
       integer ii,illa,ilma,ina,inoa,inva,ioa,j,jj
-      integer(8) ipoa
+      integer(4) ipoa
 !     ***********************************
 !     NEW VERSION OF DARE, AUGUST 1992
 !     SUPPOSED TO TREAT THE 0TH COMPONENT ACCURATELY
@@ -6106,7 +6121,7 @@
       subroutine daprimax(ina,iunit)
       implicit none
       integer iii,illa,ilma,ina,inoa,inva,ioa,iout,iunit,j
-      integer(8) i, ii, ipoa
+      integer(4) i, ii, ipoa
 !     ***************************
 !
 !     THIS SUBROUTINE PRINTS THE DA VECTOR INA TO UNIT IUNIT.
@@ -6183,7 +6198,7 @@
       implicit none
       integer illa,illc,ilma,ilmc,ina,inc,inoa,inoc,inva,invc,          &
      &istart,jd
-      integer(8) ia, ic, ipoa, ipoc
+      integer(4) ia, ic, ipoa, ipoc
       double precision cfac
 !     *****************************
 !
@@ -6238,7 +6253,7 @@
       subroutine dacycle(ina,ipresent,value,j,illa)
       implicit none
       integer i,illa,ilma,ina,inoa,inva,iout,ipoa,ipresent,j
-      integer(8) ii
+      integer(4) ii
       double precision value
 !     ***************************
 !
@@ -6286,7 +6301,7 @@
       implicit none
       integer i,ii,ii1,ii2,iin,illa,ilma,ina,inoa,inva,invo,io,io1,     &
      &ipoa,iunit,iwarin,iwarno,iwarnv,j,jh,jt,jx,nchop
-      integer(8) ic
+      integer(4) ic
       double precision c
 !     ***************************
 !
@@ -6371,7 +6386,7 @@
       implicit none
       integer ibase,ider1,ider1s,ider2,ider2s,idif,ikil1,ikil2,         &
      &illa,illc,ilma,ilmc,ina,inc,inoa,inoc,inva,invc,jj
-      integer(8) i, ic, ipoa, ipoc
+      integer(4) i, ic, ipoa, ipoc
       double precision xdivi
 !     ******************************
 !

@@ -9,8 +9,8 @@
 !
 !-----------------------------------------------------------------------------1
 
-      integer           lda, lea, lia, lno, lnv
-      integer(8)        lst
+      integer       lda, lea, lia, lno, lnv
+      integer       lst
 
 !      parameter (lda=70000, lst=300000000, lea=171000, lia=66000,       &
 !      parameter (lda=70000, lst=900000000, lea=171000, lia=66000,       &
@@ -26,21 +26,22 @@
 !     &           lno=16, lnv=7)
 !      parameter (lda=100000, lst=1000000000, lea=500000, lia=80000,         &
 !     &           lno=16, lnv=7)
-      parameter (lda=200000, lst=2000000000, lea=500000, lia=80000,         &
+!      parameter (lda=200000, lst=2000000000, lea=500000, lia=80000,         &
+      parameter (lda=30000, lst=10000000, lea=500000, lia=80000,         &
      &           lno=16, lnv=7)
 
 
-      integer           nda, ndamaxi
+      integer       nda, ndamaxi
       common /fordes/   nda, ndamaxi
 
       double precision  cc, eps, epsmac
       common /da/       cc(lst), eps, epsmac
 
-      integer           i1, i2, ie1, ie2, ieo
-      integer           ia1, ia2, ifi, idano
-      integer           idanv, idalm, idall
-      integer(8)        idapo
-      integer           nst, nomax, nvmax, nmmax, nocut, lfi
+      integer       i1, i2, ie1, ie2, ieo
+      integer       ia1, ia2, ifi, idano
+      integer       idanv, idalm, idall
+      integer       idapo
+      integer       nst, nomax, nvmax, nmmax, nocut, lfi
       common /dai/      i1(lst), i2(lst), ie1(lea), ie2(lea), ieo(lea), &
      &                  ia1(0:lia), ia2(0:lia), ifi(lea), idano(lda),   &
      &                  idanv(lda), idapo(lda), idalm(lda), idall(lda), &

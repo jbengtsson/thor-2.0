@@ -56,7 +56,7 @@
         else
           ndt=nd2
           if(ndpt.ne.nd2-1) then
-            write(6,*) ' LETHAL ERROR IN LIEINIT'
+            write(6,*) ' LETHAL ERROR IN LIEINIT', ndpt, nd2-1
             stop
           endif
         endif
@@ -956,7 +956,7 @@
       integer i,ic,ndim
       parameter (ndim=3)
 !      PARAMETER (NTT=40)
-!      INTEGER J(NTT)
+!      integer J(NTT)
       integer j(*)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
@@ -1847,7 +1847,7 @@
 ! USED IN A DACFU CALL OF GOFIX
       parameter (ndim=3)
 !      PARAMETER (NTT=40)
-!      INTEGER J(NTT)
+!      integer J(NTT)
       integer j(*)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
@@ -2014,7 +2014,7 @@
       common /ii/no,nv,nd,nd2
       integer ndc,ndc2,ndpt,ndt
       common /coast/ndc,ndc2,ndt,ndpt
-!      INTEGER J(NTT),JJ(NDIM),JP(NDIM)
+!      integer J(NTT),JJ(NDIM),JP(NDIM)
       integer j(*),jj(ndim),jp(ndim)
       xgam=0.d0
       ad=0.d0
@@ -2062,7 +2062,7 @@
       common /ii/no,nv,nd,nd2
       integer ndc,ndc2,ndpt,ndt
       common /coast/ndc,ndc2,ndt,ndpt
-!      INTEGER J(NTT),JJ(NDIM),JP(NDIM)
+!      integer J(NTT),JJ(NDIM),JP(NDIM)
       integer j(*),jj(ndim),jp(ndim)
       xgbm=0.d0
       ad=0.d0
@@ -2114,7 +2114,7 @@
       common /reson/mx(ndim,nreso),nres
       integer iflow,jtune
       common /vecflow/ iflow,jtune
-!      INTEGER J(NTT),JJ(NDIM)
+!      integer J(NTT),JJ(NDIM)
       integer j(*),jj(ndim)
 
       filt=1.d0
@@ -2165,7 +2165,7 @@
       integer mx,nres
       common /reson/mx(ndim,nreso),nres
       external filt
-!      INTEGER J(NTT)
+!      integer J(NTT)
       integer j(*)
 
       fil=filt(j)
@@ -3262,7 +3262,7 @@
       integer i,ndim
       parameter (ndim=3)
 !      PARAMETER (NTT=40)
-!      INTEGER J(NTT)
+!      integer J(NTT)
       integer j(*)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
@@ -4346,7 +4346,7 @@
       integer i,ndim
       parameter (ndim=3)
 !      PARAMETER (NTT=40)
-!      INTEGER J(NTT)
+!      integer J(NTT)
       integer j(*)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
@@ -4464,7 +4464,7 @@
       integer i,ndim
       parameter (ndim=3)
 !      PARAMETER (NTT=40)
-!      INTEGER J(NTT)
+!      integer J(NTT)
       integer j(*)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
@@ -4494,7 +4494,7 @@
       integer i,ic,ndim
       parameter (ndim=3)
 !      PARAMETER (NTT=40)
-!      INTEGER J(NTT)
+!      integer J(NTT)
       integer j(*)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2

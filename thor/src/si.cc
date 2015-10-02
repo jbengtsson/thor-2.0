@@ -489,14 +489,10 @@ void wiggler_pass(const elem_type<T> &elem, ss_vect<T> &x)
   // first order symplectic integrator for wiggler using expanded Hamiltonian
 
   int         i;
-  double      k_y, k_z;
   T           h, z, a11, a12, a21, a22, c11, c12, c21, c22, det, d1, d2, x2;
   T           B[3], AxoBrho, AyoBrho, AxoBrhop[3], AyoBrhop[3];
   T           hops0, ps0;
   
-  k_z = 2.0*pi/elem.wiggler->lambda;
-  k_y = sqrt(sqr(k_z)+sqr(elem.wiggler->kxV[0]));
-
   h = elem.L/elem.wiggler->n_step; z = 0.0;
   for (i = 1; i <= elem.wiggler->n_step; ++i) {
     get_Axy(elem.wiggler, z, x, AxoBrho, AyoBrho, AxoBrhop, AyoBrhop);

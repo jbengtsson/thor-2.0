@@ -6,8 +6,8 @@
 extern "C" {
   // Interfact to FORTRAN TPSA-library
   void daini_(const int &, const int &, const int &);
-  void daall_(int &, const int &, const char [], 
-	      const int &, const int &);
+  void daall_(int &, const int &, const char [],
+          const int &, const int &);
   void dadal_(int &, const int &);
   void dacon_(int &, const double &);
   void davar_(int &, const double &, const int &);
@@ -40,25 +40,25 @@ extern "C" {
   void daimp_(const double [], const int [], const int [], int &);
   void dainv_(const int [], const int &, int [], const int &);
   void dapin_(const int [], const int &, int [], const int &, const int []);
-  void daexp_(const int &, double [], int [], int [], char []); 
+  void daexp_(const int &, double [], int [], int [], char []);
   void dacct_(const int [], const int &, const int [], const int &,
-	      int [], const int &);
+          int [], const int &);
 
   // Interface to FORTRAN Lie-lib
   void lieinit_(const int &, const int &, const int &,
-		const int &, const int &, const int &);
+        const int &, const int &, const int &);
   void idprset_(const int &);
   void exp1d_(const int &, const int &, int &,
-	      const double &, const int &);
+          const double &, const int &);
   void expnd2_(const int &, const int [], int [],
-	       const double &, const int &);
+           const double &, const int &);
   void etinv_(const int [], int []);
   void etpin_(const int [], int [], const int []);
   void etcct_(const int [], const int [], int []);
   bool mapnorm_(const int [], int &, int [], int [], int [],
-		int &, const int &);
+        int &, const int &);
   bool mapnormf_(const int [], int [], int [], int [], int [],
-		 int [], const int &, const int &);
+         int [], const int &, const int &);
   void gofix_(const int [], int [], int [], const int &);
   void dhdj_(const int &, int []);
   void ctor_(const int &, int &, int &);

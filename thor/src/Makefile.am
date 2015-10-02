@@ -8,5 +8,5 @@ INCLUDES = -I../inc -I$(NUM_REC)/inc
 
 #FFLAGS   = -g -O2 -Wall -fbounds-check -i4 -mcmodel=medium
 FFLAGS   = -g -O2 -Wall -fbounds-check -mcmodel=medium
-#CXXFLAGS = -g -O0 -Wall -Wno-non-template-friend
+CXXFLAGS = -g -O0 -Wall -Wno-non-template-friend
 CXXFLAGS = -g -O0 -Wall -Wno-non-template-friend -fPIC

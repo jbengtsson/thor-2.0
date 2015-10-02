@@ -8,12 +8,13 @@
 extern int  no_tps, ndpt_tps;
 
 bool    ini_tps = false, header = false, res_basis = false, stable = false,
-        debug_tpsa  = false;
+        debug_tpsa = false;
 
-const int  n_max    = 100;     // max iterations for LieExp
+const int  n_max = 100;     // max iterations for LieExp
 
-const int   name_len_for = 11; // name length in FORTRAN library is 10 + NUL
-const char  tpsa_name[] = "tpsa       "; 
+// Fortran strings are passed from C by: [str, strlen(str)].
+const int   name_len_for = 10; // name length in FORTRAN library is 10.
+char  tpsa_name[name_len_for] = "tpsa     "; // String + NULL = 10.
 
 int  bufsize;  // Note, max no of monomials is (no+nv)!/(nv!*no!)
 
@@ -81,6 +82,8 @@ void TPSA_Ini(void)
   // cout << "initilizing g95 i/o" << endl;
   // g95_runtime_start(0, NULL); 
 
+  printf("tpsa_name: |%s|, %lu\n", tpsa_name, sizeof(tpsa_name));
+
   // Initialize TPSA-lib.
   daini_(no_tps, ss_dim, 0);
 
@@ -97,11 +100,11 @@ void TPSA_Ini(void)
 void TPSAEps(const double eps)
 { daeps_(eps); eps_tps = eps; }
 
-tps::tps(void) {
-
+tps::tps(void)
+{
   if (!ini_tps) TPSA_Ini();
-  intptr = 0;
-  daall_(intptr, 1, tpsa_name, no_tps, ss_dim); dacon_(intptr, 0.0);
+//  printf("tpsa_name: |%s|, %lu\n", tpsa_name, sizeof(tpsa_name));
+  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim); dacon_(intptr, 0.0);
   if (debug_tpsa)
     cout << "tps(void):                        "
 	 << ", intptr = " << intptr << endl;
@@ -111,7 +114,8 @@ tps::tps(const double r)
 {
 
   if (!ini_tps) TPSA_Ini();
-  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim); dacon_(intptr, r);
+  printf("tpsa_name: |%s|, %lu\n", tpsa_name, sizeof(tpsa_name));
+//  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim); dacon_(intptr, r);
   if (debug_tpsa)
     cout << "tps(const double r):              "
 	 << ", intptr = " << intptr << endl;
