@@ -82,8 +82,6 @@ void TPSA_Ini(void)
   // cout << "initilizing g95 i/o" << endl;
   // g95_runtime_start(0, NULL); 
 
-  printf("tpsa_name: |%s|, %lu\n", tpsa_name, sizeof(tpsa_name));
-
   // Initialize TPSA-lib.
   daini_(no_tps, ss_dim, 0);
 
