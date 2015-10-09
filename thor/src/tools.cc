@@ -369,7 +369,6 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   for (i = 1; i <= n; i++)
     s_max = max(w[i], s_max);
   
-  cout << endl;
   cout << "singular values:" << endl;
   n_sing = 0;
   for (i = 1; i <= n; i++) {
