@@ -369,7 +369,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   for (i = 1; i <= n; i++)
     s_max = max(w[i], s_max);
   
-  cout << "singular values:" << endl;
+  cout << endl << "singular values:" << endl;
   n_sing = 0;
   for (i = 1; i <= n; i++) {
     cout << scientific << setprecision(3) << setw(10) << w[i];
@@ -616,7 +616,6 @@ void SVD_lim(const int m, const int n, double **A, double *b,
 
   dsvbksb(U, w, V, n1, n, b_m, dcorr);
 
-  cout << endl;
   cout << "dcorr.:" << endl;
   prt_vec(n, dcorr);
 
