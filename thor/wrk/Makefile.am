@@ -1,5 +1,5 @@
 bin_PROGRAMS      = thor h_rnd optics tst_field get_SRM H_min H_zero nl_opt \
-                    fel tst_cg nl_cg nl_pwl nl_ns ctrl_a3 tst
+                    fel tst_cg nl_cg nl_pwl nl_ns ctrl_a3 tst vlad
 #                    nl_opt_mpi
 
 thor_SOURCES      = thor.cc
@@ -18,6 +18,7 @@ nl_sd             = nl_sd.cc
 ctrl_a3_SOURCES   = ctrl_a3.cc
 nl_opt_mpi        = nl_opt_mpi.cc
 tst               = tst.cc
+vlad              = vlad.cc
 
 #nsga2_SOURCES     = nsga2.cc
 

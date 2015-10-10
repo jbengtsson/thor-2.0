@@ -1,4 +1,5 @@
-extern double  E0, dE;
+// E0 contain kinetic energy [GeV].
+extern double  E0, dE, beta0, gamma0;
 extern tps     D_[];
 
 const double  pi = M_PI;
