@@ -276,7 +276,7 @@ void drift_pass(const T L, ss_vect<T> &x)
     u = L/(1.0+x[delta_]);
     x[ct_] += u*(sqr(x[px_])+sqr(x[py_]))/(2.0*(1.0+x[delta_]));
   } else {
-    // u = L/get_ps(x); x[ct_] += u*(1.0+x[delta_]) - L;
+    u = L/get_ps(x); x[ct_] += u*(1.0+x[delta_]) - L;
   }
   x[x_] += x[px_]*u; x[y_] += x[py_]*u;
   if (totpath_on) x[ct_] += L;
