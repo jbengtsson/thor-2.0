@@ -10,7 +10,7 @@ bool  lost;
 
 double  cl_rad, q_fluct;
 double  d_coeff1, d_coeff2, k_coeff1, k_coeff2;
-double  E0, dE;
+double  E0, dE, beta0, gamma0;
 tps     D_[3]; // diff. coeff. for the linear invarient
 
 bool  rad_on    = false, H_exact        = false, totpath_on   = false;
@@ -67,6 +67,7 @@ void ltog(const elem_type<T> &elem, ss_vect<T> &x)
   x[px_] += elem.c1; x[py_] += elem.s1;
 }
 
+#if 1
 
 template<typename T>
 inline T get_ps(ss_vect<T> &x)
@@ -87,6 +88,31 @@ inline T get_ps(ss_vect<T> &x)
   return ps;
 }
 
+#else
+
+template<typename T>
+inline T get_ps(const ss_vect<T> &ps)
+{
+  T p_s, p_s2;
+
+  if (!H_exact)
+    // Ultra relatistic approximation [cT, delta] -> [ct, p_t].
+    p_s2 = sqr(1e0+ps[delta_]) - sqr(ps[px_]) - sqr(ps[py_]);
+  else
+    // delta -> p_t.
+    p_s2 =
+      1e0 + 2e0*ps[delta_]/beta0 + sqr(ps[delta_]) - sqr(ps[px_])
+      - sqr(ps[py_]);
+  if (p_s2 >= 0e0)
+    p_s = sqrt(p_s2);
+  else {
+    printf("get_p_s: *** Speed of light exceeded!\n");
+    p_s = NAN;
+  }
+  return(p_s);
+}
+
+#endif
 
 // partial template-class specialization
 // primary version
@@ -239,7 +265,7 @@ void thin_kick(const int order, const T an[], const T bn[], const T L,
   }
 }
 
-#if 0
+#if 1
 
 template<typename T>
 void drift_pass(const T L, ss_vect<T> &x)
@@ -259,29 +285,29 @@ void drift_pass(const T L, ss_vect<T> &x)
 #else
 
 template <class T>
-void drift_pass(double L, ss_vect<T> &ps)
+void drift_pass(const T L, ss_vect<T> &ps)
 {
   T u, p_s, delta1;
 
     // [ct, p_t].
   if (false) {
     // Ultra relatistic approximation [cT, delta] -> [ct, p_t].
-    u = L/get_p_s(ps);
+    u = L/get_ps(ps);
     ps[x_] += ps[px_]*u;
     ps[y_] += ps[py_]*u;
     ps[ct_] += u*(1e0+ps[delta_]) - L;
   } else {
     // delta -> p_t.
-    p_s = sqrt(1e0+2e0*ps[delta_]/globval.beta0+sqr(ps[delta_]));
+    p_s = sqrt(1e0+2e0*ps[delta_]/beta0+sqr(ps[delta_]));
     delta1 = p_s - 1e0;
 
     p_s = sqrt(sqr(1e0+delta1)-sqr(ps[px_])-sqr(ps[py_]));
     u = L/p_s;
 
-    u = L/get_p_s(ps);
+    u = L/get_ps(ps);
     ps[x_] += ps[px_]*u;
     ps[y_] += ps[py_]*u;
-    ps[ct_] += L*(1e0/globval.beta0+ps[delta_])/p_s;
+    ps[ct_] += L*(1e0/beta0+ps[delta_])/p_s;
   }
   if (totpath_on) ps[ct_] += L;
 }
