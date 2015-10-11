@@ -437,8 +437,9 @@ void mpole_pass(const elem_type<T> &elem, ss_vect<T> &x)
   }
 
   if (elem.L != 0.0) {
-    if (!H_exact ||
-	((elem.mpole->edge1 == 0.0) && (elem.mpole->edge2 == 0.0))) {
+    // if (!H_exact ||
+    // 	((elem.mpole->edge1 == 0.0) && (elem.mpole->edge2 == 0.0))) {
+    if (!H_exact) {
       // polar coordinates
       h_ref = elem.mpole->h_bend; L0 = elem.L/elem.mpole->n_step;
     } else {
@@ -447,8 +448,11 @@ void mpole_pass(const elem_type<T> &elem, ss_vect<T> &x)
       if (elem.mpole->h_bend == 0.0)
 	L0 = elem.L/elem.mpole->n_step;
       else
-	L0 = 1.0/elem.mpole->h_bend*(sin(dtor(elem.mpole->edge1))
-	     + sin(dtor(elem.mpole->edge2)))/elem.mpole->n_step;
+	// L0 = 1.0/elem.mpole->h_bend*(sin(dtor(elem.mpole->edge1))
+	//      + sin(dtor(elem.mpole->edge2)))/elem.mpole->n_step;
+	L0 =
+	  2.0/elem.mpole->h_bend*sin(elem.L*elem.mpole->h_bend/2.0)
+	  /elem.mpole->n_step;
     }
     switch (elem.mpole->method) {
     case Linear:
