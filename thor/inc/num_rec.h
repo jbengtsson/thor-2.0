@@ -221,6 +221,8 @@ extern "C" {
 	      void (*vecfunc)(int, double [], double []));
   void dfour1(double data[], unsigned long nn, int isign);
   double dfmin_(double x[]);
+  void d_dfpmin(double p[], int n, double gtol, int *iter, double *fret,
+		double (*func)(double []), void (*dfunc)(double [], double []));
   void dfpmin(float p[], int n, float gtol, int *iter, float *fret,
 	      float (*func)(float []), void (*dfunc)(float [], float []));
   float dfridr(float (*func)(float), float x, float h, float *err);
