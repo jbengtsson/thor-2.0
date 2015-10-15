@@ -327,7 +327,7 @@ void h_zero1(void)
 
   const bool   prt_iter   = true;
   const int    n_iter_max = 1000;
-  const double bn_tol     = 1e-5;
+  const double bn_tol     = 1e-3;
 
   bn = dvector(1, n_prm); bn_max = dvector(1, n_prm);
   g = dvector(1, n_prm); h = dvector(1, n_prm);
