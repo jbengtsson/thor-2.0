@@ -23,6 +23,8 @@ void set_to_cout(ofstream &fp_out);
 
 void prt_lat(const char *file_name);
 
+void prt_lat(const char *file_name, const int n);
+
 void get_matrix(const ss_vect<tps> &Map, float **M);
 
 void copy_mat(const int n, float **A, float **B);

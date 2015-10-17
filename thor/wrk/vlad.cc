@@ -449,6 +449,103 @@ void analyze_nl_dyn(void)
 }
 
 
+double get_code(elem_type<double> &elem)
+{
+  double  code;
+
+  switch (elem.kind) {
+  case Drift:
+    code = 0e0;
+    break;
+  case Mpole:
+    if (elem.mpole->h_bend != 0e0)
+      code = 0.5e0;
+    else if (elem.mpole->bn[Quad-1] != 0)
+      code = sgn(elem.mpole->bn[Quad-1]);
+    else if (elem.mpole->bn[Sext-1] != 0)
+      code = 1.5*sgn(elem.mpole->bn[Sext-1]);
+    else
+      code = 0e0;
+    break;
+  default:
+    code = 0e0;
+    break;
+  }
+
+  return code;
+}
+
+#if 0
+
+void prt_lat(const char *fname)
+{
+  long int i;
+  FILE     *outf;
+
+  outf = file_write(fname);
+  fprintf(outf, "#        name           s   code"
+	        "  alphax  betax   nux   etax   etapx");
+  fprintf(outf, "  alphay  betay   nuy   etay   etapy    I5\n");
+  fprintf(outf, "#                      [m]"
+	        "                 [m]           [m]");
+  fprintf(outf, "                   [m]           [m]\n");
+  fprintf(outf, "#\n");
+
+  for (i = 0; i <= n_elem; i++) {
+    fprintf(outf, "%4ld %15s %9.5f %4.1f"
+	    " %9.5f %8.5f %8.5f %8.5f %8.5f"
+	    " %9.5f %8.5f %8.5f %8.5f %8.5f\n",
+	    i, elem[i].Name, elem[i].S, get_code(elem[i]),
+	    elem[i].Alpha[X_], elem[i].Beta[X_], elem[i].Nu[X_],
+	    elem[i].Eta[X_], elem[i].Etap[X_],
+	    elem[i].Alpha[Y_], elem[i].Beta[Y_], elem[i].Nu[Y_],
+	    elem[i].Eta[Y_], elem[i].Etap[Y_]);
+  }
+
+  fclose(outf);
+}
+
+#endif
+
+void get_twiss(const double alpha[], const double beta[],
+	       const double eta[], const double etap[])
+{
+  int          j;
+  ss_vect<tps> A1_A1tp;
+
+  danot_(1);
+
+  get_A1(alpha[X_], beta[X_], alpha[Y_], beta[Y_]);
+  for (j = 1; j <= n_elem; j++) {
+    A1.propagate(j, j); elem_tps[j].A1 = A1;
+    A1_A1tp = A1*tp_S(2, A1);
+
+    elem[j-1].Alpha[X_] = -h_ijklm(A1_A1tp[x_], 0, 1, 0, 0, 0);
+    elem[j-1].Alpha[Y_] = -h_ijklm(A1_A1tp[y_], 0, 0, 0, 1, 0);
+    elem[j-1].Beta[X_]  =  h_ijklm(A1_A1tp[x_], 1, 0, 0, 0, 0);
+    elem[j-1].Beta[Y_]  =  h_ijklm(A1_A1tp[y_], 0, 0, 1, 0, 0);
+  }
+}
+
+
+void ctrl_lin_opt()
+{
+  int    k;
+  double alpha[2], beta[2], eta[2], etap[2];
+
+  for (k = 0; k < 2; k++) {
+    alpha[k] = 0e0; beta[k] = 0e0; eta[k] = 0e0; etap[k] = 0e0;
+  }
+
+  // ARC3.
+  beta[X_] = 5.9942; beta[Y_] = 1.8373;
+
+  get_twiss(alpha, beta, eta, etap);
+
+  prt_lat("linlat.out");
+}
+
+
 int main(int argc, char *argv[])
 {
   ss_vect<double> ps;
@@ -482,9 +579,11 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
+  ctrl_lin_opt();
+
   // opt_nl_disp();
 
-  if (true) {
+  if (false) {
     get_prms();
 
     if (false) no_mpoles();

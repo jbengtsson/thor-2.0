@@ -67,11 +67,36 @@ void set_to_cout(ofstream &fp_out)
 }
 
 
+double get_code(elem_type<double> &elem)
+{
+  double  code;
+
+  switch (elem.kind) {
+  case Drift:
+    code = 0e0;
+    break;
+  case Mpole:
+    if (elem.mpole->h_bend != 0e0)
+      code = 0.5e0;
+    else if (elem.mpole->bn[Quad-1] != 0)
+      code = sgn(elem.mpole->bn[Quad-1]);
+    else if (elem.mpole->bn[Sext-1] != 0)
+      code = 1.5*sgn(elem.mpole->bn[Sext-1]);
+    else
+      code = 0e0;
+    break;
+  default:
+    code = 0e0;
+    break;
+  }
+
+  return code;
+}
+
 void prt_lat(const char *file_name)
 {
-  long int      i = 0;
-  double        code = 0.0;
-  FILE          *outf;
+  long int i;
+  FILE     *outf;
 
   outf = file_write(file_name);
   fprintf(outf, "#        name           s   code"
@@ -83,32 +108,125 @@ void prt_lat(const char *file_name)
   fprintf(outf, "#\n");
 
   for (i = 0; i < n_elem; i++) {
-    switch (elem[i].kind) {
-    case Drift:
-      code = 0.0;
-      break;
-    case Mpole:
-      if (elem[i].mpole->h_bend != 0.0)
-	code = 0.5;
-      else if (elem[i].mpole->bn[Quad-1] != 0)
-	code = sgn(elem[i].mpole->bn[Quad-1]);
-      else if (elem[i].mpole->bn[Sext-1] != 0)
-	code = 1.5*sgn(elem[i].mpole->bn[Sext-1]);
-      else
-	code = 0.0;
-      break;
-    default:
-      code = 0.0;
-      break;
-    }
     fprintf(outf, "%4ld %-15s %6.2f %4.1f"
 	    " %7.3f %6.3f %6.3f %6.3f %6.3f"
 	    " %7.3f %6.3f %6.3f %6.3f %6.3f\n",
-	    i, elem[i].Name, elem[i].S, code,
+	    i, elem[i].Name, elem[i].S, get_code(elem[i]),
 	    elem[i].Alpha[X_], elem[i].Beta[X_], elem[i].Nu[X_],
 	    elem[i].Eta[X_], elem[i].Etap[X_],
 	    elem[i].Alpha[Y_], elem[i].Beta[Y_], elem[i].Nu[Y_],
 	    elem[i].Eta[Y_], elem[i].Etap[Y_]);
+  }
+
+  fclose(outf);
+}
+
+
+void prt_lat(const char *fname, const int n)
+{
+  long int           i;
+  int                j, k;
+  double             alpha[2], beta[2], nu[2], dnu[2], eta[2], etap[2], dnu1[2];
+  mpole_type<double> *mpole;
+  tps                s, h;
+  ss_vect<double>    eta_Fl;
+  ss_vect<tps>       A, A_CS;
+  FILE               *outf;
+
+  const double  c1 = 1e0/(2e0*(2e0-pow(2e0, 1e0/3e0))), c2 = 0.5e0-c1;
+  const double  d1 = 2e0*c1, d2 = 1e0-2e0*d1;
+
+  outf = file_write(fname);
+  fprintf(outf, "#        name           s   code"
+	        "  alphax  betax   nux   etax   etapx");
+  fprintf(outf, "  alphay  betay   nuy   etay   etapy\n");
+  fprintf(outf, "#                      [m]"
+	        "                 [m]           [m]");
+  fprintf(outf, "                   [m]           [m]\n");
+  fprintf(outf, "#\n");
+
+  for (i = 0; i < n_elem; i++) {
+    if ((i != 0) &&
+	((elem[i].kind == Drift) ||
+	 ((elem[i].kind == Mpole) && (elem[i].L != 0e0)))) {
+      mpole = elem[i].mpole;
+
+      for (k = 0; k < 2; k++) {
+	alpha[k] = elem[i].Alpha[k]; beta[k] = elem[i].Beta[k];
+	nu[k] = elem[i].Nu[k];
+	eta[k] = elem[i].Eta[k]; etap[k] = elem[i].Etap[k];
+      }
+
+      get_A1(alpha[X_], beta[X_], alpha[Y_], beta[Y_]);
+ 
+      s = elem[i].S - elem[i].L; h = elem[i].L/n;
+
+      for (j = 1; j <= n; j++) {
+	s += h;
+
+	if (elem[i].kind == Drift)
+	  drift_pass(h, A1);
+	else if (elem[i].kind == Mpole) {
+	  if ((j == 1) && (mpole->h_bend != 0e0))
+	    bend_HE_fringe(mpole->h_bend, mpole->edge1, mpole->gap, A1);
+
+	  drift_pass(c1*h, A1);
+	  thin_kick(Quad, mpole->an, mpole->bn, d1*h, mpole->h_bend,
+		    mpole->h_bend, true, A1);
+	  drift_pass(c2*h, A1);
+	  thin_kick(Quad, mpole->an, mpole->bn, d2*h, mpole->h_bend,
+		    mpole->h_bend, true, A1);
+	  drift_pass(c2*h, A1);
+	  thin_kick(Quad, mpole->an, mpole->bn, d1*h, mpole->h_bend,
+		    mpole->h_bend, true, A1);
+	  drift_pass(c1*h, A1);
+
+	  if ((j == n) && (mpole->h_bend != 0e0))
+	    bend_HE_fringe(mpole->h_bend, mpole->edge2, mpole->gap, A1);
+	}
+
+	get_ab(A1, alpha, beta, dnu, eta, etap);
+
+	if(elem[i].L < 0e0)
+	  for (k = 0; k < 2; k++)
+	    dnu[k] -= 1e0;
+
+	A_CS = get_A_CS(2, A1, dnu1);
+
+	eta_Fl.zero();
+	for (k = 0; k < 2; k++) {
+	  eta_Fl[2*k] = eta[k]; eta_Fl[2*k+1] = etap[k];
+	}
+	eta_Fl = (Inv(A_CS)*eta_Fl).cst();
+	curly_H = sqr(eta_Fl[x_]) + sqr(eta_Fl[px_]);
+
+	fprintf(outf, "%4ld %15s %6.2f %4.1f"
+		" %7.3f %6.3f %6.3f %6.3f %6.3f"
+		" %7.3f %6.3f %6.3f %6.3f %6.3f %10.3e %10.3e %10.3e\n",
+		i, elem[i].Name, s, get_code(elem[i]),
+		alpha[X_], beta[X_], nu[X_]+dnu[X_], eta[X_], etap[X_],
+		alpha[Y_], beta[Y_], nu[Y_]+dnu[Y_], eta[Y_], etap[Y_],
+		eta_Fl[x_], eta_Fl[px_], curly_H);
+      }
+    } else {
+      A1 = get_A(elem[i].Alpha, elem[i].Beta, elem[i].Eta, elem[i].Etap);
+
+      eta_Fl.zero();
+      for (k = 0; k < 2; k++) {
+	eta_Fl[2*k] = elem[i].Eta[k]; eta_Fl[2*k+1] = elem[i].Etap[k];
+      }
+      eta_Fl = (Inv(A)*eta_Fl).cst();
+
+      fprintf(outf, "%4ld %15s %6.2f %4.1f"
+	      " %7.3f %6.3f %6.3f %6.3f %6.3f"
+	      " %7.3f %6.3f %6.3f %6.3f %6.3f %10.3e %10.3e\n",
+	      i, elem[i].name, elem[i].S, get_code(elem[i]),
+	      elem[i].Alpha[X_], elem[i].Beta[X_], elem[i].Nu[X_],
+	      elem[i].Eta[X_], elem[i].Etap[X_],
+	      elem[i].Alpha[Y_], elem[i].Beta[Y_], elem[i].Nu[Y_],
+	      elem[i].Eta[Y_], elem[i].Etap[Y_],
+	      eta_Fl[x_], eta_Fl[px_]);
+    }
   }
 
   fclose(outf);
@@ -1237,18 +1355,35 @@ bool get_COD(const int i_max, const double eps, const double delta,
 }
 
 
-void get_A1(const double alpha_x, const double beta_x,
-	    const double alpha_y, const double beta_y)
+void get_A1(const double alpha[], const double beta[],
+	    const double eta[], const double etap[])
 {
-  ss_vect<tps>  Id;
+  int          k;
+  ss_vect<tps> Id;
 
   Map.zero(); A0.zero(); A1.zero(); g = 0.0; Id.identity();
 
-  A1[x_]  = sqrt(beta_x)*Id[x_];
-  A1[px_] = -alpha_x/sqrt(beta_x)*Id[x_] + 1.0/sqrt(beta_x)*Id[px_];
+  for (k = 0; k < 2; k++) {
+    A1[2*k]  = sqrt(beta_x)*Id[2*k];
+    A1[2*k+1] = -alpha_x/sqrt(beta_x)*Id[2*k] + 1.0/sqrt(beta_x)*Id[2*k+1];
+    A1[2*k] += eta[k]*Id[delta_]; A[2*k+1] += etap[k]*Id[delta_];
+  }
+}
 
-  A1[y_]  = sqrt(beta_y)*Id[y_];
-  A1[py_] = -alpha_y/sqrt(beta_y)*Id[y_] + 1.0/sqrt(beta_y)*Id[py_];
+
+void get_A1(const double alphax, const double betax,
+	    const double alphay, const double betay)
+{
+  int    k;
+  double eta[2], etap[2];
+
+  for (k = 0; k < 2; k++) {
+    eta[k] = 0e0; etap[k] = 0e0;
+  }
+
+  alpha[X_] = alphax; beta[X_] = betax; alpha[Y_] = alphay; beta[Y_] = betay;
+
+  get_A1(alpha, beta, eta, etap);
 }
 
 

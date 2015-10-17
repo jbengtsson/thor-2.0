@@ -206,10 +206,10 @@ void radiate(ss_vect<T> &x, const T L, double h_ref, T B[])
   if (emittance_on) is_tps<T>::emittance(B2, H_dL, ps0, u);
 }
 
-template<typename T>
+template<typename T, typename U>
 void thin_kick(const int order, const T an[], const T bn[], const T L,
 	       const double h_bend, const double h_ref, const int thick,
-	       ss_vect<T> &x)
+	       ss_vect<U> &x)
 {
 
 /* The kick is given by
@@ -233,9 +233,9 @@ void thin_kick(const int order, const T an[], const T bn[], const T L,
       p_0   B rho                                            */
 
   int	      j;
-  T           BxoBrho, ByoBrho, ByoBrho1;
-  T           B[3];
-  ss_vect<T>  x0;
+  U           BxoBrho, ByoBrho, ByoBrho1;
+  U           B[3];
+  ss_vect<U>  x0;
 
   x0 = x;
   if ((h_bend != 0.0) || ((1 <= order) && (order <= mpole_max))) {
@@ -267,10 +267,10 @@ void thin_kick(const int order, const T an[], const T bn[], const T L,
 
 #if 1
 
-template<typename T>
-void drift_pass(const T L, ss_vect<T> &x)
+template<typename T, typename U>
+void drift_pass(const T L, ss_vect<U> &x)
 {
-  T  u;
+  U u;
 
   if (!H_exact) {
     u = L/(1.0+x[delta_]);
