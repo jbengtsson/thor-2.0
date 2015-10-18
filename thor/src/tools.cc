@@ -125,9 +125,9 @@ void prt_lat(const char *file_name)
   fprintf(outf, "#\n");
 
   for (i = 0; i < n_elem; i++) {
-    fprintf(outf, "%4ld %-15s %6.2f %4.1f"
-	    " %7.3f %6.3f %6.3f %6.3f %6.3f"
-	    " %7.3f %6.3f %6.3f %6.3f %6.3f\n",
+    fprintf(outf, "%4ld %15s %9.5f %4.1f"
+	    " %9.5f %8.5f %8.5f %8.5f %8.5f"
+	    " %9.5f %8.5f %8.5f %8.5f %8.5f\n",
 	    i, elem[i].Name, elem[i].S, get_code(elem[i]),
 	    elem[i].Alpha[X_], elem[i].Beta[X_], elem[i].Nu[X_],
 	    elem[i].Eta[X_], elem[i].Etap[X_],
@@ -240,7 +240,7 @@ void prt_lat(const char *fname, const int n)
 	eta[k] = elem[i-1].Eta[k]; etap[k] = elem[i-1].Etap[k];
       }
 
-      get_A1(alpha[X_], beta[X_], alpha[Y_], beta[Y_]);
+      get_A1(alpha, beta, eta, etap);
       A1[delta_] = tps(0e0, 5); A1[ct_] = tps(0e0, 6);
 
       s = elem[i].S - elem[i].L; h = elem[i].L/n;

@@ -167,6 +167,11 @@ bool get_COD(const int i_max, const double eps, const double delta,
 void get_A1(const double alpha_x, const double beta_x,
 	    const double alpha_y, const double beta_y);
 
+void get_A1(const double alpha[], const double beta[],
+	    const double eta[], const double etap[]);
+
+ss_vect<tps> get_A_CS(const int n, const ss_vect<tps> &A, double dnu[]);
+
 tps get_h(void);
 
 tps get_H(void);
