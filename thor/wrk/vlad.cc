@@ -48,8 +48,9 @@ int get_ind(const int k)
 }
 
 
-void prt_lin_map(const int n_DOF, const ss_vect<tps> &map)
+void prt_lin_map1(const int n_DOF, const ss_vect<tps> &map)
 {
+  // Phase-space coordinates in canonical order.
   int  i, j;
 
   cout << endl;
@@ -419,7 +420,7 @@ void analyze_nl_dyn(void)
   danot_(1); lin_map = Map; danot_(no_tps);
   h = LieFact(Map*Inv(lin_map));
 
-  prt_lin_map(3, Map);
+  prt_lin_map1(3, Map);
   cout << endl << scientific << setprecision(6)
        << "R_56:    " << setw(14) << h_ijklm(Map[ct_], 0, 0, 0, 0, 1) << endl;
   cout << scientific << setprecision(6)
@@ -449,108 +450,114 @@ void analyze_nl_dyn(void)
 }
 
 
-double get_code(elem_type<double> &elem)
-{
-  double  code;
-
-  switch (elem.kind) {
-  case Drift:
-    code = 0e0;
-    break;
-  case Mpole:
-    if (elem.mpole->h_bend != 0e0)
-      code = 0.5e0;
-    else if (elem.mpole->bn[Quad-1] != 0)
-      code = sgn(elem.mpole->bn[Quad-1]);
-    else if (elem.mpole->bn[Sext-1] != 0)
-      code = 1.5*sgn(elem.mpole->bn[Sext-1]);
-    else
-      code = 0e0;
-    break;
-  default:
-    code = 0e0;
-    break;
-  }
-
-  return code;
-}
-
-#if 0
-
-void prt_lat(const char *fname)
-{
-  long int i;
-  FILE     *outf;
-
-  outf = file_write(fname);
-  fprintf(outf, "#        name           s   code"
-	        "  alphax  betax   nux   etax   etapx");
-  fprintf(outf, "  alphay  betay   nuy   etay   etapy    I5\n");
-  fprintf(outf, "#                      [m]"
-	        "                 [m]           [m]");
-  fprintf(outf, "                   [m]           [m]\n");
-  fprintf(outf, "#\n");
-
-  for (i = 0; i <= n_elem; i++) {
-    fprintf(outf, "%4ld %15s %9.5f %4.1f"
-	    " %9.5f %8.5f %8.5f %8.5f %8.5f"
-	    " %9.5f %8.5f %8.5f %8.5f %8.5f\n",
-	    i, elem[i].Name, elem[i].S, get_code(elem[i]),
-	    elem[i].Alpha[X_], elem[i].Beta[X_], elem[i].Nu[X_],
-	    elem[i].Eta[X_], elem[i].Etap[X_],
-	    elem[i].Alpha[Y_], elem[i].Beta[Y_], elem[i].Nu[Y_],
-	    elem[i].Eta[Y_], elem[i].Etap[Y_]);
-  }
-
-  fclose(outf);
-}
-
-#endif
-
 void get_twiss(const double alpha[], const double beta[],
 	       const double eta[], const double etap[])
 {
-  int          j;
+  int          j, k;
+  double       alpha1[2], beta1[2], eta1[2], etap1[2], dnu1[2], dnu2[2];
   ss_vect<tps> A1_A1tp;
 
   danot_(1);
 
-  get_A1(alpha[X_], beta[X_], alpha[Y_], beta[Y_]);
+  for (k = 0; k < 2; k++)
+    dnu1[k] = 0e0;
+  A1 = get_A(alpha, beta, eta, etap);
   for (j = 1; j <= n_elem; j++) {
-    A1.propagate(j, j); elem_tps[j].A1 = A1;
-    A1_A1tp = A1*tp_S(2, A1);
+    A1.propagate(j, j); elem_tps[j-1].A1 = A1; A1_A1tp = A1*tp_S(2, A1);
 
-    elem[j-1].Alpha[X_] = -h_ijklm(A1_A1tp[x_], 0, 1, 0, 0, 0);
-    elem[j-1].Alpha[Y_] = -h_ijklm(A1_A1tp[y_], 0, 0, 0, 1, 0);
-    elem[j-1].Beta[X_]  =  h_ijklm(A1_A1tp[x_], 1, 0, 0, 0, 0);
-    elem[j-1].Beta[Y_]  =  h_ijklm(A1_A1tp[y_], 0, 0, 1, 0, 0);
+    get_ab(A1, alpha1, beta1, dnu2, eta1, etap1);
+    for (k = 0; k < 2; k++) {
+      elem[j-1].Alpha[k] = alpha1[k]; elem[j-1].Beta[k] = beta1[k];
+      elem[j-1].Eta[k] = eta1[k]; elem[j-1].Etap[k] = etap1[k];
+    }
+
+    // Assumes dnu < 360 degrees.
+    for (k = 0; k < 2; k++) {
+      elem[j-1].Nu[k] = floor(elem[j-2].Nu[k]) + dnu2[k];
+      if ((dnu2[k] < dnu1[k]) && (elem[j-1].L >= 0e0)) elem[j-1].Nu[k] += 1e0;
+    }
+
+    for (k = 0; k < 2; k++)
+      dnu1[k] = dnu2[k];
   }
 }
 
 
-void ctrl_lin_opt()
+template<typename T>
+T atan2(const T y, const T x)
 {
-  int    k;
+  T z;
+  
+  if (x != 0e0)
+    z = atan(y/x);
+  else {
+    if (y > 0e0)
+      z = M_PI/2e0;
+    else
+      z = -M_PI/2e0;
+  }
+  if (x < 0e0) {
+    if (y >= 0e0)
+      z += M_PI;
+    else
+      z -= M_PI;
+  }
+  return z;
+}
+
+
+void get_dnu(tps dnu[])
+{
+  int    k, jj[ss_dim];
   double alpha[2], beta[2], eta[2], etap[2];
+  tps    a11, a12;
 
   for (k = 0; k < 2; k++) {
-    alpha[k] = 0e0; beta[k] = 0e0; eta[k] = 0e0; etap[k] = 0e0;
+    eta[k] = elem[0].Eta[k]; etap[k] = elem[0].Etap[k];
+    alpha[k] = elem[0].Alpha[k]; beta[k] = elem[0].Beta[k];
   }
+  A1 = get_A(alpha, beta, eta, etap); A1.propagate(1, n_elem);
 
-  // ARC3.
-  beta[X_] = 5.9942; beta[Y_] = 1.8373;
+  for (k = 0; k < ss_dim; k++)
+    jj[k] = 0;
 
-  get_twiss(alpha, beta, eta, etap);
+  for (k = 0; k < 2; k++) {
+    jj[2*k] = 1; a11 = A1[2*k][jj];
+    jj[delta_] = 1; a11 += A1[2*k][jj]*tps(0e0, delta_+1);
+    jj[2*k] = 0; jj[delta_] = 0;
+    jj[2*k+1] = 1; a12 = A1[2*k][jj];
+    jj[delta_] = 1; a12 += A1[2*k][jj]*tps(0e0, delta_+1);
+    jj[2*k+1] = 0; jj[delta_] = 0;
+    dnu[k] = atan2(a12, a11)/(2e0*M_PI);
+    if (dnu[k] < 0e0) dnu[k] += 1e0;
+  }
+}
 
-  prt_lat("linlat.out");
+
+void get_ksi(double ksi[])
+{
+  int k;
+  tps nu[2];
+
+  danot_(2); get_dnu(nu);
+  for (k = 0; k < 2; k++)
+    ksi[k] =  h_ijklm(nu[k], 0, 0, 0, 0, 1);
+  cout << fixed << setprecision(5)
+       << "nu  = [" << setw(8) << nu[X_].cst() << ", "
+       << setw(8) << nu[Y_].cst() << "]" << endl;
+  cout << fixed << setprecision(5)
+       << "ksi = [" << setw(8) << ksi[X_] << ", "
+       << setw(8) << ksi[Y_] << "]" << endl;
 }
 
 
 int main(int argc, char *argv[])
 {
+  int             k;
+  double          alpha[2], beta[2], eta[2], etap[2], ksi[2];
   ss_vect<double> ps;
 
-  rad_on    = false; H_exact        = false;  totpath_on   = false;
+  rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
   IBS_on    = false;
 
@@ -579,7 +586,26 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  ctrl_lin_opt();
+  for (k = 0; k < 2; k++) {
+    eta[k] = 0e0; etap[k] = 0e0; alpha[k] = 0e0; beta[k] = 0e0;
+  }
+  switch (1) {
+  case 1:
+    // Arc3.
+    beta[X_] = 5.9942; beta[Y_] = 1.8373;
+    break;
+   case 2:
+     // Chicane2.
+     alpha[X_] = -0.25; alpha[Y_] = 0.00; beta[X_] =  2.50;  beta[Y_] = 5.00;
+    break;
+  }
+
+  get_twiss(alpha, beta, eta, etap);
+
+  prt_lat("linlat.out", 10);
+  prt_lat("linlat1.out");
+
+  get_ksi(ksi);
 
   // opt_nl_disp();
 
