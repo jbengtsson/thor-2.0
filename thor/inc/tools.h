@@ -21,6 +21,8 @@ void file_wr(ofstream &outf, const char file_name[]);
 
 void set_to_cout(ofstream &fp_out);
 
+void prt_lin_map(const int n_DOF, const ss_vect<tps> &map);
+
 void prt_lat(const char *file_name);
 
 void prt_lat(const char *file_name, const int n);

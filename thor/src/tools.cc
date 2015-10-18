@@ -67,6 +67,23 @@ void set_to_cout(ofstream &fp_out)
 }
 
 
+void prt_lin_map(const int n_DOF, const ss_vect<tps> &map)
+{
+  int  i, j;
+
+  cout << endl;
+  for (i = 0; i < 2*n_DOF; i++) {
+    for (j = 0; j < 2*n_DOF; j++) {
+      if (true)
+	cout << scientific << setprecision(6) << setw(14) << map[i][j];
+      else
+	cout << scientific << setprecision(16) << setw(24) << map[i][j];
+    }
+    cout << endl;
+  }
+}
+
+
 double get_code(elem_type<double> &elem)
 {
   double  code;
@@ -122,15 +139,81 @@ void prt_lat(const char *file_name)
 }
 
 
+void get_dnu(const int n, const ss_vect<tps> &A, double dnu[])
+{
+  int  k;
+
+  for (k = 0; k < n; k++) {
+    dnu[k] = atan2(A[2*k][2*k+1], A[2*k][2*k])/(2.0*M_PI);
+    if (dnu[k] < 0.0) dnu[k] += 1.0;
+  }
+}
+
+
+void get_ab(const ss_vect<tps> &A,
+	    double alpha[], double beta[], double dnu[],
+	    double eta[], double etap[])
+{
+  int           k;
+  ss_vect<tps>  A_Atp;
+
+  A_Atp = A*tp_S(2, A);
+
+  for (k = 0; k <= 1; k++) {
+    eta[k] = A[2*k][delta_]; etap[k] = A[2*k+1][delta_];
+
+    alpha[k] = -A_Atp[2*k][2*k+1]; beta[k] = A_Atp[2*k][2*k];
+  }
+
+  get_dnu(2, A, dnu);
+}
+
+
+ss_vect<tps> get_A(const double alpha[], const double beta[],
+		   const double eta[], const double etap[])
+{
+  int           k;
+  ss_vect<tps>  A, Id;
+
+  Id.identity();
+
+  A.identity();
+  for (k = 0; k < 2; k++) {
+    A[2*k]  = sqrt(beta[k])*Id[2*k];
+    A[2*k+1] = -alpha[k]/sqrt(beta[k])*Id[2*k] + 1.0/sqrt(beta[k])*Id[2*k+1];
+
+    A[2*k] += eta[k]*Id[delta_]; A[2*k+1] += etap[k]*Id[delta_];
+  }
+
+  return A;
+}
+
+
+ss_vect<tps> get_A_CS(const int n, const ss_vect<tps> &A, double dnu[])
+{
+  int           k;
+  double        c, s;
+  ss_vect<tps>  Id, R;
+
+  Id.identity(); R.identity(); get_dnu(n, A, dnu);
+  for (k = 0; k < n; k++) {
+    c = cos(2.0*M_PI*dnu[k]); s = sin(2.0*M_PI*dnu[k]);
+    R[2*k] = c*Id[2*k] - s*Id[2*k+1]; R[2*k+1] = s*Id[2*k] + c*Id[2*k+1];
+  }
+
+  return A*R;
+}
+
+
 void prt_lat(const char *fname, const int n)
 {
   long int           i;
   int                j, k;
+  double             s, h;
   double             alpha[2], beta[2], nu[2], dnu[2], eta[2], etap[2], dnu1[2];
   mpole_type<double> *mpole;
-  tps                s, h;
   ss_vect<double>    eta_Fl;
-  ss_vect<tps>       A, A_CS;
+  ss_vect<tps>       A_CS;
   FILE               *outf;
 
   const double  c1 = 1e0/(2e0*(2e0-pow(2e0, 1e0/3e0))), c2 = 0.5e0-c1;
@@ -152,13 +235,14 @@ void prt_lat(const char *fname, const int n)
       mpole = elem[i].mpole;
 
       for (k = 0; k < 2; k++) {
-	alpha[k] = elem[i].Alpha[k]; beta[k] = elem[i].Beta[k];
-	nu[k] = elem[i].Nu[k];
-	eta[k] = elem[i].Eta[k]; etap[k] = elem[i].Etap[k];
+	alpha[k] = elem[i-1].Alpha[k]; beta[k] = elem[i-1].Beta[k];
+	nu[k] = elem[i-1].Nu[k];
+	eta[k] = elem[i-1].Eta[k]; etap[k] = elem[i-1].Etap[k];
       }
 
       get_A1(alpha[X_], beta[X_], alpha[Y_], beta[Y_]);
- 
+      A1[delta_] = tps(0e0, 5); A1[ct_] = tps(0e0, 6);
+
       s = elem[i].S - elem[i].L; h = elem[i].L/n;
 
       for (j = 1; j <= n; j++) {
@@ -198,15 +282,14 @@ void prt_lat(const char *fname, const int n)
 	  eta_Fl[2*k] = eta[k]; eta_Fl[2*k+1] = etap[k];
 	}
 	eta_Fl = (Inv(A_CS)*eta_Fl).cst();
-	curly_H = sqr(eta_Fl[x_]) + sqr(eta_Fl[px_]);
 
 	fprintf(outf, "%4ld %15s %6.2f %4.1f"
 		" %7.3f %6.3f %6.3f %6.3f %6.3f"
-		" %7.3f %6.3f %6.3f %6.3f %6.3f %10.3e %10.3e %10.3e\n",
+		" %7.3f %6.3f %6.3f %6.3f %6.3f %10.3e %10.3e\n",
 		i, elem[i].Name, s, get_code(elem[i]),
 		alpha[X_], beta[X_], nu[X_]+dnu[X_], eta[X_], etap[X_],
 		alpha[Y_], beta[Y_], nu[Y_]+dnu[Y_], eta[Y_], etap[Y_],
-		eta_Fl[x_], eta_Fl[px_], curly_H);
+		eta_Fl[x_], eta_Fl[px_]);
       }
     } else {
       A1 = get_A(elem[i].Alpha, elem[i].Beta, elem[i].Eta, elem[i].Etap);
@@ -215,12 +298,12 @@ void prt_lat(const char *fname, const int n)
       for (k = 0; k < 2; k++) {
 	eta_Fl[2*k] = elem[i].Eta[k]; eta_Fl[2*k+1] = elem[i].Etap[k];
       }
-      eta_Fl = (Inv(A)*eta_Fl).cst();
+      eta_Fl = (Inv(A1)*eta_Fl).cst();
 
       fprintf(outf, "%4ld %15s %6.2f %4.1f"
 	      " %7.3f %6.3f %6.3f %6.3f %6.3f"
 	      " %7.3f %6.3f %6.3f %6.3f %6.3f %10.3e %10.3e\n",
-	      i, elem[i].name, elem[i].S, get_code(elem[i]),
+	      i, elem[i].Name, elem[i].S, get_code(elem[i]),
 	      elem[i].Alpha[X_], elem[i].Beta[X_], elem[i].Nu[X_],
 	      elem[i].Eta[X_], elem[i].Etap[X_],
 	      elem[i].Alpha[Y_], elem[i].Beta[Y_], elem[i].Nu[Y_],
@@ -1364,9 +1447,9 @@ void get_A1(const double alpha[], const double beta[],
   Map.zero(); A0.zero(); A1.zero(); g = 0.0; Id.identity();
 
   for (k = 0; k < 2; k++) {
-    A1[2*k]  = sqrt(beta_x)*Id[2*k];
-    A1[2*k+1] = -alpha_x/sqrt(beta_x)*Id[2*k] + 1.0/sqrt(beta_x)*Id[2*k+1];
-    A1[2*k] += eta[k]*Id[delta_]; A[2*k+1] += etap[k]*Id[delta_];
+    A1[2*k]  = sqrt(beta[k])*Id[2*k];
+    A1[2*k+1] = -alpha[k]/sqrt(beta[k])*Id[2*k] + 1.0/sqrt(beta[k])*Id[2*k+1];
+    A1[2*k] += eta[k]*Id[delta_]; A1[2*k+1] += etap[k]*Id[delta_];
   }
 }
 
@@ -1375,7 +1458,7 @@ void get_A1(const double alphax, const double betax,
 	    const double alphay, const double betay)
 {
   int    k;
-  double eta[2], etap[2];
+  double alpha[2], beta[2], eta[2], etap[2];
 
   for (k = 0; k < 2; k++) {
     eta[k] = 0e0; etap[k] = 0e0;
