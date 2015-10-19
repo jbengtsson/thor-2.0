@@ -185,11 +185,11 @@ T B2_perp(const double h_ref, const T B[], const ss_vect<T> u)
 }
 
 
-template<typename T>
-void radiate(ss_vect<T> &x, const T L, double h_ref, T B[])
+template<typename T, typename U>
+void radiate(ss_vect<T> &x, const U L, double h_ref, T B[])
 {
-  T           ps0, ps1, H_dL, B2;
-  ss_vect<T>  u;
+  T          ps0, ps1, H_dL, B2;
+  ss_vect<T> u;
 
   // large ring: x' and y' approx. const. wrt radiation:  p_x = x'*(1+delta)
   u = x; ps0 = get_ps(x); u[px_] /= ps0; u[py_] /= ps0;
@@ -923,7 +923,7 @@ bool si(const long int i0, const long int i1, ss_vect<T> &x,
       return false;
     }
 
-    is_tps<T>::get_ps(x, elem[i-1]);
+    // is_tps<T>::get_ps(x, elem[i-1]);
   }
 
   return true;

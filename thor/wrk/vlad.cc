@@ -457,14 +457,16 @@ void get_twiss(const double alpha[], const double beta[],
   double       alpha1[2], beta1[2], eta1[2], etap1[2], dnu1[2], dnu2[2];
   ss_vect<tps> A1_A1tp;
 
+  // Crucial; to only store linear part of A.
   danot_(1);
 
   for (k = 0; k < 2; k++)
     dnu1[k] = 0e0;
   A1 = get_A(alpha, beta, eta, etap);
   for (j = 1; j <= n_elem; j++) {
-    A1.propagate(j, j); elem_tps[j-1].A1 = A1; A1_A1tp = A1*tp_S(2, A1);
-
+    A1.propagate(j, j);
+    elem_tps[j-1].A1 = get_A_CS(2, A1, dnu2);
+    A1_A1tp = A1*tp_S(2, A1);
     get_ab(A1, alpha1, beta1, dnu2, eta1, etap1);
     for (k = 0; k < 2; k++) {
       elem[j-1].Alpha[k] = alpha1[k]; elem[j-1].Beta[k] = beta1[k];
@@ -506,7 +508,7 @@ T atan2(const T y, const T x)
 }
 
 
-void get_dnu(tps dnu[])
+void get_nu1(tps nu[])
 {
   int    k, jj[ss_dim];
   double alpha[2], beta[2], eta[2], etap[2];
@@ -524,12 +526,38 @@ void get_dnu(tps dnu[])
   for (k = 0; k < 2; k++) {
     jj[2*k] = 1; a11 = A1[2*k][jj];
     jj[delta_] = 1; a11 += A1[2*k][jj]*tps(0e0, delta_+1);
-    jj[2*k] = 0; jj[delta_] = 0;
+    jj[6] = 1; a11 += A1[2*k][jj]*tps(0e0, 7);
+    jj[2*k] = 0; jj[delta_] = 0; jj[6] = 0;
     jj[2*k+1] = 1; a12 = A1[2*k][jj];
     jj[delta_] = 1; a12 += A1[2*k][jj]*tps(0e0, delta_+1);
-    jj[2*k+1] = 0; jj[delta_] = 0;
-    dnu[k] = atan2(a12, a11)/(2e0*M_PI);
-    if (dnu[k] < 0e0) dnu[k] += 1e0;
+    jj[6] = 1; a12 += A1[2*k][jj]*tps(0e0, 7);
+    jj[2*k+1] = 0; jj[delta_] = 0; jj[6] = 0;
+    nu[k] = atan2(a12, a11)/(2e0*M_PI);
+    if (nu[k] < 0e0) nu[k] += 1e0;
+  }
+}
+
+
+void get_nu(tps nu[])
+{
+  int          k;
+  ss_vect<tps> A0, A1, R, Id;
+  tps          r11, r12;
+
+  A0.identity(); A1.identity();
+  for (k = 0; k < 4; k++) {
+    A0[k] = elem_tps[0].A1[k]; A1[k] = elem_tps[n_elem-1].A1[k];
+  }
+  get_Map(); R = Inv(A1)*Map*A0;
+
+  Id.zero(); Id[delta_] = tps(0e0, delta_+1); Id[6] = tps(0e0, 7);
+  for (k = 0; k < 2; k++) {
+    Id[2*k] = tps(0e0, 2*k+1); r11 = (R*Id)[2*k]; Id[2*k] = 0e0;
+    Id[2*k+1] = tps(0e0, 2*k+2); r12 = (R*Id)[2*k]; Id[2*k+1] = 0e0;
+    // Only correct for leading order.
+    r11 = Der(r11, 2*k+1); r12 = Der(r12, 2*k+2);
+    nu[k] = atan(r12/r11)/(2e0*M_PI);
+    if (nu[k] < 0e0) nu[k] += 1e0;
   }
 }
 
@@ -539,9 +567,11 @@ void get_ksi(double ksi[])
   int k;
   tps nu[2];
 
-  danot_(2); get_dnu(nu);
+  get_nu(nu);
   for (k = 0; k < 2; k++)
-    ksi[k] =  h_ijklm(nu[k], 0, 0, 0, 0, 1);
+    ksi[k] = h_ijklm(nu[k], 0, 0, 0, 0, 1);
+
+  cout << endl;
   cout << fixed << setprecision(5)
        << "nu  = [" << setw(8) << nu[X_].cst() << ", "
        << setw(8) << nu[Y_].cst() << "]" << endl;
@@ -551,9 +581,76 @@ void get_ksi(double ksi[])
 }
 
 
+void fit_ksi(const double ksi_x, const double ksi_y,
+	     const int n_b3, const int b3s[])
+{
+  int    i, j;
+  double L, ksi[2], *b, *b3, *db3, *b3_max, **A;
+  tps    nu[2];
+
+  const double b3L_max = 100e0, s_cut = 1e-15;
+
+  b = dvector(1, 2); b3 = dvector(1, n_b3); db3 = dvector(1, n_b3);
+  b3_max = dvector(1, n_b3); A = dmatrix(1, 2, 1, n_b3);
+
+  danot_(3);
+
+  cout << endl;
+  for (i = 1; i <= n_b3; i++) {
+    cout << "b3: " << b3s[i-1] << endl;
+    L = get_L(b3s[i-1], 1);
+    if (L == 0e0) L = 1e0;
+    b3_max[i] = b3L_max/L; b3[i] = get_bn(b3s[i-1], 1, Sext);
+  }
+
+  get_ksi(ksi);
+
+  for (i = 1; i <= n_b3; i++) {
+    for (j = 1; j <= get_n_Kids(b3s[i-1]); j++)
+      set_bn_par(b3s[i-1], j, Sext, 7);
+
+    get_nu(nu);
+
+    A[1][i] = h_ijklm_p(nu[X_], 0, 0, 0, 0, 1, 7);
+    A[2][i] = h_ijklm_p(nu[Y_], 0, 0, 0, 0, 1, 7);
+
+    if (i == n_b3) {
+      b[1] = -h_ijklm(nu[X_], 0, 0, 0, 0, 1);
+      b[2] = -h_ijklm(nu[Y_], 0, 0, 0, 0, 1);
+    }
+
+    for (j = 1; j <= get_n_Kids(b3s[i-1]); j++)
+      clr_bn_par(b3s[i-1], j, Sext);
+  }
+
+  cout << endl;
+  for (j = 1; j <= 2; j++) {
+    for (i = 1; i <= n_b3; i++)
+      cout << scientific << setprecision(3) << setw(11) << A[j][i];
+    cout << scientific << setprecision(3) << setw(11) << b[j] << endl;
+  }
+
+  SVD_lim(2, n_b3, A, b, b3_max, s_cut, b3, db3);
+
+  cout << "b3L:" << endl;
+  for (i = 1; i <= n_b3; i++) {
+    set_dbn(b3s[i-1], Sext, db3[i]);
+    cout << scientific << setprecision(6)
+	 << setw(14) << get_bn(b3s[i-1], 1, Sext);
+  }
+
+  get_ksi(ksi);
+
+  free_dvector(b, 1, 2); free_dvector(b3, 1, n_b3); free_dvector(db3, 1, n_b3);
+  free_dvector(b3_max, 1, n_b3); free_dmatrix(A, 1, 2, 1, n_b3);
+}
+
+
 int main(int argc, char *argv[])
 {
-  int             k;
+  const int n_b3_max = 3;
+
+  int             k, n_b3, b3s[n_b3_max];
   double          alpha[2], beta[2], eta[2], etap[2], ksi[2];
   ss_vect<double> ps;
 
@@ -595,17 +692,30 @@ int main(int argc, char *argv[])
     beta[X_] = 5.9942; beta[Y_] = 1.8373;
     break;
    case 2:
-     // Chicane2.
-     alpha[X_] = -0.25; alpha[Y_] = 0.00; beta[X_] =  2.50;  beta[Y_] = 5.00;
+     // Chicane2arc3combiner2.
+    alpha[X_] = -0.25; alpha[Y_] = 0.00; beta[X_] =  2.50;  beta[Y_] = 5.00;
     break;
   }
 
+  danot_(1);
   get_twiss(alpha, beta, eta, etap);
 
   prt_lat("linlat.out", 10);
   prt_lat("linlat1.out");
 
+  danot_(2);
   get_ksi(ksi);
+
+  n_b3 = 0;
+  b3s[n_b3++] = get_Fnum("s1"); b3s[n_b3++] = get_Fnum("s2");
+
+  if (n_b3 > n_b3_max) {
+    cout << endl << "n_b3_max exceeded: " << n_b3 << " (" << n_b3_max << ")"
+	 << endl;
+    exit(1);
+  }
+
+  fit_ksi(0e0, 0e0, n_b3, b3s);
 
   // opt_nl_disp();
 
