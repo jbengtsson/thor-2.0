@@ -510,31 +510,68 @@ T atan2(const T y, const T x)
 
 void get_nu1(tps nu[])
 {
-  int    k, jj[ss_dim];
-  double alpha[2], beta[2], eta[2], etap[2];
-  tps    a11, a12;
+  tps    a11, a12, a33, a34;
+  ss_vect<tps> Id;
 
-  for (k = 0; k < 2; k++) {
-    eta[k] = elem[0].Eta[k]; etap[k] = elem[0].Etap[k];
-    alpha[k] = elem[0].Alpha[k]; beta[k] = elem[0].Beta[k];
-  }
-  A1 = get_A(alpha, beta, eta, etap); A1.propagate(1, n_elem);
+  A1 = elem_tps[0].A1; A1.propagate(1, n_elem);
 
-  for (k = 0; k < ss_dim; k++)
-    jj[k] = 0;
+  Id.identity(); Id[6] = tps(0e0, 7);
 
-  for (k = 0; k < 2; k++) {
-    jj[2*k] = 1; a11 = A1[2*k][jj];
-    jj[delta_] = 1; a11 += A1[2*k][jj]*tps(0e0, delta_+1);
-    jj[6] = 1; a11 += A1[2*k][jj]*tps(0e0, 7);
-    jj[2*k] = 0; jj[delta_] = 0; jj[6] = 0;
-    jj[2*k+1] = 1; a12 = A1[2*k][jj];
-    jj[delta_] = 1; a12 += A1[2*k][jj]*tps(0e0, delta_+1);
-    jj[6] = 1; a12 += A1[2*k][jj]*tps(0e0, 7);
-    jj[2*k+1] = 0; jj[delta_] = 0; jj[6] = 0;
-    nu[k] = atan2(a12, a11)/(2e0*M_PI);
-    if (nu[k] < 0e0) nu[k] += 1e0;
-  }
+  a11 =
+    h_ijklm(A1[x_], 1, 0, 0, 0, 0)
+    + h_ijklm(A1[x_], 1, 0, 0, 0, 1)*Id[delta_]
+    + h_ijklm_p(A1[x_], 1, 0, 0, 0, 1, 7)*Id[delta_]*Id[6];
+  a12 =
+    h_ijklm(A1[x_], 0, 1, 0, 0, 0)
+    + h_ijklm(A1[x_], 0, 1, 0, 0, 1)*Id[delta_]
+    + h_ijklm_p(A1[x_], 0, 1, 0, 0, 1, 7)*Id[delta_]*Id[6];
+  nu[X_] = atan2(a12, a11)/(2e0*M_PI);
+  if (nu[X_] < 0e0) nu[X_] += 1e0;
+
+  a33 =
+    h_ijklm(A1[y_], 0, 0, 1, 0, 0)
+    + h_ijklm(A1[y_], 0, 0, 1, 0, 1)*Id[delta_]
+    + h_ijklm_p(A1[y_], 0, 0, 1, 0, 1, 7)*Id[delta_]*Id[6];
+  a34 =
+    h_ijklm(A1[y_], 0, 0, 0, 1, 0)
+    + h_ijklm(A1[y_], 0, 0, 0, 1, 1)*Id[delta_]
+    + h_ijklm_p(A1[y_], 0, 0, 0, 1, 1, 7)*Id[delta_]*Id[6];
+  nu[Y_] = atan2(a34, a33)/(2e0*M_PI);
+  if (nu[Y_] < 0e0) nu[Y_] += 1e0;
+}
+
+
+void get_nu2(tps nu[])
+{
+  ss_vect<tps> A0, A1, R, Id;
+  tps          r11, r12, r33, r34;
+
+  A0 = elem_tps[0].A1; A1 = elem_tps[n_elem-1].A1;
+  get_Map(); R = Inv(A1)*Map*A0;
+
+  Id.identity(); Id[6] = tps(0e0, 7);
+
+  r11 =
+    h_ijklm(R[x_], 1, 0, 0, 0, 0)
+    + h_ijklm(R[x_], 1, 0, 0, 0, 1)*Id[delta_]
+    + h_ijklm_p(R[x_], 1, 0, 0, 0, 1, 7)*Id[delta_]*Id[6];
+  r12 =
+    h_ijklm(R[x_], 0, 1, 0, 0, 0)
+    + h_ijklm(R[x_], 0, 1, 0, 0, 1)*Id[delta_]
+    + h_ijklm_p(R[x_], 0, 1, 0, 0, 1, 7)*Id[delta_]*Id[6];
+  nu[X_] = atan2(r12, r11)/(2e0*M_PI);
+  if (nu[X_] < 0e0) nu[X_] += 1e0;
+
+  r33 =
+    h_ijklm(R[y_], 0, 0, 1, 0, 0)
+    + h_ijklm(R[y_], 0, 0, 1, 0, 1)*Id[delta_]
+    + h_ijklm_p(R[y_], 0, 0, 1, 0, 1, 7)*Id[delta_]*Id[6];
+  r34 =
+    h_ijklm(R[y_], 0, 0, 0, 1, 0)
+    + h_ijklm(R[y_], 0, 0, 0, 1, 1)*Id[delta_]
+    + h_ijklm_p(R[y_], 0, 0, 0, 1, 1, 7)*Id[delta_]*Id[6];
+  nu[Y_] = atan2(r34, r33)/(2e0*M_PI);
+  if (nu[Y_] < 0e0) nu[Y_] += 1e0;
 }
 
 
@@ -542,21 +579,16 @@ void get_nu(tps nu[])
 {
   int          k;
   ss_vect<tps> A0, A1, R, Id;
-  tps          r11, r12;
+  tps          r11, r12, r33, r34;
 
-  A0.identity(); A1.identity();
-  for (k = 0; k < 4; k++) {
-    A0[k] = elem_tps[0].A1[k]; A1[k] = elem_tps[n_elem-1].A1[k];
-  }
+  A0 = elem_tps[0].A1; A1 = elem_tps[n_elem-1].A1;
   get_Map(); R = Inv(A1)*Map*A0;
 
-  Id.zero(); Id[delta_] = tps(0e0, delta_+1); Id[6] = tps(0e0, 7);
+  Id.identity(); Id[6] = tps(0e0, 7);
+
   for (k = 0; k < 2; k++) {
-    Id[2*k] = tps(0e0, 2*k+1); r11 = (R*Id)[2*k]; Id[2*k] = 0e0;
-    Id[2*k+1] = tps(0e0, 2*k+2); r12 = (R*Id)[2*k]; Id[2*k+1] = 0e0;
-    // Only correct for leading order.
-    r11 = Der(r11, 2*k+1); r12 = Der(r12, 2*k+2);
-    nu[k] = atan(r12/r11)/(2e0*M_PI);
+    r11 = Der(R[2*k], 2*k+1); r12 = Der(R[2*k], 2*k+2);
+    nu[k] = atan2(r12, r11)/(2e0*M_PI);
     if (nu[k] < 0e0) nu[k] += 1e0;
   }
 }
