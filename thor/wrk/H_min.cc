@@ -10,7 +10,7 @@ extern double        b2_max;
 extern tps           K, g;
 extern ss_vect<tps>  Map, A0, A1, Map_res;
 
-const int  max_ind = 10;
+const int  max_ind = 10, n_prm_max = 20;
 
 bool          h[max_ind][max_ind][max_ind][max_ind][max_ind], fit_chrm;
 int           n_b3, b3s[mpole_max], n_bn, *bns_fam, *bns_n, n_cell;
@@ -1174,7 +1174,7 @@ void no_mpoles(void)
 }
 
 
-void get_prm(char *file_name)
+void get_prm(const char *file_name)
 {
   char      line[max_str];      
   ifstream  prm_in;

@@ -240,11 +240,8 @@ void prt_lat(const char *fname, const int n)
 	eta[k] = elem[i-1].Eta[k]; etap[k] = elem[i-1].Etap[k];
       }
 
-      get_A1(alpha, beta, eta, etap);
-      A1[delta_] = tps(0e0, 5); A1[ct_] = tps(0e0, 6);
-
+      A1 = get_A(alpha, beta, eta, etap);
       s = elem[i].S - elem[i].L; h = elem[i].L/n;
-
       for (j = 1; j <= n; j++) {
 	s += h;
 
@@ -281,7 +278,6 @@ void prt_lat(const char *fname, const int n)
 	for (k = 0; k < 2; k++) {
 	  eta_Fl[2*k] = eta[k]; eta_Fl[2*k+1] = etap[k];
 	}
-	eta_Fl = (Inv(A_CS)*eta_Fl).cst();
 
 	fprintf(outf, "%4ld %15s %6.2f %4.1f"
 		" %7.3f %6.3f %6.3f %6.3f %6.3f"
@@ -2287,7 +2283,7 @@ double get_bn_s(const int Fnum, const int Knum, const int n)
   long int  k;
   double    bn;
 
-  if (Fnum > 0)
+  if (n != 0)
     bn = get_bn(Fnum, Knum, n);
   else {
     k = get_loc(abs(Fnum), Knum) - 1;
@@ -2316,7 +2312,7 @@ double get_bnL_s(const int Fnum, const int Knum, const int n)
   long int  k;
   double    bnL;
 
-  if (Fnum > 0)
+  if (n != 0)
     bnL = get_bnL(Fnum, Knum, n);
   else {
     k = get_loc(abs(Fnum), Knum) - 1;
@@ -2344,7 +2340,7 @@ void set_bn_s(const int Fnum, const int Knum, const int n, const double bn)
 {
   long int  k = 0;
 
-  if (Fnum > 0)
+  if (n != 0)
     set_bn(Fnum, Knum, n, bn);
   else {
     // point to multipole
@@ -2394,7 +2390,7 @@ void set_bnL_s(const int Fnum, const int Knum, const int n, const double bnL)
 {
   long int  k;
 
-  if (Fnum > 0)
+  if (n != 0)
     set_bnL(Fnum, Knum, n, bnL);
   else {
     // point to multipole
@@ -2444,7 +2440,7 @@ void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
 {
   long int  k;
 
-  if (Fnum > 0)
+  if (n != 0)
     set_dbn(Fnum, Knum, n, dbn);
   else {
     // point to multipole

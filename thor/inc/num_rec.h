@@ -90,6 +90,7 @@ extern "C" {
 		     long ndl, long ndh);
   void dWriteMatrix(FILE *outf, char *text, double **a,
 		    int a_rows, int a_cols, char *format);
+  void dvcopy(double *a, int a_els, double *y);
   void dmcopy(double **a, int a_rows, int a_cols, double **b);
   void dmmult(double **a, int a_rows, int a_cols,
               double **b, int b_rows, int b_cols, double **y);

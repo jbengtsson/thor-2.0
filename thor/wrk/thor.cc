@@ -3,13 +3,13 @@
 #include "thor_lib.h"
 
 int  no_tps   = NO,
-     ndpt_tps = 5;
+  ndpt_tps = 5;
 
 
 
 /* SLS:
 
-    I [A] = | (b_3L)* 13.72 |,    pos = { sf, s*b }, net = { se, sd, s*a }
+   I [A] = | (b_3L)* 13.72 |,    pos = { sf, s*b }, net = { se, sd, s*a }
 
 */
 
@@ -81,19 +81,19 @@ double ranf(void)
 void get_stats(long n, double sum, double sum2, double &m, double &s)
 {
   if (n > 0)
-      m = sum/n;
+    m = sum/n;
+  else
+    printf("average not defined: n = %ld\n", n);
+  if (n < 2) {
+    printf("sigma not defined: n = %ld\n", n);
+    s = 0.0;
+  } else {
+    s = (sum2-n*sqr(m))/(n-1);
+    if (s >= 0.0)
+      s = sqrt(s);
     else
-      printf("average not defined: n = %ld\n", n);
-    if (n < 2) {
-      printf("sigma not defined: n = %ld\n", n);
-      s = 0.0;
-    } else {
-      s = (sum2-n*sqr(m))/(n-1);
-      if (s >= 0.0)
-        s = sqrt(s);
-      else
-        printf("sqrt of neg. value\n");
-    }
+      printf("sqrt of neg. value\n");
+  }
 }
 
 
@@ -108,7 +108,7 @@ ss_vect<tps> get_A_nl(const tps g)
     gn = Take(g, j); A_nl = A_nl*LieExp(gn, Id);
   }
 
-//  return FExpo(g, Id, 3, no_tps, -1);
+  //  return FExpo(g, Id, 3, no_tps, -1);
 
   return A_nl;
 }
@@ -125,7 +125,7 @@ ss_vect<tps> get_A_nl_inv(const tps g)
     gn = Take(g, j); A_nl_inv = A_nl_inv*LieExp(-gn, Id);
   }
 
-//  return FExpo(-g, Id, 3, no_tps, 1);
+  //  return FExpo(-g, Id, 3, no_tps, 1);
 
   return A_nl_inv;
 }
@@ -146,7 +146,7 @@ void prt_h(const tps &H, const double J_max, const double delta)
       ps[y_] = j*sqrt(2.0*J_max)/n_steps;
       of << scientific << setprecision(2)
 	 << setw(10) << ps[x_].cst() << setw(10) << ps[y_].cst()
-//	 << setw(10) << (H*ps).cst() << endl;
+	//	 << setw(10) << (H*ps).cst() << endl;
 	 << setw(10) << ((K-Take(K, 2))*ps).cst() << endl;
     }
     of << endl;
@@ -253,8 +253,8 @@ void select_h(void)
     }
 
     // balance nonlinear terms
-//    h[1][1][0][0][3] = false; h[0][0][1][1][3] = false;
-//    h[1][1][0][0][5] = false; h[0][0][1][1][5] = false;
+    //    h[1][1][0][0][3] = false; h[0][0][1][1][3] = false;
+    //    h[1][1][0][0][5] = false; h[0][0][1][1][5] = false;
   }
 
   if (true) {
@@ -332,7 +332,7 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
       bn_max[i] = ds_max;
 
     bn[i] = get_bn_s(prms[i-1], 1, bns[i-1]);
- }
+  }
 
   if (first) {
     // store initial sextupole strengths
@@ -362,7 +362,7 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
       else
 	set_s_par(abs(prms[i1-1]), 7);
 
-//      Jx = 0.5; Jy = 0.5; delta = 1.0;
+      //      Jx = 0.5; Jy = 0.5; delta = 1.0;
 
       danot_(no_tps-1); get_Map_N(n_cell);
       danot_(no_tps); K = MapNorm(Map, g, A1, A0, Map_res, 1);
@@ -555,15 +555,15 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
 	    +2.0*h_ijklm(K_re, 2, 2, 1, 1, 0)*dnudJ_twoJx);
       sprintf(hs[m1-1], "dnuydJx");
 
-     A[++m1][i1] =
+      A[++m1][i1] =
 	scl_L*scl_dnuddelta
 	*(3.0*h_ijklm_p(K_re, 1, 1, 0, 0, 3, 7)*sqr(dnuddelta_delta)
 	  +5.0*h_ijklm_p(K_re, 1, 1, 0, 0, 5, 7)*pow(dnuddelta_delta, 4));
       if (i1 == n_prm)
 	b[m1] = -scl_dnuddelta
-	*(h_ijklm(K_re, 1, 1, 0, 0, 1)
-	  +3.0*h_ijklm(K_re, 1, 1, 0, 0, 3)*sqr(dnuddelta_delta)
-	  +5.0*h_ijklm(K_re, 1, 1, 0, 0, 5)*pow(dnuddelta_delta, 4));
+	  *(h_ijklm(K_re, 1, 1, 0, 0, 1)
+	    +3.0*h_ijklm(K_re, 1, 1, 0, 0, 3)*sqr(dnuddelta_delta)
+	    +5.0*h_ijklm(K_re, 1, 1, 0, 0, 5)*pow(dnuddelta_delta, 4));
       sprintf(hs[m1-1], "dnuxdd ");
 
       A[++m1][i1] =
@@ -572,9 +572,9 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
 	  +5.0*h_ijklm_p(K_re, 0, 0, 1, 1, 5, 7)*pow(dnuddelta_delta, 4));
       if (i1 == n_prm)
 	b[m1] = -scl_dnuddelta
-	*(h_ijklm(K_re, 0, 0, 1, 1, 1)
-	  +3.0*h_ijklm(K_re, 0, 0, 1, 1, 3)*sqr(dnuddelta_delta)
-	  +5.0*h_ijklm(K_re, 0, 0, 1, 1, 5)*pow(dnuddelta_delta, 4));
+	  *(h_ijklm(K_re, 0, 0, 1, 1, 1)
+	    +3.0*h_ijklm(K_re, 0, 0, 1, 1, 3)*sqr(dnuddelta_delta)
+	    +5.0*h_ijklm(K_re, 0, 0, 1, 1, 5)*pow(dnuddelta_delta, 4));
       sprintf(hs[m1-1], "dnuydd ");
 
       A[++m1][i1] =
@@ -602,7 +602,7 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
     }
 
     // Exclude balancing of nonlinear terms
-//    m1 -= 6;
+    //    m1 -= 6;
     // Exclude balancing of dnudJy
     m1 -= 2;
 
@@ -720,7 +720,7 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
 		     << setw(2) << 0 << endl;
 	    sprintf(str, "dd_%s", get_Name(abs(prms[i-1])));
 	    sext_out << fixed << setprecision(7) 
-		      << setw(9) << str << "(" << j << ") = "
+		     << setw(9) << str << "(" << j << ") = "
 		     << setw(11) << -get_bnL_s(prms[i-1], 1, bns[i-1])
 		     << setw(2) << 0 << endl;
 	  }
@@ -975,7 +975,7 @@ void tune_scan(const int n_b2, const int b2s[], const bool opt)
   cout << endl;
   danot_(2);
   get_Map();
-//  get_COD(10, 1e-10, 0.0, true);
+  //  get_COD(10, 1e-10, 0.0, true);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   nus = dHdJ(K); get_nu_ksi(nus, nu, ksi); prt_nu(nus);
 
@@ -1027,7 +1027,7 @@ void tune_scan(const int n_b2, const int b2s[], const bool opt)
       sext_out << "n = " << n << ":" << endl;
 
       if (opt)
-//	h_zero(no_tps, 5, nu_x, nu_y, false);
+	//	h_zero(no_tps, 5, nu_x, nu_y, false);
 	H_zero(eps_ksi, 10, false);
 
       if (true)
@@ -1092,11 +1092,11 @@ void tune_scan(const bool opt)
     set_bn(get_Fnum("qm1"), Quad, b2s[6]);
     set_bn(get_Fnum("qm2"), Quad, b2s[7]);
 
-//    danot_(2);
-//  get_Map();
-//    get_COD(10, 1e-10, 0.0, true);
-//    K = MapNorm(Map, g, A1, A0, Map_res, 1);
-//    nus = dHdJ(K); get_nu_ksi(nus, nu, ksi);
+    //    danot_(2);
+    //  get_Map();
+    //    get_COD(10, 1e-10, 0.0, true);
+    //    K = MapNorm(Map, g, A1, A0, Map_res, 1);
+    //    nus = dHdJ(K); get_nu_ksi(nus, nu, ksi);
 
     cout << endl;
     cout << fixed << setprecision(4)
@@ -1354,13 +1354,13 @@ void no_mpoles(void)
   for (j = 0; j < n_elem; j++)
     if (elem[j].kind == Mpole)
       for (k = Sext; k < mpole_max; k++) {
-//	cout << "zeroing " << elem[j].Name << endl;
+	//	cout << "zeroing " << elem[j].Name << endl;
 	set_bn(elem[j].Fnum, elem[j].Knum, k, 0.0);
       }
 }
 
 
-void get_prm(char *file_name)
+void get_prm(const char *file_name)
 {
   char      line[max_str];      
   ifstream  prm_in;
@@ -1668,7 +1668,7 @@ void get_b2s(int &n_b2, int b2_Fams[])
 
       b2_Fams[n_b2++] = -get_Fnum("twl1"); b2_Fams[n_b2++] = -get_Fnum("twl2");
       b2_Fams[n_b2++] = -get_Fnum("twl3"); b2_Fams[n_b2++] = -get_Fnum("twl4");
-   }
+    }
   } else if (strcmp(lattice, "NSLS-II_DBA") == 0) {
     b2_Fams[n_b2++] = get_Fnum("ql1");
     b2_Fams[n_b2++] = get_Fnum("ql2");
@@ -1682,7 +1682,7 @@ void get_b2s(int &n_b2, int b2_Fams[])
       b2_Fams[n_b2++] = -get_Fnum("q1");  b2_Fams[n_b2++] = -get_Fnum("q2");
       b2_Fams[n_b2++] = -get_Fnum("q3");  b2_Fams[n_b2++] = -get_Fnum("q4");
 
-//      b2_Fams[n_b2++] = -get_Fnum("q11");
+      //      b2_Fams[n_b2++] = -get_Fnum("q11");
       b2_Fams[n_b2++] = -get_Fnum("q22");
       b2_Fams[n_b2++] = -get_Fnum("q33"); b2_Fams[n_b2++] = -get_Fnum("q44");
     }
@@ -1691,16 +1691,16 @@ void get_b2s(int &n_b2, int b2_Fams[])
       b2_Fams[n_b2++] = get_Fnum("qd3"); b2_Fams[n_b2++] = get_Fnum("qf2");
     }
   } else if (strcmp(lattice, "NSLS-II_BOOSTER") == 0) {
-      b2_Fams[n_b2++] = get_Fnum("qf");
-      b2_Fams[n_b2++] = get_Fnum("qg");
-//      b2_Fams[n_b2++] = get_Fnum("qd");
+    b2_Fams[n_b2++] = get_Fnum("qf");
+    b2_Fams[n_b2++] = get_Fnum("qg");
+    //      b2_Fams[n_b2++] = get_Fnum("qd");
   } else if (strcmp(lattice, "SLS") == 0) {
-      b2_Fams[n_b2++] = get_Fnum("qle"); b2_Fams[n_b2++] = get_Fnum("qlf");
-      b2_Fams[n_b2++] = get_Fnum("qlg"); b2_Fams[n_b2++] = get_Fnum("qlh");
-      b2_Fams[n_b2++] = get_Fnum("qse"); b2_Fams[n_b2++] = get_Fnum("qsf");
-      b2_Fams[n_b2++] = get_Fnum("qsg");
-      b2_Fams[n_b2++] = get_Fnum("qme"); b2_Fams[n_b2++] = get_Fnum("qmf");
-      b2_Fams[n_b2++] = get_Fnum("qmg");
+    b2_Fams[n_b2++] = get_Fnum("qle"); b2_Fams[n_b2++] = get_Fnum("qlf");
+    b2_Fams[n_b2++] = get_Fnum("qlg"); b2_Fams[n_b2++] = get_Fnum("qlh");
+    b2_Fams[n_b2++] = get_Fnum("qse"); b2_Fams[n_b2++] = get_Fnum("qsf");
+    b2_Fams[n_b2++] = get_Fnum("qsg");
+    b2_Fams[n_b2++] = get_Fnum("qme"); b2_Fams[n_b2++] = get_Fnum("qmf");
+    b2_Fams[n_b2++] = get_Fnum("qmg");
   } else if (strcmp(lattice, "ESRF") == 0) {
     b2_Fams[n_b2++] = get_Fnum("qd4");   b2_Fams[n_b2++] = get_Fnum("qf3");
     b2_Fams[n_b2++] = get_Fnum("qd5");
@@ -1811,7 +1811,7 @@ void get_lin_map(void)
 
 
 void get_ampl(const double nux, const double nuy, const int n,
-	     int &nx, int &ny, double &A)
+	      int &nx, int &ny, double &A)
 {
   // n must be even
   int     i, j;
@@ -1839,7 +1839,7 @@ void chk_lat(double nu[], double ksi[])
   double        alpha1[2];
   ss_vect<tps>  nus;
 
-//  get_Map();
+  //  get_Map();
   get_COD(10, 1e-10, 0.0, true);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   nus = dHdJ(K); get_nu_ksi(nus, nu, ksi); get_ab(alpha1, beta1, 0);
@@ -1857,9 +1857,9 @@ void get_locs()
 
   beta_loc1 = get_loc(get_Fnum("mp"), 1); get_ab(alpha1, beta1, beta_loc1);
   beta_loc2 = get_loc(get_Fnum("ss"), 1); get_ab(alpha2, beta2, beta_loc2);
-//  beta2[X_] = 1.0; beta2[Y_] = 1.0;
+  //  beta2[X_] = 1.0; beta2[Y_] = 1.0;
   beta_loc3 = get_loc(get_Fnum("ls"), 1); get_ab(alpha3, beta3, beta_loc3);
-//  beta3[X_] = 15.0; beta3[Y_] = 3.0;
+  //  beta3[X_] = 15.0; beta3[Y_] = 3.0;
   if (strcmp(lattice, "SLS") == 0)
     beta_loc4 = get_loc(get_Fnum("ms"), 1); get_ab(alpha4, beta4, beta_loc4);
 
@@ -1874,7 +1874,7 @@ void get_locs()
        << "alpha2_x  = " << setw(6) << alpha2[X_]
        << ", alpha2_y = " << setw(6) << alpha2[Y_]
        << ", beta2_x = " << setw(6) << beta2[X_]
-	   << ", beta2_y  = " << setw(6) << beta2[Y_]
+       << ", beta2_y  = " << setw(6) << beta2[Y_]
        << endl;
   cout << fixed << setprecision(3)
        << "alpha3_x  = " << setw(6) << alpha3[X_]
@@ -1942,7 +1942,7 @@ void fit_chrom(void)
   // fit chromaticity
   cavity_on = false;
   fit_chrom(ksi1[X_], ksi1[Y_], n_b3, b3s, true);
-//  fit_chrom1(0.0, 0.0, n_prm, prms, eps_ksi, true);
+  //  fit_chrom1(0.0, 0.0, n_prm, prms, eps_ksi, true);
 }
 
 
@@ -2092,7 +2092,7 @@ float H_fun(float p[])
 
   // requires output from MapNorm
   H = get_H();
-//  H = get_h();
+  //  H = get_h();
   CtoR(H, H_re, H_im);
   H_re = H_re*Id_scl;
 
@@ -2268,7 +2268,7 @@ int main()
     exit(0);
   }
 
-//  if (H_exact) bend_cal(get_Fnum("bd1"));
+  //  if (H_exact) bend_cal(get_Fnum("bd1"));
 
   danot_(3);
 
@@ -2297,14 +2297,14 @@ int main()
 	 << ", beta_y  = " << setw(6) << beta[Y_] << endl;
   }
 
-/*  Id.identity(); Map2.identity();
-  Map2[x_]  += sqr(Id[x_]) + Id[x_]*Id[px_];
-  Map2[px_] += Id[x_]*Id[px_] + sqr(Id[px_]);
-  Map2[y_]  += sqr(Id[y_]) + Id[y_]*Id[py_];
-  Map2[py_] += Id[y_]*Id[py_] + sqr(Id[py_]);
+  /*  Id.identity(); Map2.identity();
+      Map2[x_]  += sqr(Id[x_]) + Id[x_]*Id[px_];
+      Map2[px_] += Id[x_]*Id[px_] + sqr(Id[px_]);
+      Map2[y_]  += sqr(Id[y_]) + Id[y_]*Id[py_];
+      Map2[py_] += Id[y_]*Id[py_] + sqr(Id[py_]);
 
-  Map2.propagate(1, n_elem);
-  cout << Map2;*/
+      Map2.propagate(1, n_elem);
+      cout << Map2;*/
 
   if (false) {
     n_b2 = 0;
@@ -2321,8 +2321,8 @@ int main()
     b2_Fams[n_b2++] = get_Fnum("q4_jb");
     n_b2 = 0;
 
-//    fit_alpha(alpha[X_], beta[X_], alpha[Y_], beta[Y_],
-//	      k1, k2, n_b2, b2_Fams, 0.15, true);
+    //    fit_alpha(alpha[X_], beta[X_], alpha[Y_], beta[Y_],
+    //         k1, k2, n_b2, b2_Fams, 0.15, true);
 
     n_b2 = 0;
     b2_Fams[n_b2++] = get_Fnum("q1_jb");
@@ -2345,8 +2345,8 @@ int main()
     Jx = sqr(max_Ax)/(2.0*beta1[X_]); Jy = sqr(max_Ay)/(2.0*beta1[Y_]);
     delta = max_delta;
     // RHIC
-//    Jx = sqr(0.5e-3)/(2.0*beta1[X_]); Jy = sqr(0.5e-3)/(2.0*beta1[Y_]);
-//    delta = 1e-2;
+    //    Jx = sqr(0.5e-3)/(2.0*beta1[X_]); Jy = sqr(0.5e-3)/(2.0*beta1[Y_]);
+    //    delta = 1e-2;
   }
 
   Id_scl.identity();
@@ -2386,7 +2386,7 @@ int main()
 		 beta3[X_], beta3[Y_], beta_loc3,
 		 n_b2, b2_Fams, eps_nu, true);
 
-//      exit(0);
+      //      exit(0);
     }
 
     // check tuning range (linear stability)
@@ -2408,7 +2408,7 @@ int main()
 
     cavity_on = true;
 
-//    tune_scan(n_b2, b2_Fams, true);
+    //    tune_scan(n_b2, b2_Fams, true);
     tune_scan(true);
   } else {
     if (adj_chrom) {
@@ -2427,7 +2427,7 @@ int main()
       }
     }
  
-//    get_fixed_points(50e-3, 50e-3, 25, 15, true);
+    //    get_fixed_points(50e-3, 50e-3, 25, 15, true);
  
     if (false) {
       track_H("track_H_1.dat",  1.0e-3,  1.0e-3);
@@ -2436,15 +2436,15 @@ int main()
       track_H("track_H_4.dat",  7.5e-3,  4.0e-3);
       track_H("track_H_5.dat", 10.0e-3,  4.0e-3);
       track_H("track_H_6.dat", 15.0e-3,  4.0e-3);
-//      track_H("track_H_7.dat", 12.5e-3,  8.0e-3);
-//      track_H("track_H_8.dat", 19.9e-3,  8.0e-3);
+      //      track_H("track_H_7.dat", 12.5e-3,  8.0e-3);
+      //      track_H("track_H_8.dat", 19.9e-3,  8.0e-3);
 
       exit(0);
     }
 
-//    H_min();
+    //    H_min();
     
-//    sext_out.close();
+    //    sext_out.close();
 
     if (false)
       DA = get_dynap(10e-3, 0.0, n_track, 0.1e-3, n_aper, x_min, x_max, false);
@@ -2505,21 +2505,21 @@ int main()
 	}
 
 	H_zero(eps_ksi, 25, true);
-//	H_min();
+	//   H_min();
       }
 
-//      danot_(no_tps-1); get_COD(10, 1e-10, 0.0, true);
-//      file_wr(outf, "map.dat"); outf << Map; outf.close();
+      //      danot_(no_tps-1); get_COD(10, 1e-10, 0.0, true);
+      //      file_wr(outf, "map.dat"); outf << Map; outf.close();
 
       danot_(no_tps-1);
 
-//      if (true)
-	get_Map();
-//      else
-//	get_Map_N(n_cell);
+      //      if (true)
+      get_Map();
+      //      else
+      //   get_Map_N(n_cell);
 
-//      get_Map_N(15);
-//      get_Map_N(3);
+      //      get_Map_N(15);
+      //      get_Map_N(3);
 
       file_wr(outf, "map.dat"); outf << Map; outf.close();
 
@@ -2551,25 +2551,25 @@ int main()
       H_re = H_re*Id_scl;
       file_wr(outf, "H.dat"); outf << H_re; outf.close();
 
-/*      // single Lie exponent, i.e. not Dragt-Finn factored
-      h = get_h();
-      Id.identity();
-      Map_Fl = LieExp(h, Id)*R;
-      danot_(no_tps-1);
-      Map_Fl = Inv(A0*A1)*Map*A0*A1;
-      danot_(1); R = Map_Fl;
-      danot_(no_tps);
-      cout << h*R-h*Map_Fl;
-      cout << endl;
-      cout << scientific << setprecision(14) << setw(22) << abs2(h) << endl;
-      cout << scientific << setprecision(14)
-	   << setw(22) << abs2(h*Map_Fl) << endl;
-      cout << scientific << setprecision(14)
-	   << setw(22) << abs2(h*Map_Fl*Map_Fl) << endl;*/
+      /*      // single Lie exponent, i.e. not Dragt-Finn factored
+	      h = get_h();
+	      Id.identity();
+	      Map_Fl = LieExp(h, Id)*R;
+	      danot_(no_tps-1);
+	      Map_Fl = Inv(A0*A1)*Map*A0*A1;
+	      danot_(1); R = Map_Fl;
+	      danot_(no_tps);
+	      cout << h*R-h*Map_Fl;
+	      cout << endl;
+	      cout << scientific << setprecision(14) << setw(22) << abs2(h) << endl;
+	      cout << scientific << setprecision(14)
+	      << setw(22) << abs2(h*Map_Fl) << endl;
+	      cout << scientific << setprecision(14)
+	      << setw(22) << abs2(h*Map_Fl*Map_Fl) << endl;*/
 
-//      h = h*Id;
-//      CtoR(h, h_re, h_im);
-//      file_wr(outf, "h.dat"); outf << h_re << h_im; outf.close();
+      //      h = h*Id;
+      //      CtoR(h, h_re, h_im);
+      //      file_wr(outf, "h.dat"); outf << h_re << h_im; outf.close();
 
       exit(0);
     }
@@ -2579,7 +2579,7 @@ int main()
       danot_(no_tps);
       K = MapNorm(Map, g, A1, A0, Map_res, 1); CtoR(K, K_re, K_im);
       nus = dHdJ(K); get_nu_ksi(nus, nu, ksi);
-//      K_re = K_re*Id; K_im = K_im*Id;
+      //      K_re = K_re*Id; K_im = K_im*Id;
 
       file_wr(A1_out, "A1.dat"); A1_out << A1; A1_out.close();
 
@@ -2592,7 +2592,7 @@ int main()
 
       h = 0.5*tps(0.0, 1) + 2.0*tps(0.0, 2);
       CtoR(h, h_re, h_im);
-//      cout << h << h_re << h_im;
+      //      cout << h << h_re << h_im;
       exit(0);
     }
 
@@ -2600,22 +2600,22 @@ int main()
 
     if (false) { get_dnu(n_nu, max_Ax, max_Ay); }
 
-//    DA = get_dynap(10e-3, 0.0, n_track, 0.1e-3, n_aper, x_min, x_max, false); 
+    //    DA = get_dynap(10e-3, 0.0, n_track, 0.1e-3, n_aper, x_min, x_max, false); 
   }
   
-//  danot_(no_tps-1); get_Map(); danot_(no_tps);
-//  Map2 = Map*Map; Map = Map2*Map2*Map;
+  //  danot_(no_tps-1); get_Map(); danot_(no_tps);
+  //  Map2 = Map*Map; Map = Map2*Map2*Map;
   // requires map normal form
-//  H = get_H();
-//  prt_h(H, pow(30e-3, 2)/(2.0*beta[X_]), 0e-2, 10);
+  //  H = get_H();
+  //  prt_h(H, pow(30e-3, 2)/(2.0*beta[X_]), 0e-2, 10);
 
   if (false) {
     prt_alphac();
 
-//    prt_H_long(10, 180*pi/180.0, 4e-2, -932.5e3);
+    //    prt_H_long(10, 180*pi/180.0, 4e-2, -932.5e3);
 
     // MAX-IV
-//    prt_H_long(10, 180*pi/180.0, 6.2e-2, -359.4e3);
+    //    prt_H_long(10, 180*pi/180.0, 6.2e-2, -359.4e3);
 
     // DIAMOND
     prt_H_long(10, 180*M_PI/180.0, 11e-2, -1005.2e-3);
@@ -2623,19 +2623,19 @@ int main()
 
   exit(0);
 
-//  prt_H_long(10, 180*pi/180.0, 5e-2, 0.0);
-//  prt_H_long(10, 150*pi/180.0, 4e-2, -26.7*pi/180.0);
-//  prt_H_long(10, 200*pi/180.0, 10e-2, 0.0);
-//  prt_H_long(10, 150*pi/180.0, 4e-2, -28.3*pi/180.0);
+  //  prt_H_long(10, 180*pi/180.0, 5e-2, 0.0);
+  //  prt_H_long(10, 150*pi/180.0, 4e-2, -26.7*pi/180.0);
+  //  prt_H_long(10, 200*pi/180.0, 10e-2, 0.0);
+  //  prt_H_long(10, 150*pi/180.0, 4e-2, -28.3*pi/180.0);
 
-//  get_cav("cav", h_rf, V_rf, f_rf);
-//  track(0e-3, 0e-3, 0e-3, 0e-3, 2.4e-2, n_track, f_rf, true);
+  //  get_cav("cav", h_rf, V_rf, f_rf);
+  //  track(0e-3, 0e-3, 0e-3, 0e-3, 2.4e-2, n_track, f_rf, true);
 
-//  get_dynap(5e-3, 0.0, n_track, 0.1e-3, n_aper, 0.0, 0.0,
-//	    x_min, x_max, false);
+  //  get_dynap(5e-3, 0.0, n_track, 0.1e-3, n_aper, 0.0, 0.0,
+  //       x_min, x_max, false);
 
-//  get_dynap(5e-3, 0.0, n_track, 0.1e-3, n_aper, 0.491, 0.604,
-//	    x_min, x_max, true);
+  //  get_dynap(5e-3, 0.0, n_track, 0.1e-3, n_aper, 0.491, 0.604,
+  //       x_min, x_max, true);
 
   if (false) {
     danot_(1); R = Map; danot_(no_tps); h = LieFact(Map*Inv(R));
@@ -2644,87 +2644,87 @@ int main()
     jj[x_] = 2; jj[px_] = 2; h.pook(jj, 0.0);
     jj[x_] = 1; jj[px_] = 1; jj[y_] = 1; jj[py_] = 1; h.pook(jj, 0.0);
     jj[x_] = 0; jj[px_] = 0; jj[y_] = 2; jj[py_] = 2; h.pook(jj, 0.0);
-//    Id.identity(); Map = LieExp(h, Id)*R;
+    //    Id.identity(); Map = LieExp(h, Id)*R;
     danot_(no_tps-1); Map = Map; danot_(no_tps);
   }
 
   // requires map normal form
-//  H = get_H();
-//  cout << H*Id;
+  //  H = get_H();
+  //  cout << H*Id;
 
-//  get_dynap(5e-3, 0.0, n_track, 0.1e-3, n_aper, 0.491, 0.604,
-//	    x_min, x_max, true);
+  //  get_dynap(5e-3, 0.0, n_track, 0.1e-3, n_aper, 0.491, 0.604,
+  //       x_min, x_max, true);
 
-//  cout << get_h()*Id;
+  //  cout << get_h()*Id;
 
-//  danot_(3);
+  //  danot_(3);
   // requires map normal form
-//  H = get_H();
-//  cout << H;
+  //  H = get_H();
+  //  cout << H;
 
   exit(0);
 
   cout << "O.K.? "; cin.get();  
 
-//  cout << K; prt_dnu(nus);
+  //  cout << K; prt_dnu(nus);
 
-//  prt_h(H, 20e-3, 30e-3, 10);
+  //  prt_h(H, 20e-3, 30e-3, 10);
 
 
   get_Map();
   // requires map normal form
-//  H = get_H();
+  //  H = get_H();
   cout << H;
 
-/*  gn = Take(g, 4);
-  for (i = 5; i <= no_tps; i++) {
-    pq = Take(g, i); gn = BCH(gn, pq, 3);
-  }
-  cout << (H-K*LieExp(-gn, I()));*/
+  /*  gn = Take(g, 4);
+      for (i = 5; i <= no_tps; i++) {
+      pq = Take(g, i); gn = BCH(gn, pq, 3);
+      }
+      cout << (H-K*LieExp(-gn, I()));*/
 
- /*  // Transform map to Floquet space
-  Map = Inv(A1*A2)*Map*A1*A2;
-  // Factor out the linear part.
-  danot_(1); R = Map; danot_(no_tps-1); Map2 = Map*Inv(R);
-  // Extract the Lie generator.
-  danot_(no_tps); Hnl = LieFact(Map2, eps);*/
+  /*  // Transform map to Floquet space
+      Map = Inv(A1*A2)*Map*A1*A2;
+      // Factor out the linear part.
+      danot_(1); R = Map; danot_(no_tps-1); Map2 = Map*Inv(R);
+      // Extract the Lie generator.
+      danot_(no_tps); Hnl = LieFact(Map2, eps);*/
 
-/*  get_matrix(R, M); prt_matrix(M);
-  nu_x = GetAngle(M[0][0], M[0][1])/(2.0*pi);
-  nu_y = GetAngle(M[2][2], M[2][3])/(2.0*pi);
-  cout << endl;
-  cout << fixed << setprecision(5)
-       << "nux = " << setw(7) << nu_x
-       << " nuy = " << setw(7) << nu_y << endl;
+  /*  get_matrix(R, M); prt_matrix(M);
+      nu_x = GetAngle(M[0][0], M[0][1])/(2.0*pi);
+      nu_y = GetAngle(M[2][2], M[2][3])/(2.0*pi);
+      cout << endl;
+      cout << fixed << setprecision(5)
+      << "nux = " << setw(7) << nu_x
+      << " nuy = " << setw(7) << nu_y << endl;
 
-  ps.identity();
-  H2 = - 2.0*pi*nu_x*(sqr(ps[x_])+sqr(ps[px_]))/2.0
-       - 2.0*pi*nu_y*(sqr(ps[y_])+sqr(ps[py_]))/2.0;*/
+      ps.identity();
+      H2 = - 2.0*pi*nu_x*(sqr(ps[x_])+sqr(ps[px_]))/2.0
+      - 2.0*pi*nu_y*(sqr(ps[y_])+sqr(ps[py_]))/2.0;*/
 
-/*  P = H2 + Hnl; Q = H2 - Hnl;
-  pq = PB(P, Q);
-  pqq = PB(pq, Q); pqp = PB(pq, P);
-  pqpp = PB(pqp, P); pqqq = PB(pqq, Q); pqqp = PB(pqq, P);
-  H = P - pq/4.0 + pqq/24.0 + (pqpp-pqqq)/192.0;
-  // 5th order appears to be incorrect
-//  H = P - pq/4.0 + pqq/24.0 + (pqpp-pqqq)/192.0
-//      + (8.0*PB(pqqp, P)-15.0*PB(pqpp, Q)+3.0*PB(pqqq, Q))/5760.0;
-  H_num = BCH(H2, Hnl, 4);
-  cout << H_num;
-  cout << (H_num-H);*/
+  /*  P = H2 + Hnl; Q = H2 - Hnl;
+      pq = PB(P, Q);
+      pqq = PB(pq, Q); pqp = PB(pq, P);
+      pqpp = PB(pqp, P); pqqq = PB(pqq, Q); pqqp = PB(pqq, P);
+      H = P - pq/4.0 + pqq/24.0 + (pqpp-pqqq)/192.0;
+      // 5th order appears to be incorrect
+      //  H = P - pq/4.0 + pqq/24.0 + (pqpp-pqqq)/192.0
+      //      + (8.0*PB(pqqp, P)-15.0*PB(pqpp, Q)+3.0*PB(pqqq, Q))/5760.0;
+      H_num = BCH(H2, Hnl, 4);
+      cout << H_num;
+      cout << (H_num-H);*/
   // Numerical search for the invariant
-/*  Id.identity(); Id[delta_] = tps(0.0, 0); Id[ct_] = tps(0.0, 0);
-  H_num = H;
-  for (i = 1; i <= 100; i++) {
-    dH = H_num - H_num*Map; dH = dH*Inv(Map-Id);
-    H_num = H_num + dH;
-  }
-//  cout << H_num;
-  cout << dH;*/
+  /*  Id.identity(); Id[delta_] = tps(0.0, 0); Id[ct_] = tps(0.0, 0);
+      H_num = H;
+      for (i = 1; i <= 100; i++) {
+      dH = H_num - H_num*Map; dH = dH*Inv(Map-Id);
+      H_num = H_num + dH;
+      }
+      //  cout << H_num;
+      cout << dH;*/
 
   // check the Lie generator
-//  danot_(no_tps); Map2 = LieExp(H_num, I());
-//  danot_(no_tps-1); TPSAEps(1e-9);
-//  cout << (Map*Inv(Map2)); TPSAEps(eps);
+  //  danot_(no_tps); Map2 = LieExp(H_num, I());
+  //  danot_(no_tps-1); TPSAEps(1e-9);
+  //  cout << (Map*Inv(Map2)); TPSAEps(eps);
 }
 

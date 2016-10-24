@@ -2,7 +2,6 @@ const double  max_ampl[] = { 100e-3, 100e-3 };
 
 const int     n_alphac = 3;
 
-const int     n_prm_max  = 40;
 const double  scl_alpha_mp = 1e-2, scl_beta_mp = 1e-2;
 
 extern double           b2_max, ds_max, scl_ds;
@@ -22,6 +21,8 @@ void file_wr(ofstream &outf, const char file_name[]);
 void set_to_cout(ofstream &fp_out);
 
 void prt_lin_map(const int n_DOF, const ss_vect<tps> &map);
+
+double get_code(elem_type<double> &elem);
 
 void prt_lat(const char *file_name);
 
@@ -162,7 +163,7 @@ void get_Map(const ss_vect<double> &fixed_point);
 ss_vect<tps> get_Map(const int k);
 
 bool get_COD(const int i_max, const double eps, const double delta,
-	     const bool prt);
+	      const bool prt);
 
 void get_A1(const double alpha_x, const double beta_x,
 	    const double alpha_y, const double beta_y);
@@ -260,6 +261,13 @@ void get_ab(tps ab[], tps nu[], const long int loc);
 void get_ab(tps ab[], tps dnu[], const long int k1, const long int k2);
 
 void get_nu(double nu[], const long int k);
+
+void get_ab(const ss_vect<tps> &A,
+	    double alpha[], double beta[], double dnu[],
+	    double eta[], double etap[]);
+
+ss_vect<tps> get_A(const double alpha[], const double beta[],
+		   const double eta[], const double etap[]);
 
 void bend_cal(const int Fnum1);
 

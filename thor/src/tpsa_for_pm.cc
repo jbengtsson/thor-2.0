@@ -353,31 +353,77 @@ tps atan(const tps &a)
 
 #else
 
+// tps atan(const tps &a)
+// {
+//   // arctan(a+b) to 8th order
+//   double  cst;
+//   tps     b, c;
+
+//   if (no_tps <= 8) {
+//     cst = a.cst(); b = a - cst;
+
+//     c = b/(1+sqr(cst)) - (cst*sqr(b))/pow(1.0+sqr(cst), 2) +
+//       ((-1+3.0*sqr(cst))*pow(b, 3))/(3.0*pow(1.0+sqr(cst), 3)) +
+//       ((cst-pow(cst, 3))*pow(b, 4))/pow(1+sqr(cst), 4) +
+//       ((1-10*sqr(cst)+5.0*pow(cst, 4))*pow(b, 5))/(5.0*pow(1+sqr(cst), 5))+
+//       ((-3*cst+10.0*pow(cst, 3)-3.0*pow(cst, 5))*pow(b, 6))/
+//       (3.0*pow(1+sqr(cst), 6)) +
+//       ((-1+21.0*sqr(cst)-35.0*pow(cst, 4)+7.0*pow(cst, 6))*pow(b, 7))/
+//       (7.0*pow(1+sqr(cst), 7)) +
+//       ((cst-7.0*pow(cst, 3)+7.0*pow(cst, 5)-pow(cst, 7))*pow(b, 8))/
+//       pow(1+sqr(cst), 8)
+//       + ((1.0-36.0*sqr(cst) + 126.0*pow(cst, 4) - 
+//         84.0*pow(cst, 6) + 9.0*pow(cst, 8))*pow(b, 9))/
+//       (9.0*pow(1.0+sqr(cst), 9))
+//       + atan(cst);
+//    } else {
+//     cout << "atan: only defined to 8th order (" << no_tps
+// 	 << ")" << endl;
+//     exit(1);
+//   }
+
+//   return c;
+// }
+
 tps atan(const tps &a)
 {
-  // arctan(a+b) to 8th order
+  // arctan(a+b) to 10th order
   double  cst;
   tps     b, c;
 
-  if (no_tps <= 8) {
+  if (no_tps <= 10) {
     cst = a.cst(); b = a - cst;
 
-    c = b/(1+sqr(cst)) - (cst*sqr(b))/pow(1.0+sqr(cst), 2) +
-      ((-1+3.0*sqr(cst))*pow(b, 3))/(3.0*pow(1.0+sqr(cst), 3)) +
-      ((cst-pow(cst, 3))*pow(b, 4))/pow(1+sqr(cst), 4) +
-      ((1-10*sqr(cst)+5.0*pow(cst, 4))*pow(b, 5))/(5.0*pow(1+sqr(cst), 5))+
-      ((-3*cst+10.0*pow(cst, 3)-3.0*pow(cst, 5))*pow(b, 6))/
-      (3.0*pow(1+sqr(cst), 6)) +
-      ((-1+21.0*sqr(cst)-35.0*pow(cst, 4)+7.0*pow(cst, 6))*pow(b, 7))/
-      (7.0*pow(1+sqr(cst), 7)) +
-      ((cst-7.0*pow(cst, 3)+7.0*pow(cst, 5)-pow(cst, 7))*pow(b, 8))/
-      pow(1+sqr(cst), 8)
-      + ((1.0-36.0*sqr(cst) + 126.0*pow(cst, 4) - 
-        84.0*pow(cst, 6) + 9.0*pow(cst, 8))*pow(b, 9))/
-      (9.0*pow(1.0+sqr(cst), 9))
-      + atan(cst);
-   } else {
-    cout << "atan: only defined to 8th order (" << no_tps
+    c = b/(1+sqr(cst)) - (cst*sqr(b))/pow(1+sqr(cst),2) + 
+      ((-1 + 3*sqr(cst))*pow(b, 3))/(3.*pow(1+sqr(cst),3)) + 
+      (((-8*pow(cst,3))/pow(1+sqr(cst),3) + (4*cst)/pow(1+sqr(cst),2))*
+       pow(b, 4))/(4.*(1+sqr(cst))) + 
+      (((16*pow(cst,4))/pow(1+sqr(cst),4) - 
+        (12*sqr(cst))/pow(1+sqr(cst),3) + pow(1+sqr(cst),-2))*
+       pow(b, 5))/(5.*(1+sqr(cst))) + 
+      (((-32*pow(cst,5))/pow(1+sqr(cst),5) + 
+        (32*pow(cst,3))/pow(1+sqr(cst),4) - (6*cst)/pow(1+sqr(cst),3))*
+       pow(b, 6))/(6.*(1+sqr(cst))) + 
+      (((64*pow(cst,6))/pow(1+sqr(cst),6) - 
+        (80*pow(cst,4))/pow(1+sqr(cst),5) + 
+        (24*sqr(cst))/pow(1+sqr(cst),4) - pow(1+sqr(cst),-3))*
+       pow(b, 7))/(7.*(1+sqr(cst))) + 
+      (((-128*pow(cst,7))/pow(1+sqr(cst),7) + 
+        (192*pow(cst,5))/pow(1+sqr(cst),6) - 
+        (80*pow(cst,3))/pow(1+sqr(cst),5) + (8*cst)/pow(1+sqr(cst),4))*
+       pow(b, 8))/(8.*(1+sqr(cst))) + 
+      (((256*pow(cst,8))/pow(1+sqr(cst),8) - 
+        (448*pow(cst,6))/pow(1+sqr(cst),7) + 
+        (240*pow(cst,4))/pow(1+sqr(cst),6) - 
+        (40*sqr(cst))/pow(1+sqr(cst),5) + pow(1+sqr(cst),-4))*
+       pow(b, 9))/(9.*(1+sqr(cst))) + 
+      (((-512*pow(cst,9))/pow(1+sqr(cst),9) + 
+        (1024*pow(cst,7))/pow(1+sqr(cst),8) - 
+        (672*pow(cst,5))/pow(1+sqr(cst),7) + 
+        (160*pow(cst,3))/pow(1+sqr(cst),6) - (10*cst)/pow(1+sqr(cst),5))*
+       pow(b, 10))/(10.*(1+sqr(cst))) + atan(cst);
+  } else {
+    cout << "atan: only defined to 10th order (" << no_tps
 	 << ")" << endl;
     exit(1);
   }

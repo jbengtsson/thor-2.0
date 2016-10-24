@@ -12,9 +12,9 @@ C beam-beam kicks except for the kinematical term (nr_e/\gamma)
 C SIGXX is \Sigma
 C**********************************************************************
       implicit none
-      integer idaa
+      integera
       double precision dare,hundred,sqrpi2
-      integer mbea,mcor,mcop,mmul,mpa,mran,nbb,nblo,nblz,ncom,ncor1,
+      integera,mcor,mcop,mmul,mpa,mran,nbb,nblo,nblz,ncom,ncor1,
      &nelb,nele,nema,ninv,nlya,nmac,nmon1,npart,nper,nplo,npos,nran,
      &nrco,ntr,nzfz
       parameter(npart = 64,nmac = 1)
@@ -46,7 +46,7 @@ C**********************************************************************
       parameter(pmap = 938.271998d0,pmae = .510998902d0)
       parameter(crade = 2.817940285d-15)
       parameter(sqrpi2 = 3.544907701811032d0,hundred = 100d0)
-      integer icorr,idial,idptr,imod1,imod2,inorm,ipar,namp,ncor,nctype,
+      integerrr,idial,idptr,imod1,imod2,inorm,ipar,namp,ncor,nctype,
      &ndimf,nmom,nmom1,nmom2,nord,nord1,nordf,nsix,nvar,nvar2,nvarf
       double precision dpmax,preda,weig1,weig2
       character*16 coel
@@ -75,31 +75,31 @@ C-----------------------------------------------------------------------
 *FOX  D F RE DARE 1 ;
 *FOX  E D ;
 *FOX{
-      INTEGER SEPX    
-      INTEGER SEPY    
-      INTEGER SIGXX   
-      INTEGER SIGYY   
-      INTEGER BBFX    
-      INTEGER BBFY    
-      INTEGER BBGX    
-      INTEGER BBGY    
-      INTEGER SIGXY   
-      INTEGER EXPFAC  
-      INTEGER X       
-      INTEGER FAC     
-      INTEGER FAC2    
-      INTEGER CONST   
-      INTEGER ARG1X   
-      INTEGER ARG1Y   
-      INTEGER ARG2X   
-      INTEGER ARG2Y   
-      INTEGER WX1     
-      INTEGER WY1     
-      INTEGER WX2     
-      INTEGER WY2     
-      INTEGER COMFAC  
-      INTEGER COMFAC2 
-      INTEGER ISCRDA, ISCRRI,IDAO
+      integerX    
+      integerY    
+      integerXX   
+      integerYY   
+      integerX    
+      integerY    
+      integerX    
+      integerY    
+      integerXY   
+      integerFAC  
+      integer     
+      integer     
+      integer2    
+      integerST   
+      integer1X   
+      integer1Y   
+      integer2X   
+      integer2Y   
+      integer     
+      integer     
+      integer     
+      integer     
+      integerFAC  
+      integerFAC2 
+      integerRDA, ISCRRI,IDAO
       DOUBLE PRECISION RSCRRI
       COMMON/DASCR/ISCRDA(100),RSCRRI(100),ISCRRI(100),IDAO
       if(1.eq.1) then                                                 

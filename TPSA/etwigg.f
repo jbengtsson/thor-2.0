@@ -3,10 +3,10 @@
 
       implicit none
 
-      integer	nharm
+      integerrm
       parameter	(nharm = 1)
 
-      integer	radia, i
+      integeria, i
       real*8	z, BoBrho, kx, ky, kz, x(*), AxoBrho(0:3), AyoBrho(0:3)
       real*8	cx, sx, chy, shy, sz, cz
 
@@ -53,7 +53,7 @@ c     first order symplectic integrator for wiggler using expanded Hamiltonian
 
       implicit none
 
-      integer	nstep, pthlen, radia, i
+      integerep, pthlen, radia, i
       real*8	len, lambda, BoBrho, kx, x(*), crad
       real*8	pi, ky, kz, AxoBrho(0:3), AyoBrho(0:3), B2, x2
       real*8	dp, h, hodp, det, a11, a12, a21, a22, xf(6)

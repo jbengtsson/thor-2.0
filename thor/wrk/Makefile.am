@@ -1,6 +1,12 @@
-bin_PROGRAMS =  vlad
+bin_PROGRAMS   = H_min max_iv_match vlad vlad_2 vlad_3 vlad_4 vlad_5
 
-vlad_SOURCES = vlad.cc
+H_min_SOURCES        = H_min.cc
+max_iv_match_SOURCES = max_iv_match.cc
+vlad_SOURCES         = vlad.cc
+vlad_2_SOURCES       = vlad_2.cc
+vlad_3_SOURCES       = vlad_3.cc
+vlad_4_SOURCES       = vlad_4.cc
+vlad_5_SOURCES       = vlad_5.cc
 
 LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
 	  -L$(NUM_REC)/lib -lnum_rec \
@@ -17,9 +23,12 @@ LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
 #	  -L$(HOME)/readline-5.0
 #	  -lreadline -lhistory
 
-INCLUDES = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc -I$(HOME)/R-2.8.1/include \
-	   -I/usr/local/include -I/usr/include/openmpi
+#INCLUDES = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc -I$(HOME)/R-2.8.1/include \
+#	   -I/usr/local/include -I/usr/include/openmpi
+AM_CPPFLAGS = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc  \
+              -I$(HOME)/R-2.8.1/include \
+	      -I/usr/local/include -I/usr/include/openmpi
 
-CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend
+AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend
 #CXXFLAGS = -g -Wl,-stack_size -Wl,0x40000000 -O2 -Wall -Wno-non-template-friend
 UNLIMIT_RESOURCES = datasize memorysize stacksize
