@@ -10,7 +10,7 @@ ss_vect<double> ss_vect<tps>::cst(void) const
   int              i;
   ss_vect<double>  x;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     x[i] = ss[i].cst();
   return x;
 }
@@ -21,7 +21,7 @@ ss_vect<T>& ss_vect<T>::operator=(const ss_vect<T> &x)
 {
   int  i;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     ss[i] = x[i];
   return *this;
 }
@@ -31,7 +31,7 @@ ss_vect<T>& ss_vect<T>::operator+=(const ss_vect<T> &a)
 {
   int  i;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     ss[i] += a[i];
   return *this;
 }
@@ -41,7 +41,7 @@ ss_vect<T>& ss_vect<T>::operator-=(const ss_vect<T> &a)
 {
   int  i;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     ss[i] -= a[i];
   return *this;
 }
@@ -51,7 +51,7 @@ ss_vect<T>& ss_vect<T>::operator*=(const double a)
 {
   int  i;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     ss[i] *= a;
   return *this;
 }
@@ -61,7 +61,7 @@ ss_vect<tps>& ss_vect<tps>::operator*=(const tps &a)
 {
   int  i;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     ss[i] *= a;
   return *this;
 }
@@ -110,7 +110,7 @@ void ss_vect<T>::zero(void)
 {
   int         i;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     ss[i] = 0.0;
 }
 
@@ -132,7 +132,7 @@ operator>>(basic_istream<CharT, Traits> &is, ss_vect<tps> &a)
   int                                 i;
   basic_istringstream<CharT, Traits>  s;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     darea77_(a[i].intptr, 7);
   return is;
 }
@@ -168,7 +168,7 @@ operator<<(basic_ostream<CharT, Traits> &os, const ss_vect<tps> &a)
   basic_ostringstream<CharT, Traits>  s;
 
   s.flags(os.flags()); s.imbue(os.getloc());
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     s << setprecision(os.precision()) << setw(os.width()) << a[i];
   return os << s.str();
 }

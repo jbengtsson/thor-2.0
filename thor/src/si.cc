@@ -1,21 +1,22 @@
 /* Author:  Johan Bengtsson  */
 
 
-long int           n_elem;
-elem_type<double>  elem[max_elem];
-elem_type<tps>     elem_tps[max_elem];
-Family             Families[max_Family];
+long int          n_elem;
+elem_type<double> elem[max_elem];
+elem_type<tps>    elem_tps[max_elem];
+Family            Families[max_Family];
 
-bool  lost;
+bool lost;
 
-double  cl_rad, q_fluct;
-double  d_coeff1, d_coeff2, k_coeff1, k_coeff2;
-double  E0, dE, beta0, gamma0;
-tps     D_[3]; // diff. coeff. for the linear invarient
+double cl_rad, q_fluct;
+double d_coeff1, d_coeff2, k_coeff1, k_coeff2;
+double E0, dE, beta0, gamma0;
+double I2, I4, I5, dcurly_H, dI4;
+tps    D_[3]; // diff. coeff. for the linear invarient
 
-bool  rad_on    = false, H_exact        = false, totpath_on   = false;
-bool  cavity_on = false, quad_fringe_on = false, emittance_on = false;
-bool  IBS_on    = false;
+bool rad_on    = false, H_exact        = false, totpath_on   = false;
+bool cavity_on = false, quad_fringe_on = false, emittance_on = false;
+bool IBS_on    = false;
 
 
 /* initialize symplectic integrator */
@@ -127,6 +128,21 @@ class is_tps<double> {
   static inline void get_ps(const ss_vect<double> &x,
 			    elem_type<double> &elem) { }
 
+  static inline double get_curly_H(const ss_vect<tps> &x)
+    {
+      cout << "get_curly_H: operation not defined for double" << endl;
+      exit(1);
+      return 0e0;
+    }
+
+  static inline double get_dI4(const double h, const double b2, const double L,
+			       const ss_vect<tps> &x)
+  {
+    cout << "get_dI4: operation not defined for double" << endl;
+    exit(1);
+    return 0e0;
+  }
+
   static inline void emittance(const double B2, const double u,
 			       const double ps0, const ss_vect<double> &xp) { }
 };
@@ -138,6 +154,23 @@ class is_tps<tps> {
  public:
   static inline void get_ps(const ss_vect<tps> &x, elem_type<tps> &elem)
   { elem.A1 = x; }
+
+  static inline double get_curly_H(const ss_vect<tps> &A)
+  {
+    int              j;
+    double           curly_H[2];
+    ss_vect<double>  eta;
+
+    eta.zero();
+    for (j = 0; j < 4; j++)
+      eta[j] = A[j][delta_];
+ 
+    get_twoJ(2, eta, A, curly_H);
+
+    return curly_H[X_];
+  }
+
+  static inline double get_dI4(const ss_vect<tps> &A) { return A[x_][delta_]; }
 
   static inline void emittance(const tps &B2, const tps &H_dL, const tps &ps0,
 			       const ss_vect<tps> &A) {
@@ -418,7 +451,7 @@ template<typename T>
 void mpole_pass(const elem_type<T> &elem, ss_vect<T> &x)
 {
   int     i;
-  double  h_ref;
+  double  h_ref, h, L;
   T       L0, L1, L2, k1, k2;
 
   // Note, expanded
@@ -465,17 +498,45 @@ void mpole_pass(const elem_type<T> &elem, ss_vect<T> &x)
       break;
     case Fourth:
       L1 = d_coeff1*L0; L2 = d_coeff2*L0; k1 = k_coeff1*L0; k2 = k_coeff2*L0;
+      dcurly_H = 0e0; dI4 = 0e0;
       for (i = 0; i < elem.mpole->n_step; i++) {
+	if (emittance_on && (!cavity_on) && (elem.mpole->h_bend != 0e0)) {
+	  dcurly_H += is_tps<tps>::get_curly_H(x);
+	  dI4 += is_tps<tps>::get_dI4(x);
+	}
+
 	drift_pass(L1, x);
 	thin_kick(elem.mpole->order, elem.mpole->an, elem.mpole->bn, k1,
 		  elem.mpole->h_bend, h_ref, true, x);
 	drift_pass(L2, x);
 	thin_kick(elem.mpole->order, elem.mpole->an, elem.mpole->bn, k2,
 		  elem.mpole->h_bend, h_ref, true, x);
+
+	if (emittance_on && (!cavity_on) && (elem.mpole->h_bend != 0e0)) {
+	  dcurly_H += 4e0*is_tps<tps>::get_curly_H(x);
+	  dI4 += 4e0*is_tps<tps>::get_dI4(x);
+	}
+
 	drift_pass(L2, x);
 	thin_kick(elem.mpole->order, elem.mpole->an, elem.mpole->bn, k1,
 		  elem.mpole->h_bend, h_ref, true, x);
 	drift_pass(L1, x);
+
+	if (emittance_on && (!cavity_on) && (elem.mpole->h_bend != 0e0)) {
+	  dcurly_H += is_tps<tps>::get_curly_H(x);
+	  dI4 += is_tps<tps>::get_dI4(x);
+	}
+      }
+
+      if (emittance_on && (!cavity_on) && (elem.mpole->h_bend != 0e0)) {
+	dcurly_H /= 6e0*elem.mpole->n_step;
+	L = is_double<T>::cst(elem.L);
+	h = is_double<T>::cst(elem.mpole->h_bend);
+	dI4 *=
+	  h*(sqr(h)+2e0*is_double<T>::cst(elem.mpole->bn[Quad-1]))
+	  /(6e0*elem.mpole->n_step);
+	I2 += L*sqr(h); I4 += L*dI4;
+	I5 += L*fabs(cube(h))*dcurly_H;
       }
       break;
     default:
@@ -876,11 +937,14 @@ bool si(const long int i0, const long int i1, ss_vect<T> &x,
 
   if (Check_Ampl(x)) return false;
 
-  if (rad_on) dE = 0.0;
+  if (rad_on) dE = 0e0;
 
-  if (emittance_on)
+  if (emittance_on) {
+    I2 = 0e0; I4 = 0e0; I5 = 0e0;
+
     for (i = 0; i < 3; i++)
-      D_[i] = 0.0;
+      D_[i] = 0e0;
+  }
 
   for (i = i0; i <= i1; i++) {
 //    if (IBS_on) add_IBS();

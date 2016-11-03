@@ -1,7 +1,7 @@
 # Optimize dynamic aperture:
 #
 fit_tune       0 2.301 1.05 1e-5
-fit_chrom      1 0.66667 0.66667 -5e-3  # neg. to reset (0.0, 0.13333)
+fit_chrom      0 0.0 0.0 -5e-3  # neg. to reset (0.0, 0.13333)
 check_range    0
 nu_x_min       2.15001
 nu_x_max       2.25
@@ -11,13 +11,13 @@ n_steps        5
 n_cell         1 (4)
 ds_max         0.20
 b2_max         3.0
-b3L_max        3.5
+b3L_max        300.0
 b4L_max        1000.0
 b5L_max        2000.0
-scl_dnu        10.0
+scl_dnu        5.0
 scl_ksi1       1e4
-scl_ksi2       50.0
-scl_ksi_nl     5.0
-scl_dnuddelta  1e-6
-scl_dnudJ      1e-7
+scl_ksi2       0.0
+scl_ksi_nl     0.0
+scl_dnuddelta  0e-6
+scl_dnudJ      0e-7
 step           0.3

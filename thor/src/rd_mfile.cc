@@ -131,16 +131,16 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	exit(1);
       }
       elem[ind].Fnum = Fnum; elem[ind].Knum = Knum;
-      if (Fnum <= max_Family) {
+      if ((0 < Fnum) && (Fnum <= max_Family)) {
 	strcpy(Families[Fnum-1].Name, elem[ind].Name);
-	if (Knum <= max_Kids) {
+	if ((0 < Knum) && (Knum <= max_Kids)) {
 	  Families[Fnum-1].Kids[Knum-1] = ind;
 	  Families[Fnum-1].n_Kids = max(Knum, Families[Fnum-1].n_Kids);
-	} else {
+	} else if (0 < Knum) {
 	  printf("rd_mfile: max_Kids exceeded %d (%d)\n", Knum, max_Kids);
 	  exit(1);
 	}
-      } else {
+      } else if (0 < Fnum) {
 	printf("rd_mfile: max_Family exceeded %d (%d)\n", Fnum, max_Family);
 	exit(1);
       }

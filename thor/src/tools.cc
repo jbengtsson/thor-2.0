@@ -205,6 +205,36 @@ ss_vect<tps> get_A_CS(const int n, const ss_vect<tps> &A, double dnu[])
 }
 
 
+void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
+	      const ss_vect<tps> &A, double twoJ[])
+{
+  int             j, k, jj[ss_dim];
+  ss_vect<double> z;
+  ss_vect<tps>    A1;
+
+  for (j = 0; j < ss_dim; j++)
+    jj[j] = (j < 2*n_DOF)? 1 : 0;
+
+  // Get linear part.
+  A1.zero();
+  for (j = 0; j < ps_dim; j++)
+    for (k = 0; k < ps_dim; k++)
+      A1[j] += A[j][k]*tps(0e0, k+1);
+  // Get parameter dependance.
+  for (j = 0; j < 2; j++) {
+    A1[j]   += h_ijklm_p(A[j],   1, 0, 0, 0, 0, 7)*tps(0e0, j+1);
+    A1[j]   += h_ijklm_p(A[j],   0, 1, 0, 0, 0, 7)*tps(0e0, j+2);
+    A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 1, 0, 0, 7)*tps(0e0, j+3);
+    A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 0, 1, 0, 7)*tps(0e0, j+4);
+  }
+
+  z = (PInv(A1, jj)*ps).cst();
+
+  for (j = 0; j < n_DOF; j++)
+    twoJ[j] = sqr(z[2*j]) + sqr(z[2*j+1]);
+}
+
+
 void prt_lat(const char *fname, const int n)
 {
   long int           i;
@@ -4007,7 +4037,7 @@ void fit_chrom(const double ksi_x, const double ksi_y,
   danot_(3);
   get_Map();
   danot_(4);
-  lieinit_(4, ss_dim, nd_tps, ndpt_tps, iref_tps, 0);
+  // lieinit_(4, ss_dim, nd_tps, ndpt_tps, iref_tps, 0);
   K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
   ksi[X_] = h_ijklm(nus[3], 0, 0, 0, 0, 1);
   ksi[Y_] = h_ijklm(nus[4], 0, 0, 0, 0, 1);

@@ -44,13 +44,65 @@ long int nok(long int n, long int k)
 }
 
 
-void daexp(const int &intptr, double rbuf[], int ibuf1[], int ibuf2[],
-	   char name[name_len_for])
-{
+#if NO > 1
 
-  daexp_(intptr, rbuf, ibuf1, ibuf2, name, name_len_for); name[10] = '\0';
+double getmat(const ss_vect<tps> &map, const int i, const int j)
+{
+  int      k;
+  double   r;
+  iVector  jj;
+
+  for (k = 0; k < nv_tps; k++)
+    jj[k] = 0;
+
+  jj[j-1] = 1;
+
+  dapek_(map[i-1].intptr, jj, r);
+
+  return r;
 }
 
+
+void putmat(ss_vect<tps> &map, const int i, const int j, const double r)
+{
+  int      k;
+  iVector  jj;
+
+  for (k = 0; k < nv_tps; k++)
+    jj[k] = 0;
+
+  if (j > 0) jj[j-1] = 1;
+
+  dapok_(map[i-1].intptr, jj, r);
+}
+
+
+void getlinmat(const int nv, const ss_vect<tps> &map, Matrix &mat)
+{
+  int  j, k;
+
+  for (j = 1; j <= nv; j++)
+    for (k = 1; k <= nv; k++)
+      mat[j-1][k-1] = getmat(map, j, k);
+}
+
+
+void putlinmat(const int nv, const Matrix &mat, ss_vect<tps> &map)
+{
+  /* Puts zeroes in constant part of da map */
+  int j, k;
+
+  for (j = 1; j <= nv; j++) {
+    for (k = 0; k <= nv; k++) {
+      if (k == 0)
+        putmat(map, j, k, 0.0);
+      else
+        putmat(map, j, k, mat[j-1][k-1]);
+    }
+  }
+}
+
+#endif
 
 
 // Interface to Fortran TPSA library
@@ -83,7 +135,7 @@ void TPSA_Ini(void)
   // g95_runtime_start(0, NULL); 
 
   // Initialize TPSA-lib.
-  daini_(no_tps, ss_dim, 0);
+  // daini_(no_tps, ss_dim, 0);
 
   daeps_(eps_tps);
 
@@ -597,10 +649,10 @@ tps LieExp(const tps &H, const tps &x)
 
 ss_vect<tps> LieExp(const tps &H, const ss_vect<tps> &x)
 {
-  int           i, xintptrs[ps_dim], mapintptrs[ps_dim];
+  int           i, xintptrs[ss_dim], mapintptrs[ss_dim];
   ss_vect<tps>  map;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; mapintptrs[i] = map[i].intptr;
   }
   expnd2_(H.intptr, xintptrs, mapintptrs, eps_tps, n_max);
@@ -610,14 +662,14 @@ ss_vect<tps> LieExp(const tps &H, const ss_vect<tps> &x)
 ss_vect<tps> FExpo(const tps &H, const ss_vect<tps> &x,
                    const int k0, const int k1, const int k)
 {
-  int           i, xintptrs[ps_dim], mapintptrs[ps_dim];
+  int           i, xintptrs[ss_dim], mapintptrs[ss_dim];
   ss_vect<tps>  map;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; mapintptrs[i] = map[i].intptr;
   }
   fexpo_(H.intptr, xintptrs, mapintptrs, k0, k1, 1.0, k);
-  for (i = ps_dim; i < ss_dim; i++)
+  for (i = ss_dim; i < ss_dim; i++)
     map[i] = tps(0.0, i+1);
   return map;
 }
@@ -647,13 +699,13 @@ ss_vect<double> PPUSH(const ss_vect<tps> &x, ss_vect<double> &y)
 
 tps operator*(const tps &x, const ss_vect<tps> &y)
 {
-  int  i, xintptrs[ps_dim], y1intptrs[ss_dim], zintptrs[ps_dim];
+  int  i, xintptrs[ss_dim], y1intptrs[ss_dim], zintptrs[ss_dim];
   tps  z;
   tps  y1[ss_dim];
 
   xintptrs[0] = x.intptr; zintptrs[0] = z.intptr;
   for (i = 0; i < ss_dim; i++) {
-    y1[i] = (i < ps_dim)? y[i] : tps(0.0, i+1);
+    y1[i] = (i < ss_dim)? y[i] : tps(0.0, i+1);
     y1intptrs[i] = y1[i].intptr;
   }
   dacct_(xintptrs, 1, y1intptrs, ss_dim, zintptrs, 1);
@@ -662,10 +714,10 @@ tps operator*(const tps &x, const ss_vect<tps> &y)
 
 ss_vect<tps> operator*(const ss_vect<tps> &x, const ss_vect<tps> &y)
 {
-  int           i, xintptrs[ps_dim], yintptrs[ps_dim], zintptrs[ps_dim];
+  int           i, xintptrs[ss_dim], yintptrs[ss_dim], zintptrs[ss_dim];
   ss_vect<tps>  z;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
     zintptrs[i] = z[i].intptr;
   }
@@ -675,23 +727,23 @@ ss_vect<tps> operator*(const ss_vect<tps> &x, const ss_vect<tps> &y)
 
 ss_vect<tps> CCT(const ss_vect<tps> &x, const ss_vect<tps> &y)
 {
-  int           i, xintptrs[ps_dim], yintptrs[ps_dim], zintptrs[ps_dim];
+  int           i, xintptrs[ss_dim], yintptrs[ss_dim], zintptrs[ss_dim];
   ss_vect<tps>  z;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
     zintptrs[i] = z[i].intptr;
   }
-  dacct_(xintptrs, ps_dim, yintptrs, ps_dim, zintptrs, ps_dim);
+  dacct_(xintptrs, ss_dim, yintptrs, ss_dim, zintptrs, ss_dim);
   return z;
 }
 
 ss_vect<tps> Inv(const ss_vect<tps> &x)
 {
-  int           i, xintptrs[ps_dim], yintptrs[ps_dim];
+  int           i, xintptrs[ss_dim], yintptrs[ss_dim];
   ss_vect<tps>  y;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
   }
   etinv_(xintptrs, yintptrs);
@@ -700,22 +752,22 @@ ss_vect<tps> Inv(const ss_vect<tps> &x)
 
 ss_vect<tps> Inv_Ext(const ss_vect<tps> &x)
 {
-  int           i, xintptrs[ps_dim], yintptrs[ps_dim];
+  int           i, xintptrs[ss_dim], yintptrs[ss_dim];
   ss_vect<tps>  y;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
   }
-  dainv_(xintptrs, ps_dim, yintptrs, ps_dim);
+  dainv_(xintptrs, ss_dim, yintptrs, ss_dim);
   return y;
 }
 
 ss_vect<tps> PInv(const ss_vect<tps> &x, const int jj[])
 {
-  int           i, xintptrs[ps_dim], yintptrs[ps_dim];
+  int           i, xintptrs[ss_dim], yintptrs[ss_dim];
   ss_vect<tps>  y;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
   }
   etpin_(xintptrs, yintptrs, jj);
@@ -736,9 +788,9 @@ void PInv(const int m, const tps x[], const int n, tps y[], const int jj[])
 void GoFix(const ss_vect<tps> &xy, ss_vect<tps> &a1, ss_vect<tps> &a1inv,
 	   const int nord)
 {
-  int  i, xyintptrs[ps_dim], a1intptrs[ps_dim], a1invintptrs[ps_dim];
+  int  i, xyintptrs[ss_dim], a1intptrs[ss_dim], a1invintptrs[ss_dim];
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xyintptrs[i] = xy[i].intptr; a1intptrs[i] = a1[i].intptr;
     a1invintptrs[i] = a1inv[i].intptr;
   }
@@ -748,11 +800,11 @@ void GoFix(const ss_vect<tps> &xy, ss_vect<tps> &a1, ss_vect<tps> &a1inv,
 tps MapNorm(const ss_vect<tps> &x, tps &g, ss_vect<tps> &a2,
 	    ss_vect<tps> &a1, ss_vect<tps> &xy, const int nord)
 {
-  int  i, xintptrs[ps_dim], a2intptrs[ps_dim], a1intptrs[ps_dim];
-  int  xyintptrs[ps_dim];
+  int  i, xintptrs[ss_dim], a2intptrs[ss_dim], a1intptrs[ss_dim];
+  int  xyintptrs[ss_dim];
   tps  K;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; a2intptrs[i] = a2[i].intptr;
     a1intptrs[i] = a1[i].intptr; xyintptrs[i] = xy[i].intptr;
   }
@@ -765,11 +817,11 @@ ss_vect<tps> MapNormF(const ss_vect<tps> &x, ss_vect<tps> &g, ss_vect<tps> &a2,
 		      ss_vect<tps> &a1, ss_vect<tps> &xy,
 		      const int nord, const int kpmax)
 {
-  int   i, xintptrs[ps_dim], gintptrs[ps_dim], a2intptrs[ps_dim];
-  int   a1intptrs[ps_dim], xyintptrs[ps_dim], Kintptrs[ps_dim];
+  int   i, xintptrs[ss_dim], gintptrs[ss_dim], a2intptrs[ss_dim];
+  int   a1intptrs[ss_dim], xyintptrs[ss_dim], Kintptrs[ss_dim];
   ss_vect<tps>  K;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; gintptrs[i] = g[i].intptr;
     a2intptrs[i] = a2[i].intptr; a1intptrs[i] = a1[i].intptr;
     xyintptrs[i] = xy[i].intptr;  Kintptrs[i] = K[i].intptr;
@@ -781,10 +833,10 @@ ss_vect<tps> MapNormF(const ss_vect<tps> &x, ss_vect<tps> &g, ss_vect<tps> &a2,
 
 ss_vect<tps> dHdJ(const tps &H)
 {
-  int           i, nuintptrs[ps_dim];
+  int           i, nuintptrs[ss_dim];
   ss_vect<tps>  nu;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     nuintptrs[i] = nu[i].intptr;
   dhdj_(H.intptr, nuintptrs);
   return nu;
@@ -810,10 +862,10 @@ tps LieFact_DF(const ss_vect<tps> &xy, ss_vect<tps> &x)
        M = M_lin exp(:h_3:) exp(:h_4:) ... 
 
   */
-  int  i, xyintptrs[ps_dim], xintptrs[ps_dim];
+  int  i, xyintptrs[ss_dim], xintptrs[ss_dim];
   tps  H;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xyintptrs[i] = xy[i].intptr; xintptrs[i] = x[i].intptr;
   }
   liefact_(xyintptrs, xintptrs, H.intptr);
@@ -832,10 +884,10 @@ tps LieFact(const ss_vect<tps> &xy)
 
 ss_vect<tps> FlowFact(const ss_vect<tps> &xy)
 {
-  int           i, xyintptrs[ps_dim], Vintptrs[ps_dim];
+  int           i, xyintptrs[ss_dim], Vintptrs[ss_dim];
   ss_vect<tps>  V;
 
-  for (i = 0; i < ps_dim; i++) {
+  for (i = 0; i < ss_dim; i++) {
     xyintptrs[i] = xy[i].intptr; Vintptrs[i] = V[i].intptr;
   }
   flofacg_(xyintptrs, Vintptrs, eps_tps);
@@ -844,10 +896,10 @@ ss_vect<tps> FlowFact(const ss_vect<tps> &xy)
 
 tps Intd(const ss_vect<tps> &V, double eps)
 {
-  int  i, Vintptrs[ps_dim];
+  int  i, Vintptrs[ss_dim];
   tps  H;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ss_dim; i++)
     Vintptrs[i] = V[i].intptr;
   intd_(Vintptrs, H.intptr, eps);
   return H;
@@ -925,7 +977,7 @@ ostream& operator<<(ostream &os, const tps &a)
     return os;
   }
 
-  daexp(a.intptr, rbuf, ibuf1, ibuf2, name);
+  daexp_(a.intptr, rbuf, ibuf1, ibuf2, name, name_len_for);
   s << endl;
   
   name[10] = '\0'; i = 0;

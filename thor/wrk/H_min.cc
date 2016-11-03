@@ -2,32 +2,31 @@
 
 #include "thor_lib.h"
 
-int  no_tps   = NO,
-     ndpt_tps = 5;
+int no_tps   = NO,
+    ndpt_tps = 5;
 
 
-extern double        b2_max;
-extern tps           K, g;
-extern ss_vect<tps>  Map, A0, A1, Map_res;
+extern double       b2_max;
+extern tps          K, g;
+extern ss_vect<tps> Map, A0, A1, Map_res;
 
 const int  max_ind = 10, n_prm_max = 20;
 
-bool          h[max_ind][max_ind][max_ind][max_ind][max_ind], fit_chrm;
-int           n_b3, b3s[mpole_max], n_bn, *bns_fam, *bns_n, n_cell;
-int           check_range, adj_tune, adj_chrom, n_steps;
-long int      beta_loc1, beta_loc2, beta_loc3;
-double        Jx, Jy, delta, ksi1[2], nu0_x, nu0_y, eps_nu, chi2;
-double        beta1[2], beta2[2], beta3[2];
-double        bnL_max[mpole_max], eps_ksi, *bns;
-double        scl_dnu, scl_ksi_nl, scl_dnuddelta, step, scl_dnudJ;
-double        nu_x_min, nu_x_max, nu_y_min, nu_y_max;
-ss_vect<tps>  Id_scl;
+bool         h[max_ind][max_ind][max_ind][max_ind][max_ind], fit_chrm;
+int          n_b3, b3s[mpole_max], n_bn, *bns_fam, *bns_n, n_cell;
+int          check_range, adj_tune, adj_chrom, n_steps;
+long int     beta_loc1, beta_loc2, beta_loc3;
+double       Jx, Jy, delta, ksi1[2], nu0_x, nu0_y, eps_nu, chi2;
+double       beta1[2], beta2[2], beta3[2];
+double       bnL_max[mpole_max], eps_ksi, *bns;
+double       scl_dnu, scl_ksi_nl, scl_dnuddelta, step, scl_dnudJ;
+double       nu_x_min, nu_x_max, nu_y_min, nu_y_max;
+ss_vect<tps> Id_scl;
 
+const double max_Ax = 5e-3, max_Ay = 5e-3, max_delta = 3e-2;
 
-const double  max_Ax = 20e-3, max_Ay = 10e-3, max_delta = 3e-2;
-
-const double  scl_ksi1[] = { 1e3, 1e3 };
-const bool    mirror_sym = false;
+const double scl_ksi1[] = { 1e3, 1e3 };
+const bool   mirror_sym = true;
 
 
 int ncom;
@@ -712,6 +711,26 @@ void dfpmin(double p[], int n, double gtol, int *iter, double *fret,
 #undef FREEALL
 
 
+void prt_b3s(double bns[])
+{
+  int  i, j;
+  FILE *outf;
+
+  const string file_name = "b3s.out";
+
+  outf = file_write(file_name.c_str());
+  
+  for (i = 1; i <= ncom; i++)
+    for (j = 1; j <= get_n_Kids(abs(bns_fam[i])); j++) {
+      if (bns_fam[i] > 0) 
+	fprintf(outf, "%9s(%2d) = %10.5f %1d\n",
+		get_Name(abs(bns_fam[i])), j, get_bnL(bns_fam[i], 1, bns_n[i]),
+		bns_n[i]);
+   }
+
+  fclose(outf);
+}
+
 void select_h(void)
 {
   int  i, j, k, l, m;
@@ -797,6 +816,8 @@ double H_fun(double bns[])
   tps     r, K_re, K_im, g_re, g_im;
 
   const int  n_prt = 10;
+
+  prt_b3s(bns);
 
   for (i = 1; i <= ncom; i++)
     set_bn(bns_fam[i], bns_n[i], bns[i]);
@@ -940,8 +961,9 @@ double get_dh(const tps &h,
 
 void H_dfun(double bns[], double dh2[])
 {
-  int  i1, i, j, k, l, m;
-  tps  r, K_re, K_im, g_re, g_im;
+  int      i1, i, j, k, l, m;
+  tps      r, K_re, K_im, g_re, g_im;
+  ofstream outf;
 
   for (i = 1; i <= ncom; i++)
     set_bn(bns_fam[i], bns_n[i], bns[i]);
@@ -1049,10 +1071,10 @@ void H_dfun(double bns[], double dh2[])
 
 void H_min(const int k)
 {
-  int     i, j, iter;
-  double  **xi, *y, **p, fret;
+  int    i, j, iter;
+  double **xi, *y, **p, fret;
 
-  const double  d_bn = 1e-1;
+  const double d_bn = 1e-1;
 
   select_h();
 
@@ -1062,8 +1084,7 @@ void H_min(const int k)
 
   switch (k) {
   case 1:\
-    cout << endl;
-    cout << "Downhill simplex" << endl;
+    printf("\nDownhill simplex\n");
 
     y = dvector(1, n_bn); p = dmatrix(1, n_bn+1, 1, n_bn);
 
@@ -1080,8 +1101,7 @@ void H_min(const int k)
     free_dvector(y, 1, n_bn); free_dmatrix(p, 1, n_bn+1, 1, n_bn);
     break;
   case 2:
-    cout << endl;
-    cout << "Powell's method" << endl;
+    printf("\nPowell's method\n");
 
     xi = dmatrix(1, n_bn, 1, n_bn);
 
@@ -1094,18 +1114,19 @@ void H_min(const int k)
     free_dmatrix(xi, 1, n_bn, 1, n_bn);
     break;
   case 3:
-    cout << endl;
-    cout << "Conjugated gradient" << endl;
+    printf("\nConjugated gradient\n");
 
     frprmn(bns, n_bn, 1e-15, &iter, &fret, H_fun, H_dfun);
     break;
   case 4:
-    cout << endl;
-    cout << "Metric method" << endl;
+    printf("\nMetric method\n");
 
     dfpmin(bns, n_bn, 1e-30, &iter, &fret, H_fun, H_dfun);
-      break;
- }
+    break;
+  default:
+    printf("\n*** H_min: undefined method %d (1-4)\n", k);
+    exit(1);
+  }
 }
 
 
@@ -1114,14 +1135,14 @@ void chk_lat(double nu[], double ksi[])
   double        alpha1[2];
   ss_vect<tps>  nus;
 
-//  get_Map();
+  // get_Map();
   get_COD(10, 1e-10, 0.0, true);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   nus = dHdJ(K); get_nu_ksi(nus, nu, ksi); get_ab(alpha1, beta1, 0);
-  cout << endl;
-  cout << fixed << setprecision(3)
-       << "alpha_x  = " << alpha1[X_] << ", alpha_y = " << alpha1[Y_]
-       << ", beta_x = " << beta1[X_] << ", beta_y  = " << beta1[Y_] << endl;
+
+  printf("\nalpha_x  = %10.3f, alpha_y = %10.3f"
+	 ", beta_x =  %10.3f, beta_x =  %10.3f\n",
+	 alpha1[X_], alpha1[Y_], beta1[X_] , beta1[Y_]);
   prt_nu(nus);
 }
 
@@ -1136,25 +1157,15 @@ void get_locs()
   beta_loc3 = get_loc(get_Fnum("ls"), 1); get_ab(alpha3, beta3, beta_loc3);
 //  beta3[X_] = 15.0; beta3[Y_] = 3.0;
 
-  cout << endl;
-  cout << fixed << setprecision(3)
-       << "alpha1_x  = " << setw(6) << alpha1[X_]
-       << ", alpha1_y = " << setw(6) << alpha1[Y_]
-       << ", beta1_x = " << setw(6) << beta1[X_]
-       << ", beta1_y  = " << setw(6) << beta1[Y_]
-       << endl;
-  cout << fixed << setprecision(3)
-       << "alpha2_x  = " << setw(6) << alpha2[X_]
-       << ", alpha2_y = " << setw(6) << alpha2[Y_]
-       << ", beta2_x = " << setw(6) << beta2[X_]
-	   << ", beta2_y  = " << setw(6) << beta2[Y_]
-       << endl;
-  cout << fixed << setprecision(3)
-       << "alpha3_x  = " << setw(6) << alpha3[X_]
-       << ", alpha3_y = " << setw(6) << alpha3[Y_]
-       << ", beta3_x = " << setw(6) << beta3[X_]
-       << ", beta3_y  = " << setw(6) << beta3[Y_]
-       << endl;
+  printf("\nalpha1_x = %6.3f, alpha1_y = %6.3f"
+	 ", beta1_x = %6.3f, beta1_y  = %6.3f",
+	 alpha1[X_], alpha1[Y_], beta1[X_], beta1[Y_]);
+  printf("\nalpha2_x = %6.3f, alpha2_y = %6.3f"
+	 ", beta2_x = %6.3f, beta2_y = %6.3f",
+	 alpha2[X_], alpha2[Y_], beta2[X_], beta2[Y_]);
+  printf("\nalpha3_x = %6.3f, alpha3_y = %6.3f"
+	 ", beta3_x = %6.3f, beta3_y = %6.3f",
+	 alpha3[X_], alpha3[Y_], beta3[X_], beta3[Y_]);
 }
 
 
@@ -1307,17 +1318,13 @@ void get_bns()
 
   n_bn = 0;
 
-  bns_fam[++n_bn] = get_Fnum("sl1");  bns_n[n_bn] = Sext;
-  bns_fam[++n_bn] = get_Fnum("sl2");  bns_n[n_bn] = Sext;
-  bns_fam[++n_bn] = get_Fnum("sl3");  bns_n[n_bn] = Sext;
+  bns_fam[++n_bn] = get_Fnum("sf");  bns_n[n_bn] = Sext;
+  bns_fam[++n_bn] = get_Fnum("sd");  bns_n[n_bn] = Sext;
 
-  bns_fam[++n_bn] = get_Fnum("sm1a"); bns_n[n_bn] = Sext;
-  bns_fam[++n_bn] = get_Fnum("sm1b"); bns_n[n_bn] = Sext;
-  bns_fam[++n_bn] = get_Fnum("sm2");  bns_n[n_bn] = Sext;
-
-  bns_fam[++n_bn] = get_Fnum("sh1");  bns_n[n_bn] = Sext;
-  bns_fam[++n_bn] = get_Fnum("sh3");  bns_n[n_bn] = Sext;
-  bns_fam[++n_bn] = get_Fnum("sh4");  bns_n[n_bn] = Sext;
+  bns_fam[++n_bn] = get_Fnum("o1");  bns_n[n_bn] = Oct;
+  bns_fam[++n_bn] = get_Fnum("o2");  bns_n[n_bn] = Oct;
+  bns_fam[++n_bn] = get_Fnum("o3");  bns_n[n_bn] = Oct;
+  bns_fam[++n_bn] = get_Fnum("o4");  bns_n[n_bn] = Oct;
 
   if (n_bn > n_prm_max) {
     cout << "get_bns: n_prm_max exceeded " << n_bn << "(" << n_prm_max
@@ -1330,128 +1337,6 @@ void get_bns()
 
   cout << endl;
   cout << "get_bns: no of multipole families " << n_bn << endl;
-}
-
-
-void fit_chrom2(const double ksi_x, const double ksi_y,
-		const int n_b3, const int b3s[], const double eps,
-		const bool prt)
-{
-  int           i, j;
-  float         **A, *b, *w, **U, **V, *db3;
-  double        ksi[2], s_max;
-  ss_vect<tps>  nus;
-  ofstream      sext_out;
-
-  const bool    debug = false;
-  const int     m     = 3; // ksi^(1)_x, ksi^(1)_y, ksi^(2)_x), ksi^(3)_x
-  const double  s_cut = 1e-7;
-
-  b = vector(1, m); w = vector(1, n_b3); db3 = vector(1, n_b3);
-  A = matrix(1, m, 1, n_b3); U = matrix(1, m, 1, n_b3);
-  V = matrix(1, n_b3, 1, n_b3);
-
-  cout << endl;
-  cout << fixed << setprecision(5)
-       << "fit_chrom: ksi_x = " << setw(8) << ksi_x
-       << ", ksi_y = " << setw(8) << ksi_y << endl;
-
-  danot_(4); get_Map();
-  danot_(5); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
-  ksi[X_] = h_ijklm(nus[3], 0, 0, 0, 0, 1);
-  ksi[Y_] = h_ijklm(nus[4], 0, 0, 0, 0, 1);
-  b[1] = ksi[X_] - ksi_x; b[2] = ksi[Y_] - ksi_y;
-  b[3] = h_ijklm(nus[3], 0, 0, 0, 0, 2);
-
-  cout << fixed << setprecision(5)
-       << "ksi_x = " << setw(8) << ksi[X_]
-       << ", ksi_y = " << setw(8) << ksi[Y_] << endl;
-
-  while ((fabs(b[1]) > eps) || (fabs(b[2]) > eps)
-	 || (fabs(b[3]/sqr(max_delta)) > 0.05)) {
-    for (i = 1; i <= n_b3; i++) {
-      for (j = 1; j <= get_n_Kids(b3s[i-1]); j++)
-	set_bn_par(b3s[i-1], j, Sext, 7);
-
-      danot_(4); get_Map();
-      danot_(5); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
-
-      A[1][i] = -scl_ksi1[X_]*h_ijklm_p(nus[3], 0, 0, 0, 0, 1, 7);
-      A[2][i] = -scl_ksi1[Y_]*h_ijklm_p(nus[4], 0, 0, 0, 0, 1, 7);
-      A[3][i] = -h_ijklm_p(nus[3], 0, 0, 0, 0, 2, 7);
-
-      for (j = 1; j <= get_n_Kids(b3s[i-1]); j++)
-	clr_bn_par(b3s[i-1], j, Sext);
-    }
-
-    for (i = 1; i <= m; i++)
-      for (j = 1; j <= n_b3; j++)
-	U[i][j] = A[i][j];
-
-    svdcmp(U, m, n_b3, w, V);
-
-    s_max = -1e30;
-    for (i = 1; i <= n_b3; i++)
-      s_max = max(w[i], s_max);
-  
-    cout << endl;
-    cout << "singular values:" << endl;
-    for (i = 1; i <= n_b3; i++) {
-      cout << scientific << setprecision(3) << setw(10) << w[i];
-      if (w[i]/s_max < s_cut) {
-	w[i] = 0.0;
-	cout << " (zeroed)";
-      }
-      cout << endl;
-    }
-
-    b[1] *= scl_ksi1[X_]; b[2] *= scl_ksi1[Y_];
-
-    svbksb(U, w, V, m, n_b3, b, db3);
-
-    for (i = 1; i <= n_b3; i++)
-      for (j = 1; j <= get_n_Kids(b3s[i-1]); j++) {
-	set_dbn(b3s[i-1], j, Sext, db3[i]);
-	if (debug) {
-	  cout << fixed << setprecision(5)
-	       << setw(8) << get_bn(b3s[i-1], j, Sext) << endl;
-	}
-      }
-    if (debug) cout << endl;
-
-    danot_(3); get_Map();
-    danot_(4); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
-    ksi[X_] = h_ijklm(nus[3], 0, 0, 0, 0, 1);
-    ksi[Y_] = h_ijklm(nus[4], 0, 0, 0, 0, 1);
-    b[1] = ksi[X_] - ksi_x; b[2] = ksi[Y_] - ksi_y;
-    b[3] = h_ijklm(nus[3], 0, 0, 0, 0, 2);
-
-    cout << endl;
-    cout << fixed << setprecision(5)
-	 << "ksi^(1)_x = " << setw(8) << ksi[X_]
-	 << ", ksi^(1)_y = " << setw(8) << ksi[Y_]
-	 << scientific << setprecision(3)
-	 << ", ksi^(2)_x = " << setw(9) << b[3]
-	 << endl;
-  }
-
-  if (prt) {
-    sext_out.open("fit_chrom.dat", ios::out);
-    sext_out << endl;
-    sext_out << "n = 1:" << endl;
-    for (i = 1; i <= n_b3; i++)
-      for (j = 1; j <= get_n_Kids(b3s[i-1]); j++)
-	sext_out << fixed << setprecision(7) 
-		 << setw(6) << get_Name(b3s[i-1]) << "(" << j << ") = "
-		 << setw(11) << get_bnL(b3s[i-1], j, Sext)
-		 << setw(2) << Sext << endl;
-    sext_out.close();
-  }
-
-  free_vector(b, 1, m); free_vector(w, 1, n_b3);
-  free_vector(db3, 1, n_b3);
-  free_matrix(A, 1, m, 1, n_b3); free_matrix(U, 1, m, 1, n_b3);
-  free_matrix(V, 1, n_b3, 1, n_b3);
 }
 
 
@@ -1476,7 +1361,7 @@ int main(int argc, char *argv[])
   IBS_on    = false;
 
 
-  rd_mfile("flat_file.dat", elem); rd_mfile("flat_file.dat", elem_tps);
+  rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
 
   // initialize the symplectic integrator after energy has been defined
   ini_si();
@@ -1522,8 +1407,7 @@ int main(int argc, char *argv[])
 
   if (adj_chrom) {
     n_b3 = 0;
-    b3s[n_b3++] = get_Fnum("sm1a"); b3s[n_b3++] = get_Fnum("sm1b");
-    b3s[n_b3++] = get_Fnum("sm2");
+    b3s[n_b3++] = get_Fnum("sf"); b3s[n_b3++] = get_Fnum("sd");
 
     if (fit_chrm) {
       danot_(3);
@@ -1532,7 +1416,7 @@ int main(int argc, char *argv[])
       fit_chrom(ksi1[X_], ksi1[Y_], n_b3, b3s, true);
     }
 
-    get_bns(); H_min(atoi(argv[1]));
+    get_bns(); H_min(atoi(argv[2]));
   }
 
   danot_(no_tps-1);
@@ -1547,9 +1431,9 @@ int main(int argc, char *argv[])
   if (false) Id_scl.identity();
 
   file_wr(outf, "map.dat"); outf << Map; outf.close();
-  file_wr(outf, "K.dat"); outf << K_re; outf.close();
-  file_wr(outf, "g.dat"); outf << g_im; outf.close();
+  file_wr(outf, "K.dat"); outf << K_re*Id_scl; outf.close();
+  file_wr(outf, "g.dat"); outf << g_im*Id_scl; outf.close();
   file_wr(outf, "nus.dat"); outf << nus[3] << nus[4]; outf.close();
-  file_wr(outf, "h.dat"); outf << h_re; outf.close();
-  file_wr(outf, "H.dat"); outf << H_re; outf.close();
+  file_wr(outf, "h.dat"); outf << h_re*Id_scl; outf.close();
+  file_wr(outf, "H.dat"); outf << H_re*Id_scl; outf.close();
 }

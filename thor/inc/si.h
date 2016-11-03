@@ -1,18 +1,19 @@
 // E0 contain kinetic energy [GeV].
-extern double  E0, dE, beta0, gamma0;
-extern tps     D_[];
+extern double E0, dE, beta0, gamma0;
+extern double I2, I4, I5;
+extern tps    D_[];
 
-const double  pi = M_PI;
+const double pi = M_PI;
 
-const double  clight   = 2.99792458e8;   // speed of light in vacuum
-const double  q_e      = 1.60217646e-19; // electron charge
-const double  m_e      = 0.51099906e6;   // electron rest mass [eV]
-const double  mu_0     = 4.0*M_PI*1e-7;  // permittivity of free space
-const double  eps_0    = 1.0/(sqr(clight)*mu_0); // permeability of free space
-const double  h_bar    = 6.58211899e-16; // reduced Planck constant [eV]
-const double  r_e      = q_e/(4.0*M_PI*eps_0*m_e); // classical electron radius
-const double  C_u      = 55.0/(24.0*sqrt(3.0));
-const double  C_gamma  = 4.0*M_PI*r_e/(3.0*cube(1e-9*m_e));
+const double clight  = 2.99792458e8;   // speed of light in vacuum
+const double q_e     = 1.60217646e-19; // electron charge
+const double m_e     = 0.51099906e6;   // electron rest mass [eV]
+const double mu_0    = 4.0*M_PI*1e-7;  // permittivity of free space
+const double eps_0   = 1.0/(sqr(clight)*mu_0); // permeability of free space
+const double h_bar   = 6.58211899e-16; // reduced Planck constant [eV]
+const double r_e     = q_e/(4.0*M_PI*eps_0*m_e); // classical electron radius
+const double C_u     = 55.0/(24.0*sqrt(3.0));
+const double C_gamma = 4.0*M_PI*r_e/(3.0*cube(1e-9*m_e));
 
 
 /* element type codes */

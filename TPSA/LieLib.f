@@ -41,8 +41,8 @@
         is(i)=0
       enddo
       write(*, *) "lieinit:", no, nv
-!      write(*, *) "lieinit: calling daini"
-!      call daini(no,nv,0)
+      write(*, *) "lieinit: calling daini"
+      call daini(no,nv,0)
       if(nis.gt.0)call etallnom(is,nis,'$$IS      ')
       if(ndpt1.eq.0) then
         ndpt=0

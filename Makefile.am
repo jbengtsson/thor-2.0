@@ -1,1 +1,1 @@
-SUBDIRS = thor
+SUBDIRS = TPSA thor
