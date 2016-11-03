@@ -26,7 +26,7 @@ C ANFANG - HAUPTPROGRAMM -
       PARAMETER(C12E0=12.0D0,C32E0=32.0D0,C48E0=48.0D0,C160E0=160.0D0)
       PARAMETER(ISZ=200)
       CHARACTER A*160
-      INTEGER NA(50)
+      integer50)
 *
 
       IARI = 0
@@ -74,7 +74,7 @@ C ANFANG - HAUPTPROGRAMM -
 *-----MEMORY MANAGEMENT ----------------------------------------------------- 1
       PARAMETER(LNAM=10000,LVAR=8,LTEX=4000,LTTE=80,LCC=10000)                2
       CHARACTER CNAM(LNAM)*8,CTEX(LTEX)*80,CBLA*80                            3
-      INTEGER NPAR(LNAM,17)                                                   4
+      integerR(LNAM,17)                                                   4
       DOUBLE PRECISION CC(LCC)                                                5
       COMMON / CMEM / CNAM,CTEX,CBLA                                          6
       COMMON /  MEM / NPAR, CC, INAM, ITEX, ICC                               7
@@ -83,19 +83,19 @@ C ANFANG - HAUPTPROGRAMM -
 *     CNAM: CONTAINS INAM NAMES OF VARIABLES, FUNCTIONS, SUBROUTINES
 *     NPAR: PARAMETERS DESCRIBING THE VARIABLES
 *           1: KIND (1:VAR, 2: FUN, 3:SUB)
-*           2: TYPE (1:REAL, 2:INTEGER, 3:CHARACTER, 4:DA)
+*           2: TYPE (1:REAL, 2:integerCHARACTER, 4:DA)
 *           3: ADDRESS
 *           4: INDICES (FOR ARRAY), NUMBER OF ARGUMENTS (FOR FUN,SUB)
 *           11-17: BOUNDS (FOR ARRAYS)
 *
 *-----CODE ------------------------------------------------------------------ 1
       PARAMETER (LARI=10000)                                                   2
-      INTEGER NARI(LARI,11), IARI                                             3
+      integerI(LARI,11), IARI                                             3
       COMMON / CODE / NARI, IARI                                              4
 *---------------------------------------------------------------------------- 5
 *-----SYMBOL---------------------------------------------------------------- 1
       PARAMETER (LFUNC=100,LOPER=16)                                           2
-      INTEGER KFUN(LFUNC)
+      integerN(LFUNC)
       CHARACTER OPER(LOPER)*6, FUNC(LFUNC)*6                                  3
       COMMON / SYMBOL1 / KFUN
       COMMON / SYMBOL / OPER, FUNC                                           4
@@ -147,14 +147,14 @@ C ANFANG UNTERPROGRAMM
 *-----MEMORY MANAGEMENT ----------------------------------------------------- 1
       PARAMETER(LNAM=10000,LVAR=8,LTEX=4000,LTTE=80,LCC=10000)                2
       CHARACTER CNAM(LNAM)*8,CTEX(LTEX)*80,CBLA*80                            3
-      INTEGER NPAR(LNAM,17)                                                   4
+      integerR(LNAM,17)                                                   4
       DOUBLE PRECISION CC(LCC)                                                5
       COMMON / CMEM / CNAM,CTEX,CBLA                                          6
       COMMON /  MEM / NPAR, CC, INAM, ITEX, ICC                               7
 *---------------------------------------------------------------------------- 8
 *-----CODE ------------------------------------------------------------------ 1
       PARAMETER (LARI=10000)                                                   2
-      INTEGER NARI(LARI,11), IARI                                             3
+      integerI(LARI,11), IARI                                             3
       COMMON / CODE / NARI, IARI                                              4
       CHARACTER NAMEDAL*480
       PARAMETER(MNAME=1000)
@@ -164,7 +164,7 @@ C ANFANG UNTERPROGRAMM
       CHARACTER A*10000,CID*2,BLANK*8,DNAM*8
       CHARACTER PREC*6,IDAT*64
     
-      INTEGER NA(50)
+      integer50)
 *
       DATA  BLANK / '        ' /
 *
@@ -193,17 +193,17 @@ C ANFANG UNTERPROGRAMM
          IT = NPAR(I,5) - 1
          ID = NPAR(I,4)
          IF(ID.EQ.0) THEN
-            WRITE(2,'(A)') '      INTEGER '//CNAM(I)
+            WRITE(2,'(A)') '      integerCNAM(I)
          ELSE
             WRITE(2,'(2A,44A1,5(/''     *   '',60A1))')
-     *             '      INTEGER ',CNAM(I),'(',
+     *             '      integerNAM(I),'(',
      *      ( ( CTEX(IT+J+2)(K:K),K=1,ILAST(CTEX(IT+J+2),1,80) ),',',
      *        J=1,ID-1 ),
      *       ( CTEX(IT+ID+2)(K:K),K=1,ILAST(CTEX(IT+ID+2),1,80) ),')'
          ENDIF
   30     CONTINUE
 *
-         WRITE(2,'(6X,A)') 'INTEGER ISCRDA, ISCRRI,IDAO'
+         WRITE(2,'(6X,A)') 'integerRDA, ISCRRI,IDAO'
          WRITE(2,'(6X,A)') 'DOUBLE PRECISION RSCRRI'
          WRITE(2,'(6X,A)') 'COMMON/DASCR/ISCRDA(100),RSCRRI(100)'
      *                         //',ISCRRI(100),IDAO'
@@ -426,12 +426,12 @@ C ANFANG UNTERPROGRAMM
 *     THIS SUBROUTINE GETS THE NEXT COMMAND FROM THE INPUT FILE AND STORES
 *     IT IN THE CHARACTER A
 *
-      INTEGER MA(50)
+      integer50)
 *
 *-----MEMORY MANAGEMENT ----------------------------------------------------- 1
       PARAMETER(LNAM=10000,LVAR=8,LTEX=4000,LTTE=80,LCC=10000)                2
       CHARACTER CNAM(LNAM)*8,CTEX(LTEX)*80,CBLA*80                            3
-      INTEGER NPAR(LNAM,17)                                                   4
+      integerR(LNAM,17)                                                   4
       DOUBLE PRECISION CC(LCC)                                                5
       COMMON / CMEM / CNAM,CTEX,CBLA                                          6
       COMMON /  MEM / NPAR, CC, INAM, ITEX, ICC                               7
@@ -602,7 +602,7 @@ C ANFANG UNTERPROGRAMM
 *     DELIMITER CDEL, STORING THEM IN NA
 *
       CHARACTER A*(*),CDEL*1
-      INTEGER NA(LA)
+      integerLA)
 *
       IF(A(IA1:IA1).NE.CDEL) THEN
          IA = 1
@@ -626,7 +626,7 @@ C ANFANG UNTERPROGRAMM
       RETURN
       END
 *
-      INTEGER FUNCTION ILAST(A,IA1,IA2)
+      integerCTION ILAST(A,IA1,IA2)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       PARAMETER(PIENI=1D-17)
       PARAMETER(ZERO=0.0D0,HALF=5.0D-1,ONE=1.0D0)
@@ -708,7 +708,7 @@ C ANFANG UNTERPROGRAMM
       RETURN
       END
 *
-      INTEGER FUNCTION IVCHK(A,IA1,IA2)
+      integerCTION IVCHK(A,IA1,IA2)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       PARAMETER(PIENI=1D-17)
       PARAMETER(ZERO=0.0D0,HALF=5.0D-1,ONE=1.0D0)
@@ -809,19 +809,19 @@ C ANFANG UNTERPROGRAMM
 *-----MEMORY MANAGEMENT ----------------------------------------------------- 1
       PARAMETER(LNAM=10000,LVAR=8,LTEX=4000,LTTE=80,LCC=10000)                2
       CHARACTER CNAM(LNAM)*8,CTEX(LTEX)*80,CBLA*80                            3
-      INTEGER NPAR(LNAM,17)                                                   4
+      integerR(LNAM,17)                                                   4
       DOUBLE PRECISION CC(LCC)                                                5
       COMMON / CMEM / CNAM,CTEX,CBLA                                          6
       COMMON /  MEM / NPAR, CC, INAM, ITEX, ICC                               7
 *---------------------------------------------------------------------------- 8
 *-----CODE ------------------------------------------------------------------ 1
       PARAMETER (LARI=10000)                                                   2
-      INTEGER NARI(LARI,11), IARI                                             3
+      integerI(LARI,11), IARI                                             3
       COMMON / CODE / NARI, IARI                                              4
 *---------------------------------------------------------------------------- 5
 *-----SYMBOL---------------------------------------------------------------- 1
       PARAMETER (LFUNC=100,LOPER=16)                                           2
-      INTEGER KFUN(LFUNC)
+      integerN(LFUNC)
       CHARACTER OPER(LOPER)*6, FUNC(LFUNC)*6                                  3
       COMMON / SYMBOL1 / KFUN
       COMMON / SYMBOL / OPER, FUNC                                           4
@@ -831,7 +831,7 @@ cfrs      PARAMETER(LANA=100,LA=10000,LCHECK=0,LDEC=37)
       PARAMETER(LANA=100,LA=10000,LDEC=37)
       PARAMETER(LSCR=100)
 *
-      INTEGER NANA(LANA,5)
+      integerA(LANA,5)
       CHARACTER B*(*),A*10000
       CHARACTER OPS*6,CANA*10,CTYP*7,CCNA*1
       CHARACTER BLANK*8,NUM*10,LET*52,SEARCH*8,AER*50
@@ -1594,19 +1594,19 @@ C ANFANG UNTERPROGRAMM
 *-----MEMORY MANAGEMENT ----------------------------------------------------- 1
       PARAMETER(LNAM=10000,LVAR=8,LTEX=4000,LTTE=80,LCC=10000)                2
       CHARACTER CNAM(LNAM)*8,CTEX(LTEX)*80,CBLA*80                            3
-      INTEGER NPAR(LNAM,17)                                                   4
+      integerR(LNAM,17)                                                   4
       DOUBLE PRECISION CC(LCC)                                                5
       COMMON / CMEM / CNAM,CTEX,CBLA                                          6
       COMMON /  MEM / NPAR, CC, INAM, ITEX, ICC                               7
 *---------------------------------------------------------------------------- 8
 *-----CODE ------------------------------------------------------------------ 1
       PARAMETER (LARI=10000)                                                   2
-      INTEGER NARI(LARI,11), IARI                                             3
+      integerI(LARI,11), IARI                                             3
       COMMON / CODE / NARI, IARI                                              4
 *---------------------------------------------------------------------------- 5
 *-----SYMBOL---------------------------------------------------------------- 1
       PARAMETER (LFUNC=100,LOPER=16)                                           2
-      INTEGER KFUN(LFUNC)
+      integerN(LFUNC)
       CHARACTER OPER(LOPER)*6, FUNC(LFUNC)*6                                  3
       COMMON / SYMBOL1 / KFUN
       COMMON / SYMBOL / OPER, FUNC                                           4
@@ -1614,7 +1614,7 @@ C ANFANG UNTERPROGRAMM
 *
       PARAMETER (LSCR=100)
       CHARACTER A*800,AL*808,AR*800,AS*800,AC*800,BLANK*800,ABC*52
-      INTEGER ISCRTY(LSCR),INDEX(7)
+      integerRTY(LSCR),INDEX(7)
 *
       SAVE ICALL
       SAVE BLANK
@@ -2029,20 +2029,20 @@ C ANFANG UNTERPROGRAMM
 *-----MEMORY MANAGEMENT ----------------------------------------------------- 1
       PARAMETER(LNAM=10000,LVAR=8,LTEX=4000,LTTE=80,LCC=10000)                2
       CHARACTER CNAM(LNAM)*8,CTEX(LTEX)*80,CBLA*80                            3
-      INTEGER NPAR(LNAM,17)                                                   4
+      integerR(LNAM,17)                                                   4
       DOUBLE PRECISION CC(LCC)                                                5
       COMMON / CMEM / CNAM,CTEX,CBLA                                          6
       COMMON /  MEM / NPAR, CC, INAM, ITEX, ICC                               7
 *---------------------------------------------------------------------------- 8
 *-----CODE ------------------------------------------------------------------ 1
       PARAMETER (LARI=10000)                                                   2
-      INTEGER NARI(LARI,11), IARI                                             3
+      integerI(LARI,11), IARI                                             3
       COMMON / CODE / NARI, IARI                                              4
 *---------------------------------------------------------------------------- 5
 *
       PARAMETER (LSCR=100)
       CHARACTER A*(*),CNUM(100)*2
-      INTEGER ISCRTY(*),IN(*)
+      integerRTY(*),IN(*)
 *
       DATA CNUM / ' 1',' 2',' 3',' 4',' 5',' 6',' 7',' 8',' 9','10',
      *            '11','12','13','14','15','16','17','18','19','20',
@@ -2164,8 +2164,8 @@ C ANFANG UNTERPROGRAMM
          STOP
       ENDIF
       IF((NPAR(IA,1).EQ.1).AND.(ITI.NE.1).AND.(ITI.NE.2)) THEN
-         WRITE(6,'(1X,A)') '### ERROR, ARRAY INDEX NOT INTEGER OR REAL'
-         WRITE(2,'(1X,A)') '### ERROR, ARRAY INDEX NOT INTEGER OR REAL'
+         WRITE(6,'(1X,A)') '### ERROR, ARRAY INDEX NOT integerREAL'
+         WRITE(2,'(1X,A)') '### ERROR, ARRAY INDEX NOT integerREAL'
          RETURN
       ENDIF
 *

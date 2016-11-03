@@ -1,8 +1,12 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(thor/src/field.cc)
+#AC_INIT(thor/src/field.cc)
+AC_INIT(thor, 1.0)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(thor,1.0)
+AC_CONFIG_SRCDIR(thor/src/field.cc)
+#AM_INIT_AUTOMAKE(thor, 1.0)
 AM_CONFIG_HEADER(config.h)
+#AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 # Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
@@ -28,4 +32,5 @@ AC_TYPE_SIZE_T
 
 # Checks for library functions.
 AC_OUTPUT(Makefile
+          TPSA/Makefile
           thor/Makefile thor/src/Makefile thor/wrk/Makefile)
