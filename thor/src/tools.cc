@@ -220,12 +220,35 @@ void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
   for (j = 0; j < ps_dim; j++)
     for (k = 0; k < ps_dim; k++)
       A1[j] += A[j][k]*tps(0e0, k+1);
-  // Get parameter dependance.
+
+  z = (PInv(A1, jj)*ps).cst();
+
+  for (j = 0; j < n_DOF; j++)
+    twoJ[j] = sqr(z[2*j]) + sqr(z[2*j+1]);
+}
+
+
+void get_twoJ(const int n_DOF, const ss_vect<tps> &ps,
+	      const ss_vect<tps> &A, tps twoJ[])
+{
+  int             j, k, jj[ss_dim];
+  ss_vect<double> z;
+  ss_vect<tps>    A1;
+
+  for (j = 0; j < ss_dim; j++)
+    jj[j] = (j < 2*n_DOF)? 1 : 0;
+
+  // Get linear part.
+  A1.zero();
+  for (j = 0; j < ps_dim; j++)
+    for (k = 0; k < ps_dim; k++)
+      A1[j] += A[j][k]*tps(0e0, k+1);
+  // Include parameter dependance.
   for (j = 0; j < 2; j++) {
-    A1[j]   += h_ijklm_p(A[j],   1, 0, 0, 0, 0, 7)*tps(0e0, j+1);
-    A1[j]   += h_ijklm_p(A[j],   0, 1, 0, 0, 0, 7)*tps(0e0, j+2);
-    A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 1, 0, 0, 7)*tps(0e0, j+3);
-    A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 0, 1, 0, 7)*tps(0e0, j+4);
+    A1[j]   += h_ijklm_p(A[j],   1, 0, 0, 0, 0, 7)*tps(0e0, j+1)*tps(0e0, 7);
+    A1[j]   += h_ijklm_p(A[j],   0, 1, 0, 0, 0, 7)*tps(0e0, j+2)*tps(0e0, 7);
+    A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 1, 0, 0, 7)*tps(0e0, j+3)*tps(0e0, 7);
+    A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 0, 1, 0, 7)*tps(0e0, j+4)*tps(0e0, 7);
   }
 
   z = (PInv(A1, jj)*ps).cst();

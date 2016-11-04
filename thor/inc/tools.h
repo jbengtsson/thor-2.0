@@ -176,6 +176,9 @@ ss_vect<tps> get_A_CS(const int n, const ss_vect<tps> &A, double dnu[]);
 void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
 	      const ss_vect<tps> &A, double twoJ[]);
 
+void get_twoJ(const int n_DOF, const ss_vect<tps> &ps,
+	      const ss_vect<tps> &A, tps twoJ[]);
+
 tps get_h(void);
 
 tps get_H(void);

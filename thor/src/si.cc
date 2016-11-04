@@ -11,7 +11,7 @@ bool lost;
 double cl_rad, q_fluct;
 double d_coeff1, d_coeff2, k_coeff1, k_coeff2;
 double E0, dE, beta0, gamma0;
-double I2, I4, I5, dcurly_H, dI4;
+tps    I2, I4, I5, dcurly_H, dI4;
 tps    D_[3]; // diff. coeff. for the linear invarient
 
 bool rad_on    = false, H_exact        = false, totpath_on   = false;
@@ -155,22 +155,29 @@ class is_tps<tps> {
   static inline void get_ps(const ss_vect<tps> &x, elem_type<tps> &elem)
   { elem.A1 = x; }
 
-  static inline double get_curly_H(const ss_vect<tps> &A)
+  static inline tps get_curly_H(const ss_vect<tps> &A)
   {
-    int              j;
-    double           curly_H[2];
-    ss_vect<double>  eta;
+    int          j;
+    tps          curly_H[2];
+    ss_vect<tps> eta;
 
     eta.zero();
-    for (j = 0; j < 4; j++)
-      eta[j] = A[j][delta_];
+    for (j = 0; j < 4; j++) {
+      // Include parameter dependance.
+      eta[j] =
+	A[j][delta_]
+	+ h_ijklm_p(A[j], 0, 0, 0, 0, 1, 7)*tps(0e0, delta_+1)*tps(0e0, 7);
+    }
  
     get_twoJ(2, eta, A, curly_H);
 
     return curly_H[X_];
   }
 
-  static inline double get_dI4(const ss_vect<tps> &A) { return A[x_][delta_]; }
+  static inline tps get_dI4(const ss_vect<tps> &A)
+  {
+    return A[x_][delta_];
+  }
 
   static inline void emittance(const tps &B2, const tps &H_dL, const tps &ps0,
 			       const ss_vect<tps> &A) {
