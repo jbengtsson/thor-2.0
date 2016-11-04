@@ -231,12 +231,11 @@ void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
 void get_twoJ(const int n_DOF, const ss_vect<tps> &ps,
 	      const ss_vect<tps> &A, tps twoJ[])
 {
-  int             j, k, jj[ss_dim];
-  ss_vect<double> z;
-  ss_vect<tps>    A1;
+  int          j, k, jj[ss_dim];
+  ss_vect<tps> A1, z;
 
   for (j = 0; j < ss_dim; j++)
-    jj[j] = (j < 2*n_DOF)? 1 : 0;
+    jj[j] = ((j < 2*n_DOF) || (j == ss_dim-1))? 1 : 0;
 
   // Get linear part.
   A1.zero();
@@ -251,8 +250,8 @@ void get_twoJ(const int n_DOF, const ss_vect<tps> &ps,
     A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 0, 1, 0, 7)*tps(0e0, j+4)*tps(0e0, 7);
   }
 
-  z = (PInv(A1, jj)*ps).cst();
-
+  z = PInv(A1, jj)*ps;
+ 
   for (j = 0; j < n_DOF; j++)
     twoJ[j] = sqr(z[2*j]) + sqr(z[2*j+1]);
 }

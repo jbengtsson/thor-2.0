@@ -458,7 +458,7 @@ template<typename T>
 void mpole_pass(const elem_type<T> &elem, ss_vect<T> &x)
 {
   int     i;
-  double  h_ref, h, L;
+  double  h_ref;
   T       L0, L1, L2, k1, k2;
 
   // Note, expanded
@@ -537,13 +537,12 @@ void mpole_pass(const elem_type<T> &elem, ss_vect<T> &x)
 
       if (emittance_on && (!cavity_on) && (elem.mpole->h_bend != 0e0)) {
 	dcurly_H /= 6e0*elem.mpole->n_step;
-	L = is_double<T>::cst(elem.L);
-	h = is_double<T>::cst(elem.mpole->h_bend);
 	dI4 *=
-	  h*(sqr(h)+2e0*is_double<T>::cst(elem.mpole->bn[Quad-1]))
+	  elem.mpole->h_bend
+	  *(sqr(elem.mpole->h_bend)+2e0*elem.mpole->bn[Quad-1])
 	  /(6e0*elem.mpole->n_step);
-	I2 += L*sqr(h); I4 += L*dI4;
-	I5 += L*fabs(cube(h))*dcurly_H;
+	I2 += elem.L*sqr(elem.mpole->h_bend); I4 += elem.L*dI4;
+	I5 += elem.L*fabs(cube(elem.mpole->h_bend))*dcurly_H;
       }
       break;
     default:
