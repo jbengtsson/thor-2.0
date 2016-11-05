@@ -13,11 +13,11 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 const int n_prm_max = 20;
 
 
-template<typename T>
-void get_eps_x(T &eps_x)
+tps get_eps_x(void)
 {
   // Compute hor. emittance with parameter dependence.
   int Fnum, j;
+  tps eps_x, J_x, J_z;
 
   cavity_on = false; emittance_on = false;
 
@@ -44,12 +44,14 @@ void get_eps_x(T &eps_x)
 
   A1.propagate(1, n_elem);
 
-  eps_x = 1470e0*sqr(E0)*I5/(I2-I4);
+  eps_x = 1470e0*sqr(E0)*I5/(I2-I4); J_x = 1e0 - I4/I2; J_z = 3e0 - J_x;
 
-  cout << "\neps_x = " << 1e3*eps_x << 1e0-I4/I2 << " pm.rad, J_x = "
-       << ", J_z = " << 2e0+I4/I2 << " \n";
+  printf("\neps_x = %5.3f pm.rad, J_x = %5.3f, J_z = %5.3f\n",
+	 1e3*eps_x.cst(), J_x.cst(), J_z.cst());
 
   emittance_on = false;
+
+  return eps_x;
 }
 
 
@@ -64,9 +66,8 @@ void chk_lat(double nu[], double ksi[])
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   nus = dHdJ(K); get_nu_ksi(nus, nu, ksi); get_ab(alpha, beta, 0);
   cout << endl;
-  cout << fixed << setprecision(3)
-       << "alpha_x  = " << alpha[X_] << ", alpha_y = " << alpha[Y_]
-       << ", beta_x = " << beta[X_] << ", beta_y  = " << beta[Y_] << endl;
+  printf("alpha_x = %5.3f, alpha_y = %5.3f, beta_x = %5.3f, beta_y  = %5.3f\n",
+	 alpha[X_], alpha[Y_], beta[X_], beta[Y_]);
   prt_nu(nus);
 }
 
@@ -98,6 +99,7 @@ void fit_emit(int &n_b2, int b2s[], const double nu_x, const double nu_y,
   int          i, j, m, loc;
   double       **A, *b, *b2_lim, *b2, *db2;
   double       db2_max;
+  tps          eps_x;
   ss_vect<tps> nus;
 
   b = dvector(1, m_max); b2_lim = dvector(1, n_b2);
@@ -113,9 +115,7 @@ void fit_emit(int &n_b2, int b2s[], const double nu_x, const double nu_y,
     }
   }
 
-  danot_(3);
-
-  get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+  danot_(2);
 
   do {
     for (i = 1; i <= n_b2; i++) {
@@ -125,11 +125,10 @@ void fit_emit(int &n_b2, int b2s[], const double nu_x, const double nu_y,
 	else
 	  set_s_par(abs(b2s[i-1]), j, 7);
 
-      get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+      eps_x = get_eps_x();
  
       m = 0;
-      A[++m][i] = -h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
-      A[++m][i] = -h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
+      A[++m][i] = h_ijklm_p(eps_x, 0, 0, 0, 0, 0, 7);
 
       if (b2s[i-1] < 0)
 	for (j = 1; j <= m; j++)
@@ -143,10 +142,7 @@ void fit_emit(int &n_b2, int b2s[], const double nu_x, const double nu_y,
     }
 
     m = 0;
-    b[++m] = nus[3].cst() - nu_x;
-    b[++m] = nus[4].cst() - nu_y;
-    printf("\nnu  = [%8.5f, %8.5f]\n", nus[3].cst(), nus[4].cst());
-    printf("dnu = [%8.5f, %8.5f]\n", b[1], b[2]);
+    b[++m] = -eps_x.cst();
 
     prt_system(m, n_b2, A, b);
 
@@ -195,8 +191,6 @@ void fit_uc(int &n_b2, int b2s[], const double nu_x, const double nu_y,
 
   danot_(3);
 
-  get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
-
   do {
     for (i = 1; i <= n_b2; i++) {
       for (j = 1; j <= get_n_Kids(abs(b2s[i-1])); j++)
@@ -208,8 +202,8 @@ void fit_uc(int &n_b2, int b2s[], const double nu_x, const double nu_y,
       get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
  
       m = 0;
-      A[++m][i] = -h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
-      A[++m][i] = -h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
+      A[++m][i] = h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
+      A[++m][i] = h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
 
       if (b2s[i-1] < 0)
 	for (j = 1; j <= m; j++)
@@ -223,8 +217,8 @@ void fit_uc(int &n_b2, int b2s[], const double nu_x, const double nu_y,
     }
 
     m = 0;
-    b[++m] = nus[3].cst() - nu_x;
-    b[++m] = nus[4].cst() - nu_y;
+    b[++m] = -(nus[3].cst()-nu_x);
+    b[++m] = -(nus[4].cst()-nu_y);
     printf("\nnu  = [%8.5f, %8.5f]\n", nus[3].cst(), nus[4].cst());
     printf("dnu = [%8.5f, %8.5f]\n", b[1], b[2]);
 
@@ -256,6 +250,25 @@ void get_b2s(int &n_b2, int b2_Fams[])
 }
 
 
+void tst_eps_x()
+{
+  int    Fnum;
+  double eps_x[2], b2, der;
+
+  const double db2 = 1e-3;
+  
+  Fnum = get_Fnum("bh");
+  b2 = get_bn(Fnum, 1, Quad);
+  set_bn(Fnum, Quad, b2+db2); eps_x[1] = (get_eps_x()).cst();
+  set_bn(Fnum, Quad, b2-db2); eps_x[0] = (get_eps_x()).cst();
+  set_bn(Fnum, Quad, b2);
+
+  der = (eps_x[1]-eps_x[0])/(2e0*db2);
+
+  printf("\n%14.5e\n", der);
+}
+
+
 int main(int argc, char *argv[])
 {
   int b2_Fams[n_prm_max], n_b2;
@@ -277,7 +290,15 @@ int main(int argc, char *argv[])
 
   danot_(1);
 
-  get_eps_x(eps_x);
+  tst_eps_x();
+
+  eps_x = get_eps_x();
+  cout << eps_x << "\n"; 
+
+  if (false) {
+    get_b2s(n_b2, b2_Fams);
+    fit_emit(n_b2, b2_Fams, nu[X_], nu[Y_], 100.0, 1e-4, 1e-4, 0.1);
+  }
 
   if (false) {
     get_b2s(n_b2, b2_Fams);

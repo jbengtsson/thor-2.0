@@ -164,9 +164,7 @@ class is_tps<tps> {
     eta.zero();
     for (j = 0; j < 4; j++) {
       // Include parameter dependance.
-      eta[j] =
-	A[j][delta_]
-	+ h_ijklm_p(A[j], 0, 0, 0, 0, 1, 7)*tps(0e0, delta_+1)*tps(0e0, 7);
+      eta[j] = A[j][delta_] + h_ijklm_p(A[j], 0, 0, 0, 0, 1, 7)*tps(0e0, 7);
     }
  
     get_twoJ(2, eta, A, curly_H);
@@ -176,7 +174,7 @@ class is_tps<tps> {
 
   static inline tps get_dI4(const ss_vect<tps> &A)
   {
-    return A[x_][delta_];
+    return A[x_][delta_] + h_ijklm_p(A[x_], 0, 0, 0, 0, 1, 7)*tps(0e0, 7);
   }
 
   static inline void emittance(const tps &B2, const tps &H_dL, const tps &ps0,

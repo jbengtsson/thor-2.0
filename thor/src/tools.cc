@@ -244,10 +244,10 @@ void get_twoJ(const int n_DOF, const ss_vect<tps> &ps,
       A1[j] += A[j][k]*tps(0e0, k+1);
   // Include parameter dependance.
   for (j = 0; j < 2; j++) {
-    A1[j]   += h_ijklm_p(A[j],   1, 0, 0, 0, 0, 7)*tps(0e0, j+1)*tps(0e0, 7);
-    A1[j]   += h_ijklm_p(A[j],   0, 1, 0, 0, 0, 7)*tps(0e0, j+2)*tps(0e0, 7);
-    A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 1, 0, 0, 7)*tps(0e0, j+3)*tps(0e0, 7);
-    A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 0, 1, 0, 7)*tps(0e0, j+4)*tps(0e0, 7);
+    A1[j]   += h_ijklm_p(A[j],   1, 0, 0, 0, 0, 7)*tps(0e0, 1)*tps(0e0, 7);
+    A1[j]   += h_ijklm_p(A[j],   0, 1, 0, 0, 0, 7)*tps(0e0, 2)*tps(0e0, 7);
+    A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 1, 0, 0, 7)*tps(0e0, 3)*tps(0e0, 7);
+    A1[j+2] += h_ijklm_p(A[j+2], 0, 0, 0, 1, 0, 7)*tps(0e0, 4)*tps(0e0, 7);
   }
 
   z = PInv(A1, jj)*ps;
