@@ -1242,7 +1242,7 @@ void set_dL(const int Fnum, const double dL)
 
 void set_bn_par(const int Fnum, const int Knum, const int n, const int j)
 {
-  // set parameter dependence
+  // Set parameter dependence.
   int     k;
   double  bn;
 
@@ -1255,7 +1255,7 @@ void set_bn_par(const int Fnum, const int Knum, const int n, const int j)
 
 void set_bn_par(const int Fnum, const int n, const int j)
 {
-  // set parameter dependence
+  // Set parameter dependence.
   int  k;
 
   for (k = 1; k <= get_n_Kids(Fnum); k++)
@@ -1265,7 +1265,7 @@ void set_bn_par(const int Fnum, const int n, const int j)
 
 void clr_bn_par(const int Fnum, const int Knum, const int n)
 {
-  // clear parameter dependence
+  // Clear parameter dependence.
   int     k;
   double  bn;
 
@@ -1277,7 +1277,7 @@ void clr_bn_par(const int Fnum, const int Knum, const int n)
 
 void clr_bn_par(const int Fnum, const int n)
 {
-  // set parameter dependence
+  // Set parameter dependence.
   int  k;
 
   for (k = 1; k <= get_n_Kids(Fnum); k++)
@@ -1294,7 +1294,7 @@ void set_s_par(const int Fnum, const int Knum, const int j)
 
   const bool  prt = false;
 
-  // point to multipole
+  // Point to multipole.
   k = get_loc(Fnum, Knum) - 1;
 
   if (prt)
@@ -1304,7 +1304,7 @@ void set_s_par(const int Fnum, const int Knum, const int j)
   case 'u':
     if (elem[k+1].Name[1] == 'd') {
       L = elem_tps[k-1].L.cst(); elem_tps[k-1].L = tps(L, j);
-      L = elem_tps[k+1].L.cst(); elem_tps[k+1].L = L - tps(0.0, j);
+      L = elem_tps[k+1].L.cst(); elem_tps[k+1].L = -tps(-L, j);
     } else {
       cout << "set_s_par: configuration error " << elem[k+1].Name
 	   << " (" << k+2 << ")" << endl;
@@ -1313,7 +1313,7 @@ void set_s_par(const int Fnum, const int Knum, const int j)
     break;
   case 'd':
     if (elem[k+1].Name[1] == 'u') {
-      L = elem_tps[k-1].L.cst(); elem_tps[k-1].L = L - tps(0.0, j);
+      L = elem_tps[k-1].L.cst(); elem_tps[k-1].L = -tps(-L, j);
       L = elem_tps[k+1].L.cst(); elem_tps[k+1].L = tps(L, j);
     } else {
       cout << "set_s_par: configuration error " << elem[k+1].Name
@@ -2335,7 +2335,7 @@ double get_bn_s(const int Fnum, const int Knum, const int n)
   long int  k;
   double    bn;
 
-  if (n != 0)
+  if (Fnum > 0)
     bn = get_bn(Fnum, Knum, n);
   else {
     k = get_loc(abs(Fnum), Knum) - 1;
@@ -2364,7 +2364,7 @@ double get_bnL_s(const int Fnum, const int Knum, const int n)
   long int  k;
   double    bnL;
 
-  if (n != 0)
+  if (Fnum > 0)
     bnL = get_bnL(Fnum, Knum, n);
   else {
     k = get_loc(abs(Fnum), Knum) - 1;
@@ -2392,7 +2392,7 @@ void set_bn_s(const int Fnum, const int Knum, const int n, const double bn)
 {
   long int  k = 0;
 
-  if (n != 0)
+  if (Fnum > 0)
     set_bn(Fnum, Knum, n, bn);
   else {
     // point to multipole
@@ -2442,7 +2442,7 @@ void set_bnL_s(const int Fnum, const int Knum, const int n, const double bnL)
 {
   long int  k;
 
-  if (n != 0)
+  if (Fnum > 0)
     set_bnL(Fnum, Knum, n, bnL);
   else {
     // point to multipole
@@ -2492,7 +2492,7 @@ void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
 {
   long int  k;
 
-  if (n != 0)
+  if (Fnum > 0)
     set_dbn(Fnum, Knum, n, dbn);
   else {
     // point to multipole

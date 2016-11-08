@@ -2,8 +2,8 @@
 
 #include "thor_lib.h"
 
-int  no_tps   = NO,
-     ndpt_tps = 5;
+int no_tps   = NO,
+    ndpt_tps = 5;
 
 
 extern tps          K, g;
@@ -11,6 +11,23 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 
 const int n_prm_max = 20;
+
+
+void get_twiss(const double alpha[], const double beta[],
+	       const double eta[], const double etap[])
+{
+  int    j;
+  double dnu[2];
+
+  // Include parameter dependence.
+  danot_(2);
+
+  A1 = get_A(alpha, beta, eta, etap);
+  for (j = 1; j <= n_elem; j++) {
+    A1.propagate(j, j);
+    elem_tps[j-1].A1 = get_A_CS(2, A1, dnu);
+  }
+}
 
 
 tps get_eps_x(void)
@@ -71,19 +88,20 @@ void chk_lat(double nu[], double ksi[])
   prt_nu(nus);
 }
 
+
 void prt_system(const int m, const int n_b2, double **A, double *b)
 {
   int i, j;
 
-  printf("\n Ax = b:\n\n");
+  printf("\n Ax = b:\n");
   for (j = 1; j <= n_b2; j++)
     printf("%8d", j);
   printf("\n");
   for (i = 1; i <= m; i++) {
     printf("%2d", i);
     for (j = 1; j <= n_b2; j++)
-      printf("%8.3f", A[i][j]);
-    printf("%8.3f\n", b[i]);
+      printf("%11.3e", A[i][j]);
+    printf("%11.3e\n", b[i]);
   }
 }
 
@@ -93,8 +111,9 @@ void fit_emit(int &n_b2, int b2s[], const double nu_x, const double nu_y,
 	      const double step)
 {
   // Optimize hor. emittance.
+  const double scl_nu = 1e1;
 
-  const int m_max = 2;
+  const int m_max = 3;
 
   int          i, j, m, loc;
   double       **A, *b, *b2_lim, *b2, *db2;
@@ -125,10 +144,14 @@ void fit_emit(int &n_b2, int b2s[], const double nu_x, const double nu_y,
 	else
 	  set_s_par(abs(b2s[i-1]), j, 7);
 
+      get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+
       eps_x = get_eps_x();
  
       m = 0;
       A[++m][i] = h_ijklm_p(eps_x, 0, 0, 0, 0, 0, 7);
+      A[++m][i] = scl_nu*h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
+      A[++m][i] = scl_nu*h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
 
       if (b2s[i-1] < 0)
 	for (j = 1; j <= m; j++)
@@ -143,17 +166,23 @@ void fit_emit(int &n_b2, int b2s[], const double nu_x, const double nu_y,
 
     m = 0;
     b[++m] = -eps_x.cst();
+    b[++m] = -scl_nu*(nus[3].cst()-nu_x);
+    b[++m] = -scl_nu*(nus[4].cst()-nu_y);
 
     prt_system(m, n_b2, A, b);
 
     SVD_lim(m, n_b2, A, b, b2_lim, s_cut, b2, db2);
 
+    printf("\n");
     db2_max = 0e0;
     for (i = 1; i <= n_b2; i++) {
       set_dbn_s(b2s[i-1], Quad, step*db2[i]);
       b2[i] = get_bn_s(b2s[i-1], 1, Quad);
       db2_max = max(fabs(step*db2[i]), db2_max);
+
+      printf("%14.5e", b2[i]);
     }
+    printf("\n");
   } while (db2_max > db2_tol);
 
   free_dvector(b, 1, m_max);
@@ -163,18 +192,25 @@ void fit_emit(int &n_b2, int b2s[], const double nu_x, const double nu_y,
 }
 
 
-void fit_uc(int &n_b2, int b2s[], const double nu_x, const double nu_y,
-	    const double b2_max, const double db2_tol, const double s_cut,
-	    const double step)
+void fit_match(int &n_b2, int b2s[], const double beta_x, const double beta_y,
+	       const double eta_x, const double b2_max, const double db2_tol,
+	       const double s_cut, const double step)
 {
-  // Periodic unit cell: [nu_x, nu_y].
+  // Match linear optics.
 
-  const int m_max = 2;
+  const int m_max = 6;
 
-  int          i, j, m, loc;
+  long int     loc;
+  int          i, j, m;
   double       **A, *b, *b2_lim, *b2, *db2;
   double       db2_max;
-  ss_vect<tps> nus;
+  ss_vect<tps> AA_tp, A_disp;
+
+  const double scl_eta = 1e1,
+               alpha[] = {0e0,    0e0},
+               beta[]  = {beta_x, beta_y},
+               eta[]   = {eta_x,  0e0},
+	       etap[]  = {0e0,    0e0};
 
   b = dvector(1, m_max); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -191,6 +227,8 @@ void fit_uc(int &n_b2, int b2s[], const double nu_x, const double nu_y,
 
   danot_(3);
 
+  loc = get_loc(get_Fnum("bm"), 1);
+
   do {
     for (i = 1; i <= n_b2; i++) {
       for (j = 1; j <= get_n_Kids(abs(b2s[i-1])); j++)
@@ -199,11 +237,17 @@ void fit_uc(int &n_b2, int b2s[], const double nu_x, const double nu_y,
 	else
 	  set_s_par(abs(b2s[i-1]), j, 7);
 
-      get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
- 
+      get_twiss(alpha, beta, eta, etap);
+      AA_tp = elem_tps[n_elem-1].A1*tp_S(2, elem_tps[n_elem-1].A1);
+      A_disp = elem_tps[loc-1].A1;
+
       m = 0;
-      A[++m][i] = h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
-      A[++m][i] = h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
+      A[++m][i] = h_ijklm_p(-AA_tp[x_], 0, 1, 0, 0, 0, 7);
+      A[++m][i] = h_ijklm_p(-AA_tp[y_], 0, 0, 0, 1, 0, 7);
+      A[++m][i] = h_ijklm_p(AA_tp[x_], 1, 0, 0, 0, 0, 7);
+      A[++m][i] = h_ijklm_p(AA_tp[y_], 0, 0, 1, 0, 0, 7);
+      A[++m][i] = scl_eta*h_ijklm_p(A_disp[x_],  0, 0, 0, 0, 1, 7);
+      A[++m][i] = scl_eta*h_ijklm_p(A_disp[px_], 0, 0, 0, 0, 1, 7);
 
       if (b2s[i-1] < 0)
 	for (j = 1; j <= m; j++)
@@ -217,21 +261,27 @@ void fit_uc(int &n_b2, int b2s[], const double nu_x, const double nu_y,
     }
 
     m = 0;
-    b[++m] = -(nus[3].cst()-nu_x);
-    b[++m] = -(nus[4].cst()-nu_y);
-    printf("\nnu  = [%8.5f, %8.5f]\n", nus[3].cst(), nus[4].cst());
-    printf("dnu = [%8.5f, %8.5f]\n", b[1], b[2]);
+    b[++m] = -h_ijklm(-AA_tp[x_], 0, 1, 0, 0, 0);
+    b[++m] = -h_ijklm(-AA_tp[y_], 0, 0, 0, 1, 0);
+    b[++m] = -(h_ijklm(AA_tp[x_], 1, 0, 0, 0, 0)-beta_x);
+    b[++m] = -(h_ijklm(AA_tp[y_], 0, 0, 1, 0, 0)-beta_y);
+    b[++m] = -scl_eta*h_ijklm(A_disp[x_],  0, 0, 0, 0, 1);
+    b[++m] = -scl_eta*h_ijklm(A_disp[px_], 0, 0, 0, 0, 1);
 
     prt_system(m, n_b2, A, b);
 
     SVD_lim(m, n_b2, A, b, b2_lim, s_cut, b2, db2);
 
+    printf("\n");
     db2_max = 0e0;
     for (i = 1; i <= n_b2; i++) {
       set_dbn_s(b2s[i-1], Quad, step*db2[i]);
       b2[i] = get_bn_s(b2s[i-1], 1, Quad);
       db2_max = max(fabs(step*db2[i]), db2_max);
+
+      printf("%14.5e", b2[i]);
     }
+    printf("\n");
   } while (db2_max > db2_tol);
 
   free_dvector(b, 1, m_max);
@@ -245,8 +295,19 @@ void get_b2s(int &n_b2, int b2_Fams[])
 {
 
   n_b2 = 0;
-  b2_Fams[n_b2++] = get_Fnum("bh");
-  b2_Fams[n_b2++] = get_Fnum("qf");
+  if (false) {
+    b2_Fams[n_b2++] = get_Fnum("bh");
+    b2_Fams[n_b2++] = get_Fnum("qf");
+  } else {
+    b2_Fams[n_b2++] = get_Fnum("bm");
+    b2_Fams[n_b2++] = get_Fnum("qfe");
+    b2_Fams[n_b2++] = get_Fnum("qde");
+    b2_Fams[n_b2++] = get_Fnum("qm");
+    b2_Fams[n_b2++] = -get_Fnum("bm");
+    b2_Fams[n_b2++] = -get_Fnum("qfe");
+    b2_Fams[n_b2++] = -get_Fnum("qde");
+    b2_Fams[n_b2++] = -get_Fnum("qm");
+  }
 }
 
 
@@ -274,7 +335,9 @@ int main(int argc, char *argv[])
   int b2_Fams[n_prm_max], n_b2;
   tps eps_x;
 
-  const double nu[] = {5.0/16.0, 1.0/16.0};
+  const double nu[] = {5.0/16.0, 1.0/16.0},
+        beta[]      = {1.26669,  1.81291},
+	  eta_x     = 0.00618198;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -290,18 +353,18 @@ int main(int argc, char *argv[])
 
   danot_(1);
 
-  tst_eps_x();
-
-  eps_x = get_eps_x();
-  cout << eps_x << "\n"; 
+  // tst_eps_x();
+  // eps_x = get_eps_x();
+  // cout << eps_x << "\n"; 
 
   if (false) {
     get_b2s(n_b2, b2_Fams);
-    fit_emit(n_b2, b2_Fams, nu[X_], nu[Y_], 100.0, 1e-4, 1e-4, 0.1);
+    fit_emit(n_b2, b2_Fams, nu[X_], nu[Y_], 100.0, 1e-4, 1e-4, 0.5);
   }
 
-  if (false) {
+  if (true) {
     get_b2s(n_b2, b2_Fams);
-    fit_uc(n_b2, b2_Fams, nu[X_], nu[Y_], 100.0, 1e-4, 1e-4, 1.0);
+    ds_max = 0.2, scl_ds = 0.01;
+    fit_match(n_b2, b2_Fams, beta[X_], beta[Y_], eta_x, 100.0, 1e-5, 1e-4, 0.5);
   }
 }
