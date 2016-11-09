@@ -1305,6 +1305,7 @@ void set_s_par(const int Fnum, const int Knum, const int j)
     if (elem[k+1].Name[1] == 'd') {
       L = elem_tps[k-1].L.cst(); elem_tps[k-1].L = tps(L, j);
       L = elem_tps[k+1].L.cst(); elem_tps[k+1].L = -tps(-L, j);
+      printf("\n%s %s\n", elem_tps[k-1].Name, elem[k+1].Name);
     } else {
       cout << "set_s_par: configuration error " << elem[k+1].Name
 	   << " (" << k+2 << ")" << endl;
@@ -2401,8 +2402,8 @@ void set_bn_s(const int Fnum, const int Knum, const int n, const double bn)
     switch (elem[k-1].Name[1]) {
     case 'u':
       if (elem[k+1].Name[1] == 'd') {
-	set_dL(elem[k-1].Fnum, elem[k-1].Knum, bn);
-	set_dL(elem[k+1].Fnum, elem[k+1].Knum, -bn);
+	set_L(elem[k-1].Fnum, elem[k-1].Knum, bn);
+	set_L(elem[k+1].Fnum, elem[k+1].Knum, -bn);
       } else {
 	cout << "set_bn_s: configuration error " << elem[k+1].Name
 	     << " (" << k+2 << ")" << endl;
@@ -2411,8 +2412,8 @@ void set_bn_s(const int Fnum, const int Knum, const int n, const double bn)
       break;
     case 'd':
       if (elem[k+1].Name[1] == 'u') {
-	set_dL(elem[k-1].Fnum, elem[k-1].Knum, -bn);
-	set_dL(elem[k+1].Fnum, elem[k+1].Knum, bn);
+	set_L(elem[k-1].Fnum, elem[k-1].Knum, -bn);
+	set_L(elem[k+1].Fnum, elem[k+1].Knum, bn);
       } else {
 	cout << "set_bn_s: configuration error " << elem[k+1].Name
 	     << " (" << k+2 << ")" << endl;
@@ -2501,8 +2502,8 @@ void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
     switch (elem[k-1].Name[1]) {
     case 'u':
       if (elem[k+1].Name[1] == 'd') {
-	set_dL(elem[k-1].Fnum, elem[k-1].Knum, scl_ds*dbn);
-	set_dL(elem[k+1].Fnum, elem[k+1].Knum, -scl_ds*dbn);
+	set_dL(elem[k-1].Fnum, elem[k-1].Knum, dbn);
+	set_dL(elem[k+1].Fnum, elem[k+1].Knum, -dbn);
       } else {
 	cout << "set_dbn_s: configuration error " << elem[k+1].Name
 	     << " (" << k+2 << ")" << endl;
@@ -2511,8 +2512,8 @@ void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
       break;
     case 'd':
       if (elem[k+1].Name[1] == 'u') {
-	set_dL(elem[k-1].Fnum, elem[k-1].Knum, -scl_ds*dbn);
-	set_dL(elem[k+1].Fnum, elem[k+1].Knum, scl_ds*dbn);
+	set_dL(elem[k-1].Fnum, elem[k-1].Knum, -dbn);
+	set_dL(elem[k+1].Fnum, elem[k+1].Knum, dbn);
       } else {
 	cout << "set_dbn_s: configuration error " << elem[k+1].Name
 	     << " (" << k+2 << ")" << endl;
