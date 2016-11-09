@@ -2389,106 +2389,6 @@ double get_bnL_s(const int Fnum, const int Knum, const int n)
 }
 
 
-void set_bn_s(const int Fnum, const int Knum, const int n, const double bn)
-{
-  long int  k = 0;
-
-  if (Fnum > 0)
-    set_bn(Fnum, Knum, n, bn);
-  else {
-    // point to multipole
-    k = get_loc(abs(Fnum), Knum) - 1;
-
-    switch (elem[k-1].Name[1]) {
-    case 'u':
-      if (elem[k+1].Name[1] == 'd') {
-	set_L(elem[k-1].Fnum, elem[k-1].Knum, bn);
-	set_L(elem[k+1].Fnum, elem[k+1].Knum, -bn);
-      } else {
-	cout << "set_bn_s: configuration error " << elem[k+1].Name
-	     << " (" << k+2 << ")" << endl;
-	exit(1);
-      }
-      break;
-    case 'd':
-      if (elem[k+1].Name[1] == 'u') {
-	set_L(elem[k-1].Fnum, elem[k-1].Knum, -bn);
-	set_L(elem[k+1].Fnum, elem[k+1].Knum, bn);
-      } else {
-	cout << "set_bn_s: configuration error " << elem[k+1].Name
-	     << " (" << k+2 << ")" << endl;
-	exit(1);
-      }
-      break;
-    default:
-      cout << "set_bn_s: configuration error " << elem[k-1].Name
-	   << " (" << k << ")" << endl;
-      exit(1);
-      break;
-    }
-  }
-}
-
-
-void set_bn_s(const int Fnum, const int n, const double bn)
-{
-  int  k;
-
-  for (k = 1; k <= get_n_Kids(abs(Fnum)); k++)
-    set_bn_s(Fnum, k, n, bn);
-}
-
-
-void set_bnL_s(const int Fnum, const int Knum, const int n, const double bnL)
-{
-  long int  k;
-
-  if (Fnum > 0)
-    set_bnL(Fnum, Knum, n, bnL);
-  else {
-    // point to multipole
-    k = get_loc(abs(Fnum), Knum) - 1;
-
-    switch (elem[k-1].Name[1]) {
-    case 'u':
-      if (elem[k+1].Name[1] == 'd') {
-	set_dL(elem[k-1].Fnum, elem[k-1].Knum, bnL);
-	set_dL(elem[k+1].Fnum, elem[k+1].Knum, -bnL);
-      } else {
-	cout << "set_bn_s: configuration error " << elem[k+1].Name
-	     << " (" << k+2 << ")" << endl;
-	exit(1);
-      }
-      break;
-    case 'd':
-      if (elem[k+1].Name[1] == 'u') {
-	set_dL(elem[k-1].Fnum, elem[k-1].Knum, -bnL);
-	set_dL(elem[k+1].Fnum, elem[k+1].Knum, bnL);
-      } else {
-	cout << "set_bn_s: configuration error " << elem[k+1].Name
-	     << " (" << k+2 << ")" << endl;
-	exit(1);
-      }
-      break;
-    default:
-      cout << "set_bn_s: configuration error " << elem[k-1].Name
-	   << " (" << k << ")" << endl;
-      exit(1);
-      break;
-    }
-  }
-}
-
-
-void set_bnL_s(const int Fnum, const int n, const double bnL)
-{
-  int  k;
-
-  for (k = 1; k <= get_n_Kids(abs(Fnum)); k++)
-    set_bnL_s(Fnum, k, n, bnL);
-}
-
-
 void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
 {
   long int  k;
@@ -2502,8 +2402,8 @@ void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
     switch (elem[k-1].Name[1]) {
     case 'u':
       if (elem[k+1].Name[1] == 'd') {
-	set_dL(elem[k-1].Fnum, elem[k-1].Knum, dbn);
-	set_dL(elem[k+1].Fnum, elem[k+1].Knum, -dbn);
+	set_dL(elem[k-1].Fnum, elem[k-1].Knum, scl_ds*dbn);
+	set_dL(elem[k+1].Fnum, elem[k+1].Knum, -scl_ds*dbn);
       } else {
 	cout << "set_dbn_s: configuration error " << elem[k+1].Name
 	     << " (" << k+2 << ")" << endl;
@@ -2512,8 +2412,8 @@ void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
       break;
     case 'd':
       if (elem[k+1].Name[1] == 'u') {
-	set_dL(elem[k-1].Fnum, elem[k-1].Knum, -dbn);
-	set_dL(elem[k+1].Fnum, elem[k+1].Knum, dbn);
+	set_dL(elem[k-1].Fnum, elem[k-1].Knum, -scl_ds*dbn);
+	set_dL(elem[k+1].Fnum, elem[k+1].Knum, scl_ds*dbn);
       } else {
 	cout << "set_dbn_s: configuration error " << elem[k+1].Name
 	     << " (" << k+2 << ")" << endl;
