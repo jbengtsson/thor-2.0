@@ -118,7 +118,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
   file_rd(inf, file_name);
 
   clr_Family(); n_elem = 0;
-  while (inf.getline(line, max_str) != NULL) {
+  while (inf.getline(line, max_str)) {
     n_elem++;
     if (n_elem <= max_elem) {
       sscanf(line, "%*s %*d %*d %ld", &ind);

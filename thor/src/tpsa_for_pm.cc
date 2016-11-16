@@ -589,7 +589,7 @@ tps cosh(const tps &a)
 
 #endif
 
-const double tps::cst(void) const
+double tps::cst(void) const
 {
   int     i, jj[ss_dim];
   double  r;
