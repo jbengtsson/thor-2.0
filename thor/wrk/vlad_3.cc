@@ -105,23 +105,23 @@ void prt_ct()
 {
   int          k;
   ss_vect<tps> ps;
-  ofstream     outf;
+  std::ofstream     outf;
 
-  const string file_name = "ct.out";
+  const std::string file_name = "ct.out";
 
   file_wr(outf, file_name.c_str());
 
-  cout << endl;
+  std::cout << std::endl;
   ps.identity();
   for (k = 1; k <= n_elem; k++) {
     ps.propagate(k, k);
 
-    outf << setw(4) << k << " " << setw(15) << elem[k-1].Name
-	 << fixed << setprecision(5) << setw(9) << elem[k-1].S
-	 << setprecision(1) << setw(5) << get_code(elem[k-1])
-	 << scientific << setprecision(5)
-	 << setw(13) << h_ijklm(ps[ct_], 0, 0, 0, 0, 1)
-	 << setw(13) << h_ijklm(ps[ct_], 0, 0, 0, 0, 2) << endl;
+    outf << std::setw(4) << k << " " << std::setw(15) << elem[k-1].Name
+	 << std::fixed << std::setprecision(5) << std::setw(9) << elem[k-1].S
+	 << std::setprecision(1) << std::setw(5) << get_code(elem[k-1])
+	 << std::scientific << std::setprecision(5)
+	 << std::setw(13) << h_ijklm(ps[ct_], 0, 0, 0, 0, 1)
+	 << std::setw(13) << h_ijklm(ps[ct_], 0, 0, 0, 0, 2) << std::endl;
   }
 
   outf.close();
@@ -133,9 +133,9 @@ void get_ct(void)
   ss_vect<tps> ps;
 
   ps.identity(); ps.propagate(1, n_elem);
-  cout << fixed << setprecision(5)
-       << endl << "R_56 = " << h_ijklm(ps[ct_], 0, 0, 0, 0, 1) << ", "
-       << "T_566 = " << h_ijklm(ps[ct_], 0, 0, 0, 0, 2) << endl;
+  std::cout << std::fixed << std::setprecision(5)
+       << std::endl << "R_56 = " << h_ijklm(ps[ct_], 0, 0, 0, 0, 1) << ", "
+       << "T_566 = " << h_ijklm(ps[ct_], 0, 0, 0, 0, 2) << std::endl;
 }
 
 
@@ -199,18 +199,21 @@ void get_nu(tps nu[])
 
 
 void prt_system(const int m_cstr, const int n_prm, double **A, double *b,
-	        const double chi2_old, const double chi2, ostringstream hs[])
+	        const double chi2_old, const double chi2,
+		std::ostringstream hs[])
 {
   int i, j;
 
-  cout << scientific << setprecision(1)
-       << endl << n_iter << " Ax = b, chi2: " << chi2_old << " -> " << chi2
-       << ":" << endl << endl;
+  std::cout << std::scientific << std::setprecision(1)
+       << std::endl << n_iter << " Ax = b, chi2: " << chi2_old << " -> " << chi2
+       << ":" << std::endl << std::endl;
   for (i = 1; i <= m_cstr; i++) {
-    cout  << setw(3) << i << " " << hs[i-1].str();
+    std::cout  << std::setw(3) << i << " " << hs[i-1].str();
     for (j = 1; j <= n_prm; j++)
-      cout << scientific << setprecision(2) << setw(10) << A[i][j];
-    cout << scientific << setprecision(2) << setw(10) << -b[i] << endl;
+      std::cout << std::scientific << std::setprecision(2)
+		<< std::setw(10) << A[i][j];
+    std::cout << std::scientific << std::setprecision(2)
+	      << std::setw(10) << -b[i] << std::endl;
   }
 }
 
@@ -231,7 +234,7 @@ void h_init(double *bn_max, double *bn)
   int    i;
   double L;
 
-  cout << endl << "Initial b2:" << endl;
+  std::cout << std::endl << "Initial b2:" << std::endl;
   for (i = 1; i <= n_prm; i++) {
     // Note, Jacobian is a function of the multipole strengths.
     if (bn_prm[i-1].n > 0) {
@@ -243,10 +246,10 @@ void h_init(double *bn_max, double *bn)
       bn_max[i] = L_max;
       bn[i] = get_bn_s1(bn_prm[i-1].Fnum, 1, bn_prm[i-1].n);
     }
-    cout << scientific << setprecision(5)
-	 << setw(13) << get_bn_s1(bn_prm[i-1].Fnum, 1, bn_prm[i-1].n);
+    std::cout << std::scientific << std::setprecision(5)
+	 << std::setw(13) << get_bn_s1(bn_prm[i-1].Fnum, 1, bn_prm[i-1].n);
   }
-  cout << endl;
+  std::cout << std::endl;
 }
 
 
@@ -284,8 +287,8 @@ double f_opt(double b2s[])
   for (i = 1; i <= m_cstr; i++)
     f += sqr(b[i]);
 
-  cout << scientific << setprecision(3)
-       << setw(4) << n_iter << " f = " << setw(9) << f << endl;
+  std::cout << std::scientific << std::setprecision(3)
+       << std::setw(4) << n_iter << " f = " << std::setw(9) << f << std::endl;
 
   free_dvector(b, 1, m_cstr_max);
 
@@ -295,10 +298,10 @@ double f_opt(double b2s[])
 
 void h_opt(double &chi2, const double *bn_max, double *bn,
 	   double &dbn_max, double *g, double *h, const bool prt_iter,
-	   ofstream &sext_out)
+	   std::ofstream &sext_out)
 {
   // Conjugate gradient method.
-  ostringstream hs[m_cstr_max];
+  std::ostringstream hs[m_cstr_max];
   int           i, k;
   double        L, chi2_old, fret, g2, gamma, dg2;
   double        **A, *b, *w, **U, **V, *dbn, *bn0;
@@ -313,15 +316,16 @@ void h_opt(double &chi2, const double *bn_max, double *bn,
   A = dmatrix(1, m_cstr_max, 1, n_prm); U = dmatrix(1, m_cstr_max, 1, n_prm);
   V = dmatrix(1, n_prm, 1, n_prm);
 
-  cout << endl;
+  std::cout << std::endl;
   for (i = 1; i <= n_prm; i++) {
     if (bn_prm[i-1].n > 0)
       set_bn_par(bn_prm[i-1].Fnum, bn_prm[i-1].n, 7);
     else
       set_s_par1(bn_prm[i-1].Fnum, 7);
 
-    cout << "Family: " << setw(6) << get_Name(bn_prm[i-1].Fnum)
-	 << setw(4) << bn_prm[i-1].Fnum << setw(3) << bn_prm[i-1].n << endl;
+    std::cout << "Family: " << std::setw(6) << get_Name(bn_prm[i-1].Fnum)
+	      << std::setw(4) << bn_prm[i-1].Fnum
+	      << std::setw(3) << bn_prm[i-1].n << std::endl;
 
     danot_(no_tps);
 
@@ -386,14 +390,14 @@ void h_opt(double &chi2, const double *bn_max, double *bn,
 	g[i] = dbn[i]; dbn[i] = h[i] = g[i] + gamma*h[i];
       }
     } else {
-      cout << "g.g = 0" << endl; exit(0);
+      std::cout << "g.g = 0" << std::endl; exit(0);
     }
   }
 
-  cout << endl;
+  std::cout << std::endl;
   d_linmin(bn, dbn, n_prm, &fret, f_opt);
 
-  cout << endl << "db2L (dcorr*L):" << endl;
+  std::cout << std::endl << "db2L (dcorr*L):" << std::endl;
   dbn_max = 0e0;
   for (i = 1; i <= n_prm; i++) {
     if (bn_prm[i-1].n > 0) {
@@ -403,20 +407,22 @@ void h_opt(double &chi2, const double *bn_max, double *bn,
     } else
       dbn_max = max(fabs((bn[i]-bn0[i])), dbn_max);
     if (bn_prm[i-1].n > 0) 
-      cout << scientific << setprecision(3) << setw(11) << (bn[i]-bn0[i])*L;
+      std::cout << std::scientific << std::setprecision(3)
+		<< std::setw(11) << (bn[i]-bn0[i])*L;
     else
-      cout << scientific << setprecision(3) << setw(11) << bn[i]-bn0[i];
+      std::cout << std::scientific << std::setprecision(3)
+		<< std::setw(11) << bn[i]-bn0[i];
   }
-  cout << endl;
+  std::cout << std::endl;
 
-  cout << "b2:" << endl;
+  std::cout << "b2:" << std::endl;
   for (i = 1; i <= n_prm; i++) {
     set_bn_s1(bn_prm[i-1].Fnum, bn_prm[i-1].n, bn[i]);
     bn[i] = get_bn_s1(bn_prm[i-1].Fnum, 1, bn_prm[i-1].n);
-    cout << scientific << setprecision(6)
-	 << setw(14) << get_bn_s1(bn_prm[i-1].Fnum, 1, bn_prm[i-1].n);
+    std::cout << std::scientific << std::setprecision(6)
+	 << std::setw(14) << get_bn_s1(bn_prm[i-1].Fnum, 1, bn_prm[i-1].n);
   }
-  cout << endl;
+  std::cout << std::endl;
 
   free_dvector(b, 1, m_cstr_max); free_dvector(w, 1, n_prm);
   free_dvector(dbn, 1, n_prm); free_dvector(bn0, 1, n_prm);
@@ -427,10 +433,10 @@ void h_opt(double &chi2, const double *bn_max, double *bn,
 
 void h_zero(void)
 {
-  string   str;
+  std::string   str;
   int      i;
   double   *g, *h, dbn_max, chi2, *bn, *bn_max;
-  ofstream sext_out;
+  std::ofstream sext_out;
 
   const bool   prt_iter   = true;
   const int    n_iter_max = 1000;
@@ -455,11 +461,11 @@ void h_zero(void)
     for (i = 1; i <= n_prm; i++)
 
     for (i = 1; i <= n_prm; i++)
-      sext_out << fixed << setprecision(7) 
-	       << setw(9) << get_Name(bn_prm[i-1].Fnum)
+      sext_out << std::fixed << std::setprecision(7) 
+	       << std::setw(9) << get_Name(bn_prm[i-1].Fnum)
 	       << "(" << elem[bn_prm[i-1].Fnum].Knum << ") = "
-	       << setw(11) << get_bnL_s(bn_prm[i-1].Fnum, 1, bn_prm[i-1].n)
-	       << setw(2) << bn_prm[i-1].n << endl;
+	       << std::setw(11) << get_bnL_s(bn_prm[i-1].Fnum, 1, bn_prm[i-1].n)
+	       << std::setw(2) << bn_prm[i-1].n << std::endl;
     sext_out.flush();
   }
 
@@ -479,12 +485,12 @@ void get_prms(void)
   // bn_prm[n_prm].Fnum = get_Fnum("dm"); bn_prm[n_prm++].n = 0;
   // bn_prm[n_prm].Fnum = get_Fnum("bm"); bn_prm[n_prm++].n = 0;
 
-  cout << endl;
+  std::cout << std::endl;
   for (k = 0; k < n_prm; k++) {
-    cout << setw(3) << k+1
-	 << ", " << setw(6) << get_Name(bn_prm[k].Fnum)
-	 << ", " << setw(2) << bn_prm[k].Fnum
-	 << ", n = " << bn_prm[k].n << endl;
+    std::cout << std::setw(3) << k+1
+	 << ", " << std::setw(6) << get_Name(bn_prm[k].Fnum)
+	 << ", " << std::setw(2) << bn_prm[k].Fnum
+	 << ", n = " << bn_prm[k].n << std::endl;
   }
 }
 
@@ -496,7 +502,7 @@ int main(int argc, char *argv[])
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
   IBS_on    = false;
 
-  string home_dir = "/home/johan/projects/src/";
+  std::string home_dir = "/home/johan/projects/src/";
 
   // E0 contains p_0 [GeV].
   E0 = 750e-3; // Energy in ARC3.

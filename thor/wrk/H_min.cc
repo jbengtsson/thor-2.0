@@ -654,8 +654,8 @@ void dfpmin(double p[], int n, double gtol, int *iter, double *fret,
     }
     if (test < TOLX) {
       FREEALL
-      cout << scientific << setprecision(3)
-	   << "dfpmin (TOLX): " << test << " (" << TOLX << ")" << endl;
+      std::cout << std::scientific << std::setprecision(3)
+	   << "dfpmin (TOLX): " << test << " (" << TOLX << ")" << std::endl;
       return;
     }
     for (i=1;i<=n;i++) dg[i]=g[i];
@@ -668,8 +668,8 @@ void dfpmin(double p[], int n, double gtol, int *iter, double *fret,
     }
     if (test < gtol) {
       FREEALL
-      cout << scientific << setprecision(3)
-	   << "dfpmin (gtol): " << test << " (" << gtol << ")" << endl;
+      std::cout << std::scientific << std::setprecision(3)
+	   << "dfpmin (gtol): " << test << " (" << gtol << ")" << std::endl;
       return;
     }
     for (i=1;i<=n;i++) dg[i]=g[i]-dg[i];
@@ -716,7 +716,7 @@ void prt_b3s(double bns[])
   int  i, j;
   FILE *outf;
 
-  const string file_name = "b3s.out";
+  const std::string file_name = "b3s.out";
 
   outf = file_write(file_name.c_str());
   
@@ -919,30 +919,31 @@ double H_fun(double bns[])
   if (false || (h2 < chi2)) {
     i = 0;
     do {
-      cout << endl;
+      std::cout << std::endl;
       for (j = 1; j <= n_prt; j++) {
 	i++;
-	if (i <= m1) cout << setw(10) << hs[i-1];
+	if (i <= m1) std::cout << std::setw(10) << hs[i-1];
       }
-      cout << endl;
+      std::cout << std::endl;
 
       i -= n_prt;
       for (j = 1; j <= n_prt; j++) {
 	i++;
 	if (i <= m1)
-	  cout << scientific << setprecision(2) << setw(10) << b[i-1];
+	  std::cout << std::scientific << std::setprecision(2)
+		    << std::setw(10) << b[i-1];
       }
-      cout << endl;
+      std::cout << std::endl;
     } while (i < m1);
 
-    cout << endl;
-    cout << scientific << setprecision(3)
-	 << "chi2:" << setw(10) << h2 << endl;
+    std::cout << std::endl;
+    std::cout << std::scientific << std::setprecision(3)
+	 << "chi2:" << std::setw(10) << h2 << std::endl;
 
     for (i = 1; i <= ncom; i++)
-      cout << scientific << setprecision(3)
-	   << setw(11) << get_bnL(bns_fam[i], 1, bns_n[i]);
-    cout << endl;
+      std::cout << std::scientific << std::setprecision(3)
+	   << std::setw(11) << get_bnL(bns_fam[i], 1, bns_n[i]);
+    std::cout << std::endl;
 
     chi2 = h2;
   }
@@ -963,7 +964,7 @@ void H_dfun(double bns[], double dh2[])
 {
   int      i1, i, j, k, l, m;
   tps      r, K_re, K_im, g_re, g_im;
-  ofstream outf;
+  std::ofstream outf;
 
   for (i = 1; i <= ncom; i++)
     set_bn(bns_fam[i], bns_n[i], bns[i]);
@@ -1060,11 +1061,12 @@ void H_dfun(double bns[], double dh2[])
   }
 
   if (false) {
-    cout << endl;
-    cout << "dh2" << endl;
+    std::cout << std::endl;
+    std::cout << "dh2" << std::endl;
     for (i = 1; i <= ncom; i++)
-      cout << scientific << setprecision(3) << setw(11) << dh2[i];
-    cout << endl;
+      std::cout << std::scientific << std::setprecision(3)
+		<< std::setw(11) << dh2[i];
+    std::cout << std::endl;
   }
 }
 
@@ -1173,13 +1175,13 @@ void no_mpoles(void)
 {
   int j, k;
 
-  cout << endl;
-  cout << "zeroing multipoles" << endl;
-  cout << endl;
+  std::cout << std::endl;
+  std::cout << "zeroing multipoles" << std::endl;
+  std::cout << std::endl;
   for (j = 0; j < n_elem; j++)
     if (elem[j].kind == Mpole)
       for (k = Sext; k < mpole_max; k++) {
-//	cout << "zeroing " << elem[j].Name << endl;
+//	std::cout << "zeroing " << elem[j].Name << endl;
 	set_bn(elem[j].Fnum, elem[j].Knum, k, 0.0);
       }
 }
@@ -1188,7 +1190,7 @@ void no_mpoles(void)
 void get_prm(const char *file_name)
 {
   char      line[max_str];      
-  ifstream  prm_in;
+  std::ifstream  prm_in;
 
   file_rd(prm_in, file_name);
 
@@ -1254,43 +1256,46 @@ void get_prm(const char *file_name)
   prm_in.getline(line, max_str);
   sscanf(line, "%*s %lf", &step);
 
-  cout << endl;
-  cout << fixed << setprecision(6)
+  std::cout << std::endl;
+  std::cout << std::fixed << std::setprecision(6)
        << "fit_tune      = " << adj_tune
        << ", nu0_x  = " << nu0_x << ", nu0_y  = " << nu0_y
-       << scientific << setprecision(1) << ", eps_nu = " << eps_nu << endl;
-  cout << fixed << setprecision(6)
+       << std::scientific << std::setprecision(1)
+	    << ", eps_nu = " << eps_nu << std::endl;
+  std::cout << std::fixed << std::setprecision(6)
        << "fit_chrom     = " << adj_chrom
        << ", ksi0_x = " << ksi1[X_] << ", ksi0_y = " << ksi1[Y_]
-       << scientific << setprecision(1) << ", eps_ksi = " << eps_ksi << endl;
-  cout << "check_range   = " << check_range << endl;
-  cout << endl;
-  cout << fixed << setprecision(6)
+       << std::scientific << std::setprecision(1) << ", eps_ksi = " << eps_ksi
+	    << std::endl;
+  std::cout << "check_range   = " << check_range << std::endl;
+  std::cout << std::endl;
+  std::cout << std::fixed << std::setprecision(6)
        << "n_steps   = " << n_steps
        << ", nu_x_min = " << nu_x_min << ", nu_x_max = " << nu_x_max
-       << ", nu_y_min = " << nu_y_min << ", nu_y_max = " << nu_y_max << endl;
-  cout << endl;
-  cout << "n_cell        = " << n_cell << endl;
-  cout << fixed << setprecision(2)
-       << "ds_max        = " << ds_max << endl;
-  cout << fixed << setprecision(1)
-       << "b2_max        = " << b2_max << endl;
-  cout << fixed << setprecision(1)
-       << "b3L_max       = " << bnL_max[Sext] << endl;
-  cout << fixed << setprecision(1)
-       << "b4L_max       = " << bnL_max[Oct] << endl;
-  cout << fixed << setprecision(1)
-       << "b5L_max       = " << bnL_max[Dec] << endl;
-  cout << fixed << setprecision(1)
-       << "scl_dnu       = " << scl_dnu << endl;
-  cout << fixed << setprecision(1)
-       << "scl_ksi_nl    = " << scl_ksi_nl << endl;
-  cout << scientific << setprecision(1)
-       << "scl_dnuddelta = " << scl_dnuddelta << endl;
-  cout << scientific << setprecision(1)
-       << "scl_dnuddJ    = " << scl_dnudJ << endl;
-  cout << fixed << setprecision(2)
-       << "step          = " << step << endl;
+       << ", nu_y_min = " << nu_y_min << ", nu_y_max = " << nu_y_max
+	    << std::endl;
+  std::cout << std::endl;
+  std::cout << "n_cell        = " << n_cell << std::endl;
+  std::cout << std::fixed << std::setprecision(2)
+       << "ds_max        = " << ds_max << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "b2_max        = " << b2_max << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "b3L_max       = " << bnL_max[Sext] << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "b4L_max       = " << bnL_max[Oct] << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "b5L_max       = " << bnL_max[Dec] << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "scl_dnu       = " << scl_dnu << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "scl_ksi_nl    = " << scl_ksi_nl << std::endl;
+  std::cout << std::scientific << std::setprecision(1)
+       << "scl_dnuddelta = " << scl_dnuddelta << std::endl;
+  std::cout << std::scientific << std::setprecision(1)
+       << "scl_dnuddJ    = " << scl_dnudJ << std::endl;
+  std::cout << std::fixed << std::setprecision(2)
+       << "step          = " << step << std::endl;
 }
 
 
@@ -1327,16 +1332,16 @@ void get_bns()
   bns_fam[++n_bn] = get_Fnum("o4");  bns_n[n_bn] = Oct;
 
   if (n_bn > n_prm_max) {
-    cout << "get_bns: n_prm_max exceeded " << n_bn << "(" << n_prm_max
-	 << ")" << endl;
+    std::cout << "get_bns: n_prm_max exceeded " << n_bn << "(" << n_prm_max
+	 << ")" << std::endl;
     exit(0);
   }
 
   for (k = 1; k <= n_bn; k++)
     bns[k] = get_bn(bns_fam[k], 1, bns_n[k]);
 
-  cout << endl;
-  cout << "get_bns: no of multipole families " << n_bn << endl;
+  std::cout << std::endl;
+  std::cout << "get_bns: no of multipole families " << n_bn << std::endl;
 }
 
 
@@ -1350,8 +1355,8 @@ int main(int argc, char *argv[])
   ss_vect<double>  x;
   ss_vect<tps>     A_inv, ps, ps_re, ps_im, nus, R, R_inv, Map2;
   ss_vect<tps>     Map_Fl, Mn, Mk, J, eta, M1, M2, M3, M4, Mp;
-  ofstream         outf, K_out, nus_out, A1_out, J_out;
-  ifstream         inf;
+  std::ofstream         outf, K_out, nus_out, A1_out, J_out;
+  std::ifstream         inf;
 
 
   danot_(no_tps-1);
@@ -1374,12 +1379,12 @@ int main(int argc, char *argv[])
   if (true) chk_lat(nu, ksi);
 
   get_ab(alpha, beta, 0);
-  cout << endl;
-  cout << fixed << setprecision(3)
-       << "alpha_x  = " << setw(6) << alpha[X_]
-       << ", alpha_y = " << setw(6) << alpha[Y_]
-       << ", beta_x = " << setw(6) << beta[X_]
-       << ", beta_y  = " << setw(6) << beta[Y_] << endl;
+  std::cout << std::endl;
+  std::cout << std::fixed << std::setprecision(3)
+       << "alpha_x  = " << std::setw(6) << alpha[X_]
+       << ", alpha_y = " << std::setw(6) << alpha[Y_]
+       << ", beta_x = " << std::setw(6) << beta[X_]
+       << ", beta_y  = " << std::setw(6) << beta[Y_] << std::endl;
 
   if (true) prt_alphac();
 

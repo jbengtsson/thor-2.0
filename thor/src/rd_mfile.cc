@@ -108,12 +108,12 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
   int       k, order, n_mpole, Fnum, Knum, method, n_step;
   double    drerror, bn, an, L;
   char      line[max_str];
-  ifstream  inf;
+  std::ifstream  inf;
 
   bool  prt = false;
 
-  cout << endl;
-  cout << "reading machine file: " << file_name << endl;;
+  std::cout << std::endl;
+  std::cout << "reading machine file: " << file_name <<std:: endl;;
 
   file_rd(inf, file_name);
 
@@ -147,17 +147,18 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 
       inf.getline(line, max_str);
       sscanf(line, "%d %d %d", &elem[ind].kind, &method, &n_step);
-      if (prt) cout << elem[ind].Name << " " << elem[ind].kind << endl;
+      if (prt)
+	std::cout << elem[ind].Name << " " << elem[ind].kind << std::endl;
 
       inf.getline(line, max_str); 
       sscanf(line, "%lf %lf %lf %lf",
 	     &elem[ind].max_ampl[X_][0], &elem[ind].max_ampl[X_][1],
 	     &elem[ind].max_ampl[Y_][0], &elem[ind].max_ampl[Y_][1]);
-      if (prt) cout << scientific << setprecision(3)
-	     << setw(11) << elem[ind].max_ampl[X_][0]
-	     << setw(11) << elem[ind].max_ampl[X_][0]
-	     << setw(11) << elem[ind].max_ampl[Y_][1]
-	     << setw(11) << elem[ind].max_ampl[Y_][1] << endl;
+      if (prt) std::cout << std::scientific << std::setprecision(3)
+	     << std::setw(11) << elem[ind].max_ampl[X_][0]
+	     << std::setw(11) << elem[ind].max_ampl[X_][0]
+	     << std::setw(11) << elem[ind].max_ampl[Y_][1]
+	     << std::setw(11) << elem[ind].max_ampl[Y_][1] << std::endl;
 
       switch (elem[ind].kind) {
       case Marker:
@@ -207,8 +208,8 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	    elem[ind].mpole->an[order-1] = an;
 	    elem[ind].mpole->order = order;
 	  } else {
-	    cout << "rd_mfile: mpole_max exceeded " << order
-		 << "(" << mpole_max << ")" << endl;
+	    std::cout << "rd_mfile: mpole_max exceeded " << order
+		 << "(" << mpole_max << ")" << std::endl;
 	    exit(1);
 	  }
 	}
@@ -257,8 +258,8 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	    elem[ind].mpole->an[order-1] = an;
 	    elem[ind].mpole->order = order;
 	  } else {
-	    cout << "rdmfile: mpole_max exceeded " << order
-		 << "(" << mpole_max << ")" << endl;
+	    std::cout << "rdmfile: mpole_max exceeded " << order
+		 << "(" << mpole_max << ")" << std::endl;
 	    exit(0);
 	  }
 	}
@@ -326,9 +327,9 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       }
 	break;
       default:
-	cout << "rd_mfile: undefined element " << elem[ind].Name
-	     << setw(4) << ind << " " << setw(2) << elem[ind].kind
-	     << endl;
+	std::cout << "rd_mfile: undefined element " << elem[ind].Name
+	     << std::setw(4) << ind << " " << std::setw(2) << elem[ind].kind
+	     << std::endl;
 	exit(1);
 	break;
       }
@@ -340,18 +341,19 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       else
 	elem[ind].S = elem[ind-1].S + L;
     } else {
-      cout << "rd_mfile: max_elem exceeded " << n_elem
-	   << "(" << max_elem << ")" << endl;
+      std::cout << "rd_mfile: max_elem exceeded " << n_elem
+	   << "(" << max_elem << ")" << std::endl;
       exit(1);
     }
   }
 
-  cout << endl;
-  cout << "no of elements:    " << setw(12) << n_elem << endl;
-  cout << "circumference [m]: "
-       << fixed << setw(12) << setprecision(6) << elem[n_elem-1].S << endl;
-  cout << fixed << "Energy [GeV]:        "
-       << setw(10) << setprecision(2) << E0 << endl;
+  std::cout << std::endl;
+  std::cout << "no of elements:    " << std::setw(12) << n_elem << std::endl;
+  std::cout << "circumference [m]: "
+       << std::fixed << std::setw(12) << std::setprecision(6)
+	    << elem[n_elem-1].S << std::endl;
+  std::cout << std::fixed << "Energy [GeV]:        "
+       << std::setw(10) << std::setprecision(2) << E0 << std::endl;
 
   inf.close();
 }

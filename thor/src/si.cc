@@ -23,8 +23,8 @@ bool IBS_on    = false;
 void ini_si(void)
 {
 
-  cout << endl;
-  cout << "ini_si" << endl;
+  std::cout << std::endl;
+  std::cout << "ini_si" << std::endl;
 
   // compute 4th order symplectic integrator coefficients
   d_coeff1 = 1.0/(2.0*(2.0-pow(2.0, 1.0/3.0))); d_coeff2 = 0.5 - d_coeff1;
@@ -82,7 +82,7 @@ inline T get_ps(ss_vect<T> &x)
     if (ps2 >= 0.0)
       ps = sqrt(ps2);
     else {
-      cout << "*** Speed of light exceeded!\n" << endl;
+      std::cout << "*** Speed of light exceeded!\n" << std::endl;
       exit(1);
     }
   }
@@ -130,7 +130,7 @@ class is_tps<double> {
 
   static inline double get_curly_H(const ss_vect<tps> &x)
     {
-      cout << "get_curly_H: operation not defined for double" << endl;
+      std::cout << "get_curly_H: operation not defined for double" << std::endl;
       exit(1);
       return 0e0;
     }
@@ -138,7 +138,7 @@ class is_tps<double> {
   static inline double get_dI4(const double h, const double b2, const double L,
 			       const ss_vect<tps> &x)
   {
-    cout << "get_dI4: operation not defined for double" << endl;
+    std::cout << "get_dI4: operation not defined for double" << std::endl;
     exit(1);
     return 0e0;
   }
@@ -425,7 +425,8 @@ void bend_fringe(double h_bend, ss_vect<T> &x)
     x[py_] = x1[py_] + 2.0*coeff*x1[px_]*x1[y_]/ps;
     x[ct_] = x1[ct_] - coeff*x1[px_]*sqr(x1[y_])*(1.0+x1[delta_])/ps3;
   } else {
-    cout << "bend_fringe: *** Speed of light exceeded!" << endl; exit(0);
+    std::cout << "bend_fringe: *** Speed of light exceeded!" << std::endl;
+    exit(0);
   }
 }
 
@@ -494,11 +495,13 @@ void mpole_pass(const elem_type<T> &elem, ss_vect<T> &x)
     }
     switch (elem.mpole->method) {
     case Linear:
-      cout << "*** matrix method not supported: " << elem.Name << endl;
+      std::cout << "*** matrix method not supported: " << elem.Name
+		<< std::endl;
       exit(1);
       break;
     case Second:
-      cout << "*** second order symplectic integrator not supported" << endl;
+      std::cout << "*** second order symplectic integrator not supported"
+		<< std::endl;
       exit(1);
       break;
     case Fourth:
@@ -544,7 +547,8 @@ void mpole_pass(const elem_type<T> &elem, ss_vect<T> &x)
       }
       break;
     default:
-      cout << "mpole_pass: undefined element %d\n" << elem.kind << endl;
+      std::cout << "mpole_pass: undefined element %d\n" << elem.kind
+		<< std::endl;
     }
   } else {
     k1 = 1.0;
@@ -971,7 +975,8 @@ bool si(const long int i0, const long int i1, ss_vect<T> &x,
 	wiggler_pass_Wu(elem[i-1], x);
 	break;
       default:
-	cout << "si: undefined method " << elem[i-1].wiggler->method << endl;
+	std::cout << "si: undefined method " << elem[i-1].wiggler->method
+		  << std::endl;
       }
       break;
     case Cavity:
@@ -981,8 +986,8 @@ bool si(const long int i0, const long int i1, ss_vect<T> &x,
       kick_map_pass(elem[i-1], x);
       break;
     default:
-      cout << "si_templ: undefined element no "
-	   << setw(3) << i << " type = " << elem[i-1].kind << endl;
+      std::cout << "si_templ: undefined element no "
+	   << std::setw(3) << i << " type = " << elem[i-1].kind << std::endl;
       exit(0);
     }
 

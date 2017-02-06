@@ -3,7 +3,7 @@
    Definitions:  Polymorphic number class.              */
 
 #include <sstream>
-using namespace std;
+//using namespace std;
 
 #define sqr(x) ((x)*(x))
 #define cube(x) ((x)*(x)*(x))
@@ -59,11 +59,11 @@ class tps {
   tps& operator*=(const tps &);
   tps& operator/=(const tps &);
 
-  friend istream& operator>>(istream &, tps &);
+  friend std::istream& operator>>(std::istream &, tps &);
   template<typename CharT, class Traits>
-  friend basic_istream<CharT, Traits>&
-    operator>>(basic_istream<CharT, Traits> &, ss_vect<tps> &);
-  friend ostream& operator<<(ostream &, const tps &);
+    friend std::basic_istream<CharT, Traits>&
+    operator>>(std::basic_istream<CharT, Traits> &, ss_vect<tps> &);
+  friend std::ostream& operator<<(std::ostream &, const tps &);
 
   friend double abs(const tps &);
   friend double abs2(const tps &);
@@ -181,12 +181,12 @@ template<typename T> class ss_vect {
   friend tps operator*(const tps &, const ss_vect<tps> &);
 
   template<typename CharT, class Traits>
-    friend basic_istream<CharT, Traits>&
-    operator>>(basic_istream<CharT, Traits> &, ss_vect<T> &);
+    friend std::basic_istream<CharT, Traits>&
+    operator>>(std::basic_istream<CharT, Traits> &, ss_vect<T> &);
 
   template<typename CharT, class Traits>
-    friend basic_ostream<CharT, Traits>&
-    operator<<(basic_ostream<CharT, Traits> &, const ss_vect<T> &);
+    friend std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits> &, const ss_vect<T> &);
 
   void zero(void);
   void identity(void);

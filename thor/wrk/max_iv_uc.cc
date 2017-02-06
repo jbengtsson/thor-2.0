@@ -10,9 +10,6 @@ extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
 
-const int n_prm_max = 20;
-
-
 void get_twiss(const double alpha[], const double beta[],
 	       const double eta[], const double etap[])
 {
@@ -152,21 +149,23 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 }
 
 	
-void fit_emit(int &n_b2, int b2s[], const double eps_x,
+void fit_emit(std::vector<int> &b2s, const double eps_x,
 	      const double nu_x, const double nu_y,
 	      const double b2_max, const double db2_tol, const double s_cut,
 	      const double step)
 {
-  // Optimize hor. emittance.
-  const double scl_nu = 1e1, scl_ksi = 1e-2;
+  // Optimize unit cell for hor. emittance.
+  const double scl_nu = 1e1, scl_ksi = 1e-2, scl_eps = 1e1;
 
   const int m_max = 8;
 
-  int          i, j, m, loc;
+  int          n_b2, i, j, m, loc;
   double       **A, *b, *b2_lim, *b2, *db2;
   double       db2_max;
   tps          eps1_x;
   ss_vect<tps> nus;
+
+  n_b2 = b2s.size();
 
   b = dvector(1, m_max); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -196,7 +195,7 @@ void fit_emit(int &n_b2, int b2s[], const double eps_x,
       eps1_x = get_eps_x();
  
       m = 0;
-      A[++m][i] = h_ijklm_p(eps1_x, 0, 0, 0, 0, 0, 7);
+      A[++m][i] = scl_eps*h_ijklm_p(eps1_x, 0, 0, 0, 0, 0, 7);
       A[++m][i] = scl_nu*h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
       A[++m][i] = scl_nu*h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
       A[++m][i] = scl_ksi*h_ijklm_p(nus[3], 0, 0, 0, 0, 1, 7);
@@ -214,7 +213,7 @@ void fit_emit(int &n_b2, int b2s[], const double eps_x,
     }
 
     m = 0;
-    b[++m] = -(eps1_x.cst()-eps_x);
+    b[++m] = -scl_eps*(eps1_x.cst()-eps_x);
     b[++m] = -scl_nu*(h_ijklm(nus[3], 0, 0, 0, 0, 0)-nu_x);
     b[++m] = -scl_nu*(h_ijklm(nus[4], 0, 0, 0, 0, 0)-nu_y);
     b[++m] = -scl_ksi*h_ijklm(nus[3], 0, 0, 0, 0, 1);
@@ -231,7 +230,7 @@ void fit_emit(int &n_b2, int b2s[], const double eps_x,
       b2[i] = get_bn_s(b2s[i-1], 1, Quad);
       db2_max = max(fabs(step*db2[i]), db2_max);
 
-      printf("%14.5e", b2[i]);
+      printf("%10.5f", b2[i]);
     }
     printf("\n");
   } while (db2_max > db2_tol);
@@ -243,18 +242,18 @@ void fit_emit(int &n_b2, int b2s[], const double eps_x,
 }
 
 
-void fit_match(int &n_b2, int b2s[],
+void fit_match(std::vector<int> &b2s,
 	       const double beta0_x, const double beta0_y, const double eta0_x,
 	       const double beta1_x, const double beta1_y,
 	       const double b2_max, const double db2_tol,
 	       const double s_cut, const double step)
 {
-  // Match linear optics.
+  // Match linear optics to straight section.
 
   const int m_max = 8;
 
   long int     loc;
-  int          i, j, m;
+  int          n_b2, i, j, m;
   double       **A, *b, *b2_lim, *b2, *db2;
   double       db2_max;
   ss_vect<tps> AA_tp, A_disp;
@@ -264,6 +263,8 @@ void fit_match(int &n_b2, int b2s[],
                beta0[]  = {beta0_x, beta0_y},
                eta0[]   = {eta0_x,  0e0},
 	       etap0[]  = {0e0,     0e0};
+
+  n_b2 = b2s.size();
 
   b = dvector(1, m_max); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -344,7 +345,7 @@ void fit_match(int &n_b2, int b2s[],
 }
 
 
-void fit_3rd_achrom(int &n_bn, int bns[],
+void fit_3rd_achrom(std::vector<int> &bns,
 		    const double bn_max, const double dbn_tol,
 		    const double s_cut, const double step)
 {
@@ -352,11 +353,13 @@ void fit_3rd_achrom(int &n_bn, int bns[],
 
   const int m_max = 6;
 
-  int          i, j, m, loc;
+  int          n_bn, i, j, m, loc;
   double       **A, *b, *bn_lim, *bn, *dbn;
   double       dbn_max;
   tps          K_re, K_im;
   ss_vect<tps> nus;
+
+  n_bn = bns.size();
 
   b = dvector(1, m_max); bn_lim = dvector(1, n_bn);
   bn = dvector(1, n_bn); dbn = dvector(1, n_bn);
@@ -431,55 +434,52 @@ void fit_3rd_achrom(int &n_bn, int bns[],
 }
 
 
-void get_b2s_1(int &n_b2, int b2_Fams[])
+void get_b2s_1(std::vector<int> &b2_Fams)
 {
 
-  n_b2 = 0;
-  b2_Fams[n_b2++] =  get_Fnum("bh");
-  b2_Fams[n_b2++] =  get_Fnum("qf");
-  b2_Fams[n_b2++] = -get_Fnum("bh");
-  b2_Fams[n_b2++] = -get_Fnum("qf");
+  b2_Fams.push_back(get_Fnum("bh"));
+  b2_Fams.push_back(get_Fnum("qf"));
+  b2_Fams.push_back(-get_Fnum("bh"));
+  b2_Fams.push_back(-get_Fnum("qf"));
 }
 
 
-void get_b2s_2(int &n_b2, int b2_Fams[])
+void get_b2s_2(std::vector<int> &b2_Fams)
 {
 
-  n_b2 = 0;
-  b2_Fams[n_b2++] =  get_Fnum("bm");
-  b2_Fams[n_b2++] =  get_Fnum("qfe");
-  b2_Fams[n_b2++] =  get_Fnum("qde");
-  b2_Fams[n_b2++] =  get_Fnum("qm");
-  b2_Fams[n_b2++] = -get_Fnum("bm");
-  b2_Fams[n_b2++] = -get_Fnum("qfe");
-  b2_Fams[n_b2++] = -get_Fnum("qde");
-  b2_Fams[n_b2++] = -get_Fnum("qm");
+  b2_Fams.push_back(get_Fnum("bm"));
+  b2_Fams.push_back(get_Fnum("qfe"));
+  b2_Fams.push_back(get_Fnum("qde"));
+  b2_Fams.push_back(get_Fnum("qm"));
+  b2_Fams.push_back(-get_Fnum("bm"));
+  b2_Fams.push_back(-get_Fnum("qfe"));
+  b2_Fams.push_back(-get_Fnum("qde"));
+  b2_Fams.push_back(-get_Fnum("qm"));
 }
 
 
-void get_bns(int &n_bn, int bn_Fams[])
+void get_bns(std::vector<int> &bn_Fams)
 {
 
-  n_bn = 0;
-  bn_Fams[n_bn++] = get_Fnum("o1");
-  bn_Fams[n_bn++] = get_Fnum("o2");
-  bn_Fams[n_bn++] = get_Fnum("o3");
-  // bn_Fams[n_bn++] = get_Fnum("sf");
-  // bn_Fams[n_bn++] = get_Fnum("sd");
+  bn_Fams.push_back(get_Fnum("o1"));
+  bn_Fams.push_back(get_Fnum("o2"));
+  bn_Fams.push_back(get_Fnum("o3"));
+  // bn_Fams.push_back(get_Fnum("sf"));
+  // bn_Fams.push_back(get_Fnum("sd"));
 }
 
 
 void chk_lat(double nu[], double ksi[])
 {
-  double        alpha[2], beta[2];
-  ss_vect<tps>  nus;
+  double       alpha[2], beta[2];
+  ss_vect<tps> nus;
 
 //  get_Map();
   get_COD(10, 1e-10, 0e0, true);
-  cout << Map;
+  std::cout << Map;
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   nus = dHdJ(K); get_nu_ksi(nus, nu, ksi); get_ab(alpha, beta, 0);
-  cout << endl;
+   std::cout <<  std::endl;
   printf("alpha_x = %5.3f, alpha_y = %5.3f, beta_x = %5.3f, beta_y  = %5.3f\n",
 	 alpha[X_], alpha[Y_], beta[X_], beta[Y_]);
   prt_nu(nus);
@@ -488,11 +488,11 @@ void chk_lat(double nu[], double ksi[])
 
 int main(int argc, char *argv[])
 {
-  int          b2_Fams[n_prm_max], n_b2, bn_Fams[n_prm_max], n_bn;
-  double       Jx, Jy;
-  tps          eps1_x, K_re, K_im, g_re, g_im, h_re, h_im, H_re, H_im;
-  ss_vect<tps> Id_scl;
-  ofstream     outf;
+  double           Jx, Jy;
+  tps              eps1_x, K_re, K_im, g_re, g_im, h_re, h_im, H_re, H_im;
+  ss_vect<tps>     Id_scl;
+  std::vector<int> b2_Fams, bn_Fams;
+  std::ofstream    outf;
   
   const double max_Ax = 5e-3, max_Ay = 5e-3, max_delta = 3e-2;
   
@@ -530,24 +530,24 @@ int main(int argc, char *argv[])
 
   // tst_dL(beta[X_], beta[Y_], eta_x);
 
-  if (false) {
-    get_b2s_1(n_b2, b2_Fams);
+  if (true) {
+    get_b2s_1(b2_Fams);
     ds_max = 0.2; scl_ds = 0.01;
 
-    fit_emit(n_b2, b2_Fams, eps_x, nu[X_], nu[Y_], 100.0, 1e-4, 1e-6, 0.5);
+    fit_emit(b2_Fams, eps_x, nu[X_], nu[Y_], 100.0, 1e-4, 1e-6, 0.5);
   }
 
   if (false) {
-    get_b2s_2(n_b2, b2_Fams);
+    get_b2s_2(b2_Fams);
     ds_max = 0.2; scl_ds = 0.01;
 
-    fit_match(n_b2, b2_Fams, beta0[X_], beta0[Y_], eta0_x, beta1[X_], beta1[Y_],
+    fit_match(b2_Fams, beta0[X_], beta0[Y_], eta0_x, beta1[X_], beta1[Y_],
 	      100.0, 1e-5, 1e-4, 0.5);
   }
 
-  if (true) {
-    get_bns(n_bn, bn_Fams);
-    fit_3rd_achrom(n_bn, bn_Fams, 1e5, 1e-5, 1e-4, 1.0);
+  if (false) {
+    get_bns(bn_Fams);
+    fit_3rd_achrom(bn_Fams, 1e5, 1e-5, 1e-4, 1.0);
   }
 
   danot_(NO);

@@ -9,7 +9,9 @@
 #include <istream>
 #include <iomanip>
 #include <sstream>
-using namespace std;
+#include <vector>
+
+//using namespace std;
 
 #include "field.h"
 #include "tpsa_for.h"

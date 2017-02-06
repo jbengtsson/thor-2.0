@@ -26,7 +26,7 @@ long int fact(long int n)
   else if (n == 0)
     return 1;
   else {
-    cout << "fact: neg. argument: " << n << endl;
+    std::cout << "fact: neg. argument: " << n << std::endl;
     exit(1);
   }
 }
@@ -121,10 +121,10 @@ extern "C" {
 void TPSA_Ini(void)
 {
 
-  cout << endl;
-  cout << scientific << setprecision(0)
+  std::cout << std::endl;
+  std::cout << std::scientific << std::setprecision(0)
        << "TPSA_Ini: no = " << no_tps << ", nv = " << ss_dim
-       << ", eps = " << eps_tps << endl;
+       << ", eps = " << eps_tps << std::endl;
 
   // initialize g77 I/O
   // cout << "initilizing g77 i/o" << endl;
@@ -155,8 +155,8 @@ tps::tps(void)
   if (!ini_tps) TPSA_Ini();
   intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for); dacon_(intptr, 0.0);
   if (debug_tpsa)
-    cout << "tps(void):                        "
-	 << ", intptr = " << intptr << endl;
+    std::cout << "tps(void):                        "
+	 << ", intptr = " << intptr << std::endl;
 }
 
 tps::tps(const double r)
@@ -165,8 +165,8 @@ tps::tps(const double r)
   if (!ini_tps) TPSA_Ini();
   intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for); dacon_(intptr, r);
   if (debug_tpsa)
-    cout << "tps(const double r):              "
-	 << ", intptr = " << intptr << endl;
+    std::cout << "tps(const double r):              "
+	 << ", intptr = " << intptr <<std:: endl;
 }
 
 tps::tps(const double r, const int i)
@@ -179,25 +179,26 @@ tps::tps(const double r, const int i)
   else
     davar_(intptr, r, i);
   if (debug_tpsa)
-    cout << "tps(const double r, const int i): "
-	 << ", intptr = " << intptr << endl;
+    std::cout << "tps(const double r, const int i): "
+	 << ", intptr = " << intptr << std::endl;
 }
 
 tps::tps(const tps &x) {
 
   if (!ini_tps) TPSA_Ini();
   intptr = 0;
-  daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for); dacop_(x.intptr, intptr);
+  daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for);
+  dacop_(x.intptr, intptr);
   if (debug_tpsa)
-    cout << "tps(const tps &x):                "
-	 << ", intptr = " << intptr << endl;
+    std::cout << "tps(const tps &x):                "
+	 << ", intptr = " << intptr << std::endl;
 }
 
 tps::~tps(void) {
 
   if (debug_tpsa)
-    cout << "~tps(void):                       "
-	 << ", intptr = " << intptr << endl;
+    std::cout << "~tps(void):                       "
+	 << ", intptr = " << intptr << std::endl;
 
   dadal_(intptr, 1);
 }
@@ -282,7 +283,7 @@ tps pow(const tps &a, const int n)
   else if (n > 1)
     return tps(pow(a, n-1)) *= a;
   else {
-    cout << "pow: should never get here " << n << endl;
+    std::cout << "pow: should never get here " << n << std::endl;
     exit(1);
   }
 }
@@ -475,8 +476,8 @@ tps atan(const tps &a)
         (160*pow(cst,3))/pow(1+sqr(cst),6) - (10*cst)/pow(1+sqr(cst),5))*
        pow(b, 10))/(10.*(1+sqr(cst))) + atan(cst);
   } else {
-    cout << "atan: only defined to 10th order (" << no_tps
-	 << ")" << endl;
+    std::cout << "atan: only defined to 10th order (" << no_tps
+	 << ")" << std::endl;
     exit(1);
   }
 
@@ -504,7 +505,7 @@ tps atan2(const tps &b, const tps &a) {
     if (b.cst() != 0.0)
       c = sgn(b.cst())*pi/2.0;
     else {
-      cout << "atan2: 0/0 undefined" << endl;
+      std::cout << "atan2: 0/0 undefined" << std::endl;
       exit(1);
     }
   else
@@ -921,7 +922,7 @@ tps Take(const tps &H, const int n)
   return Hn;
 }
 
-istream& operator>>(istream &is, tps &a)
+std::istream& operator>>(std::istream &is, tps &a)
 {
   int     i, n, no1, nv1;
   int     ibuf1[bufsize], ibuf2[bufsize], jj[ss_dim];
@@ -956,19 +957,19 @@ istream& operator>>(istream &is, tps &a)
     rbuf[0] = -no1;
     daimp_(rbuf, ibuf1, ibuf2, a.intptr);
   } else
-    cout << "*** illegal no (" << no_tps << ") or nv ("
-	 << ss_dim << ")" << endl;
+    std::cout << "*** illegal no (" << no_tps << ") or nv ("
+	 << ss_dim << ")" << std::endl;
   return is;
 }
 
 
-ostream& operator<<(ostream &os, const tps &a)
+std::ostream& operator<<(std::ostream &os, const tps &a)
 {
   char           name[name_len_for];
   int            i, j, ord, n, no;
   int            ibuf1[bufsize], ibuf2[bufsize], jj[ss_dim];
   double         rbuf[bufsize];
-  ostringstream  s;
+  std::ostringstream  s;
 
   const bool  debug = false;
 
@@ -978,7 +979,7 @@ ostream& operator<<(ostream &os, const tps &a)
   }
 
   daexp_(a.intptr, rbuf, ibuf1, ibuf2, name, name_len_for);
-  s << endl;
+  s << std::endl;
   
   name[10] = '\0'; i = 0;
   while ((i <= 10) && (name[i] != ' ')) {
@@ -986,60 +987,60 @@ ostream& operator<<(ostream &os, const tps &a)
   }
   n = (int) rbuf[0];
   s << ", NO = " << no_tps
-    << ", NV = " << ss_dim << ", INA = " << a.intptr << endl;
+    << ", NV = " << ss_dim << ", INA = " << a.intptr << std::endl;
 
   for (i = 1; i <= 66; i++)
     s << "-"; 
-  s << endl;
+  s << std::endl;
 
   if (header) {
-    s << endl;
+    s << std::endl;
     if (!res_basis) {
       s << "                                                        n"
-	<< endl;
+	<< std::endl;
       s << "      ====     i  i   i  i  i   i  i     i             ===="
-	<< endl;
+	<< std::endl;
       s << "      \\         1  2   3  4  5   6  7     n            \\   "
-	<< endl;
+	<< std::endl;
       s << "  P =  |   a  x  p   y  p  d  ct  p ... p  ,    |I| =  |   i"
-	<< endl;
+	<< std::endl;
       s << "      /     I     x      y         1     n             /     k"
-	<< endl;
+	<< std::endl;
       s << "      ====                                             ===="
-	<< endl;
+	<< std::endl;
       s << "       I                                               k=1"
-	<< endl;
+	<< std::endl;
     } else {
       s << "                                                          n"
-	<< endl;
+	<< std::endl;
       s << "      ====      i   i   i   i  i   i  i     i            ===="
-	<< endl;
+	<< std::endl;
       s << "      \\        + 1 - 2 + 3 - 4  5   6  7     n           \\   "
-	<< endl;
+	<< std::endl;
       s << "  P =  |   a  h   h   h   h   d  ct  p ... p  ,    |I| =  |   i"
-	<< endl;
+	<< std::endl;
       s << "      /     I  x   x   y   y          1     n            /     k"
-	<< endl;
+	<< std::endl;
       s << "      ====                                               ===="
-	<< endl;
+	<< std::endl;
       s << "       I                                                 k=1"
-	<< endl;
+	<< std::endl;
     }
   }
   
   if (n != 0) {
-    s << endl;
+    s << std::endl;
     s << "   |I|         a              ";
     for (i = 1; i <= ss_dim; i++)
       s << "  i";
-    s << endl;
+    s << std::endl;
     s << "                I              ";
     for (i = 1; i <= ss_dim; i++)
-      s << setw(3) << i;
-    s << endl;
-    s << endl;
+      s << std::setw(3) << i;
+    s << std::endl;
+    s << std::endl;
   } else
-    s << "   ALL COMPONENTS ZERO " << endl;
+    s << "   ALL COMPONENTS ZERO " << std::endl;
   for (no = 0; no <= no_tps; no++) {
     for (i = 1; i <= n; i++) {
       dehash_(no_tps, ss_dim, ibuf1[i-1], ibuf2[i-1], jj);
@@ -1048,20 +1049,20 @@ ostream& operator<<(ostream &os, const tps &a)
 	ord += jj[j];
       if (ord == no)
 	if (fabs(rbuf[i]) >= eps_tps) {
-	  s << setw(5) << ord << scientific << setw(24)
-	    << setprecision(16) << rbuf[i] << " ";
+	  s << std::setw(5) << ord << std::scientific << std::setw(24)
+	    << std::setprecision(16) << rbuf[i] << " ";
 	  for (j = 0; j < ss_dim; j++)
-	    s << setw(3) << jj[j];
-	  s << endl;
+	    s << std::setw(3) << jj[j];
+	  s << std::endl;
 	}
     }
   }
   if (n == 0) n = 1;
-  s << setw(5) << -n
-    << scientific << setw(24) << setprecision(16) << 0.0 << " ";
+  s << std::setw(5) << -n
+    << std::scientific << std::setw(24) << std::setprecision(16) << 0.0 << " ";
   for (j = 0; j < ss_dim; j++)
-    s << setw(3) << 0;
-  s << endl;
+    s << std::setw(3) << 0;
+  s << std::endl;
 
   return os << s.str();
 }
