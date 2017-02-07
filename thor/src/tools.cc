@@ -3,17 +3,17 @@
    Definitions:  Tools for lattice studies.  */
 
 
-double  b2_max = 3.0, ds_max = 0.15, scl_ds = 0.1;
+double b2_max = 3.0, ds_max = 0.15, scl_ds = 0.1;
 
-double           nu_[3], ksi_[3], rad_[3], part_numb_[3], tau_[3];
-tps              K, g, eps_[3];
-ss_vect<double>  fixed_point;
-ss_vect<tps>     Map, A0, A0_inv, A1, A1_inv, Map_res, nus_;
+double          nu_[3], ksi_[3], rad_[3], part_numb_[3], tau_[3];
+tps             K, g, eps_[3];
+ss_vect<double> fixed_point;
+ss_vect<tps>    Map, A0, A0_inv, A1, A1_inv, Map_res, nus_;
 
 
 FILE* file_read(const char file_name[])
 {
-  FILE      *fp;
+  FILE *fp;
   
   fp = fopen(file_name, "r");
   if (fp == NULL) {
@@ -26,7 +26,7 @@ FILE* file_read(const char file_name[])
 
 FILE* file_write(const char file_name[])
 {
-  FILE      *fp;
+  FILE *fp;
 
   fp = fopen(file_name, "w");
   if (fp == NULL) {
@@ -69,7 +69,7 @@ void set_to_cout(std::ofstream &fp_out)
 
 void prt_lin_map(const int n_DOF, const ss_vect<tps> &map)
 {
-  int  i, j;
+  int i, j;
 
   std::cout << std::endl;
   for (i = 0; i < 2*n_DOF; i++) {
@@ -88,7 +88,7 @@ void prt_lin_map(const int n_DOF, const ss_vect<tps> &map)
 
 double get_code(elem_type<double> &elem)
 {
-  double  code;
+  double code;
 
   switch (elem.kind) {
   case Drift:
@@ -108,7 +108,6 @@ double get_code(elem_type<double> &elem)
     code = 0e0;
     break;
   }
-
   return code;
 }
 
@@ -143,7 +142,7 @@ void prt_lat(const char *file_name)
 
 void get_dnu(const int n, const ss_vect<tps> &A, double dnu[])
 {
-  int  k;
+  int k;
 
   for (k = 0; k < n; k++) {
     dnu[k] = atan2(A[2*k][2*k+1], A[2*k][2*k])/(2.0*M_PI);
@@ -156,8 +155,8 @@ void get_ab(const ss_vect<tps> &A,
 	    double alpha[], double beta[], double dnu[],
 	    double eta[], double etap[])
 {
-  int           k;
-  ss_vect<tps>  A_Atp;
+  int          k;
+  ss_vect<tps> A_Atp;
 
   A_Atp = A*tp_S(2, A);
 
@@ -174,8 +173,8 @@ void get_ab(const ss_vect<tps> &A,
 ss_vect<tps> get_A(const double alpha[], const double beta[],
 		   const double eta[], const double etap[])
 {
-  int           k;
-  ss_vect<tps>  A, Id;
+  int          k;
+  ss_vect<tps> A, Id;
 
   Id.identity();
 
@@ -193,9 +192,9 @@ ss_vect<tps> get_A(const double alpha[], const double beta[],
 
 ss_vect<tps> get_A_CS(const int n, const ss_vect<tps> &A, double dnu[])
 {
-  int           k;
-  double        c, s;
-  ss_vect<tps>  Id, R;
+  int          k;
+  double       c, s;
+  ss_vect<tps> Id, R;
 
   Id.identity(); R.identity(); get_dnu(n, A, dnu);
   for (k = 0; k < n; k++) {
@@ -368,7 +367,7 @@ void prt_lat(const char *fname, const int n)
 
 void get_matrix(const ss_vect<tps> &Map, float **M)
 {
-  int  i, j, jj[ss_dim];
+  int i, j, jj[ss_dim];
 
   for (i = 0; i < ss_dim; i++)
     jj[i] = 0;
@@ -382,7 +381,7 @@ void get_matrix(const ss_vect<tps> &Map, float **M)
 
 void copy_mat(const int n, float **A, float **B)
 {
-  int  i, j;
+  int i, j;
 
   for (i = 1; i <= n; i++)
     for (j = 1; j <= n; j++)
@@ -392,8 +391,8 @@ void copy_mat(const int n, float **A, float **B)
 
 double Det(const int n, float **A)
 {
-  int    j, *indx;
-  float  d, **A1;
+  int   j, *indx;
+  float d, **A1;
 
   indx = ivector(1, n); A1 = matrix(1, n, 1, n);
 
@@ -409,7 +408,7 @@ double Det(const int n, float **A)
 
 void prt_mat(const int n, const double **M)
 {
-  int  i, j;
+  int i, j;
 
   std::cout << std::endl;
   std::cout << std::scientific << std::setprecision(5);
@@ -432,9 +431,9 @@ int sign(const double x)
 
 void prt_vec(const int n, const double *x)
 {
-  int  j;
+  int j;
 
-  const int  n_prt = 9;
+  const int n_prt = 9;
 
   for (j = 1; j <= n; j++) {
     std::cout << std::scientific << std::setprecision(3)
@@ -447,7 +446,7 @@ void prt_vec(const int n, const double *x)
 
 void vec_cp(const int n, double *x, double *y)
 {
-  int  j;
+  int j;
 
   for (j = 1; j <= n; j++)
     y[j] = x[j];
@@ -457,7 +456,7 @@ void vec_cp(const int n, double *x, double *y)
 double scl_prod(const int n, double *x, double *y)
 {
   int    k;
-  double  xy;
+  double xy;
 
   xy = 0.0;
   for (k = 1; k <= n; k++)
@@ -472,7 +471,7 @@ double vec_abs(const int n, double *x) { return sqrt(scl_prod(n, x, x)); }
 
 void vec_add(const int n, double *x, double *y, double *z)
 {
-  int  i;
+  int i;
 
   for (i = 1; i <= n; i++)
     z[i] = x[i] + y[i];
@@ -481,7 +480,7 @@ void vec_add(const int n, double *x, double *y, double *z)
 
 void vec_sub(const int n, double *x, double *y, double *z)
 {
-  int  i;
+  int i;
 
   for (i = 1; i <= n; i++)
     z[i] = x[i] - y[i];
@@ -490,7 +489,7 @@ void vec_sub(const int n, double *x, double *y, double *z)
 
 void lin_trans(const int m, const int n, double **A, double *x, double *y)
 {
-  int  j, k;
+  int j, k;
 
   for (j = 1; j <= m; j++) {
     y[j] = 0.0;
@@ -502,7 +501,7 @@ void lin_trans(const int m, const int n, double **A, double *x, double *y)
 
 void mat_cp(const int m, const int n, double **A, double **B)
 {
-  int  i, j;
+  int i, j;
 
   for (i = 1; i <= m; i++)
     for (j = 1; j <= n; j++)
@@ -512,7 +511,7 @@ void mat_cp(const int m, const int n, double **A, double **B)
 
 void mat_mul(const int m, const int n, double **A, double **B, double **C)
 {
-  int  i, j, k;
+  int i, j, k;
 
   for (i = 1; i <= m; i++)
     for (j = 1; j <= n; j++) {
@@ -525,7 +524,7 @@ void mat_mul(const int m, const int n, double **A, double **B, double **C)
 
 void mat_tp(const int m, const int n, double **A, double **B)
 {
-  int    i, j;
+  int i, j;
 
   for (i = 1; i <= m; i++)
     for (j = 1; j <= n; j++)
@@ -535,7 +534,7 @@ void mat_tp(const int m, const int n, double **A, double **B)
 
 void prt_mat(const int m, const int n, double **A)
 {
-  int  i, j;
+  int i, j;
 
   for (i = 1; i <= m; i++) {
     for (j = 1; j <= n; j++)
@@ -550,15 +549,15 @@ void SVD_lim(const int m, const int n, double **A, double *b,
 	     const double corr_max[], const double s_cut, double *corr0,
 	     double *dcorr)
 {
-  int     i, j, k, n_sing, max_ind = 0, sgn, max_sgn = 0, n1, mpn;
-  double  **U, **U_tp, **V, **AtU_inv, **n0_tp, n_norm;
-  double  **U_m, **V_m, **U_m_tp, **N_m;
-  double  *w, *w_m, *dUb, *Ub0, *b_m, *p_m, *b_ext;
-  double  **n_m_tp, Delta_m, **d0, max_dist, u, **C, **C_tp, s_max, v;
-  double  **A_ext;
+  int    i, j, k, n_sing, max_ind = 0, sgn, max_sgn = 0, n1, mpn;
+  double **U, **U_tp, **V, **AtU_inv, **n0_tp, n_norm;
+  double **U_m, **V_m, **U_m_tp, **N_m;
+  double *w, *w_m, *dUb, *Ub0, *b_m, *p_m, *b_ext;
+  double **n_m_tp, Delta_m, **d0, max_dist, u, **C, **C_tp, s_max, v;
+  double **A_ext;
 
-  const bool    prt = false;
-  const double  eps = 1e-10;
+  const bool   prt = false;
+  const double eps = 1e-10;
 
   mpn = m + n;
 
@@ -895,8 +894,8 @@ void SVD_lim(const int m, const int n, double **A, double *b,
 
 void SVD(const int m, const int n, double **A, double *b, double *dcorr)
 {
-  int     i, j;
-  double  *w, **U, **V;
+  int    i, j;
+  double *w, **U, **V;
 
   U = dmatrix(1, m, 1, n); w = dvector(1, n); V = dmatrix(1, n, 1, n);
 
@@ -918,8 +917,8 @@ void SVD(const int m, const int n, double **A, double *b, double *dcorr)
 void get_A_inv(const int m, const int n, float **U, float *w, float **V,
 	       float **A_inv)
 {
-  int    j, k, l;
-  float  **V1;
+  int   j, k, l;
+  float **V1;
 
   V1 = matrix(1, n, 1, n);
 
@@ -1000,8 +999,8 @@ tps BCH(const tps &a, const tps &b, const int n_ord)
    L.Corwin & F.P. Greenleaf "Representation of Nilpotent Lie Groups
    and their Applications, Part 1: Basic Theory and Examples".         */
 {
-  bool      skip;
-  int       i, j, m, twom, n, jj[100], m_ord, sgn, coeff;
+  bool skip;
+  int  i, j, m, twom, n, jj[100], m_ord, sgn, coeff;
   tps  c;
 
   c = 0.0;
@@ -1012,7 +1011,7 @@ tps BCH(const tps &a, const tps &b, const int n_ord)
       sgn = -sgn; twom = 2*m;
       for (i = 0; i < twom; i++)
 	jj[i] = 0;
-      for (i = 0; i < (int)(pow((double)(n/m+1+1), twom)+0.5); i++) {
+      for (i = 0; i < (int)(pow((double)(n/m+1+1), (double)twom)+0.5); i++) {
 	skip = false;
 	for (j = 0; j < m; j++)
 	  if (jj[2*j]+jj[2*j+1] == 0) {
@@ -1046,7 +1045,7 @@ tps BCH(const tps &a, const tps &b, const int n_ord)
 
 int get_Fnum(const char name[])
 {
-  int  i, Fnum = 0;
+  int i, Fnum = 0;
 
   for (i = 0; i < max_Family; i++)
     if (strcmp(Families[i].Name, name) == 0) {
@@ -1072,7 +1071,7 @@ int get_n_Kids(const int Fnum) { return Families[Fnum-1].n_Kids; }
 
 long int get_loc(const int Fnum, const int Knum)
 {
-  int  k = 0;
+  int k = 0;
 
   if (Fnum <= max_Family)
     if (Knum <= max_Kids)
@@ -1105,8 +1104,8 @@ double get_bn(const int Fnum, const int Knum, const int n)
 
 double get_bnL(const int Fnum, const int Knum, const int n)
 {
-  int     k;
-  double  bnL = 0.0;
+  int    k;
+  double bnL = 0.0;
 
   k = get_loc(Fnum, Knum) - 1;
   if (elem[k].L == 0.0)
@@ -1119,7 +1118,7 @@ double get_bnL(const int Fnum, const int Knum, const int n)
 
 void set_bn(const int Fnum, const int Knum, const int n, const double bn)
 {
-  int   k;
+  int k;
 
   k = get_loc(Fnum, Knum) - 1;
   elem[k].mpole->bn[n-1] = bn; elem_tps[k].mpole->bn[n-1] = bn;
@@ -1131,7 +1130,7 @@ void set_bn(const int Fnum, const int Knum, const int n, const double bn)
 
 void set_bn(const int Fnum, const int n, const double bn)
 {
-  int   j;
+  int j;
 
   for (j = 1; j <= get_n_Kids(Fnum); j++)
     set_bn(Fnum, j, n, bn);
@@ -1140,7 +1139,7 @@ void set_bn(const int Fnum, const int n, const double bn)
 
 void set_bnL(const int Fnum, const int Knum, const int n, const double bnL)
 {
-  int   k;
+  int k;
 
   k = get_loc(Fnum, Knum) - 1;
   if (elem[k].L == 0.0) {
@@ -1157,7 +1156,7 @@ void set_bnL(const int Fnum, const int Knum, const int n, const double bnL)
 
 void set_bnL(const int Fnum, const int n, const double bnL)
 {
-  int   j;
+  int j;
 
   for (j = 1; j <= get_n_Kids(Fnum); j++)
     set_bnL(Fnum, j, n, bnL);
@@ -1166,7 +1165,7 @@ void set_bnL(const int Fnum, const int n, const double bnL)
 
 void set_dbn(const int Fnum, const int Knum, const int n, const double dbn)
 {
-  int  k;
+  int k;
 
   k = get_loc(Fnum, Knum) - 1;
   elem[k].mpole->bn[n-1] += dbn; elem_tps[k].mpole->bn[n-1] += dbn;
@@ -1178,7 +1177,7 @@ void set_dbn(const int Fnum, const int Knum, const int n, const double dbn)
 
 void set_dbn(const int Fnum, const int n, const double dbn)
 {
-  int  j;
+  int j;
 
   for (j = 1; j <= get_n_Kids(Fnum); j++)
     set_dbn(Fnum, j, n, dbn);
@@ -1187,7 +1186,7 @@ void set_dbn(const int Fnum, const int n, const double dbn)
 
 void set_dbnL(const int Fnum, const int Knum, const int n, const double dbnL)
 {
-  int  k;
+  int k;
 
   k = get_loc(Fnum, Knum) - 1;
   if (elem[k].L == 0.0) {
@@ -1204,7 +1203,7 @@ void set_dbnL(const int Fnum, const int Knum, const int n, const double dbnL)
 
 void set_dbnL(const int Fnum, const int n, const double dbnL)
 {
-  int  j;
+  int j;
 
   for (j = 1; j <= get_n_Kids(Fnum); j++)
     set_dbnL(Fnum, j, n, dbnL);
@@ -1222,7 +1221,7 @@ void set_L(const int Fnum, const int Knum, const double L)
 
 void set_L(const int Fnum, const double L)
 {
-  int  j;
+  int j;
 
   for (j = 1; j <= get_n_Kids(Fnum); j++)
     set_L(Fnum, j, L);
@@ -1231,7 +1230,7 @@ void set_L(const int Fnum, const double L)
 
 void set_dL(const int Fnum, const int Knum, const double dL)
 {
-  int  k;
+  int k;
 
   k = get_loc(Fnum, Knum) - 1;
   elem[k].L += dL; elem_tps[k].L += dL;
@@ -1240,7 +1239,7 @@ void set_dL(const int Fnum, const int Knum, const double dL)
 
 void set_dL(const int Fnum, const double dL)
 {
-  int  j;
+  int j;
 
   for (j = 1; j <= get_n_Kids(Fnum); j++)
     set_dL(Fnum, j, dL);
@@ -1250,8 +1249,8 @@ void set_dL(const int Fnum, const double dL)
 void set_bn_par(const int Fnum, const int Knum, const int n, const int j)
 {
   // Set parameter dependence.
-  int     k;
-  double  bn;
+  int    k;
+  double bn;
 
   k = get_loc(Fnum, Knum) - 1;
   bn = elem_tps[k].mpole->bn[n-1].cst();
@@ -1273,8 +1272,8 @@ void set_bn_par(const int Fnum, const int n, const int j)
 void clr_bn_par(const int Fnum, const int Knum, const int n)
 {
   // Clear parameter dependence.
-  int     k;
-  double  bn;
+  int    k;
+  double bn;
 
   k = get_loc(Fnum, Knum) - 1;
   bn = elem_tps[k].mpole->bn[n-1].cst(); elem_tps[k].mpole->bn[n-1] = bn;
@@ -1284,11 +1283,53 @@ void clr_bn_par(const int Fnum, const int Knum, const int n)
 
 void clr_bn_par(const int Fnum, const int n)
 {
-  // Set parameter dependence.
-  int  k;
+  // Clear parameter dependence.
+  int k;
 
   for (k = 1; k <= get_n_Kids(Fnum); k++)
     clr_bn_par(Fnum, k, n);
+}
+
+
+void set_L_par(const int Fnum, const int Knum, const int n, const int j)
+{
+  // Set parameter dependence.
+  int    k;
+  double L;
+
+  k = get_loc(Fnum, Knum) - 1;
+  L = elem[k].L; elem_tps[k].L = tps(L, j);
+}
+
+
+void set_L_par(const int Fnum, const int n, const int j)
+{
+  // Set parameter dependence.
+  int k;
+
+  for (k = 1; k <= get_n_Kids(Fnum); k++)
+    set_L_par(Fnum, k, n, j);
+}
+
+
+void clr_L_par(const int Fnum, const int Knum, const int n)
+{
+  // Clear parameter dependence.
+  int    k;
+  double L;
+
+  k = get_loc(Fnum, Knum) - 1;
+  L = elem_tps[k].L.cst(); elem_tps[k].L = L;
+}
+
+
+void clr_L_par(const int Fnum, const int n)
+{
+  // Clear parameter dependence.
+  int k;
+
+  for (k = 1; k <= get_n_Kids(Fnum); k++)
+    clr_L_par(Fnum, k, n);
 }
 
 
@@ -1296,10 +1337,10 @@ void set_s_par(const int Fnum, const int Knum, const int j)
 {
   // Set s-dependence.
 
-  long int  k;
-  double    L;
+  long int k;
+  double   L;
 
-  const bool  prt = false;
+  const bool prt = false;
 
   // Point to multipole.
   k = get_loc(Fnum, Knum) - 1;
@@ -1342,7 +1383,7 @@ void set_s_par(const int Fnum, const int Knum, const int j)
 void set_s_par(const int Fnum, const int j)
 {
   // Set s-dependence.
-  int  k;
+  int k;
 
   for (k = 1; k <= get_n_Kids(Fnum); k++)
     set_s_par(Fnum, k, j);
@@ -1352,8 +1393,8 @@ void set_s_par(const int Fnum, const int j)
 void clr_s_par(const int Fnum, const int Knum)
 {
   // Clear s-dependence.
-  int     k;
-  double  L;
+  int    k;
+  double L;
 
   const bool  prt = false;
 
@@ -1372,7 +1413,7 @@ void clr_s_par(const int Fnum, const int Knum)
 void clr_s_par(const int Fnum)
 {
   // Clear s-dependence.
-  int  k;
+  int k;
 
   for (k = 1; k <= get_n_Kids(Fnum); k++)
     clr_s_par(Fnum, k);
@@ -1387,7 +1428,7 @@ double get_BoBrho(const int Fnum, const int Knum)
 
 void set_BoBrho(const int Fnum, const int Knum, const double BoBrho)
 {
-  int  k;
+  int k;
 
   k = get_loc(Fnum, Knum) - 1;
   elem[k].wiggler->BoBrhoV[0] = BoBrho;
@@ -1398,7 +1439,7 @@ void set_BoBrho(const int Fnum, const int Knum, const double BoBrho)
 void get_cav(const int Fnum, const int Knum,
 	     int &h_rf, double &V_rf, double &f_rf)
 {
-  int  k;
+  int k;
 
   k = get_loc(Fnum, Knum) - 1;
   h_rf = elem[k].cavity->h_rf; V_rf = elem[k].cavity->V_rf;
@@ -1423,7 +1464,7 @@ void get_Map(const ss_vect<double> &fixed_point)
 
 ss_vect<tps> get_Map(const int k)
 {
-  ss_vect<tps>  Mk;
+  ss_vect<tps> Mk;
 
   // Propagate one-turn map to location k.
   Mk.identity(); Mk.propagate(1, k); Mk = Mk*Map*Inv(Mk);
@@ -1435,11 +1476,11 @@ ss_vect<tps> get_Map(const int k)
 bool get_COD(const int i_max, const double eps, const double delta,
 	     const bool prt)
 {
-  bool             cod;
-  int              n_dim, n_iter, j, jj[ss_dim];
-  double           dx_abs = 0.0;
-  ss_vect<double>  x1, dx;
-  ss_vect<tps>     I, dx0;
+  bool            cod;
+  int             n_dim, n_iter, j, jj[ss_dim];
+  double          dx_abs = 0.0;
+  ss_vect<double> x1, dx;
+  ss_vect<tps>    I, dx0;
 
   // danot_(1);
 
@@ -1530,7 +1571,7 @@ void get_A1(const double alphax, const double betax,
 
 tps get_h(void)
 {
-  ss_vect<tps>  Map1, R;
+  ss_vect<tps> Map1, R;
 
   // Parallel transport nonlinear kick to start of lattice,
   // assumes left to right evaluation.
@@ -1548,11 +1589,11 @@ tps get_h(void)
 
 tps get_H(void)
 {
-  int           i;
-  tps           H, gn;
-  ss_vect<tps>  Id, Mn;
+  int          i;
+  tps          H, gn;
+  ss_vect<tps> Id, Mn;
 
-  const bool  prt = false;
+  const bool prt = false;
 
   // Construct generator.
   // K is in Dragt-Finn form but the generators commute.
@@ -1591,8 +1632,8 @@ ss_vect<double> get_J_phi(const ss_vect<double> ps)
 
 ss_vect<tps> get_A_inv()
 {
-  int           i;
-  ss_vect<tps>  Id, A_inv;
+  int          i;
+  ss_vect<tps> Id, A_inv;
 
   Id.identity(); A_inv = Inv(A1);
   for (i = 3; i <= no_tps; i++)
@@ -1604,8 +1645,8 @@ ss_vect<tps> get_A_inv()
 
 ss_vect<tps> get_S(const int n_DOF)
 {
-  int           j;
-  ss_vect<tps>  S;
+  int          j;
+  ss_vect<tps> S;
 
   S.zero();
   for (j = 0; j < n_DOF; j++) {
@@ -1618,8 +1659,8 @@ ss_vect<tps> get_S(const int n_DOF)
 
 ss_vect<tps> tp_S(const int n_DOF, const ss_vect<tps> &A)
 {
-  int           j, jj[ss_dim];
-  ss_vect<tps>  S;
+  int          j, jj[ss_dim];
+  ss_vect<tps> S;
 
   for (j = 1; j <= ss_dim; j++)
     jj[j-1] = (j <= 2*n_DOF)? 1 : 0;
@@ -1645,7 +1686,7 @@ bool is_h_ijklm(const int i1, const int j1, const int k1,
 double h_ijklm(const tps &h, const int i, const int j, const int k,
 	       const int l, const int m)
 {
-  int  i1, jj[ss_dim];
+  int i1, jj[ss_dim];
 
   for (i1 = 0; i1 < ss_dim; i1++)
     jj[i1] = 0;
@@ -1658,8 +1699,8 @@ double h_ijklm_scl(const tps &h, const int i, const int j, const int k,
 		   const int l, const int m,
 		   const double nu_x, const double nu_y)
 {
-  int     i1, jj[ss_dim];
-  double  scl;
+  int    i1, jj[ss_dim];
+  double scl;
 
   for (i1 = 0; i1 < ss_dim; i1++)
     jj[i1] = 0;
@@ -1699,8 +1740,8 @@ double h_ijklm_p_scl(const tps &h, const int i, const int j, const int k,
 		     const int l, const int m, const int p,
 		     const double nu_x, const double nu_y)
 {
-  int     i1, jj[ss_dim];
-  double  scl;
+  int    i1, jj[ss_dim];
+  double scl;
 
   for (i1 = 0; i1 < ss_dim; i1++)
     jj[i1] = 0;
@@ -1718,7 +1759,7 @@ double h_ijklm_p_scl(const tps &h, const int i, const int j, const int k,
 
 void get_nu_ksi(const ss_vect<tps> &nus, double nu[], double ksi[])
 {
-  int  i, jj[ss_dim];
+  int i, jj[ss_dim];
 
   nu[X_] = nus[3].cst(); nu[Y_] = nus[4].cst(); nu[Z_] = nus[5].cst();
 
@@ -1731,7 +1772,7 @@ void get_nu_ksi(const ss_vect<tps> &nus, double nu[], double ksi[])
 
 void prt_nu(const ss_vect<tps> &nus)
 {
-  double  nu[3], ksi[2];
+  double nu[3], ksi[2];
 
   const int precision = 16, width = 23;
 
@@ -1780,7 +1821,7 @@ void get_k_J(const tps &K,
 
 void prt_dnu(const tps &K)
 {
-  double  k_J2[3], k_J3[4], k_J4[5], k_delta2[2];
+  double k_J2[3], k_J3[4], k_J4[5], k_delta2[2];
 
   get_k_J(K, k_J2, k_J3, k_J4, k_delta2);
   std::cout << "K_J:         "
@@ -1804,7 +1845,7 @@ void prt_dnu(const tps &K)
 void get_alphac(double alphac[])
 {
   /* alphac = d_M[ct]/d_delta */
-  int     i;
+  int i;
 
   for (i = 0; i < n_alphac; i++)
     alphac[i] = h_ijklm(Map[ct_], 0, 0, 0, 0, i+1)/elem[n_elem-1].S;
@@ -1813,7 +1854,7 @@ void get_alphac(double alphac[])
 
 void prt_alphac()
 {
-  double  alphac[n_alphac], po2, q, pm;
+  double alphac[n_alphac], po2, q, pm;
 
   get_alphac(alphac);
   std::cout << std::endl;
@@ -1845,12 +1886,12 @@ double H_long(const double phi, const double delta,
 	      const int h_rf, const double V_rf, const double phi0,
 	      const double alphac[])
 {
-  int     i;
-  double  H;
+  int    i;
+  double H;
 
   H = V_rf/(E0*1e9)*(cos(phi+phi0)+phi*sin(phi0));
   for (i = 2; i <= n_alphac+1; i++)
-    H += 2.0*pi*h_rf*alphac[i-2]*pow(delta, i)/i;
+    H += 2.0*pi*h_rf*alphac[i-2]*pow(delta, (double)i)/i;
   return H;
 }
 
@@ -1858,8 +1899,8 @@ double H_long(const double phi, const double delta,
 void prt_H_long(const int n, const double phi_max, const double delta_max,
 		const double U0)
 {
-  int       i, j, h_rf;
-  double    V_rf, f_rf, alphac[n_alphac], phi, delta, H, delta_rf, phi0;
+  int            i, j, h_rf;
+  double         V_rf, f_rf, alphac[n_alphac], phi, delta, H, delta_rf, phi0;
   std::ofstream  os;
 
   os.open("H_long.dat", std::ios::out);
@@ -1897,7 +1938,7 @@ void prt_H_long(const int n, const double phi_max, const double delta_max,
 
 double arccos_(double x)
 {
-  double  y;
+  double y;
 
   if (x == 0e0)
     y = 1.0;
@@ -1913,9 +1954,9 @@ double arccos_(double x)
 void get_nu_symp(const ss_vect<tps> &Map, double nu[])
 {
   /* Get nu from a symplectic matrix */
-  int      i, j;
-  double   sgn, detp, detm, b, c, th, tv, b2mc;
-  float    **M;
+  int    i, j;
+  double sgn, detp, detm, b, c, th, tv, b2mc;
+  float  **M;
 
   const int n_dim = 4;
 
@@ -1957,7 +1998,7 @@ void get_nu_symp(const ss_vect<tps> &Map, double nu[])
 
 inline bool Check_Ampl(const ss_vect<double> &x)
 {
-  bool  lost;
+  bool lost;
 
   // check for inf and NaN
   if (std::isinf(x[x_]) || std::isnan(x[x_]) || std::isinf(x[y_])
@@ -1971,7 +2012,7 @@ inline bool Check_Ampl(const ss_vect<double> &x)
 
 inline bool Check_Ampl(const ss_vect<tps> &x)
 {
-  bool  lost;
+  bool lost;
 
   // check for inf and NaN
   if (std::isinf(x[x_].cst()) || std::isnan(x[x_].cst()) ||
@@ -1988,9 +2029,9 @@ bool track(const double x, const double px, const double y, const double py,
 	   const double delta, const long int n, const double f_rf,
 	   const bool prt)
 {
-  long int         i;
-  ss_vect<double>  ps;
-  std::ofstream         os;
+  long int        i;
+  ss_vect<double> ps;
+  std::ofstream   os;
 
   danot_(1);
 
@@ -2060,7 +2101,7 @@ bool map_track(const double x, const double px,
   bool          lost;
   long int      i;
   ss_vect<tps>  ps;
-  std::ofstream      os;
+  std::ofstream os;
 
   danot_(1);
 
@@ -2136,8 +2177,8 @@ void get_r_stable(double &r, const double phi, const double delta,
 		  const long int n, const double eps, bool map)
 {
   /* Binary search for dynamical aperture. */
-  bool    lost = false;
-  double  r_min = 0.0, r_max = r;
+  bool   lost = false;
+  double r_min = 0.0, r_max = r;
 
   while (!lost ) {
     if (!map)
@@ -2166,8 +2207,8 @@ void get_r_stable(double &r, const double phi, const double delta,
 ss_vect<tps> get_eta(const long int k)
 {
   // parameter dependance for the periodic solution
-  int           i;
-  ss_vect<tps>  eta;
+  int          i;
+  ss_vect<tps> eta;
 
   eta.zero();
   for (i = 1; i < ps_dim; i++)
@@ -2185,7 +2226,7 @@ ss_vect<tps> get_eta(const long int k)
 
 void get_ab(double alpha[], double beta[], const long int k)
 {
-  ss_vect<tps>  a1, A1_A1tp;
+  ss_vect<tps> a1, A1_A1tp;
 
   a1 = A1;
 //  a1 += fixed_point;
@@ -2203,10 +2244,10 @@ void get_ab(double alpha[], double beta[], const long int k)
 
 ss_vect<tps> get_A1_CS(const ss_vect<tps> &A1, tps dnu[])
 {
-  int           k;
-  double        c, s;
-  tps           a11, a12;
-  ss_vect<tps>  Id, R;
+  int          k;
+  double       c, s;
+  tps          a11, a12;
+  ss_vect<tps> Id, R;
 
   Id.identity(); R.identity();
   for (k = 0; k <= 1; k++) {
@@ -2236,7 +2277,7 @@ void get_ab(tps ab[], tps nu[], const long int loc)
 
   */
 
-  ss_vect<tps>  A1_prm, A1_A1tp;
+  ss_vect<tps> A1_prm, A1_A1tp;
 
   A1_prm = LieExp(g, A1);
 
@@ -2254,7 +2295,7 @@ void get_ab(tps ab[], tps nu[], const long int loc)
 
 void get_ab(tps ab[], tps dnu[], const long int k1, const long int k2)
 {
-  ss_vect<tps>  A1_prm, A1_A1tp;
+  ss_vect<tps> A1_prm, A1_A1tp;
 
   A1_prm = LieExp(g, A1);
 
@@ -2272,8 +2313,8 @@ void get_ab(tps ab[], tps dnu[], const long int k1, const long int k2)
 
 void get_nu(double nu[], const long int k)
 {
-  double        a11, a12;
-  ss_vect<tps>  a1;
+  double       a11, a12;
+  ss_vect<tps> a1;
 
   a1 = A1;
 
@@ -2295,12 +2336,12 @@ void bend_cal(const int Fnum1)
 {
   /* Assumes a thin dipole has been inserted up- and down stream
      of the dipole. */
-  int           k, n, Fnum0, Fnum2;
-  double        b0L[2], A[2][2], A_inv[2][2], det;
-  ss_vect<tps>  x;
+  int          k, n, Fnum0, Fnum2;
+  double       b0L[2], A[2][2], A_inv[2][2], det;
+  ss_vect<tps> x;
 
-  const int     n_max = 100;
-  const double  eps   = 1e-15;
+  const int    n_max = 100;
+  const double eps   = 1e-15;
 
   std::cout << std::endl;
   std::cout << "bend_cal" << std::endl;
@@ -2353,8 +2394,8 @@ void bend_cal(const int Fnum1)
 
 double get_bn_s(const int Fnum, const int Knum, const int n)
 {
-  long int  k;
-  double    bn;
+  long int k;
+  double   bn;
 
   if (Fnum > 0)
     bn = get_bn(Fnum, Knum, n);
@@ -2382,8 +2423,8 @@ double get_bn_s(const int Fnum, const int Knum, const int n)
 
 double get_bnL_s(const int Fnum, const int Knum, const int n)
 {
-  long int  k;
-  double    bnL;
+  long int k;
+  double   bnL;
 
   if (Fnum > 0)
     bnL = get_bnL(Fnum, Knum, n);
@@ -2411,7 +2452,7 @@ double get_bnL_s(const int Fnum, const int Knum, const int n)
 
 void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
 {
-  long int  k;
+  long int k;
 
   if (Fnum > 0)
     set_dbn(Fnum, Knum, n, dbn);
@@ -2452,7 +2493,7 @@ void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
 
 void set_dbn_s(const int Fnum, const int n, const double dbn)
 {
-  int  k;
+  int k;
 
   for (k = 1; k <= get_n_Kids(abs(Fnum)); k++)
     set_dbn_s(Fnum, k, n, dbn);
@@ -2469,11 +2510,11 @@ void fit_alpha(const double alpha0_x, const double beta0_x,
   double        **A, *b, *b2_lim, *b2, *db2, step;
   double        dalpha1[2];
   tps           ab[2], nu[2];
-  std::ofstream      quad_out;
+  std::ofstream quad_out;
 
-  const bool    debug = true;
-  const int     m     = 2;
-  const double  s_cut = 1e-5, step0 = 0.7;
+  const bool   debug = true;
+  const int    m     = 2;
+  const double s_cut = 1e-5, step0 = 0.7;
 
   b = dvector(1, m); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -2606,11 +2647,11 @@ void fit_beta(const double alpha0_x, const double beta0_x,
   double        **A, *b, *b2_lim, *b2, *db2, step;
   double        dalpha1[2], dbeta1[2];
   tps           ab[2], nu[2];
-  std::ofstream      quad_out;
+  std::ofstream quad_out;
 
-  const bool    debug = true;
-  const int     m     = 2;
-  const double  s_cut = 1e-5, step0 = 0.7;
+  const bool   debug = true;
+  const int    m     = 2;
+  const double s_cut = 1e-5, step0 = 0.7;
 
   b = dvector(1, m); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -2750,11 +2791,11 @@ void fit_alpha_beta(const double alpha0_x, const double beta0_x,
   double        **A, *b, *b2_lim, *b2, *db2, step;
   double        dalpha1[2], dbeta1[2];
   tps           ab[2], nu[2];
-  std::ofstream      quad_out;
+  std::ofstream quad_out;
 
-  const bool    debug = true;
-  const int     m     = 4;
-  const double  s_cut = 1e-5, step0 = 0.5, scl_beta = scl_beta_mp*1e-3;
+  const bool   debug = true;
+  const int    m     = 4;
+  const double s_cut = 1e-5, step0 = 0.5, scl_beta = scl_beta_mp*1e-3;
 
   b = dvector(1, m); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -2893,10 +2934,10 @@ void fit_tune(const double nu_x, const double nu_y,
   // Periodic solution: [nu_x, nu_y, beta_x, beta_y]
 
   int           i, j;
-  double         **A, *b, *b2_lim, *b2, *db2, step;
+  double        **A, *b, *b2_lim, *b2, *db2, step;
   double        nu_fract[2], dnu[2];
   ss_vect<tps>  nus, dnus;
-  std::ofstream      quad_out;
+  std::ofstream quad_out;
 
   const bool    debug = true;
   const int     m     = 2;
@@ -3055,14 +3096,14 @@ void fit_tune(const double nu_x, const double nu_y,
   double        dalpha1[2], dbeta1[2], dbeta2[2], dbeta3[2], db2_max;
   tps           ab1[2], ab2[2], ab3[2], dnu1[2], dnu2[2], dnu3[2];
   ss_vect<tps>  nus, dnus, Mk;
-  std::ofstream      quad_out;
+  std::ofstream quad_out;
 
-  const bool    debug  = true;
-  const int     m      = 10;
-  const double  s_cut  = 1e-4, step0 = 0.7;
-  const double  scl_beta_mp_y = scl_beta_mp*1e-3;
-  const double  scl_beta_ss = scl_beta_mp*1e-3, scl_beta_ls = scl_beta_mp*1e-3;
-  const double  db2_tol = 1e-4;
+  const bool   debug  = true;
+  const int    m      = 10;
+  const double s_cut  = 1e-4, step0 = 0.7;
+  const double scl_beta_mp_y = scl_beta_mp*1e-3;
+  const double scl_beta_ss = scl_beta_mp*1e-3, scl_beta_ls = scl_beta_mp*1e-3;
+  const double db2_tol = 1e-4;
 
   b = dvector(1, m); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -3300,14 +3341,14 @@ void fit_tune_SLS(const double nu_x, const double nu_y,
   tps           ab1[2], ab2[2], ab3[2], ab4[2];
   tps           dnu1[2], dnu2[2], dnu3[2], dnu4[2];
   ss_vect<tps>  nus, dnus, Mk;
-  std::ofstream      quad_out;
+  std::ofstream quad_out;
 
-  const bool    debug  = true;
-  const int     m      = 14;
-  const double  s_cut  = 1e-5, step0 = 0.7;
-  const double  scl_beta_mp_y = scl_beta_mp*1e-3;
-  const double  scl_beta_ss = scl_beta_mp*1e-3, scl_beta_ls = scl_beta_mp*1e-3;
-  const double  scl_beta_ms = scl_beta_mp*1e-3;
+  const bool   debug  = true;
+  const int    m      = 14;
+  const double s_cut  = 1e-5, step0 = 0.7;
+  const double scl_beta_mp_y = scl_beta_mp*1e-3;
+  const double scl_beta_ss = scl_beta_mp*1e-3, scl_beta_ls = scl_beta_mp*1e-3;
+  const double scl_beta_ms = scl_beta_mp*1e-3;
 
   b = dvector(1, m); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -3528,11 +3569,13 @@ void fit_tune_SLS(const double nu_x, const double nu_y,
 	else {
 	  k = get_loc(abs(b2s[i-1]), j) - 1;
 	  quad_out << std::fixed << std::setprecision(7) 
-		   << std::setw(6) << get_Name(elem[k-1].Fnum) << "(" << j << ") = "
+		   << std::setw(6) << get_Name(elem[k-1].Fnum)
+		   << "(" << j << ") = "
 		   << std::setw(11) << get_L(elem[k-1].Fnum, j)
 		   << std::setw(3) << -Quad << std::endl;
 	  quad_out << std::fixed << std::setprecision(7) 
-		   << std::setw(6) << get_Name(elem[k+1].Fnum) << "(" << j << ") = "
+		   << std::setw(6) << get_Name(elem[k+1].Fnum)
+		   << "(" << j << ") = "
 		   << std::setw(11) << get_L(elem[k+1].Fnum, j)
 		   << std::setw(3) << -Quad << std::endl;
 	}
@@ -3550,8 +3593,8 @@ double get_diff(const double alpha1[], const double beta1[],
 		const double dnu12[], const long int locs[],
 		tps ab2[], tps nu[], const bool prt)
 {
-  double  dalpha[2], dbeta[2], dnu[2], diff;
-  tps     ab1[2];
+  double dalpha[2], dbeta[2], dnu[2], diff;
+  tps    ab1[2];
 
 
   get_A1(alpha1[X_], beta1[X_], alpha1[Y_], beta1[Y_]); get_ab(ab1, nu, 0);
@@ -3603,11 +3646,11 @@ void fit_femto_SLS(const double dnu_x, const double dnu_y,
   double        **A, *b, *b2_lim, *b2, *db2, step;
   double        alpha1[2], beta1[2], dnu12[2], diff;
   tps           ab2[2], nu[2];
-  std::ofstream      quad_out;
+  std::ofstream quad_out;
 
-  const bool    debug  = true;
-  const int     m      = 6;
-  const double  s_cut  = 1e-5, step0 = 0.7;
+  const bool   debug  = true;
+  const int    m      = 6;
+  const double s_cut  = 1e-5, step0 = 0.7;
 
   b = dvector(1, m); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -3754,11 +3797,11 @@ void fit_dnu_SLS(const double nu_x,
   double        dalpha1[2], dbeta1[2], dalpha2[2], dbeta2[2], beta2[2];
   tps           ab1[2], ab2[2], dnu1[2], dnu2[2];
   ss_vect<tps>  nus;
-  std::ofstream      quad_out, A_out;
+  std::ofstream quad_out, A_out;
 
-  const bool    debug  = true;
-  const int     m      = 7;
-  const double  s_cut  = 1e-5, step0 = 0.7;
+  const bool   debug  = true;
+  const int    m      = 7;
+  const double s_cut  = 1e-5, step0 = 0.7;
 
   b = dvector(1, m); w = dvector(1, n_b2); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -4001,11 +4044,11 @@ void fit_chrom(const double ksi_x, const double ksi_y,
   float         **A, *b, *w, **U, **V, *db3;
   double        ksi[2], dksi[2], s_max;
   ss_vect<tps>  nus;
-  std::ofstream      sext_out;
+  std::ofstream sext_out;
 
-  const bool    debug = false;
-  const int     m     = 2; // (ksi_x, ksi_y)
-  const double  s_cut = 1e-7;
+  const bool   debug = false;
+  const int    m     = 2; // (ksi_x, ksi_y)
+  const double s_cut = 1e-7;
 
   b = vector(1, m); w = vector(1, n_b3); db3 = vector(1, n_b3);
   A = matrix(1, m, 1, n_b3); U = matrix(1, m, 1, n_b3);
@@ -4140,12 +4183,12 @@ void fit_chrom1(const double ksi_x, const double ksi_y,
   double        ksi[2], dksi[2], h_10002, h_20001, h_00201;
   tps           h, h_re, h_im;
   ss_vect<tps>  nus;
-  std::ofstream      sext_out;
+  std::ofstream sext_out;
 
-  const bool    debug = false;
-  const int     m     = 5; // (ksi_x, ksi_y)
-  const double  scl_beta2 = 1e-3, scl_eta2 = 1e-3, b3L_max = 3.5;
-  const double  s_cut = 1e-10;
+  const bool   debug = false;
+  const int    m     = 5; // (ksi_x, ksi_y)
+  const double scl_beta2 = 1e-3, scl_eta2 = 1e-3, b3L_max = 3.5;
+  const double s_cut = 1e-10;
 
   b = dvector(1, m); db3 = dvector(1, n_b3);
   b3 = dvector(1, n_b3); b3_max = dvector(1, n_b3);
@@ -4277,11 +4320,11 @@ void fit_disp(const double eta1_x, const int k1,
   double        s_max, deta1, deta2;
   tps           eta1, eta2;
   ss_vect<tps>  Mk;
-  std::ofstream      quad_out;
+  std::ofstream quad_out;
 
-  const bool    debug = true;
-  const int     m     = 2; // periodic solution: eta_x
-  const double  s_cut = 1e-7, step = 0.7;
+  const bool   debug = true;
+  const int    m     = 2; // periodic solution: eta_x
+  const double s_cut = 1e-7, step = 0.7;
 
   b = vector(1, m); w = vector(1, n_b2);
   b2 = vector(1, n_b2); db2 = vector(1, n_b2);
@@ -4435,11 +4478,11 @@ void fit_DBA(const double nu_x, const double nu_y, const long int k,
   double        nu_fract[2], dnu[2], dalpha1[2], dalpha2[2];
   tps           ab1[2], ab2[2], dnu1[2];
   ss_vect<tps>  nus, dnus, eta;
-  std::ofstream      quad_out;
+  std::ofstream quad_out;
 
-  const bool    debug = true;
-  const int     m     = 6;
-  const double  s_cut = 1e-7, step0 = 0.7, scl_eta = 1e3, scl_etap = 1e3;
+  const bool   debug = true;
+  const int    m     = 6;
+  const double s_cut = 1e-7, step0 = 0.7, scl_eta = 1e3, scl_etap = 1e3;
 
   b = dvector(1, m); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
@@ -4604,8 +4647,8 @@ double get_dynap(const double r, const double delta, const int n,
      Assumes mid-plane symmetry.                    */
 
   int           i, j;
-  double        r1, phi, x0[2], x1[2], x2[2], DA, alpha[2], beta[2];
-  std::ofstream      os;
+  double        r1, phi, x0[2]={0e0, 0e0}, x1[2], x2[2], DA, alpha[2], beta[2];
+  std::ofstream os;
 
   os.open("dynap.dat", std::ios::out);
   os << "# Dynamical Aperture:" << std::endl;
@@ -4660,8 +4703,8 @@ double get_dynap(const double r, const double delta, const int n,
 
 void get_rad(char *cav_name, double I_beam)
 {
-  int     j, h_rf, jj[ss_dim];
-  double  V_rf, f_rf, U0, phi0, delta_rf, alpha_c;
+  int    j, h_rf, jj[ss_dim];
+  double V_rf, f_rf, U0, phi0, delta_rf, alpha_c;
 
   get_cav(get_Fnum(cav_name), 1, h_rf, V_rf, f_rf);
   U0 = 1e9*E0*dE; phi0 = fabs(asin(U0/V_rf));
@@ -4689,9 +4732,9 @@ void get_rad(char *cav_name, double I_beam)
 
 void get_emittance(void)
 {
-  int           i;
-  double        U0, C;
-  double        alpha_c, alpha_z, beta_z, gamma_z, sigma_s, sigma_delta;
+  int    i;
+  double U0, C;
+  double alpha_c, alpha_z, beta_z, gamma_z, sigma_s, sigma_delta;
 
 //  danot_(2);
 

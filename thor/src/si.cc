@@ -30,7 +30,7 @@ void ini_si(void)
   d_coeff1 = 1.0/(2.0*(2.0-pow(2.0, 1.0/3.0))); d_coeff2 = 0.5 - d_coeff1;
   k_coeff1 = 2.0*d_coeff1; k_coeff2 = 1.0 - 2.0*k_coeff1;
   // compute radiaton coefficients
-  cl_rad = C_gamma*pow(E0, 3)/(2.0*pi);
+  cl_rad = C_gamma*pow(E0, 3e0)/(2.0*pi);
 //  q_fluct = 3.0*cu*c_gamma*hbc*pow(E0, 5)/(4.0*pi*pow(xmc2, 3.0));
   q_fluct =
     3.0*C_u*C_gamma*1e-9*h_bar*clight/(4.0*M_PI*cube(1e-9*m_e))*pow(E0, 5.0);

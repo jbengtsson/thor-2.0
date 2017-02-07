@@ -447,34 +447,35 @@ tps atan(const tps &a)
   if (no_tps <= 10) {
     cst = a.cst(); b = a - cst;
 
-    c = b/(1+sqr(cst)) - (cst*sqr(b))/pow(1+sqr(cst),2) + 
-      ((-1 + 3*sqr(cst))*pow(b, 3))/(3.*pow(1+sqr(cst),3)) + 
-      (((-8*pow(cst,3))/pow(1+sqr(cst),3) + (4*cst)/pow(1+sqr(cst),2))*
-       pow(b, 4))/(4.*(1+sqr(cst))) + 
-      (((16*pow(cst,4))/pow(1+sqr(cst),4) - 
-        (12*sqr(cst))/pow(1+sqr(cst),3) + pow(1+sqr(cst),-2))*
-       pow(b, 5))/(5.*(1+sqr(cst))) + 
-      (((-32*pow(cst,5))/pow(1+sqr(cst),5) + 
-        (32*pow(cst,3))/pow(1+sqr(cst),4) - (6*cst)/pow(1+sqr(cst),3))*
-       pow(b, 6))/(6.*(1+sqr(cst))) + 
-      (((64*pow(cst,6))/pow(1+sqr(cst),6) - 
-        (80*pow(cst,4))/pow(1+sqr(cst),5) + 
-        (24*sqr(cst))/pow(1+sqr(cst),4) - pow(1+sqr(cst),-3))*
-       pow(b, 7))/(7.*(1+sqr(cst))) + 
-      (((-128*pow(cst,7))/pow(1+sqr(cst),7) + 
-        (192*pow(cst,5))/pow(1+sqr(cst),6) - 
-        (80*pow(cst,3))/pow(1+sqr(cst),5) + (8*cst)/pow(1+sqr(cst),4))*
-       pow(b, 8))/(8.*(1+sqr(cst))) + 
-      (((256*pow(cst,8))/pow(1+sqr(cst),8) - 
-        (448*pow(cst,6))/pow(1+sqr(cst),7) + 
-        (240*pow(cst,4))/pow(1+sqr(cst),6) - 
-        (40*sqr(cst))/pow(1+sqr(cst),5) + pow(1+sqr(cst),-4))*
-       pow(b, 9))/(9.*(1+sqr(cst))) + 
-      (((-512*pow(cst,9))/pow(1+sqr(cst),9) + 
-        (1024*pow(cst,7))/pow(1+sqr(cst),8) - 
-        (672*pow(cst,5))/pow(1+sqr(cst),7) + 
-        (160*pow(cst,3))/pow(1+sqr(cst),6) - (10*cst)/pow(1+sqr(cst),5))*
-       pow(b, 10))/(10.*(1+sqr(cst))) + atan(cst);
+    c = b/(1+sqr(cst)) - (cst*sqr(b))/pow(1+sqr(cst), 2e0) + 
+      ((-1 + 3*sqr(cst))*pow(b, 3e0))/(3.*pow(1+sqr(cst), 3e0)) + 
+      (((-8*pow(cst, 3e0))/pow(1+sqr(cst), 3e0) + (4*cst)/pow(1+sqr(cst), 2e0))*
+       pow(b, 4e0))/(4.*(1+sqr(cst))) + 
+      (((16*pow(cst, 4e0))/pow(1+sqr(cst), 4e0) - 
+        (12*sqr(cst))/pow(1+sqr(cst), 3e0) + pow(1+sqr(cst), -2e0))*
+       pow(b, 5e0))/(5.*(1+sqr(cst))) + 
+      (((-32*pow(cst, 5e0))/pow(1+sqr(cst), 5e0) + 
+        (32*pow(cst, 3e0))/pow(1+sqr(cst), 4e0) - (6*cst)/pow(1+sqr(cst), 3e0))*
+       pow(b, 6e0))/(6.*(1+sqr(cst))) + 
+      (((64*pow(cst, 6e0))/pow(1+sqr(cst), 6e0) - 
+        (80*pow(cst, 4e0))/pow(1+sqr(cst), 5e0) + 
+        (24*sqr(cst))/pow(1+sqr(cst), 4e0) - pow(1+sqr(cst), -3e0))*
+       pow(b, 7e0))/(7.*(1+sqr(cst))) + 
+      (((-128*pow(cst, 7e0))/pow(1+sqr(cst), 7e0) + 
+        (192*pow(cst, 5e0))/pow(1+sqr(cst), 6e0) - 
+        (80*pow(cst, 3e0))/pow(1+sqr(cst), 5e0) + (8*cst)/pow(1+sqr(cst), 4e0))*
+       pow(b, 8e0))/(8.*(1+sqr(cst))) + 
+      (((256*pow(cst, 8e0))/pow(1+sqr(cst), 8e0) - 
+        (448*pow(cst, 6e0))/pow(1+sqr(cst), 7e0) + 
+        (240*pow(cst, 4e0))/pow(1+sqr(cst), 6e0) - 
+        (40*sqr(cst))/pow(1+sqr(cst), 5e0) + pow(1+sqr(cst), -4e0))*
+       pow(b, 9e0))/(9.*(1+sqr(cst))) + 
+      (((-512*pow(cst, 9e0))/pow(1+sqr(cst), 9e0) + 
+        (1024*pow(cst, 7e0))/pow(1+sqr(cst), 8e0) - 
+        (672*pow(cst, 5e0))/pow(1+sqr(cst), 7e0) + 
+        (160*pow(cst, 3e0))/pow(1+sqr(cst), 6e0)
+	- (10*cst)/pow(1+sqr(cst), 5e0))*
+       pow(b, 10e0))/(10.*(1+sqr(cst))) + atan(cst);
   } else {
     std::cout << "atan: only defined to 10th order (" << no_tps
 	 << ")" << std::endl;
@@ -981,7 +982,7 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
   daexp_(a.intptr, rbuf, ibuf1, ibuf2, name, name_len_for);
   s << std::endl;
   
-  name[10] = '\0'; i = 0;
+  name[name_len_for-1] = '\0'; i = 0;
   while ((i <= 10) && (name[i] != ' ')) {
     s << name[i]; i++;
   }

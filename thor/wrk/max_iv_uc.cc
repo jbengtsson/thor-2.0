@@ -155,6 +155,7 @@ void fit_emit(std::vector<int> &b2s, const double eps_x,
 	      const double step)
 {
   // Optimize unit cell for hor. emittance.
+  // 
   const double scl_nu = 1e1, scl_ksi = 1e-2, scl_eps = 1e1;
 
   const int m_max = 8;
@@ -229,7 +230,6 @@ void fit_emit(std::vector<int> &b2s, const double eps_x,
       set_dbn_s(b2s[i-1], Quad, step*db2[i]);
       b2[i] = get_bn_s(b2s[i-1], 1, Quad);
       db2_max = max(fabs(step*db2[i]), db2_max);
-
       printf("%10.5f", b2[i]);
     }
     printf("\n");
@@ -439,7 +439,7 @@ void get_b2s_1(std::vector<int> &b2_Fams)
 
   b2_Fams.push_back(get_Fnum("bh"));
   b2_Fams.push_back(get_Fnum("qf"));
-  b2_Fams.push_back(-get_Fnum("bh"));
+  // b2_Fams.push_back(-get_Fnum("bh"));
   b2_Fams.push_back(-get_Fnum("qf"));
 }
 
@@ -534,7 +534,7 @@ int main(int argc, char *argv[])
     get_b2s_1(b2_Fams);
     ds_max = 0.2; scl_ds = 0.01;
 
-    fit_emit(b2_Fams, eps_x, nu[X_], nu[Y_], 100.0, 1e-4, 1e-6, 0.5);
+    fit_emit(b2_Fams, eps_x, nu[X_], nu[Y_], 100.0, 1e-4, 1e-4, 0.8);
   }
 
   if (false) {
