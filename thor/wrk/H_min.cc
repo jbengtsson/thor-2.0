@@ -18,7 +18,7 @@ int          check_range, adj_tune, adj_chrom, n_steps;
 long int     beta_loc1, beta_loc2, beta_loc3;
 double       Jx, Jy, delta, ksi1[2], nu0_x, nu0_y, eps_nu, chi2;
 double       beta1[2], beta2[2], beta3[2];
-double       bnL_max[mpole_max], eps_ksi, *bns;
+double       bnL_max[mpole_max+1], eps_ksi, *bns;
 double       scl_dnu, scl_ksi_nl, scl_dnuddelta, step, scl_dnudJ;
 double       nu_x_min, nu_x_max, nu_y_min, nu_y_max;
 ss_vect<tps> Id_scl;
