@@ -14,13 +14,17 @@ struct param_type {
 private:
 
 public:
-  int                 n_prm, nKid;
+  int                 n_prm;
   double              bn_tol, svd_cut, step;
   std::vector<double> bn_max, bn_scl;
   std::vector<int>    Fnum, n;
 
   void add_prm(const std::string Fname, const int n,
 	       const double bn_max, const double bn_scl);
+  void ini_prm(double *bn, double *bn_lim);
+  void set_prm(const int k) const;
+  void clr_prm(const int k) const;
+  void set_bn(double *db2, double *b2, double &db2_max) const;
 };
 
 
@@ -31,6 +35,77 @@ void param_type::add_prm(const std::string Fname, const int n,
   this->n.push_back(n);
   this->bn_max.push_back(bn_max);
   this->bn_scl.push_back(bn_scl);
+  n_prm = Fnum.size();
+}
+
+
+void param_type::ini_prm(double *bn, double *bn_lim)
+{
+  int i;
+
+  n_prm = Fnum.size();
+  for (i = 1; i <= n_prm; i++) {
+    bn_lim[i] = bn_max[i-1];
+    if (n[i-1] > 0)
+      bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
+    else if (n[i-1] == -1)
+      bn[i] = get_L(Fnum[i-1], 1);
+    else if (n[i-1] == -2)
+      bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
+  }
+}
+
+
+void param_type::set_prm(const int k) const
+{
+  int j;
+
+  for (j = 1; j <= get_n_Kids(Fnum[k]); j++)
+    if (n[k] > 0)
+      set_bn_par(Fnum[k], j, n[k], 7);
+    else if (n[k] == -1)
+      set_L_par(Fnum[k], j, 7);
+    else if (n[k] == -2)
+      set_s_par(Fnum[k], j, 7);
+}
+
+
+void param_type::clr_prm(const int k) const
+{
+  int j;
+
+  for (j = 1; j <= get_n_Kids(Fnum[k]); j++)
+    if (n[k] > 0)
+      clr_bn_par(Fnum[k], j, n[k]);
+    else if (n[k] == -1)
+      clr_L_par(Fnum[k], j);
+    else if (n[k] == -2)
+      clr_s_par(Fnum[k], j);
+}
+
+
+void param_type::set_bn(double *db2, double *b2, double &db2_max) const
+{
+  int i;
+
+  printf("\n");
+  db2_max = 0e0;
+  for (i = 1; i <= n_prm; i++) {
+    db2[i] *= step*bn_scl[i-1];
+    if (n[i-1] > 0) {
+      set_dbn(Fnum[i-1], n[i-1], db2[i]);
+      b2[i] = get_bn(Fnum[i-1], 1, n[i-1]);
+    } else if (n[i-1] == -1) {
+      set_dL(Fnum[i-1], db2[i]);
+      b2[i] = get_L(Fnum[i-1], 1);
+    } else if (n[i-1] == -2) {
+      set_dbn_s(-Fnum[i-1], n[i-1], db2[i]);
+      b2[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
+    }
+    db2_max = max(fabs(db2[i]), db2_max);
+    printf("%10.5f", b2[i]);
+  }
+  printf("\n");
 }
 
 
@@ -188,32 +263,20 @@ void fit_emit(param_type &b2_prms, const double eps_x,
   tps          eps1_x;
   ss_vect<tps> nus;
 
-  n_b2 = b2_prms.Fnum.size();
+  n_b2 = b2_prms.n_prm;
+  printf("n_prm = %d\n", b2_prms.n_prm);
 
-  b = dvector(1, m_max); b2_lim = dvector(1, n_b2);
-  b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
-  A = dmatrix(1, m_max, 1, n_b2);
+  b = dvector(1, m_max); b2_lim = dvector(1, n_b2); b2 = dvector(1, n_b2);
+  db2 = dvector(1, n_b2); A = dmatrix(1, m_max, 1, n_b2);
 
-  for (i = 1; i <= n_b2; i++) {
-    b2_lim[i] = b2_prms.bn_max[i-1];
-    if (b2_prms.n[i-1] > 0)
-      b2[i] = get_bn(b2_prms.Fnum[i-1], 1, b2_prms.n[i-1]);
-    else
-      b2[i] = get_L(b2_prms.Fnum[i-1], 1);
-  }
+  b2_prms.ini_prm(b2, b2_lim);
 
   danot_(2);
 
   do {
     printf("\n");
     for (i = 1; i <= n_b2; i++) {
-      for (j = 1; j <= get_n_Kids(b2_prms.Fnum[i-1]); j++)
-	if (b2_prms.n[i-1] > 0)
-	  set_bn_par(b2_prms.Fnum[i-1], j, b2_prms.n[i-1], 7);
-	else if (b2_prms.n[i-1] == -1)
-	  set_L_par(b2_prms.Fnum[i-1], j, 7);
-	else if (b2_prms.n[i-1] == -2)
-	  set_s_par(b2_prms.Fnum[i-1], j, 7);
+      b2_prms.set_prm(i-1);
 
       get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
 
@@ -226,17 +289,10 @@ void fit_emit(param_type &b2_prms, const double eps_x,
       A[++m][i] = scl_ksi*h_ijklm_p(nus[3], 0, 0, 0, 0, 1, 7);
       A[++m][i] = scl_ksi*h_ijklm_p(nus[4], 0, 0, 0, 0, 1, 7);
 
-      if (b2_prms.n[i-1] < 0)
-	for (j = 1; j <= m; j++)
-	  A[j][i] *= b2_prms.bn_scl[i-1];
+      for (j = 1; j <= m; j++)
+	A[j][i] *= b2_prms.bn_scl[i-1];
 
-      for (j = 1; j <= get_n_Kids(b2_prms.Fnum[i-1]); j++)
-	if (b2_prms.n[i-1] > 0)
-	  clr_bn_par(b2_prms.Fnum[i-1], j, b2_prms.n[i-1]);
-	else if (b2_prms.n[i-1] == -1)
-	  clr_L_par(b2_prms.Fnum[i-1], j);
-	else if (b2_prms.n[i-1] == -2)
-	  clr_s_par(b2_prms.Fnum[i-1], j);
+      b2_prms.clr_prm(i-1);
     }
 
     m = 0;
@@ -250,38 +306,50 @@ void fit_emit(param_type &b2_prms, const double eps_x,
 
     SVD_lim(m, n_b2, A, b, b2_lim, b2_prms.svd_cut, b2, db2);
 
-    printf("\n");
-    db2_max = 0e0;
-    for (i = 1; i <= n_b2; i++) {
-      db2[i] *= b2_prms.step*b2_prms.bn_scl[i-1];
-      if (b2_prms.n[i-1] > 0) {
-	set_dbn(b2_prms.Fnum[i-1], b2_prms.n[i-1], db2[i]);
-	b2[i] = get_bn(b2_prms.Fnum[i-1], 1, b2_prms.n[i-1]);
-      } else if (b2_prms.n[i-1] == -1) {
-	set_dL(b2_prms.Fnum[i-1], db2[i]);
-	b2[i] = get_L(b2_prms.Fnum[i-1], 1);
-      } else if (b2_prms.n[i-1] == -2) {
-	set_dbn_s(b2_prms.Fnum[i-1], b2_prms.n[i-1], db2[i]);
-	b2[i] = get_bn_s(b2_prms.Fnum[i-1], 1, b2_prms.n[i-1]);
-      }
-      db2_max = max(fabs(db2[i]), db2_max);
-      printf("%10.5f", b2[i]);
-    }
-    printf("\n");
+    b2_prms.set_bn(db2, b2, db2_max);
   } while (db2_max > b2_prms.bn_tol);
 
-  free_dvector(b, 1, m_max);
-  free_dvector(b2_lim, 1, n_b2); free_dvector(b2, 1, n_b2);
-  free_dvector(db2, 1, n_b2);
+  free_dvector(b, 1, m_max); free_dvector(b2_lim, 1, n_b2);
+  free_dvector(b2, 1, n_b2); free_dvector(db2, 1, n_b2);
   free_dmatrix(A, 1, m_max, 1, n_b2);
 }
 
 
-void fit_match(std::vector<int> &b2s,
+void prt_match(const param_type &b2_prms, const double *b2)
+{
+  double l4, l5h, l6, l7h, l8;
+  FILE *outf;
+
+  std::string file_name = "match.out";
+
+  outf = file_write(file_name.c_str());
+
+  fprintf(outf, "bm:  bending, l = 0.166667, t = 0.5, k = %8.5f, t1 = 0.0"
+	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n", b2[1]);
+  fprintf(outf, "qfe: quadrupole, l = 0.15, k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[2]);
+  fprintf(outf, "qde: quadrupole, l = 0.1,  k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[3]);
+  fprintf(outf, "qm:  quadrupole, l = 0.15, k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[4]);
+
+  l4  = get_L(get_Fnum("l4"), 1);  l5h = get_L(get_Fnum("l5h"), 1);
+  l6  = get_L(get_Fnum("l6"), 1);  l7h = get_L(get_Fnum("l7h"), 1);
+  l8  = get_L(get_Fnum("l8"), 1);
+  
+  fprintf(outf, "\nl4:  drift, l = %7.5f;\n", l4+b2[6]);
+  fprintf(outf, "l5h: drift, l = %7.5f;\n", l5h-b2[6]/2e0+b2[7]/2e0);
+  fprintf(outf, "l6:  drift, l = %7.5f;\n", l6-b2[7]+b2[5]);
+  fprintf(outf, "l7h: drift, l = %7.5f;\n", l7h-b2[5]/2e0+b2[8]/2e0);
+  fprintf(outf, "l8:  drift, l = %7.5f;\n", l8-b2[8]);
+
+  fclose(outf);
+}
+
+
+void fit_match(param_type &b2_prms,
 	       const double beta0_x, const double beta0_y, const double eta0_x,
-	       const double beta1_x, const double beta1_y,
-	       const double b2_max, const double db2_tol,
-	       const double s_cut, const double step)
+	       const double beta1_x, const double beta1_y)
 {
   // Match linear optics to straight section.
 
@@ -299,20 +367,12 @@ void fit_match(std::vector<int> &b2s,
                eta0[]   = {eta0_x,  0e0},
 	       etap0[]  = {0e0,     0e0};
 
-  n_b2 = b2s.size();
+  n_b2 = b2_prms.n_prm;
 
-  b = dvector(1, m_max); b2_lim = dvector(1, n_b2);
-  b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
-  A = dmatrix(1, m_max, 1, n_b2);
+  b = dvector(1, m_max); b2_lim = dvector(1, n_b2); b2 = dvector(1, n_b2);
+  db2 = dvector(1, n_b2); A = dmatrix(1, m_max, 1, n_b2);
 
-  for (i = 1; i <= n_b2; i++) {
-    if (b2s[i-1] > 0) {
-      b2_lim[i] = b2_max; b2[i] = get_bn(b2s[i-1], 1, Quad);
-    } else {
-      b2_lim[i] = ds_max;
-      loc = get_loc(abs(b2s[i-1]), 1) - 1; b2[i] = get_L(elem[loc-1].Fnum, 1);
-    }
-  }
+  b2_prms.ini_prm(b2, b2_lim);
 
   danot_(3);
 
@@ -320,11 +380,7 @@ void fit_match(std::vector<int> &b2s,
 
   do {
     for (i = 1; i <= n_b2; i++) {
-      for (j = 1; j <= get_n_Kids(abs(b2s[i-1])); j++)
-	if (b2s[i-1] > 0)
-	  set_bn_par(b2s[i-1], j, Quad, 7);
-	else
-	  set_s_par(abs(b2s[i-1]), j, 7);
+      b2_prms.set_prm(i-1);
 
       get_twiss(alpha0, beta0, eta0, etap0);
       AA_tp = elem_tps[n_elem-1].A1*tp_S(2, elem_tps[n_elem-1].A1);
@@ -338,15 +394,10 @@ void fit_match(std::vector<int> &b2s,
       A[++m][i] = h_ijklm_p(AA_tp[x_], 1, 0, 0, 0, 0, 7);
       A[++m][i] = h_ijklm_p(AA_tp[y_], 0, 0, 1, 0, 0, 7);
 
-      if (b2s[i-1] < 0)
-	for (j = 1; j <= m; j++)
-	  A[j][i] *= scl_ds;
+      for (j = 1; j <= m; j++)
+	A[j][i] *= b2_prms.bn_scl[i-1];
 
-      for (j = 1; j <= get_n_Kids(abs(b2s[i-1])); j++)
-	if (b2s[i-1] > 0)
-	  clr_bn_par(b2s[i-1], j, Quad);
-	else
-	  clr_s_par(abs(b2s[i-1]), j);
+      b2_prms.clr_prm(i-1);
     }
 
     m = 0;
@@ -359,23 +410,15 @@ void fit_match(std::vector<int> &b2s,
 
     prt_system(m, n_b2, A, b);
 
-    SVD_lim(m, n_b2, A, b, b2_lim, s_cut, b2, db2);
+    SVD_lim(m, n_b2, A, b, b2_lim, b2_prms.svd_cut, b2, db2);
 
-    printf("\n");
-    db2_max = 0e0;
-    for (i = 1; i <= n_b2; i++) {
-      set_dbn_s(b2s[i-1], Quad, step*db2[i]);
-      b2[i] = get_bn_s(b2s[i-1], 1, Quad);
-      db2_max = max(fabs(step*db2[i]), db2_max);
+    b2_prms.set_bn(db2, b2, db2_max);
+  } while (db2_max > b2_prms.bn_tol);
 
-      printf("%14.5e", b2[i]);
-    }
-    printf("\n");
-  } while (db2_max > db2_tol);
+  prt_match(b2_prms, b2);
 
-  free_dvector(b, 1, m_max);
-  free_dvector(b2_lim, 1, n_b2); free_dvector(b2, 1, n_b2);
-  free_dvector(db2, 1, n_b2);
+  free_dvector(b, 1, m_max); free_dvector(b2_lim, 1, n_b2);
+  free_dvector(b2, 1, n_b2); free_dvector(db2, 1, n_b2);
   free_dmatrix(A, 1, m_max, 1, n_b2);
 }
 
@@ -499,8 +542,8 @@ int main(int argc, char *argv[])
   
   const double eps_x   = 15e-3,
                nu[]    = {4.0/15.0, 1.0/15.0},
-               beta0[] = {0.36428, 4.13714},
-	       eta0_x  = 0.00396551,
+               beta0[] = {0.38133, 5.00190},
+	       eta0_x  = 0.00382435,
                beta1[] = {3.0, 3.0};
 	    
 
@@ -531,7 +574,7 @@ int main(int argc, char *argv[])
 
   // tst_dL(beta[X_], beta[Y_], eta_x);
 
-  if (true) {
+  if (false) {
     b2_prms.add_prm("bh",  2, 10.0, 1.0);
     b2_prms.add_prm("qf",  2, 25.0, 1.0);
     b2_prms.add_prm("l2", -1,  0.5, 0.01);
@@ -539,21 +582,24 @@ int main(int argc, char *argv[])
     b2_prms.bn_tol = 1e-4; b2_prms.svd_cut = 1e-6;  b2_prms.step = 0.8;
 
     fit_emit(b2_prms, eps_x, nu[X_], nu[Y_]);
+
+    prt_mfile("flat_file.dat");
   }
 
-  if (false) {
-    // b2_prms.add_prm("bm",  2); b2_prms.add_prm("qfe", 2);
-    // b2_prms.add_prm("qde", 2); b2_prms.add_prm("qm",  2);
+  if (true) {
+    b2_prms.add_prm("bm",   2, 25.0, 1.0);
+    b2_prms.add_prm("qfe",  2, 25.0, 1.0);
+    b2_prms.add_prm("qde",  2, 50.0, 1.0);
+    b2_prms.add_prm("qm",   2, 25.0, 1.0);
 
-    // b2_prms.add_prm("bm",  -2); b2_prms.add_prm("qfe", -2);
-    // b2_prms.add_prm("qde", -2); b2_prms.add_prm("qm",  -2);
+    b2_prms.add_prm("bm",  -2,  0.2, 0.01);
+    b2_prms.add_prm("qfe", -2,  0.2, 0.01);
+    b2_prms.add_prm("qde", -2,  0.2, 0.01);
+    b2_prms.add_prm("qm",  -2,  0.2, 0.01);
 
-    // b2_prms.ds_max = 0.2;
+    b2_prms.bn_tol = 1e-4; b2_prms.svd_cut = 1e-6;  b2_prms.step = 0.3;
 
-    scl_ds = 0.01;
-
-    fit_match(b2_Fams, beta0[X_], beta0[Y_], eta0_x, beta1[X_], beta1[Y_],
-	      100.0, 1e-5, 1e-4, 0.5);
+    fit_match(b2_prms, beta0[X_], beta0[Y_], eta0_x, beta1[X_], beta1[Y_]);
   }
 
   if (false) {
@@ -564,16 +610,18 @@ int main(int argc, char *argv[])
     fit_3rd_achrom(bn_Fams, 1e5, 1e-5, 1e-4, 1.0);
   }
 
-  danot_(NO);
+  if (false) {
+    danot_(NO);
 
-  get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
-  CtoR(K*Id_scl, K_re, K_im); CtoR(g*Id_scl, g_re, g_im);
-  CtoR(get_h()*Id_scl, h_re, h_im);
-  CtoR(get_H()*Id_scl, H_re, H_im);
+    get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
+    CtoR(K*Id_scl, K_re, K_im); CtoR(g*Id_scl, g_re, g_im);
+    CtoR(get_h()*Id_scl, h_re, h_im);
+    CtoR(get_H()*Id_scl, H_re, H_im);
 
-  file_wr(outf, "map.dat"); outf << Map; outf.close();
-  file_wr(outf, "K.dat"); outf << K_re*Id_scl; outf.close();
-  file_wr(outf, "g.dat"); outf << g_im*Id_scl; outf.close();
-  file_wr(outf, "h.dat"); outf << h_re*Id_scl; outf.close();
-  file_wr(outf, "H.dat"); outf << H_re*Id_scl; outf.close();
+    file_wr(outf, "map.dat"); outf << Map; outf.close();
+    file_wr(outf, "K.dat"); outf << K_re*Id_scl; outf.close();
+    file_wr(outf, "g.dat"); outf << g_im*Id_scl; outf.close();
+    file_wr(outf, "h.dat"); outf << h_re*Id_scl; outf.close();
+    file_wr(outf, "H.dat"); outf << H_re*Id_scl; outf.close();
+  }
 }
