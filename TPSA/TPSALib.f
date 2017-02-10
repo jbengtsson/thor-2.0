@@ -622,9 +622,10 @@
 
       return
       end
-      subroutine daall(ic,l,ccc,no,nv)
+      subroutine daall(ic,l,ccc,no,nv) bind(C, name="daall_")
+      use iso_c_binding
       implicit none
-      integer i,ind,l,ndanum,no,nv
+      integer i,j,ind,l,ndanum,no,nv
       double precision x
 !     ********************************
 !
@@ -648,7 +649,9 @@
 !
       integer ic(*)
       logical incnda
-      character c*10,ccc*10
+!      character c*10,ccc*10
+      character c*10
+      character, dimension (10), intent (in) :: ccc
 !
       ind = 1
 
@@ -692,7 +695,10 @@
             ndanum = no
           endif
 
-          c = ccc
+!          c = ccc
+          do j=1, 10
+             c(j:j) = ccc(j)
+          enddo
           if(l.ne.1) write(c(6:10),'(I5)') i
 
           daname(ind) = c

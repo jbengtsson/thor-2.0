@@ -7,16 +7,16 @@
 
 extern int  no_tps, ndpt_tps;
 
-bool    ini_tps = false, header = false, res_basis = false, stable = false,
-        debug_tpsa = false;
+bool ini_tps = false, header = false, res_basis = false, stable = false,
+     debug_tpsa = false;
 
-const int  n_max = 100;     // max iterations for LieExp
+const int n_max = 100;     // max iterations for LieExp
 
 // Fortran strings are passed from C by: [str, strlen(str)].
-const int   name_len_for = 10; // name length in FORTRAN library is 10.
-char  tpsa_name[name_len_for] = "tpsa     "; // String + NULL = 10.
+const int  name_len_for = 10; // name length in FORTRAN library is 10.
+const char tpsa_name[name_len_for] = "tpsa     "; // String + NULL = 10.
 
-int  bufsize;  // Note, max no of monomials is (no+nv)!/(nv!*no!)
+int bufsize;  // Note, max no of monomials is (no+nv)!/(nv!*no!)
 
 
 long int fact(long int n)
@@ -153,7 +153,8 @@ void TPSAEps(const double eps)
 tps::tps(void)
 {
   if (!ini_tps) TPSA_Ini();
-  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for); dacon_(intptr, 0.0);
+  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
+  dacon_(intptr, 0.0);
   if (debug_tpsa)
     std::cout << "tps(void):                        "
 	 << ", intptr = " << intptr << std::endl;
@@ -163,7 +164,8 @@ tps::tps(const double r)
 {
 
   if (!ini_tps) TPSA_Ini();
-  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for); dacon_(intptr, r);
+  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
+  dacon_(intptr, r);
   if (debug_tpsa)
     std::cout << "tps(const double r):              "
 	 << ", intptr = " << intptr <<std:: endl;
@@ -173,7 +175,7 @@ tps::tps(const double r, const int i)
 {
 
   if (!ini_tps) TPSA_Ini();
-  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for);
+  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
   if (i == 0)
     dacon_(intptr, r);
   else
@@ -187,7 +189,7 @@ tps::tps(const tps &x) {
 
   if (!ini_tps) TPSA_Ini();
   intptr = 0;
-  daall_(intptr, 1, tpsa_name, no_tps, ss_dim, name_len_for);
+  daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
   dacop_(x.intptr, intptr);
   if (debug_tpsa)
     std::cout << "tps(const tps &x):                "
@@ -228,7 +230,7 @@ void tps::pook(const int jj[], const double r)
 { dapok_(intptr, jj, r); }
 
 void tps::exprt(double rbuf[], int ibuf1[], int ibuf2[], char *name) const
-{ daexp_(intptr, rbuf, ibuf1, ibuf2, name, name_len_for); }
+{ daexp_(intptr, rbuf, ibuf1, ibuf2, name); }
 
 void tps::imprt(const int n, double rbuf[],
 		const int ibuf1[], const int ibuf2[])
@@ -268,7 +270,7 @@ tps sqrt(const tps &a)
 {
   tps  b;
 
-  dafun_("SQRT", a.intptr, b.intptr, name_len_for);
+  dafun_("SQRT", a.intptr, b.intptr);
   return b;
 }
 
@@ -292,7 +294,7 @@ tps exp(const tps &a)
 {
   tps  b;
 
-  dafun_("EXP ", a.intptr, b.intptr, name_len_for);
+  dafun_("EXP ", a.intptr, b.intptr);
   return b;
 }
 
@@ -300,7 +302,7 @@ tps log(const tps &a)
 {
   tps  b;
 
-  dafun_("LOG ", a.intptr, b.intptr, name_len_for);
+  dafun_("LOG ", a.intptr, b.intptr);
   return b;
 }
 
@@ -390,7 +392,7 @@ tps asin(const tps &a)
 {
   tps  b;
 
-  dafun_("ASIN", a.intptr, b.intptr, name_len_for);
+  dafun_("ASIN", a.intptr, b.intptr);
   return b;
 }
 
@@ -400,7 +402,7 @@ tps atan(const tps &a)
 {
   tps  b;
 
-  dafun_("ATAN", a.intptr, b.intptr, name_len_for);
+  dafun_("ATAN", a.intptr, b.intptr);
   return b;
 }
 
@@ -979,7 +981,7 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
     return os;
   }
 
-  daexp_(a.intptr, rbuf, ibuf1, ibuf2, name, name_len_for);
+  daexp_(a.intptr, rbuf, ibuf1, ibuf2, name);
   s << std::endl;
   
   name[name_len_for-1] = '\0'; i = 0;

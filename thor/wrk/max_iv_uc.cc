@@ -1,4 +1,4 @@
-#define NO 3
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -47,10 +47,13 @@ void param_type::ini_prm(double *bn, double *bn_lim)
   for (i = 1; i <= n_prm; i++) {
     bn_lim[i] = bn_max[i-1];
     if (n[i-1] > 0)
+      // Multipole.
       bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
     else if (n[i-1] == -1)
+      // Drift.
       bn[i] = get_L(Fnum[i-1], 1);
     else if (n[i-1] == -2)
+      // Location.
       bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
   }
 }
@@ -106,6 +109,20 @@ void param_type::set_bn(double *db2, double *b2, double &db2_max) const
     printf("%10.5f", b2[i]);
   }
   printf("\n");
+}
+
+
+void no_mpoles(void)
+{
+  int j, k;
+
+  std::cout << "\nzeroing multipoles" << "\n\n";
+  for (j = 0; j < n_elem; j++)
+    if (elem[j].kind == Mpole)
+      for (k = Sext; k < mpole_max; k++) {
+	//	cout << "zeroing " << elem[j].Name << endl;
+	set_bn(elem[j].Fnum, elem[j].Knum, k, 0.0);
+      }
 }
 
 
@@ -248,11 +265,27 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 }
 
 	
+void prt_emit(const param_type &b2_prms, const double *b2)
+{
+  FILE *outf;
+
+  std::string file_name = "emit.out";
+
+  outf = file_write(file_name.c_str());
+  fprintf(outf, "l2:  drift, l = %7.5f;\n\n", b2[3]);
+  fprintf(outf, "bh:  bending, l = 0.166667, t = 0.5, k = %8.5f, t1 = 0.0"
+	  ", t2 = 0.0,\n     gap = 0.0, N = Nbend, Method = Meth;\n", b2[1]);
+  fprintf(outf, "qf:  quadrupole, l = 0.08, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[2]);
+  fclose(outf);
+}
+
+
 void fit_emit(param_type &b2_prms, const double eps_x,
 	      const double nu_x, const double nu_y)
 {
   // Optimize unit cell for hor. emittance.
-  // 
+  // Lattice: unit cell.
   const double scl_nu = 1e1, scl_ksi = 1e-2, scl_eps = 1e1;
 
   const int m_max = 8;
@@ -309,6 +342,8 @@ void fit_emit(param_type &b2_prms, const double eps_x,
     b2_prms.set_bn(db2, b2, db2_max);
   } while (db2_max > b2_prms.bn_tol);
 
+  prt_emit(b2_prms, b2);
+
   free_dvector(b, 1, m_max); free_dvector(b2_lim, 1, n_b2);
   free_dvector(b2, 1, n_b2); free_dvector(db2, 1, n_b2);
   free_dmatrix(A, 1, m_max, 1, n_b2);
@@ -343,6 +378,11 @@ void prt_match(const param_type &b2_prms, const double *b2)
   fprintf(outf, "l7h: drift, l = %7.5f;\n", l7h-b2[5]/2e0+b2[8]/2e0);
   fprintf(outf, "l8:  drift, l = %7.5f;\n", l8-b2[8]);
 
+  fprintf(outf, "\ndu_bm:  drift, L = %8.5f\n", b2[5]);
+  fprintf(outf, "du_qfe: drift, L = %8.5f\n", b2[6]);
+  fprintf(outf, "du_qde: drift, L = %8.5f\n", b2[7]);
+  fprintf(outf, "du_qm:  drift, L = %8.5f\n", b2[8]);
+
   fclose(outf);
 }
 
@@ -352,6 +392,7 @@ void fit_match(param_type &b2_prms,
 	       const double beta1_x, const double beta1_y)
 {
   // Match linear optics to straight section.
+  // Lattice: matching cell.
 
   const int m_max = 8;
 
@@ -407,6 +448,99 @@ void fit_match(param_type &b2_prms,
     b[++m] = -scl_eta*h_ijklm(A_disp[px_], 0, 0, 0, 0, 1);
     b[++m] = -(h_ijklm(AA_tp[x_], 1, 0, 0, 0, 0)-beta1_x);
     b[++m] = -(h_ijklm(AA_tp[y_], 0, 0, 1, 0, 0)-beta1_y);
+
+    prt_system(m, n_b2, A, b);
+
+    SVD_lim(m, n_b2, A, b, b2_lim, b2_prms.svd_cut, b2, db2);
+
+    b2_prms.set_bn(db2, b2, db2_max);
+  } while (db2_max > b2_prms.bn_tol);
+
+  prt_match(b2_prms, b2);
+
+  free_dvector(b, 1, m_max); free_dvector(b2_lim, 1, n_b2);
+  free_dvector(b2, 1, n_b2); free_dvector(db2, 1, n_b2);
+  free_dmatrix(A, 1, m_max, 1, n_b2);
+}
+
+
+void opt_match(param_type &b2_prms, const double beta0_x, const double beta0_y)
+{
+  // Minimize linear linear chromaticity for super period.
+  // Lattice: super period.
+
+  const int m_max = 10;
+
+  long int     loc;
+  int          n_b2, i, j, m;
+  double       **A, *b, *b2_lim, *b2, *db2;
+  double       db2_max;
+  tps          K_re, K_im;
+  ss_vect<tps> AA_tp, A_disp;
+
+  const double scl_alpha = 1e1, scl_eta = 1e1, scl_ksi = 1e-4,
+               alpha0[] = {0e0,     0e0},
+               beta0[]  = {beta0_x, beta0_y},
+               eta0[]   = {0e0,     0e0},
+	       etap0[]  = {0e0,     0e0};
+
+  n_b2 = b2_prms.n_prm;
+
+  b = dvector(1, m_max); b2_lim = dvector(1, n_b2); b2 = dvector(1, n_b2);
+  db2 = dvector(1, n_b2); A = dmatrix(1, m_max, 1, n_b2);
+
+  b2_prms.ini_prm(b2, b2_lim);
+
+  // Exit of 2nd BM.
+  loc = get_loc(get_Fnum("bm"), 2);
+
+  do {
+    for (i = 1; i <= n_b2; i++) {
+      b2_prms.set_prm(i-1);
+
+      danot_(3);
+      get_Map();
+      danot_(4);
+      K = MapNorm(Map, g, A1, A0, Map_res, 1);
+      CtoR(K, K_re, K_im);
+      // Sets no to 2.
+      get_twiss(alpha0, beta0, eta0, etap0);
+      AA_tp = elem_tps[n_elem-1].A1*tp_S(2, elem_tps[n_elem-1].A1);
+      A_disp = elem_tps[loc-1].A1;
+
+      m = 0;
+      A[++m][i] = scl_alpha*h_ijklm_p(-AA_tp[x_], 0, 1, 0, 0, 0, 7);
+      A[++m][i] = scl_alpha*h_ijklm_p(-AA_tp[y_], 0, 0, 0, 1, 0, 7);
+      A[++m][i] = scl_eta*h_ijklm_p(A_disp[x_],  0, 0, 0, 0, 1, 7);
+      A[++m][i] = scl_eta*h_ijklm_p(A_disp[px_], 0, 0, 0, 0, 1, 7);
+      A[++m][i] = h_ijklm_p(AA_tp[x_], 1, 0, 0, 0, 0, 7);
+      A[++m][i] = h_ijklm_p(AA_tp[y_], 0, 0, 1, 0, 0, 7);
+      A[++m][i] = scl_ksi*h_ijklm_p(K_re, 1, 1, 0, 0, 1, 7);
+      A[++m][i] = scl_ksi*h_ijklm_p(K_re, 0, 0, 1, 1, 1, 7);
+
+      for (j = 1; j <= m; j++)
+	A[j][i] *= b2_prms.bn_scl[i-1];
+
+      b2_prms.clr_prm(i-1);
+    }
+
+    printf("\n%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n",
+	   h_ijklm(A_disp[x_],  0, 0, 0, 0, 1),
+	   h_ijklm(A_disp[px_], 0, 0, 0, 0, 1),
+	   h_ijklm(-AA_tp[x_], 0, 1, 0, 0, 0),
+	   h_ijklm(-AA_tp[y_], 0, 0, 0, 1, 0),
+	   h_ijklm(AA_tp[x_], 1, 0, 0, 0, 0),
+	   h_ijklm(AA_tp[y_], 0, 0, 1, 0, 0));
+
+    m = 0;
+    b[++m] = -scl_alpha*h_ijklm(-AA_tp[x_], 0, 1, 0, 0, 0);
+    b[++m] = -scl_alpha*h_ijklm(-AA_tp[y_], 0, 0, 0, 1, 0);
+    b[++m] = -scl_eta*h_ijklm(A_disp[x_],  0, 0, 0, 0, 1);
+    b[++m] = -scl_eta*h_ijklm(A_disp[px_], 0, 0, 0, 0, 1);
+    b[++m] = -(h_ijklm(AA_tp[x_], 1, 0, 0, 0, 0)-beta0_x);
+    b[++m] = -(h_ijklm(AA_tp[y_], 0, 0, 1, 0, 0)-beta0_y);
+    b[++m] = -scl_ksi*(h_ijklm(K_re, 1, 1, 0, 0, 1));
+    b[++m] = -scl_ksi*(h_ijklm(K_re, 0, 0, 1, 1, 1));
 
     prt_system(m, n_b2, A, b);
 
@@ -572,7 +706,10 @@ int main(int argc, char *argv[])
   // eps1_x = get_eps_x();
   // cout << eps_x << "\n"; 
 
-  // tst_dL(beta[X_], beta[Y_], eta_x);
+  if (false) {
+    tst_dL(beta0[X_], beta0[Y_], eta0_x);
+    exit(0);
+  }
 
   if (false) {
     b2_prms.add_prm("bh",  2, 10.0, 1.0);
@@ -586,20 +723,42 @@ int main(int argc, char *argv[])
     prt_mfile("flat_file.dat");
   }
 
+  if (false) {
+    b2_prms.add_prm("bm",   2, 25.0, 1.0);
+    b2_prms.add_prm("qfe",  2, 25.0, 1.0);
+    b2_prms.add_prm("qde",  2, 50.0, 1.0);
+    b2_prms.add_prm("qm",   2, 25.0, 1.0);
+
+    b2_prms.add_prm("bm",  -2,  0.2, 1.0);
+    b2_prms.add_prm("qfe", -2,  0.2, 1.0);
+    b2_prms.add_prm("qde", -2,  0.2, 1.0);
+    b2_prms.add_prm("qm",  -2,  0.2, 1.0);
+
+    b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-6;  b2_prms.step = 0.5;
+
+    fit_match(b2_prms, beta0[X_], beta0[Y_], eta0_x, beta1[X_], beta1[Y_]);
+  }
+
   if (true) {
     b2_prms.add_prm("bm",   2, 25.0, 1.0);
     b2_prms.add_prm("qfe",  2, 25.0, 1.0);
     b2_prms.add_prm("qde",  2, 50.0, 1.0);
     b2_prms.add_prm("qm",   2, 25.0, 1.0);
 
-    b2_prms.add_prm("bm",  -2,  0.2, 0.01);
-    b2_prms.add_prm("qfe", -2,  0.2, 0.01);
-    b2_prms.add_prm("qde", -2,  0.2, 0.01);
-    b2_prms.add_prm("qm",  -2,  0.2, 0.01);
+    b2_prms.add_prm("l5h", -1, 0.2,  0.1);
+    b2_prms.add_prm("l6",  -1, 0.2,  0.1);
+    b2_prms.add_prm("l7h", -1, 0.2,  0.1);
+    b2_prms.add_prm("l8",  -1, 0.2,  0.1);
 
-    b2_prms.bn_tol = 1e-4; b2_prms.svd_cut = 1e-6;  b2_prms.step = 0.3;
+    // b2_prms.add_prm("bm",  -2,  0.2, 0.1);
+    // b2_prms.add_prm("qfe", -2,  0.2, 0.1);
+    // b2_prms.add_prm("qde", -2,  0.2, 0.1);
+    // b2_prms.add_prm("qm",  -2,  0.2, 0.1);
 
-    fit_match(b2_prms, beta0[X_], beta0[Y_], eta0_x, beta1[X_], beta1[Y_]);
+    b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-6;  b2_prms.step = 0.4;
+
+    no_mpoles();
+    opt_match(b2_prms, beta1[X_], beta1[Y_]);
   }
 
   if (false) {
