@@ -604,7 +604,7 @@ double f_match(double *b2)
   tps          K_re, K_im;
   ss_vect<tps> AA_tp1, AA_tp2, A_disp;
 
-  const double scl_eta = 1e0, scl_ksi = 1e-1,
+  const double scl_eta = 1e3, scl_ksi = 1e-1,
 	       beta0[] = {3.0,     3.0},
                beta1[] = {1.35632, 1.91473};
 
@@ -630,18 +630,18 @@ double f_match(double *b2)
   tr[Y_] = h_ijklm(Map[y_], 0, 0, 1, 0, 0)+h_ijklm(Map[py_], 0, 0, 0, 1, 0);
   // printf("trace: %6.3f %6.3f\n", tr[X_], tr[Y_]);
 
-  if ((fabs(tr[X_]) < 2e0) && (fabs(tr[Y_]) < 2e0)) {
-    chi2 = 0e0;
-    chi2 += sqr(scl_eta*h_ijklm(A_disp[x_],  0, 0, 0, 0, 1));
-    chi2 += sqr(scl_eta*h_ijklm(A_disp[px_], 0, 0, 0, 0, 1));
-    chi2 += sqr((h_ijklm(AA_tp1[x_], 1, 0, 0, 0, 0)-beta1[X_]));
-    chi2 += sqr((h_ijklm(AA_tp1[y_], 0, 0, 1, 0, 0)-beta1[Y_]));
-    chi2 += sqr((h_ijklm(AA_tp2[x_], 1, 0, 0, 0, 0)-beta0[X_]));
-    chi2 += sqr((h_ijklm(AA_tp2[y_], 0, 0, 1, 0, 0)-beta0[Y_]));
-    chi2 += sqr(scl_ksi*(h_ijklm(K_re, 1, 1, 0, 0, 1)));
-    chi2 += sqr(scl_ksi*(h_ijklm(K_re, 0, 0, 1, 1, 1)));
-  } else
-    chi2 = 1e10;
+  chi2 = 0e0;
+  chi2 += sqr(scl_eta*h_ijklm(A_disp[x_],  0, 0, 0, 0, 1));
+  chi2 += sqr(scl_eta*h_ijklm(A_disp[px_], 0, 0, 0, 0, 1));
+  chi2 += sqr((h_ijklm(AA_tp1[x_], 1, 0, 0, 0, 0)-beta1[X_]));
+  chi2 += sqr((h_ijklm(AA_tp1[y_], 0, 0, 1, 0, 0)-beta1[Y_]));
+  chi2 += sqr((h_ijklm(AA_tp2[x_], 1, 0, 0, 0, 0)-beta0[X_]));
+  chi2 += sqr((h_ijklm(AA_tp2[y_], 0, 0, 1, 0, 0)-beta0[Y_]));
+  chi2 += sqr(scl_ksi*(h_ijklm(K_re, 1, 1, 0, 0, 1)));
+  chi2 += sqr(scl_ksi*(h_ijklm(K_re, 0, 0, 1, 1, 1)));
+  if ((fabs(tr[X_]) > 2e0) || (fabs(tr[Y_]) > 2e0)) chi2 += 1e10;
+  for (i = 1; i <= b2_prms.n_prm; i++)
+    if (fabs(b2[i]) > b2_prms.bn_max[i-1]) chi2 += 1e10;
 
   if (chi2 < chi2_ref) {
     printf("\nchi2: %12.5e, %12.5e\n", chi2, chi2_ref);
@@ -658,6 +658,8 @@ double f_match(double *b2)
     for (i = 1; i <= b2_prms.n_prm; i++)
       printf("%9.5f", b2[i]);
     printf("\n");
+
+    prt_mfile("flat_file.dat");
   }
 
   chi2_ref = min(chi2, chi2_ref);
@@ -883,14 +885,14 @@ int main(int argc, char *argv[])
     b2_prms.add_prm("qm",   2, 25.0, 1.0);
 
     b2_prms.add_prm("l5h", -1, 0.2,  0.01);
-    b2_prms.add_prm("l6",  -1, 0.2,  0.01);
-    b2_prms.add_prm("l7h", -1, 0.3,  0.01);
-    b2_prms.add_prm("l8",  -1, 0.2,  0.01);
+    b2_prms.add_prm("l6",  -1, 1.0,  0.01);
+    b2_prms.add_prm("l7h", -1, 0.5,  0.01);
+    b2_prms.add_prm("l8",  -1, 0.5,  0.01);
 
-    b2_prms.add_prm("bm",  -2,  0.2, 1.0);
-    b2_prms.add_prm("qfe", -2,  0.2, 1.0);
-    b2_prms.add_prm("qde", -2,  0.2, 1.0);
-    b2_prms.add_prm("qm",  -2,  0.2, 1.0);
+    b2_prms.add_prm("bm",  -2,  0.5, 1.0);
+    b2_prms.add_prm("qfe", -2,  0.5, 1.0);
+    b2_prms.add_prm("qde", -2,  0.5, 1.0);
+    b2_prms.add_prm("qm",  -2,  0.5, 1.0);
 
     b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-4; b2_prms.step = 0.001;
 
