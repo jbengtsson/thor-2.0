@@ -2500,6 +2500,56 @@ void set_dbn_s(const int Fnum, const int n, const double dbn)
 }
 
 
+void set_bn_s(const int Fnum, const int Knum, const int n, const double dbn)
+{
+  long int k;
+
+  if (Fnum > 0)
+    set_bn(Fnum, Knum, n, dbn);
+  else {
+    // point to multipole
+    k = get_loc(abs(Fnum), Knum) - 1;
+
+    switch (elem[k-1].Name[1]) {
+    case 'u':
+      if (elem[k+1].Name[1] == 'd') {
+	set_L(elem[k-1].Fnum, elem[k-1].Knum, scl_ds*dbn);
+	set_L(elem[k+1].Fnum, elem[k+1].Knum, -scl_ds*dbn);
+      } else {
+	std::cout << "set_dbn_s: configuration error " << elem[k+1].Name
+	     << " (" << k+2 << ")" << std::endl;
+	exit(1);
+      }
+      break;
+    case 'd':
+      if (elem[k+1].Name[1] == 'u') {
+	set_L(elem[k-1].Fnum, elem[k-1].Knum, -scl_ds*dbn);
+	set_L(elem[k+1].Fnum, elem[k+1].Knum, scl_ds*dbn);
+      } else {
+	std::cout << "set_dbn_s: configuration error " << elem[k+1].Name
+	     << " (" << k+2 << ")" << std::endl;
+	exit(1);
+      }
+      break;
+    default:
+      std::cout << "set_dbn_s: configuration error " << elem[k-1].Name
+	   << " (" << k << ")" << std::endl;
+      exit(1);
+      break;
+    }
+  }
+}
+
+
+void set_bn_s(const int Fnum, const int n, const double dbn)
+{
+  int k;
+
+  for (k = 1; k <= get_n_Kids(abs(Fnum)); k++)
+    set_bn_s(Fnum, k, n, dbn);
+}
+
+
 void fit_alpha(const double alpha0_x, const double beta0_x,
 	       const double alpha0_y, const double beta0_y,
 	       const long int k1, const long int k2,

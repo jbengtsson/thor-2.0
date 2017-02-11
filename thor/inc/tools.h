@@ -301,6 +301,10 @@ void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn);
 
 void set_dbn_s(const int Fnum, const int n, const double dbn);
 
+void set_bn_s(const int Fnum, const int Knum, const int n, const double bn);
+
+void set_bn_s(const int Fnum, const int n, const double bn);
+
 void fit_alpha(const double alpha0_x, const double beta0_x,
 	       const double alpha0_y, const double beta0_y,
 	       const long int k1, const long int k2,
