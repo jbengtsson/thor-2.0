@@ -145,19 +145,48 @@ void no_mpoles(void)
 }
 
 
+void get_S(void)
+{
+  int    j;
+  double S;
+
+  S = 0e0;
+  for (j = 0; j < n_elem; j++) {
+    S += elem[j].L;
+    elem[j].S = S; elem_tps[j].S = S;
+  }
+}
+
+
 void get_twiss(const ss_vect<tps> &A)
 {
-  int          j;
-  double       dnu[2];
+  int          j, k;
+  double       alpha1[2], beta1[2], eta1[2], etap1[2], dnu1[2], dnu2[2];
   ss_vect<tps> A1;
 
   // Include parameter dependence.
   danot_(2);
 
+  for (k = 0; k < 2; k++)
+    dnu1[k] = 0e0;
   A1 = A;
   for (j = 1; j <= n_elem; j++) {
     A1.propagate(j, j);
-    elem_tps[j-1].A1 = get_A_CS(2, A1, dnu);
+    elem_tps[j-1].A1 = get_A_CS(2, A1, dnu2);
+
+    // Store linear optics for convenience.
+    get_ab(A1, alpha1, beta1, dnu2, eta1, etap1);
+    for (k = 0; k < 2; k++) {
+      elem[j-1].Alpha[k] = alpha1[k]; elem[j-1].Beta[k] = beta1[k];
+      elem[j-1].Eta[k] = eta1[k]; elem[j-1].Etap[k] = etap1[k];
+    }
+    // Assumes dnu < 360 degrees.
+    for (k = 0; k < 2; k++) {
+      elem[j-1].Nu[k] = floor(elem[j-2].Nu[k]) + dnu2[k];
+      if ((dnu2[k] < dnu1[k]) && (elem[j-1].L >= 0e0)) elem[j-1].Nu[k] += 1e0;
+    }
+    for (k = 0; k < 2; k++)
+      dnu1[k] = dnu2[k];
   }
 }
 
@@ -381,43 +410,6 @@ void fit_emit(param_type &b2_prms, const double eps_x,
 }
 
 
-void prt_match(const param_type &b2_prms, const double *b2)
-{
-  double l4, l5h, l6, l7h, l8;
-  FILE *outf;
-
-  std::string file_name = "match.out";
-
-  outf = file_write(file_name.c_str());
-
-  fprintf(outf, "bm:  bending, l = 0.166667, t = 0.5, k = %8.5f, t1 = 0.0"
-	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n", b2[1]);
-  fprintf(outf, "qfe: quadrupole, l = 0.15, k = %9.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[2]);
-  fprintf(outf, "qde: quadrupole, l = 0.1,  k = %9.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[3]);
-  fprintf(outf, "qm:  quadrupole, l = 0.15, k = %9.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[4]);
-
-  l4  = get_L(get_Fnum("l4"), 1);  l5h = get_L(get_Fnum("l5h"), 1);
-  l6  = get_L(get_Fnum("l6"), 1);  l7h = get_L(get_Fnum("l7h"), 1);
-  l8  = get_L(get_Fnum("l8"), 1);
-  
-  fprintf(outf, "\nl4:  drift, l = %7.5f;\n", l4+b2[6]);
-  fprintf(outf, "l5h: drift, l = %7.5f;\n", l5h-b2[6]/2e0+b2[7]/2e0);
-  fprintf(outf, "l6:  drift, l = %7.5f;\n", l6-b2[7]+b2[5]);
-  fprintf(outf, "l7h: drift, l = %7.5f;\n", l7h-b2[5]/2e0+b2[8]/2e0);
-  fprintf(outf, "l8:  drift, l = %7.5f;\n", l8-b2[8]);
-
-  fprintf(outf, "\ndu_bm:  drift, L = %8.5f\n", b2[5]);
-  fprintf(outf, "du_qfe: drift, L = %8.5f\n", b2[6]);
-  fprintf(outf, "du_qde: drift, L = %8.5f\n", b2[7]);
-  fprintf(outf, "du_qm:  drift, L = %8.5f\n", b2[8]);
-
-  fclose(outf);
-}
-
-
 void fit_match(param_type &b2_prms,
 	       const double beta0_x, const double beta0_y, const double eta0_x,
 	       const double beta1_x, const double beta1_y)
@@ -495,100 +487,40 @@ void fit_match(param_type &b2_prms,
 }
 
 
-void opt_match(param_type &b2_prms,
-	       const double beta0_x, const double beta0_y,
-	       const double beta1_x, const double beta1_y)
+void prt_match(const param_type &b2_prms, const double *b2)
 {
-  // Minimize linear linear chromaticity for super period.
-  // Lattice: super period.
+  double l4, l5h, l6, l7h, l8;
+  FILE *outf;
 
-  const int m_max = 10;
+  std::string file_name = "match.out";
 
-  long int     loc1, loc2, loc3;
-  int          n_b2, i, j, m;
-  double       **A, *b, *b2_lim, *b2, *db2;
-  double       db2_max;
-  tps          K_re, K_im;
-  ss_vect<tps> AA_tp1, AA_tp2, A_disp;
+  outf = file_write(file_name.c_str());
 
-  const double scl_eta = 1e0, scl_ksi = 1e-5;
+  fprintf(outf, "bm:  bending, l = 0.166667, t = 0.5, k = %8.5f, t1 = 0.0"
+	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n", b2[1]);
+  fprintf(outf, "qfe: quadrupole, l = 0.15, k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[2]);
+  fprintf(outf, "qde: quadrupole, l = 0.1,  k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[3]);
+  fprintf(outf, "qm:  quadrupole, l = 0.15, k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[4]);
 
-  n_b2 = b2_prms.n_prm;
+  l4  = get_L(get_Fnum("l4"), 1);  l5h = get_L(get_Fnum("l5h"), 1);
+  l6  = get_L(get_Fnum("l6"), 1);  l7h = get_L(get_Fnum("l7h"), 1);
+  l8  = get_L(get_Fnum("l8"), 1);
+  
+  fprintf(outf, "\nl4:  drift, l = %7.5f;\n", l4+b2[10]);
+  fprintf(outf, "l5h: drift, l = %7.5f;\n", l5h-b2[10]/2e0+b2[11]/2e0);
+  fprintf(outf, "l6:  drift, l = %7.5f;\n", l6-b2[11]+b2[9]);
+  fprintf(outf, "l7h: drift, l = %7.5f;\n", l7h-b2[9]/2e0+b2[12]/2e0);
+  fprintf(outf, "l8:  drift, l = %7.5f;\n", l8-b2[12]);
 
-  b = dvector(1, m_max); b2_lim = dvector(1, n_b2); b2 = dvector(1, n_b2);
-  db2 = dvector(1, n_b2); A = dmatrix(1, m_max, 1, n_b2);
+  fprintf(outf, "\nL_bm  = %8.5f\n", b2[9]);
+  fprintf(outf, "L_qfe = %8.5f\n", b2[10]);
+  fprintf(outf, "L_qde = %8.5f\n", b2[11]);
+  fprintf(outf, "L_qm  = %8.5f\n", b2[12]);
 
-  b2_prms.ini_prm(b2, b2_lim);
-
-  // Exit of 2nd BM.
-  loc1 = get_loc(get_Fnum("bm"), 2);
-  loc2 = get_loc(get_Fnum("sfh"), 1);
-  loc3 = n_elem;
-
-  do {
-    for (i = 1; i <= n_b2; i++) {
-      b2_prms.set_prm_dep(i-1);
-
-      danot_(3);
-      get_Map();
-      danot_(4);
-      K = MapNorm(Map, g, A1, A0, Map_res, 1);
-      CtoR(K, K_re, K_im);
-      // Call to get_twiss sets no to 2.
-      get_twiss(A1);
-      A_disp = elem_tps[loc1-1].A1;
-      AA_tp1 = elem_tps[loc2-1].A1*tp_S(2, elem_tps[loc2-1].A1);
-      AA_tp2 = elem_tps[loc3-1].A1*tp_S(2, elem_tps[loc3-1].A1);
-      danot_(4);
-
-      m = 0;
-      A[++m][i] = scl_eta*h_ijklm_p(A_disp[x_],  0, 0, 0, 0, 1, 7);
-      A[++m][i] = scl_eta*h_ijklm_p(A_disp[px_], 0, 0, 0, 0, 1, 7);
-      A[++m][i] = h_ijklm_p(AA_tp1[x_], 1, 0, 0, 0, 0, 7);
-      A[++m][i] = h_ijklm_p(AA_tp1[y_], 0, 0, 1, 0, 0, 7);
-      A[++m][i] = h_ijklm_p(AA_tp2[x_], 1, 0, 0, 0, 0, 7);
-      A[++m][i] = h_ijklm_p(AA_tp2[y_], 0, 0, 1, 0, 0, 7);
-      // A[++m][i] = scl_ksi*h_ijklm_p(K_re, 1, 1, 0, 0, 1, 7);
-      // A[++m][i] = scl_ksi*h_ijklm_p(K_re, 0, 0, 1, 1, 1, 7);
-
-      for (j = 1; j <= m; j++)
-	A[j][i] *= b2_prms.bn_scl[i-1];
-
-      b2_prms.clr_prm_dep(i-1);
-    }
-
-    printf("\n%10.3e %10.3e %8.3f %8.3f %8.3f %8.3f %10.3e %10.3e\n",
-	   h_ijklm(A_disp[x_],  0, 0, 0, 0, 1),
-	   h_ijklm(A_disp[px_], 0, 0, 0, 0, 1),
-	   h_ijklm(AA_tp1[x_], 1, 0, 0, 0, 0),
-	   h_ijklm(AA_tp1[y_], 0, 0, 1, 0, 0),
-	   h_ijklm(AA_tp2[x_], 1, 0, 0, 0, 0),
-	   h_ijklm(AA_tp2[y_], 0, 0, 1, 0, 0),
-	   h_ijklm(K_re, 1, 1, 0, 0, 1),
-	   h_ijklm(K_re, 0, 0, 1, 1, 1));
-
-    m = 0;
-    b[++m] = -scl_eta*h_ijklm(A_disp[x_],  0, 0, 0, 0, 1);
-    b[++m] = -scl_eta*h_ijklm(A_disp[px_], 0, 0, 0, 0, 1);
-    b[++m] = -(h_ijklm(AA_tp1[x_], 1, 0, 0, 0, 0)-beta1_x);
-    b[++m] = -(h_ijklm(AA_tp1[y_], 0, 0, 1, 0, 0)-beta1_y);
-    b[++m] = -(h_ijklm(AA_tp2[x_], 1, 0, 0, 0, 0)-beta0_x);
-    b[++m] = -(h_ijklm(AA_tp2[y_], 0, 0, 1, 0, 0)-beta0_y);
-    // b[++m] = -scl_ksi*(h_ijklm(K_re, 1, 1, 0, 0, 1));
-    // b[++m] = -scl_ksi*(h_ijklm(K_re, 0, 0, 1, 1, 1));
-
-    prt_system(m, n_b2, A, b);
-
-    SVD_lim(m, n_b2, A, b, b2_lim, b2_prms.svd_cut, b2, db2);
-
-    b2_prms.set_dprm(db2, b2, db2_max);
-  } while (db2_max > b2_prms.bn_tol);
-
-  prt_match(b2_prms, b2);
-
-  free_dvector(b, 1, m_max); free_dvector(b2_lim, 1, n_b2);
-  free_dvector(b2, 1, n_b2); free_dvector(db2, 1, n_b2);
-  free_dmatrix(A, 1, m_max, 1, n_b2);
+  fclose(outf);
 }
 
 
@@ -604,7 +536,7 @@ double f_match(double *b2)
   tps          K_re, K_im;
   ss_vect<tps> AA_tp1, AA_tp2, A_disp;
 
-  const double scl_eta = 1e3, scl_ksi = 1e-1,
+  const double scl_eta = 1e4, scl_ksi = 1e-1,
 	       beta0[] = {3.0,     3.0},
                beta1[] = {1.35632, 1.91473};
 
@@ -660,6 +592,10 @@ double f_match(double *b2)
     printf("\n");
 
     prt_mfile("flat_file.dat");
+    prt_match(b2_prms, b2);
+
+    get_S();
+    prt_lat("linlat.out");
   }
 
   chi2_ref = min(chi2, chi2_ref);
@@ -668,7 +604,7 @@ double f_match(double *b2)
 }
 
 
-void opt_match1(param_type &b2_prms)
+void opt_match(param_type &b2_prms)
 {
   // Minimize linear linear chromaticity for super period.
   // Lattice: super period.
@@ -689,8 +625,6 @@ void opt_match1(param_type &b2_prms)
       xi[i][j] = (i == j)? 1e0 : 0e0;
 
   dpowell(b2, xi, n_b2, 1e-15, &iter, &fret, f_match);
-
-  prt_match(b2_prms, b2);
 
   free_dvector(b2, 1, n_b2);  free_dvector(b2_lim, 1, n_b2);
   free_dmatrix(xi, 1, n_b2, 1, n_b2);
@@ -819,8 +753,6 @@ int main(int argc, char *argv[])
                beta0[] = {0.38133, 5.00190},
 	       eta0_x  = 0.00382435,
 	       beta1[] = {3.0,     3.0},
-               beta2[] = {1.35632, 1.91473};
-	    
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -897,8 +829,7 @@ int main(int argc, char *argv[])
     b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-4; b2_prms.step = 0.001;
 
     no_mpoles();
-    // opt_match(b2_prms, beta1[X_], beta1[Y_], beta2[X_], beta2[Y_]);
-    opt_match1(b2_prms);
+    opt_match(b2_prms);
   }
 
   if (false) {

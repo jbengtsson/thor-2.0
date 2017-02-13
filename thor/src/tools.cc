@@ -3,7 +3,8 @@
    Definitions:  Tools for lattice studies.  */
 
 
-double b2_max = 3.0, ds_max = 0.15, scl_ds = 0.1;
+double b2_max = 3.0, ds_max = 0.15,
+       scl_ds = 0.1; // Obsolete.
 
 double          nu_[3], ksi_[3], rad_[3], part_numb_[3], tau_[3];
 tps             K, g, eps_[3];
@@ -2463,8 +2464,8 @@ void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
     switch (elem[k-1].Name[1]) {
     case 'u':
       if (elem[k+1].Name[1] == 'd') {
-	set_dL(elem[k-1].Fnum, elem[k-1].Knum, scl_ds*dbn);
-	set_dL(elem[k+1].Fnum, elem[k+1].Knum, -scl_ds*dbn);
+	set_dL(elem[k-1].Fnum, elem[k-1].Knum, dbn);
+	set_dL(elem[k+1].Fnum, elem[k+1].Knum, -dbn);
       } else {
 	std::cout << "set_dbn_s: configuration error " << elem[k+1].Name
 	     << " (" << k+2 << ")" << std::endl;
@@ -2473,8 +2474,8 @@ void set_dbn_s(const int Fnum, const int Knum, const int n, const double dbn)
       break;
     case 'd':
       if (elem[k+1].Name[1] == 'u') {
-	set_dL(elem[k-1].Fnum, elem[k-1].Knum, -scl_ds*dbn);
-	set_dL(elem[k+1].Fnum, elem[k+1].Knum, scl_ds*dbn);
+	set_dL(elem[k-1].Fnum, elem[k-1].Knum, -dbn);
+	set_dL(elem[k+1].Fnum, elem[k+1].Knum, dbn);
       } else {
 	std::cout << "set_dbn_s: configuration error " << elem[k+1].Name
 	     << " (" << k+2 << ")" << std::endl;
@@ -2513,8 +2514,8 @@ void set_bn_s(const int Fnum, const int Knum, const int n, const double dbn)
     switch (elem[k-1].Name[1]) {
     case 'u':
       if (elem[k+1].Name[1] == 'd') {
-	set_L(elem[k-1].Fnum, elem[k-1].Knum, scl_ds*dbn);
-	set_L(elem[k+1].Fnum, elem[k+1].Knum, -scl_ds*dbn);
+	set_L(elem[k-1].Fnum, elem[k-1].Knum, dbn);
+	set_L(elem[k+1].Fnum, elem[k+1].Knum, -dbn);
       } else {
 	std::cout << "set_dbn_s: configuration error " << elem[k+1].Name
 	     << " (" << k+2 << ")" << std::endl;
@@ -2523,8 +2524,8 @@ void set_bn_s(const int Fnum, const int Knum, const int n, const double dbn)
       break;
     case 'd':
       if (elem[k+1].Name[1] == 'u') {
-	set_L(elem[k-1].Fnum, elem[k-1].Knum, -scl_ds*dbn);
-	set_L(elem[k+1].Fnum, elem[k+1].Knum, scl_ds*dbn);
+	set_L(elem[k-1].Fnum, elem[k-1].Knum, -dbn);
+	set_L(elem[k+1].Fnum, elem[k+1].Knum, dbn);
       } else {
 	std::cout << "set_dbn_s: configuration error " << elem[k+1].Name
 	     << " (" << k+2 << ")" << std::endl;
