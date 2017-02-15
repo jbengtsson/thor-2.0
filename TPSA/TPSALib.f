@@ -4520,9 +4520,11 @@
       RETURN
       END
 *
-      SUBROUTINE DAEXP(ina, r, ic1, ic2, name)
+      SUBROUTINE DAEXP(ina, r, ic1, ic2, name) bind(C, name="daexp_")
+      use iso_c_binding
       implicit none
-      character         name*10
+!      character         name*10
+      character, dimension (10), intent (out) :: name
       integer           ina, ic1, ic2, i, lh, k, jj
       integer(4)        ic
       double precision  r
@@ -4546,7 +4548,10 @@
       ic = idapo(ina)
       lh = idall(ina)
       r(1) = lh
-      name = daname(ina)
+!      name = daname(ina)
+      do k=1, 10
+         name(k) = daname(ina)(k:k)
+      enddo
 
       do k = 1, lnv
          jj(k) = 0
