@@ -1,4 +1,4 @@
-#define NO 3
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -29,7 +29,7 @@ public:
 };
 
 
-param_type b2_prms;
+param_type    b2_prms, b4_prms;
 
 
 void param_type::add_prm(const std::string Fname, const int n,
@@ -110,7 +110,7 @@ void param_type::set_dprm(double *dbn, double *bn, double &dbn_max) const
       bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
     }
     dbn_max = max(fabs(dbn[i]), dbn_max);
-    printf("%10.5f", bn[i]);
+    printf(" %9.5f", bn[i]);
   }
   printf("\n");
 }
@@ -346,7 +346,7 @@ void fit_emit(param_type &b2_prms, const double eps_x,
 {
   // Optimize unit cell for hor. emittance.
   // Lattice: unit cell.
-  const double scl_nu = 1e1, scl_ksi = 1e-2, scl_eps = 1e1;
+  const double scl_eps = 1e2, scl_nu = 1e1, scl_ksi = 1e-1;
 
   const int m_max = 8;
 
@@ -364,7 +364,7 @@ void fit_emit(param_type &b2_prms, const double eps_x,
 
   b2_prms.ini_prm(b2, b2_lim);
 
-  danot_(2);
+  danot_(3);
 
   do {
     printf("\n");
@@ -379,8 +379,8 @@ void fit_emit(param_type &b2_prms, const double eps_x,
       A[++m][i] = scl_eps*h_ijklm_p(eps1_x, 0, 0, 0, 0, 0, 7);
       A[++m][i] = scl_nu*h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
       A[++m][i] = scl_nu*h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
-      A[++m][i] = scl_ksi*h_ijklm_p(nus[3], 0, 0, 0, 0, 1, 7);
-      A[++m][i] = scl_ksi*h_ijklm_p(nus[4], 0, 0, 0, 0, 1, 7);
+      // A[++m][i] = scl_ksi*h_ijklm_p(nus[3], 0, 0, 0, 0, 1, 7);
+      // A[++m][i] = scl_ksi*h_ijklm_p(nus[4], 0, 0, 0, 0, 1, 7);
 
       for (j = 1; j <= m; j++)
 	A[j][i] *= b2_prms.bn_scl[i-1];
@@ -392,14 +392,16 @@ void fit_emit(param_type &b2_prms, const double eps_x,
     b[++m] = -scl_eps*(eps1_x.cst()-eps_x);
     b[++m] = -scl_nu*(h_ijklm(nus[3], 0, 0, 0, 0, 0)-nu_x);
     b[++m] = -scl_nu*(h_ijklm(nus[4], 0, 0, 0, 0, 0)-nu_y);
-    b[++m] = -scl_ksi*h_ijklm(nus[3], 0, 0, 0, 0, 1);
-    b[++m] = -scl_ksi*h_ijklm(nus[4], 0, 0, 0, 0, 1);
+    // b[++m] = -scl_ksi*h_ijklm(nus[3], 0, 0, 0, 0, 1);
+    // b[++m] = -scl_ksi*h_ijklm(nus[4], 0, 0, 0, 0, 1);
 
     prt_system(m, n_b2, A, b);
 
     SVD_lim(m, n_b2, A, b, b2_lim, b2_prms.svd_cut, b2, db2);
 
     b2_prms.set_dprm(db2, b2, db2_max);
+
+    prt_mfile("flat_file.dat");
   } while (db2_max > b2_prms.bn_tol);
 
   prt_emit(b2_prms, b2);
@@ -407,6 +409,42 @@ void fit_emit(param_type &b2_prms, const double eps_x,
   free_dvector(b, 1, m_max); free_dvector(b2_lim, 1, n_b2);
   free_dvector(b2, 1, n_b2); free_dvector(db2, 1, n_b2);
   free_dmatrix(A, 1, m_max, 1, n_b2);
+}
+
+
+void prt_match(const param_type &b2_prms, const double *b2)
+{
+  double l4, l5h, l6, l7h, l8;
+  FILE *outf;
+
+  std::string file_name = "match.out";
+
+  outf = file_write(file_name.c_str());
+
+  fprintf(outf, "bm:  bending, l = 0.166667, t = 0.5, k = %8.5f, t1 = 0.0"
+	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n", b2[1]);
+  fprintf(outf, "qfe: quadrupole, l = 0.15, k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[2]);
+  fprintf(outf, "qde: quadrupole, l = 0.1,  k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[3]);
+  fprintf(outf, "qm:  quadrupole, l = 0.15, k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[4]);
+
+  l4  = get_L(get_Fnum("l4"), 1);  l5h = get_L(get_Fnum("l5h"), 1);
+  l6  = get_L(get_Fnum("l6"), 1);  l7h = get_L(get_Fnum("l7h"), 1);
+  l8  = get_L(get_Fnum("l8"), 1);
+  
+  fprintf(outf, "\nl4:  drift, l = %7.5f;\n", l4);
+  fprintf(outf, "l5h: drift, l = %7.5f;\n", l5h+b2[10]/2e0);
+  fprintf(outf, "l6:  drift, l = %7.5f;\n", l6-b2[10]+b2[9]);
+  fprintf(outf, "l7h: drift, l = %7.5f;\n", l7h-b2[9]/2e0+b2[11]/2e0);
+  fprintf(outf, "l8:  drift, l = %7.5f;\n", l8-b2[11]);
+
+  fprintf(outf, "\nL_bm  = %8.5f\n", b2[9]);
+  fprintf(outf, "L_qfe = %8.5f\n", b2[10]);
+  fprintf(outf, "L_qde = %8.5f\n", b2[11]);
+
+  fclose(outf);
 }
 
 
@@ -419,10 +457,8 @@ void fit_match(param_type &b2_prms,
 
   const int m_max = 8;
 
-  long int     loc;
-  int          n_b2, i, j, m;
-  double       **A, *b, *b2_lim, *b2, *db2;
-  double       db2_max;
+  int          n_b2, i, j, m, loc;
+  double       **A, *b, *b2_lim, *b2, *db2, db2_max;
   ss_vect<tps> AA_tp, A_disp;
 
   const double scl_eta  = 1e1,
@@ -487,43 +523,6 @@ void fit_match(param_type &b2_prms,
 }
 
 
-void prt_match(const param_type &b2_prms, const double *b2)
-{
-  double l4, l5h, l6, l7h, l8;
-  FILE *outf;
-
-  std::string file_name = "match.out";
-
-  outf = file_write(file_name.c_str());
-
-  fprintf(outf, "bm:  bending, l = 0.166667, t = 0.5, k = %8.5f, t1 = 0.0"
-	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n", b2[1]);
-  fprintf(outf, "qfe: quadrupole, l = 0.15, k = %9.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[2]);
-  fprintf(outf, "qde: quadrupole, l = 0.1,  k = %9.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[3]);
-  fprintf(outf, "qm:  quadrupole, l = 0.15, k = %9.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[4]);
-
-  l4  = get_L(get_Fnum("l4"), 1);  l5h = get_L(get_Fnum("l5h"), 1);
-  l6  = get_L(get_Fnum("l6"), 1);  l7h = get_L(get_Fnum("l7h"), 1);
-  l8  = get_L(get_Fnum("l8"), 1);
-  
-  fprintf(outf, "\nl4:  drift, l = %7.5f;\n", l4+b2[10]);
-  fprintf(outf, "l5h: drift, l = %7.5f;\n", l5h-b2[10]/2e0+b2[11]/2e0);
-  fprintf(outf, "l6:  drift, l = %7.5f;\n", l6-b2[11]+b2[9]);
-  fprintf(outf, "l7h: drift, l = %7.5f;\n", l7h-b2[9]/2e0+b2[12]/2e0);
-  fprintf(outf, "l8:  drift, l = %7.5f;\n", l8-b2[12]);
-
-  fprintf(outf, "\nL_bm  = %8.5f\n", b2[9]);
-  fprintf(outf, "L_qfe = %8.5f\n", b2[10]);
-  fprintf(outf, "L_qde = %8.5f\n", b2[11]);
-  fprintf(outf, "L_qm  = %8.5f\n", b2[12]);
-
-  fclose(outf);
-}
-
-
 double f_match(double *b2)
 {
   // Minimize linear linear chromaticity for super period.
@@ -531,14 +530,15 @@ double f_match(double *b2)
 
   static double chi2_ref = 1e30;
 
-  long int     i, loc1, loc2, loc3;
-  double       tr[2], chi2;
+  int          i, loc1, loc2, loc3;
+  double       eps1_x, tr[2], chi2;
   tps          K_re, K_im;
   ss_vect<tps> AA_tp1, AA_tp2, A_disp;
 
-  const double scl_eta = 1e4, scl_ksi = 1e-1,
+  const double eps_x   = 16e-3,
+               scl_eps = 1e-1, scl_eta = 1e4, scl_ksi = 1e-1,
 	       beta0[] = {3.0,     3.0},
-               beta1[] = {1.35632, 1.91473};
+               beta1[] = {1.35633, 1.91479};
 
   b2_prms.set_prm(b2);
 
@@ -546,6 +546,9 @@ double f_match(double *b2)
   loc1 = get_loc(get_Fnum("bm"), 2);
   loc2 = get_loc(get_Fnum("sfh"), 1);
   loc3 = n_elem;
+
+  danot_(1);
+  eps1_x = get_eps_x().cst();
 
   danot_(2);
   get_Map();
@@ -563,12 +566,13 @@ double f_match(double *b2)
   // printf("trace: %6.3f %6.3f\n", tr[X_], tr[Y_]);
 
   chi2 = 0e0;
+  chi2 += sqr(scl_eps*(eps1_x-eps_x));
   chi2 += sqr(scl_eta*h_ijklm(A_disp[x_],  0, 0, 0, 0, 1));
   chi2 += sqr(scl_eta*h_ijklm(A_disp[px_], 0, 0, 0, 0, 1));
-  chi2 += sqr((h_ijklm(AA_tp1[x_], 1, 0, 0, 0, 0)-beta1[X_]));
-  chi2 += sqr((h_ijklm(AA_tp1[y_], 0, 0, 1, 0, 0)-beta1[Y_]));
-  chi2 += sqr((h_ijklm(AA_tp2[x_], 1, 0, 0, 0, 0)-beta0[X_]));
-  chi2 += sqr((h_ijklm(AA_tp2[y_], 0, 0, 1, 0, 0)-beta0[Y_]));
+  chi2 += sqr(h_ijklm(AA_tp1[x_], 1, 0, 0, 0, 0)-beta1[X_]);
+  chi2 += sqr(h_ijklm(AA_tp1[y_], 0, 0, 1, 0, 0)-beta1[Y_]);
+  chi2 += sqr(h_ijklm(AA_tp2[x_], 1, 0, 0, 0, 0)-beta0[X_]);
+  chi2 += sqr(h_ijklm(AA_tp2[y_], 0, 0, 1, 0, 0)-beta0[Y_]);
   chi2 += sqr(scl_ksi*(h_ijklm(K_re, 1, 1, 0, 0, 1)));
   chi2 += sqr(scl_ksi*(h_ijklm(K_re, 0, 0, 1, 1, 1)));
   if ((fabs(tr[X_]) > 2e0) || (fabs(tr[Y_]) > 2e0)) chi2 += 1e10;
@@ -577,7 +581,8 @@ double f_match(double *b2)
 
   if (chi2 < chi2_ref) {
     printf("\nchi2: %12.5e, %12.5e\n", chi2, chi2_ref);
-    printf("b:    %10.3e %10.3e %8.3f %8.3f %8.3f %8.3f %10.3e %10.3e\n",
+    printf("b:    %10.3e %10.3e %10.3e %8.3f %8.3f %8.3f %8.3f %10.3e %10.3e\n",
+	   eps1_x,
 	   h_ijklm(A_disp[x_],  0, 0, 0, 0, 1),
 	   h_ijklm(A_disp[px_], 0, 0, 0, 0, 1),
 	   h_ijklm(AA_tp1[x_], 1, 0, 0, 0, 0),
@@ -631,44 +636,32 @@ void opt_match(param_type &b2_prms)
 }
 
 
-void fit_3rd_achrom(std::vector<int> &bns,
-		    const double bn_max, const double dbn_tol,
-		    const double s_cut, const double step)
+void fit_3rd_achrom(param_type &b4_prms)
 {
   // Third order achromat.
 
   const int m_max = 6;
 
-  int          n_bn, i, j, m, loc;
-  double       **A, *b, *bn_lim, *bn, *dbn;
-  double       dbn_max;
+  int          n_b4, i, j, m;
+  double       **A, *b, *b4_lim, *b4, *db4;
+  double       db4_max;
   tps          K_re, K_im;
   ss_vect<tps> nus;
 
-  n_bn = bns.size();
+  n_b4 = b4_prms.n_prm;
 
-  b = dvector(1, m_max); bn_lim = dvector(1, n_bn);
-  bn = dvector(1, n_bn); dbn = dvector(1, n_bn);
-  A = dmatrix(1, m_max, 1, n_bn);
+  b = dvector(1, m_max); b4_lim = dvector(1, n_b4);
+  b4 = dvector(1, n_b4); db4 = dvector(1, n_b4);
+  A = dmatrix(1, m_max, 1, n_b4);
 
-  for (i = 1; i <= n_bn; i++) {
-    if (bns[i-1] > 0) {
-      bn_lim[i] = bn_max; bn[i] = get_bn(bns[i-1], 1, Oct);
-    } else {
-      bn_lim[i] = ds_max;
-      loc = get_loc(abs(bns[i-1]), 1) - 1; bn[i] = get_L(elem[loc-1].Fnum, 1);
-    }
-  }
+  b4_prms.ini_prm(b4, b4_lim);
 
   danot_(5);
 
   do {
-    for (i = 1; i <= n_bn; i++) {
-      for (j = 1; j <= get_n_Kids(abs(bns[i-1])); j++)
-	if (bns[i-1] > 0)
-	  set_bn_par(bns[i-1], j, Oct, 7);
-	else
-	  set_s_par(abs(bns[i-1]), j, 7);
+    printf("\n");
+    for (i = 1; i <= n_b4; i++) {
+      b4_prms.set_prm_dep(i-1);
 
       get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); CtoR(K, K_re, K_im);
 
@@ -679,15 +672,10 @@ void fit_3rd_achrom(std::vector<int> &bns,
       // A[++m][i] = h_ijklm_p(K_re, 1, 1, 0, 0, 2, 7);
       // A[++m][i] = h_ijklm_p(K_re, 0, 0, 1, 1, 2, 7);
 
-      if (bns[i-1] < 0)
-	for (j = 1; j <= m; j++)
-	  A[j][i] *= scl_ds;
+      for (j = 1; j <= m; j++)
+	A[j][i] *= b4_prms.bn_scl[i-1];
 
-      for (j = 1; j <= get_n_Kids(abs(bns[i-1])); j++)
-	if (bns[i-1] > 0)
-	  clr_bn_par(bns[i-1], j, Oct);
-	else
-	  clr_s_par(abs(bns[i-1]), j);
+      b4_prms.clr_prm_dep(i-1);
     }
 
     m = 0;
@@ -697,26 +685,17 @@ void fit_3rd_achrom(std::vector<int> &bns,
     // b[++m] = -h_ijklm(K_re, 1, 1, 0, 0, 2);
     // b[++m] = -h_ijklm(K_re, 0, 0, 1, 1, 2);
 
-    prt_system(m, n_bn, A, b);
+    prt_system(m, n_b4, A, b);
 
-    SVD_lim(m, n_bn, A, b, bn_lim, s_cut, bn, dbn);
+    SVD_lim(m, n_b4, A, b, b4_lim, b4_prms.svd_cut, b4, db4);
 
-    printf("\n");
-    dbn_max = 0e0;
-    for (i = 1; i <= n_bn; i++) {
-      set_dbn_s(bns[i-1], Oct, step*dbn[i]);
-      bn[i] = get_bn_s(bns[i-1], 1, Oct);
-      dbn_max = max(fabs(step*dbn[i]), dbn_max);
-
-      printf("%14.5e", bn[i]);
-    }
-    printf("\n");
-  } while (dbn_max > dbn_tol);
+    b4_prms.set_dprm(db4, b4, db4_max);
+  } while (db4_max > b4_prms.bn_tol);
 
   free_dvector(b, 1, m_max);
-  free_dvector(bn_lim, 1, n_bn); free_dvector(bn, 1, n_bn);
-  free_dvector(dbn, 1, n_bn);
-  free_dmatrix(A, 1, m_max, 1, n_bn);
+  free_dvector(b4_lim, 1, n_b4); free_dvector(b4, 1, n_b4);
+  free_dvector(db4, 1, n_b4);
+  free_dmatrix(A, 1, m_max, 1, n_b4);
 }
 
 
@@ -739,20 +718,20 @@ void chk_lat(double nu[], double ksi[])
 
 int main(int argc, char *argv[])
 {
-  double           Jx, Jy;
-  tps              eps1_x, K_re, K_im, g_re, g_im, h_re, h_im, H_re, H_im;
-  ss_vect<tps>     Id_scl;
-  param_type       b3_prms;
-  std::vector<int> bn_Fams;
-  std::ofstream    outf;
+  double        Jx, Jy;
+  tps           eps1_x, K_re, K_im, g_re, g_im, h_re, h_im, H_re, H_im;
+  ss_vect<tps>  Id_scl;
+  param_type    b4_prms;
+  std::ofstream outf;
   
   const double max_Ax = 5e-3, max_Ay = 5e-3, max_delta = 3e-2;
   
   const double eps_x   = 15e-3,
                nu[]    = {4.0/15.0, 1.0/15.0},
-               beta0[] = {0.38133, 5.00190},
-	       eta0_x  = 0.00382435,
-	       beta1[] = {3.0,     3.0},
+               beta0[] = {0.38133, 5.00190},   // Optics and dispersion
+	       eta0_x  = 0.00382435,           // at center of dipole.
+	       beta1[] = {1.35633, 1.91479},   // Optics at center of SFh.
+	       beta2[] = {3.0,     3.0};       // Optics at center of straight.
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -768,7 +747,7 @@ int main(int argc, char *argv[])
 
   danot_(1);
 
-  Jx = sqr(max_Ax)/(2.0*beta1[X_]); Jy = sqr(max_Ay)/(2.0*beta1[Y_]);
+  Jx = sqr(max_Ax)/(2.0*beta2[X_]); Jy = sqr(max_Ay)/(2.0*beta2[Y_]);
 
   Id_scl.identity();
   Id_scl[x_] *= sqrt(2.0*Jx); Id_scl[px_] *= sqrt(2.0*Jx);
@@ -785,11 +764,11 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    b2_prms.add_prm("bh",  2, 10.0, 1.0);
-    b2_prms.add_prm("qf",  2, 25.0, 1.0);
+    b2_prms.add_prm("bh",  2, 30.0, 1.0);
+    b2_prms.add_prm("qfh",  2, 30.0, 1.0);
     b2_prms.add_prm("l2", -1,  0.5, 0.01);
 
-    b2_prms.bn_tol = 1e-4; b2_prms.svd_cut = 1e-6;  b2_prms.step = 0.8;
+    b2_prms.bn_tol = 1e-5; b2_prms.svd_cut = 1e-8;  b2_prms.step = 0.5;
 
     fit_emit(b2_prms, eps_x, nu[X_], nu[Y_]);
   }
@@ -810,34 +789,31 @@ int main(int argc, char *argv[])
     fit_match(b2_prms, beta0[X_], beta0[Y_], eta0_x, beta1[X_], beta1[Y_]);
   }
 
-  if (true) {
+  if (false) {
     b2_prms.add_prm("bm",   2, 25.0, 1.0);
     b2_prms.add_prm("qfe",  2, 25.0, 1.0);
     b2_prms.add_prm("qde",  2, 30.0, 1.0);
     b2_prms.add_prm("qm",   2, 25.0, 1.0);
 
-    b2_prms.add_prm("l5h", -1, 0.2,  0.01);
-    b2_prms.add_prm("l6",  -1, 1.0,  0.01);
-    b2_prms.add_prm("l7h", -1, 0.5,  0.01);
-    b2_prms.add_prm("l8",  -1, 0.5,  0.01);
+    b2_prms.add_prm("l5h", -1, 0.2,  0.1);
+    b2_prms.add_prm("l6",  -1, 0.5,  0.1);
+    b2_prms.add_prm("l7h", -1, 0.5,  0.1);
+    b2_prms.add_prm("l8",  -1, 0.5,  0.1);
 
-    b2_prms.add_prm("bm",  -2,  0.5, 1.0);
-    b2_prms.add_prm("qfe", -2,  0.5, 1.0);
-    b2_prms.add_prm("qde", -2,  0.5, 1.0);
-    b2_prms.add_prm("qm",  -2,  0.5, 1.0);
-
-    b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-4; b2_prms.step = 0.001;
+    b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-8; b2_prms.step = 0.05;
 
     no_mpoles();
     opt_match(b2_prms);
   }
 
-  if (false) {
-    // b3_prms.add_prm("o1", 3);
-    // b3_prms.add_prm("o2", 3);
-    // b3_prms.add_prm("o3", 3);
+  if (true) {
+    b4_prms.add_prm("o1", 4, 1e6, 1.0);
+    b4_prms.add_prm("o2", 4, 1e6, 1.0);
+    b4_prms.add_prm("o3", 4, 1e6, 1.0);
 
-    fit_3rd_achrom(bn_Fams, 1e5, 1e-5, 1e-3, 1.0);
+    b4_prms.bn_tol = 1e-5; b4_prms.svd_cut = 1e-3; b4_prms.step = 1.0;
+
+    fit_3rd_achrom(b4_prms);
   }
 
   if (false) {

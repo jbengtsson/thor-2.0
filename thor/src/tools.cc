@@ -1299,7 +1299,7 @@ void set_L_par(const int Fnum, const int Knum, const int n, const int j)
   double L;
 
   k = get_loc(Fnum, Knum) - 1;
-  L = elem[k].L; elem_tps[k].L = tps(L, j);
+  L = elem_tps[k].L.cst(); elem_tps[k].L = tps(L, j);
 }
 
 
