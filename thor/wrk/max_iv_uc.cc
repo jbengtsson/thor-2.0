@@ -12,9 +12,10 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 const int n_max = NO/2 - 1;
 
-typedef double dnu_type[2*n_max+1][2*n_max+1];
+typedef double dnu1_type[n_max+1][n_max+1];
+typedef double dnu2_type[2*n_max+1][2*n_max+1];
 
-dnu_type dnu_xy;
+dnu2_type dnu_xy;
 
 struct param_type {
 private:
@@ -753,7 +754,7 @@ void prt_dnu(const param_type &b4_prms, const double *b4)
 }
 
 
-double int_dnu(const dnu_type &dnu_xy, const double twoJx, const double twoJy)
+double f_int_dnu(const double twoJx, const double twoJy)
 {
   int    i, j;
   double sum = 0e0;
@@ -768,9 +769,13 @@ double int_dnu(const dnu_type &dnu_xy, const double twoJx, const double twoJy)
 }
 
 
-double f_int(const double twoJx, const double twoJy)
+void prt_dnu(const int i, const int j, const dnu1_type dnu[],
+	     const double twoJ[])
 {
-  return int_dnu(dnu_xy, twoJx, twoJy);
+  printf("%1d %1d %11.3e %11.3e\n",
+	 i, j,
+	 dnu[X_][i][j]*pow(twoJ[X_], i)*pow(twoJ[Y_], j),
+	 dnu[Y_][i][j]*pow(twoJ[X_], i)*pow(twoJ[Y_], j));
 }
 
 
@@ -782,7 +787,8 @@ double f_dnu(double *b4)
   static double chi2_ref = 1e30;
 
   int          i, j, k, l;
-  double       chi2, twoJ[2], dnu[2][n_max+1][n_max+1], dnu_int;
+  double       chi2, twoJ[2], dnu_int;
+  dnu1_type    dnu[2];
   ss_vect<tps> nus, dnus1, dnus2, IC[2];
 
   const int    n_int   = 25;
@@ -802,7 +808,10 @@ double f_dnu(double *b4)
   danot_(NO);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   nus = dHdJ(K);
+  // Truncate.
+  danot_(4);
   dnus1 = dHdJ(nus[0]); dnus2 = dHdJ(nus[1]);
+  danot_(NO);
 
   // Remove constant part.
   for (k = 0; k < 2; k++)
@@ -818,7 +827,7 @@ double f_dnu(double *b4)
 
   for (i = 0; i < n_max+1; i++)
     for (j = 0; j < n_max+1; j++)
-      if (i+j <= n_max)
+      // if (i+j <= n_max)
 	for (k = 0; k < 2; k++)
 	  dnu[k][i][j] = h_ijklm(nus[3+k], i, i, j, j, 0);
 
@@ -828,7 +837,7 @@ double f_dnu(double *b4)
 	for (l = 0; l < n_max+1; l++)
 	  dnu_xy[i+k][j+l] += dnu[X_][i][j]*dnu[Y_][k][l];
 
-  dnu_int = int_2D(n_int, n_int, 0e0, twoJ[X_], 0e0, twoJ[Y_], f_int);
+  dnu_int = int_2D(n_int, n_int, 0e0, twoJ[X_], 0e0, twoJ[Y_], f_int_dnu);
 
   chi2 = 0e0;
   // chi2 += sqr((dnus1[3]*IC[0]).cst());
@@ -839,20 +848,31 @@ double f_dnu(double *b4)
   chi2 += sqr(dnu[X_][0][1]+2e0*dnu[X_][0][2]*twoJ[Y_]);
   chi2 += sqr(dnu[Y_][0][1]+2e0*dnu[Y_][0][2]*twoJ[Y_]);
   chi2 += sqr(dnu[Y_][1][0]+2e0*dnu[Y_][2][0]*twoJ[X_]);
-  // chi2 += sqr(1e5*dnu_int);
+
+  // chi2 += sqr(dnu_int/(twoJ[X_]*twoJ[Y_]));
+
+  for (i = 1; i <= b4_prms.n_prm; i++)
+    if (fabs(b4[i]) > b4_prms.bn_max[i-1]) chi2 += 1e10;
 
   if (chi2 < chi2_ref) {
     printf("\nchi2: %12.5e, %12.5e\n\n", chi2, chi2_ref);
 
-    for (i = 0; i < n_max+1; i++)
-      for (j = 0; j < n_max+1; j++)
-	if ((dnu[X_][i][j] != 0e0) || (dnu[Y_][i][j] != 0e0))
-	  printf("dnu[%d][%d]: %11.3e %11.3e\n",
-		 i, j,
-		 dnu[X_][i][j]*pow(twoJ[X_], i)*pow(twoJ[Y_], j),
-		 dnu[Y_][i][j]*pow(twoJ[X_], i)*pow(twoJ[Y_], j));
+    printf("dnu:\n");
+    prt_dnu(1, 0, dnu, twoJ);
+    prt_dnu(0, 1, dnu, twoJ);
+    printf("\n");
+    prt_dnu(2, 0, dnu, twoJ);
+    prt_dnu(0, 2, dnu, twoJ);
+    prt_dnu(1, 1, dnu, twoJ);
+    if (n_max > 2) {
+      printf("\n");
+      prt_dnu(3, 0, dnu, twoJ);
+      prt_dnu(0, 3, dnu, twoJ);
+      prt_dnu(2, 1, dnu, twoJ);
+      prt_dnu(1, 2, dnu, twoJ);
+    }
 
-    printf("\ndnu_int: %10.3e\n", dnu_int);
+    printf("\ndnu_int: %10.3e\n", dnu_int/(twoJ[X_]*twoJ[Y_]));
 
     printf("dnu_dJ: %11.3e %11.3e %11.3e %11.3e\n",
 	   dnu[X_][1][0]+2e0*dnu[X_][2][0]*twoJ[X_],
@@ -1026,13 +1046,13 @@ int main(int argc, char *argv[])
   }
 
   if (true) {
-    b4_prms.add_prm("o1", 4, 1e6, 1.0);
-    b4_prms.add_prm("o2", 4, 1e6, 1.0);
-    b4_prms.add_prm("o3", 4, 1e6, 1.0);
+    b4_prms.add_prm("o1", 4, 1e4, 1.0);
+    b4_prms.add_prm("o2", 4, 1e4, 1.0);
+    b4_prms.add_prm("o3", 4, 1e4, 1.0);
 
-    b4_prms.add_prm("o1", 6, 1e6, 1.0);
-    b4_prms.add_prm("o2", 6, 1e6, 1.0);
-    b4_prms.add_prm("o3", 6, 1e6, 1.0);
+    b4_prms.add_prm("o1", 6, 1e10, 1.0);
+    b4_prms.add_prm("o2", 6, 1e10, 1.0);
+    b4_prms.add_prm("o3", 6, 1e10, 1.0);
 
     b4_prms.bn_tol = 1e-5; b4_prms.svd_cut = 0e0; b4_prms.step = 0.0;
 
