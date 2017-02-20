@@ -1,4 +1,4 @@
-#define NO 5
+#define NO 6
 
 #include "thor_lib.h"
 
@@ -9,6 +9,12 @@ int no_tps   = NO,
 extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
+
+const int n_max = NO/2 - 1;
+
+typedef double dnu_type[2*n_max+1][2*n_max+1];
+
+dnu_type dnu_xy;
 
 struct param_type {
 private:
@@ -131,17 +137,48 @@ void param_type::set_prm(double *bn) const
 }
 
 
-void no_mpoles(void)
+double int_2D(const int nx, const int ny,
+	       const double a, const double b, const double c, const double d,
+	       double f(const double, const double))
 {
-  int j, k;
+  // Cubature trapezoidal rule for f(x,y) for x = [a,b] and y = [c,d].
+  int    i, j;
+  double sum, hx, hy, x, y;
 
-  std::cout << "\nzeroing multipoles" << "\n\n";
+  hx = (b-a)/double(nx-1); hy = (d-c)/double(ny-1);
+
+  sum = f(a,c)+f(a,d)+f(b,c)+f(b,d);
+
+  for (i = 2; i <= nx-1; i++) {
+    x = a + hx*(i-1);
+    sum += 2.0*(f(x,c)+f(x,d));
+  }
+
+  for (j = 2; j <= ny-1; j++) {
+    y = c + hy*(j-1);
+    sum += 2.0*(f(a,y)+f(b,y));
+  }
+
+  for (i = 2; i <= nx-1; i++) {
+    x = a + hx*(i-1);
+    for (j = 2; j <= ny-1; j++) {
+      y = c + hy*(j-1);
+      sum = sum + 4.0*f(x,y);
+    }
+  }
+
+  return 0.25*hx*hy*sum;
+}
+
+
+void no_mpoles(const int n)
+{
+  int j;
+
+  printf("\nzeroing multipoles: %d\n", n);
   for (j = 0; j < n_elem; j++)
     if (elem[j].kind == Mpole)
-      for (k = Sext; k < mpole_max; k++) {
-	//	cout << "zeroing " << elem[j].Name << endl;
-	set_bn(elem[j].Fnum, elem[j].Knum, k, 0e0);
-      }
+	set_bn(elem[j].Fnum, elem[j].Knum, n, 0e0);
 }
 
 
@@ -629,7 +666,7 @@ void opt_match(param_type &b2_prms)
     for (j = 1; j <= n_b2; j++)
       xi[i][j] = (i == j)? 1e0 : 0e0;
 
-  dpowell(b2, xi, n_b2, 1e-15, &iter, &fret, f_match);
+  dpowell(b2, xi, n_b2, b2_prms.bn_tol, &iter, &fret, f_match);
 
   free_dvector(b2, 1, n_b2);  free_dvector(b2_lim, 1, n_b2);
   free_dmatrix(xi, 1, n_b2, 1, n_b2);
@@ -699,6 +736,177 @@ void fit_3rd_achrom(param_type &b4_prms)
 }
 
 
+void prt_dnu(const param_type &b4_prms, const double *b4)
+{
+  FILE *outf;
+
+  std::string file_name = "dnu.out";
+
+  outf = file_write(file_name.c_str());
+  fprintf(outf, "o1: multipole, l = 0.0, HOM = (4, %12.5e, 0.0), N = Nsext,\n"
+	        "    Method = Meth;\n", b4[1]);
+  fprintf(outf, "o2: multipole, l = 0.0, HOM = (4, %12.5e, 0.0), N = Nsext,\n"
+	        "    Method = Meth;\n", b4[2]);
+  fprintf(outf, "o3: multipole, l = 0.0, HOM = (4, %12.5e, 0.0), N = Nsext,\n"
+	        "    Method = Meth;\n", b4[3]);
+  fclose(outf);
+}
+
+
+double int_dnu(const dnu_type &dnu_xy, const double twoJx, const double twoJy)
+{
+  int    i, j;
+  double sum = 0e0;
+  
+  for (i = 0; i < 2*n_max+1; i++)
+    for (j = 0; j < 2*n_max+1; j++)
+      if (dnu_xy[i][j] != 0e0)
+	sum += dnu_xy[i][j]*pow(twoJx, i)*pow(twoJy, j);
+
+  // Correct for 2J vs. J.
+  return fabs(sum/4e0);
+}
+
+
+double f_int(const double twoJx, const double twoJy)
+{
+  return int_dnu(dnu_xy, twoJx, twoJy);
+}
+
+
+double f_dnu(double *b4)
+{
+  // Minimize tune footprint for super period.
+  // Lattice: super period.
+
+  static double chi2_ref = 1e30;
+
+  int          i, j, k, l;
+  double       chi2, twoJ[2], dnu[2][n_max+1][n_max+1], dnu_int;
+  ss_vect<tps> nus, dnus1, dnus2, IC[2];
+
+  const int    n_int   = 25;
+  const double A_max[] = {1.0e-3, 1.0e-3},
+               beta2[] = {3.0, 3.0};       // Optics at center of straight.
+
+  b4_prms.set_prm(b4);
+
+  for (k = 0; k < 2; k++)
+    twoJ[k] = sqr(A_max[k])/beta2[k];
+
+  IC[0].zero(); IC[0][x_] = sqrt(twoJ[X_]); IC[0][px_] = sqrt(twoJ[X_]);
+  IC[1].zero(); IC[1][y_] = sqrt(twoJ[Y_]); IC[1][py_] = sqrt(twoJ[Y_]);
+
+  danot_(NO-1);
+  get_Map();
+  danot_(NO);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  nus = dHdJ(K);
+  dnus1 = dHdJ(nus[0]); dnus2 = dHdJ(nus[1]);
+
+  // Remove constant part.
+  for (k = 0; k < 2; k++)
+    nus[3+k] -= nus[3+k].cst();
+
+  for (i = 0; i < 2*n_max+1; i++)
+    for (j = 0; j < 2*n_max+1; j++) {
+      if ((i < n_max+1) && (j < n_max+1))
+	for (k = 0; k < 2; k++)
+	  dnu[k][i][j] = 0e0;
+      dnu_xy[i][j] = 0e0;
+    }
+
+  for (i = 0; i < n_max+1; i++)
+    for (j = 0; j < n_max+1; j++)
+      if (i+j <= n_max)
+	for (k = 0; k < 2; k++)
+	  dnu[k][i][j] = h_ijklm(nus[3+k], i, i, j, j, 0);
+
+  for (i = 0; i < n_max+1; i++)
+    for (j = 0; j < n_max+1; j++)
+      for (k = 0; k < n_max+1; k++)
+	for (l = 0; l < n_max+1; l++)
+	  dnu_xy[i+k][j+l] += dnu[X_][i][j]*dnu[Y_][k][l];
+
+  dnu_int = int_2D(n_int, n_int, 0e0, twoJ[X_], 0e0, twoJ[Y_], f_int);
+
+  chi2 = 0e0;
+  // chi2 += sqr((dnus1[3]*IC[0]).cst());
+  // chi2 += sqr((dnus1[4]*IC[1]).cst());
+  // chi2 += sqr((dnus2[4]*IC[1]).cst());
+  // chi2 += sqr((dnus2[3]*IC[0]).cst());
+  chi2 += sqr(dnu[X_][1][0]+2e0*dnu[X_][2][0]*twoJ[X_]);
+  chi2 += sqr(dnu[X_][0][1]+2e0*dnu[X_][0][2]*twoJ[Y_]);
+  chi2 += sqr(dnu[Y_][0][1]+2e0*dnu[Y_][0][2]*twoJ[Y_]);
+  chi2 += sqr(dnu[Y_][1][0]+2e0*dnu[Y_][2][0]*twoJ[X_]);
+  // chi2 += sqr(1e5*dnu_int);
+
+  if (chi2 < chi2_ref) {
+    printf("\nchi2: %12.5e, %12.5e\n\n", chi2, chi2_ref);
+
+    for (i = 0; i < n_max+1; i++)
+      for (j = 0; j < n_max+1; j++)
+	if ((dnu[X_][i][j] != 0e0) || (dnu[Y_][i][j] != 0e0))
+	  printf("dnu[%d][%d]: %11.3e %11.3e\n",
+		 i, j,
+		 dnu[X_][i][j]*pow(twoJ[X_], i)*pow(twoJ[Y_], j),
+		 dnu[Y_][i][j]*pow(twoJ[X_], i)*pow(twoJ[Y_], j));
+
+    printf("\ndnu_int: %10.3e\n", dnu_int);
+
+    printf("dnu_dJ: %11.3e %11.3e %11.3e %11.3e\n",
+	   dnu[X_][1][0]+2e0*dnu[X_][2][0]*twoJ[X_],
+	   dnu[X_][0][1]+2e0*dnu[X_][0][2]*twoJ[Y_],
+	   dnu[Y_][0][1]+2e0*dnu[Y_][0][2]*twoJ[Y_],
+	   dnu[Y_][1][0]+2e0*dnu[Y_][2][0]*twoJ[X_]);
+    printf("dnu_dJ: %11.3e %11.3e %11.3e %11.3e\n",
+	   -M_PI*(dnus1[3]*IC[0]).cst(), -M_PI*(dnus1[4]*IC[1]).cst(),
+	   -M_PI*(dnus2[4]*IC[1]).cst(), -M_PI*(dnus2[3]*IC[0]).cst());
+
+    printf("\nb4s:");
+    for (i = 1; i <= b4_prms.n_prm; i++)
+      printf("%13.5e", b4[i]);
+    printf("\n");
+  }
+  
+  prt_mfile("flat_file.fit");
+  prt_dnu(b4_prms, b4);
+
+  chi2_ref = min(chi2, chi2_ref);
+
+  return chi2;
+}
+
+
+void opt_dnu(param_type &b4_prms)
+{
+  // Minimize tune footprint for super period.
+  // Lattice: super period.
+
+  int    n_b4, i, j, iter;
+  double *b4, *b4_lim, **xi, fret;
+
+  n_b4 = b4_prms.n_prm;
+
+  b4 = dvector(1, n_b4); b4_lim = dvector(1, n_b4);
+  xi = dmatrix(1, n_b4, 1, n_b4);
+
+  b4_prms.ini_prm(b4, b4_lim);
+
+  // Set initial directions (unit vectors).
+  for (i = 1; i <= n_b4; i++)
+    for (j = 1; j <= n_b4; j++)
+      xi[i][j] = (i == j)? 1e0 : 0e0;
+
+  dpowell(b4, xi, n_b4,  b2_prms.bn_tol, &iter, &fret, f_dnu);
+
+  prt_dnu(b4_prms, b4);
+
+  free_dvector(b4, 1, n_b4);  free_dvector(b4_lim, 1, n_b4);
+  free_dmatrix(xi, 1, n_b4, 1, n_b4);
+}
+
+
 void chk_lat(double nu[], double ksi[])
 {
   double       alpha[2], beta[2];
@@ -721,10 +929,9 @@ int main(int argc, char *argv[])
   double        Jx, Jy;
   tps           eps1_x, K_re, K_im, g_re, g_im, h_re, h_im, H_re, H_im;
   ss_vect<tps>  Id_scl;
-  param_type    b4_prms;
   std::ofstream outf;
   
-  const double max_Ax = 5e-3, max_Ay = 5e-3, max_delta = 3e-2;
+  const double max_Ax = 2.5e-3, max_Ay = 2.5e-3, max_delta = 3e-2;
   
   const double eps_x   = 15e-3,
                nu[]    = {4.0/15.0, 1.0/15.0},
@@ -744,6 +951,8 @@ int main(int argc, char *argv[])
 
   // Disable log messages from TPSALib and LieLib.
   idprset(-1);
+
+  daeps_(1e-20);
 
   danot_(1);
 
@@ -800,13 +1009,13 @@ int main(int argc, char *argv[])
     b2_prms.add_prm("l7h", -1, 0.5,  0.1);
     b2_prms.add_prm("l8",  -1, 0.5,  0.1);
 
-    b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-8; b2_prms.step = 0.05;
+    b2_prms.bn_tol = 1e-15; b2_prms.svd_cut = 0e0; b2_prms.step = 0.0;
 
-    no_mpoles();
+    no_mpoles(Sext);
     opt_match(b2_prms);
   }
 
-  if (true) {
+  if (false) {
     b4_prms.add_prm("o1", 4, 1e6, 1.0);
     b4_prms.add_prm("o2", 4, 1e6, 1.0);
     b4_prms.add_prm("o3", 4, 1e6, 1.0);
@@ -814,6 +1023,21 @@ int main(int argc, char *argv[])
     b4_prms.bn_tol = 1e-5; b4_prms.svd_cut = 1e-3; b4_prms.step = 1.0;
 
     fit_3rd_achrom(b4_prms);
+  }
+
+  if (true) {
+    b4_prms.add_prm("o1", 4, 1e6, 1.0);
+    b4_prms.add_prm("o2", 4, 1e6, 1.0);
+    b4_prms.add_prm("o3", 4, 1e6, 1.0);
+
+    b4_prms.add_prm("o1", 6, 1e6, 1.0);
+    b4_prms.add_prm("o2", 6, 1e6, 1.0);
+    b4_prms.add_prm("o3", 6, 1e6, 1.0);
+
+    b4_prms.bn_tol = 1e-5; b4_prms.svd_cut = 0e0; b4_prms.step = 0.0;
+
+    no_mpoles(Oct); no_mpoles(Dodec);
+    opt_dnu(b4_prms);
   }
 
   if (false) {
