@@ -1,4 +1,4 @@
-#define NO 6
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -116,7 +116,7 @@ void param_type::set_dprm(double *dbn, double *bn, double &dbn_max) const
       set_dbn_s(-Fnum[i-1], n[i-1], dbn[i]);
       bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
     }
-    dbn_max = max(fabs(dbn[i]), dbn_max);
+    dbn_max = max(fabs(dbn[i]/bn[i]), dbn_max);
     printf(" %9.5f", bn[i]);
   }
   printf("\n");
@@ -737,6 +737,120 @@ void fit_3rd_achrom(param_type &b4_prms)
 }
 
 
+void prt_dnu_mult(const param_type &b4_prms, const double *b4)
+{
+  FILE *outf;
+
+  std::string file_name = "dnu.out";
+
+  outf = file_write(file_name.c_str());
+  fprintf(outf, "o1: multipole, l = 0.0, N = Nsext, Method = Meth,"
+	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n", b4[1], b4[4]);
+  fprintf(outf, "o2: multipole, l = 0.0, N = Nsext, Method = Meth,"
+	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n", b4[2], b4[5]);
+  fprintf(outf, "o3: multipole, l = 0.0, N = Nsext, Method = Meth,"
+	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n", b4[3], b4[6]);
+  fclose(outf);
+}
+
+
+void fit_dnu(param_type &b4_prms)
+{
+  // Control tune foot print.
+
+  const int m_max = 10;
+
+  int          n_b4, i, j, m;
+  double       **A, *b, *b4_lim, *b4, *db4;
+  double       db4_max, twoJ[2];
+  tps          K_re, K_im;
+  ss_vect<tps> nus;
+
+  const double scl_dnu = 1e-1,
+               A_max[] = {1.0e-3, 1.0e-3},
+               beta[]  = {3.0,    3.0};       // Optics at center of straight.
+
+  n_b4 = b4_prms.n_prm;
+
+  b = dvector(1, m_max); b4_lim = dvector(1, n_b4);
+  b4 = dvector(1, n_b4); db4 = dvector(1, n_b4);
+  A = dmatrix(1, m_max, 1, n_b4);
+
+  for (j = 0; j < 2; j++)
+    twoJ[j] = sqr(A_max[j])/beta[j];
+
+  b4_prms.ini_prm(b4, b4_lim);
+
+  do {
+    printf("\n");
+    for (i = 1; i <= n_b4; i++) {
+      b4_prms.set_prm_dep(i-1);
+
+      danot_(NO-1);
+      get_Map();
+      danot_(NO);
+      K = MapNorm(Map, g, A1, A0, Map_res, 1); CtoR(K, K_re, K_im);
+      nus = dHdJ(K);
+
+      m = 0;
+      A[++m][i] = scl_dnu*h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7);
+      A[++m][i] = scl_dnu*h_ijklm_p(K_re, 0, 0, 2, 2, 0, 7);
+      A[++m][i] = scl_dnu*h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7);
+
+      A[++m][i] =
+	h_ijklm_p(nus[3], 1, 1, 0, 0, 0, 7)
+	+ 2e0*h_ijklm_p(nus[3], 2, 2, 0, 0, 0, 7)*twoJ[X_];
+      A[++m][i] =
+	h_ijklm_p(nus[3], 0, 0, 1, 1, 0, 7)
+	+ 2e0*h_ijklm_p(nus[3], 0, 0, 2, 2, 0, 7)*twoJ[Y_];
+      A[++m][i] =
+	h_ijklm_p(nus[4], 0, 0, 1, 1, 0, 7)
+	+ 2e0*h_ijklm_p(nus[4], 0, 0, 2, 2, 0, 7)*twoJ[Y_];
+      A[++m][i] =
+	h_ijklm_p(nus[4], 1, 1, 0, 0, 0, 7)
+	+ 2e0*h_ijklm_p(nus[4], 2, 2, 0, 0, 0, 7)*twoJ[X_];
+
+      for (j = 1; j <= m; j++)
+	A[j][i] *= b4_prms.bn_scl[i-1];
+
+      b4_prms.clr_prm_dep(i-1);
+    }
+
+    m = 0;
+    b[++m] = -scl_dnu*h_ijklm(K_re, 2, 2, 0, 0, 0);
+    b[++m] = -scl_dnu*h_ijklm(K_re, 0, 0, 2, 2, 0);
+    b[++m] = -scl_dnu*h_ijklm(K_re, 1, 1, 1, 1, 0);
+
+    b[++m] =
+      -(h_ijklm(nus[3], 1, 1, 0, 0, 0)
+	+ 2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]);
+    b[++m] =
+      -(h_ijklm(nus[3], 0, 0, 1, 1, 0)
+	+ 2e0*h_ijklm(nus[3], 0, 0, 2, 2, 0)*twoJ[Y_]);
+    b[++m] =
+      -(h_ijklm(nus[4], 0, 0, 1, 1, 0)
+	+ 2e0*h_ijklm(nus[4], 0, 0, 2, 2, 0)*twoJ[Y_]);
+    b[++m] =
+      -(h_ijklm(nus[4], 1, 1, 0, 0, 0)
+	+ 2e0*h_ijklm(nus[4], 2, 2, 0, 0, 0)*twoJ[X_]);
+
+    prt_system(m, n_b4, A, b);
+
+    SVD_lim(m, n_b4, A, b, b4_lim, b4_prms.svd_cut, b4, db4);
+
+    b4_prms.set_dprm(db4, b4, db4_max);
+
+    prt_mfile("flat_file.fit");
+    prt_dnu_mult(b4_prms, b4);
+  } while (db4_max > b4_prms.bn_tol);
+
+  free_dvector(b, 1, m_max);
+  free_dvector(b4_lim, 1, n_b4); free_dvector(b4, 1, n_b4);
+  free_dvector(db4, 1, n_b4);
+  free_dmatrix(A, 1, m_max, 1, n_b4);
+}
+
+
 void prt_dnu(const param_type &b4_prms, const double *b4)
 {
   FILE *outf;
@@ -792,7 +906,8 @@ double f_dnu(double *b4)
   ss_vect<tps> nus, dnus1, dnus2, IC[2];
 
   const int    n_int   = 25;
-  const double A_max[] = {1.0e-3, 1.0e-3},
+  const double scl_dnu = 1e8,
+               A_max[] = {1.0e-3, 1.0e-3},
                beta2[] = {3.0, 3.0};       // Optics at center of straight.
 
   b4_prms.set_prm(b4);
@@ -849,7 +964,7 @@ double f_dnu(double *b4)
   chi2 += sqr(dnu[Y_][0][1]+2e0*dnu[Y_][0][2]*twoJ[Y_]);
   chi2 += sqr(dnu[Y_][1][0]+2e0*dnu[Y_][2][0]*twoJ[X_]);
 
-  // chi2 += sqr(dnu_int/(twoJ[X_]*twoJ[Y_]));
+  chi2 += sqr(scl_dnu*dnu_int/(twoJ[X_]*twoJ[Y_]));
 
   for (i = 1; i <= b4_prms.n_prm; i++)
     if (fabs(b4[i]) > b4_prms.bn_max[i-1]) chi2 += 1e10;
@@ -1042,13 +1157,35 @@ int main(int argc, char *argv[])
 
     b4_prms.bn_tol = 1e-5; b4_prms.svd_cut = 1e-3; b4_prms.step = 1.0;
 
+    no_mpoles(Oct); no_mpoles(Dodec);
+
     fit_3rd_achrom(b4_prms);
+
+    prt_mfile("flat_file.fit");
   }
 
   if (true) {
-    b4_prms.add_prm("o1", 4, 1e4, 1.0);
-    b4_prms.add_prm("o2", 4, 1e4, 1.0);
-    b4_prms.add_prm("o3", 4, 1e4, 1.0);
+    b4_prms.add_prm("o1", 4, 1e5, 1.0);
+    b4_prms.add_prm("o2", 4, 1e5, 1.0);
+    b4_prms.add_prm("o3", 4, 1e5, 1.0);
+
+    b4_prms.add_prm("o1", 6, 5e9, 1.0);
+    b4_prms.add_prm("o2", 6, 5e9, 1.0);
+    b4_prms.add_prm("o3", 6, 5e9, 1.0);
+
+    b4_prms.bn_tol = 1e-4; b4_prms.svd_cut = 1e-8; b4_prms.step = 0.5;
+
+    no_mpoles(Oct); no_mpoles(Dodec);
+
+    fit_dnu(b4_prms);
+
+    prt_mfile("flat_file.fit");
+  }
+
+  if (false) {
+    b4_prms.add_prm("o1", 4, 1e5, 1.0);
+    b4_prms.add_prm("o2", 4, 1e5, 1.0);
+    b4_prms.add_prm("o3", 4, 1e5, 1.0);
 
     b4_prms.add_prm("o1", 6, 1e10, 1.0);
     b4_prms.add_prm("o2", 6, 1e10, 1.0);
@@ -1057,6 +1194,7 @@ int main(int argc, char *argv[])
     b4_prms.bn_tol = 1e-5; b4_prms.svd_cut = 0e0; b4_prms.step = 0.0;
 
     no_mpoles(Oct); no_mpoles(Dodec);
+
     opt_dnu(b4_prms);
   }
 
@@ -1074,6 +1212,4 @@ int main(int argc, char *argv[])
     file_wr(outf, "h.dat"); outf << h_re*Id_scl; outf.close();
     file_wr(outf, "H.dat"); outf << H_re*Id_scl; outf.close();
   }
-
-  prt_mfile("flat_file.dat");
 }
