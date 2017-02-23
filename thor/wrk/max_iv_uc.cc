@@ -745,11 +745,14 @@ void prt_dnu_mult(const param_type &b4_prms, const double *b4)
 
   outf = file_write(file_name.c_str());
   fprintf(outf, "o1: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n", b4[1], b4[4]);
+	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
+	  b4[1], b4[4]);
   fprintf(outf, "o2: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n", b4[2], b4[5]);
+	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
+	  b4[2], b4[5]);
   fprintf(outf, "o3: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n", b4[3], b4[6]);
+	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
+	  b4[3], b4[6]);
   fclose(outf);
 }
 
