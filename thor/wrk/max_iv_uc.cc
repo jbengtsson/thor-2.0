@@ -770,8 +770,8 @@ void fit_dnu(param_type &b4_prms)
   ss_vect<tps> nus;
 
   const double scl_dnu = 1e-1,
-               A_max[] = {1.5e-3, 1.5e-3},
-               beta[]  = {3.0,    3.0};       // Optics at center of straight.
+               A_max[] = {1.0e-3, 1.0e-3},
+               beta[]  = {3.0, 3.0};       // Center of straight.
 
   n_b4 = b4_prms.n_prm;
 
@@ -1168,13 +1168,13 @@ int main(int argc, char *argv[])
   }
 
   if (true) {
-    b4_prms.add_prm("o1", 4, 1e5, 1.0);
-    b4_prms.add_prm("o2", 4, 1e5, 1.0);
-    b4_prms.add_prm("o3", 4, 1e5, 1.0);
+    // b4_prms.add_prm("o1", 4, 1e5, 1.0);
+    // b4_prms.add_prm("o2", 4, 1e5, 1.0);
+    // b4_prms.add_prm("o3", 4, 1e5, 1.0);
 
-    b4_prms.add_prm("o1", 6, 1e9, 1.0);
-    b4_prms.add_prm("o2", 6, 1e9, 1.0);
-    b4_prms.add_prm("o3", 6, 1e9, 1.0);
+    b4_prms.add_prm("o1", 6, 5e9, 1.0);
+    b4_prms.add_prm("o2", 6, 5e9, 1.0);
+    b4_prms.add_prm("o3", 6, 5e9, 1.0);
 
     b4_prms.bn_tol = 1e-4; b4_prms.svd_cut = 1e-8; b4_prms.step = 0.4;
 
