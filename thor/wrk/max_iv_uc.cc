@@ -43,7 +43,7 @@ ss_vect<tps> Id_scl;
 
 const int n_prm_max = 8;
 
-const double scl_dnu = 1e3;
+const double scl_dnu = 1e2;
 
 
 void param_type::add_prm(const std::string Fname, const int n,
@@ -940,7 +940,7 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
   } else {
     dg2 = g2 = 0e0;
     for (i = 1; i <= n_b4; i++) {
-      g2 += sqr(g_[i]); dg2 += (bn_prms.dbn[i]-g[i])*bn_prms.dbn[i];
+      g2 += sqr(g_[i]); dg2 += (bn_prms.dbn[i]-g_[i])*bn_prms.dbn[i];
     }
     if (g2 != 0e0) {
       gamma = dg2/g2;
@@ -1132,10 +1132,10 @@ int main(int argc, char *argv[])
     Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
     Id_scl[delta_] *= delta;
 
-    bn_prms.add_prm("o1", 4, 5e5, 1.0);
-    bn_prms.add_prm("o2", 4, 5e5, 1.0);
-    bn_prms.add_prm("o3", 4, 5e5, 1.0);
-    bn_prms.add_prm("o4", 4, 5e5, 1.0);
+    bn_prms.add_prm("o1", 4, 1e6, 1.0);
+    bn_prms.add_prm("o2", 4, 1e6, 1.0);
+    bn_prms.add_prm("o3", 4, 1e6, 1.0);
+    bn_prms.add_prm("o4", 4, 1e6, 1.0);
 
     // bn_prms.add_prm("o1", 6, 1e9, 1.0);
     // bn_prms.add_prm("o2", 6, 1e9, 1.0);
