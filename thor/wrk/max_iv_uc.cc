@@ -21,22 +21,29 @@ struct param_type {
 private:
 
 public:
-  int                 n_prm;
+  int                 m_constr, n_prm;
   double              bn_tol, svd_cut, step;
+  double              *bn_lim, *bn, *dbn;
   std::vector<double> bn_max, bn_scl;
   std::vector<int>    Fnum, n;
 
   void add_prm(const std::string Fname, const int n,
 	       const double bn_max, const double bn_scl);
-  void ini_prm(double *bn, double *bn_lim);
+  void ini_prm(void);
   void set_prm_dep(const int k) const;
   void clr_prm_dep(const int k) const;
-  void set_dprm(double *dbn, double *bn, double &dbn_max) const;
-  void set_prm(double *bn) const;
+  double set_dprm(void) const;
+  void set_prm(void) const;
 };
 
 
-param_type    b2_prms, b4_prms;
+param_type   bn_prms;
+int          n_iter;
+ss_vect<tps> Id_scl;
+
+const int n_prm_max = 8;
+
+const double scl_dnu = 1e3;
 
 
 void param_type::add_prm(const std::string Fname, const int n,
@@ -50,11 +57,16 @@ void param_type::add_prm(const std::string Fname, const int n,
 }
 
 
-void param_type::ini_prm(double *bn, double *bn_lim)
+void param_type::ini_prm(void)
 {
   int i;
 
   n_prm = Fnum.size();
+
+  bn_prms.bn_lim = dvector(1, n_prm); bn_prms.bn = dvector(1, n_prm);
+  bn_prms.dbn = dvector(1, n_prm);
+
+  printf("\nInitial bn (%d):\n", n_prm);
   for (i = 1; i <= n_prm; i++) {
     bn_lim[i] = bn_max[i-1];
     if (n[i-1] > 0)
@@ -66,7 +78,9 @@ void param_type::ini_prm(double *bn, double *bn_lim)
     else if (n[i-1] == -2)
       // Location.
       bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
+    printf("%13.5e", bn[i]);
   }
+  printf("\n");
 }
 
 
@@ -98,11 +112,12 @@ void param_type::clr_prm_dep(const int k) const
 }
 
 
-void param_type::set_dprm(double *dbn, double *bn, double &dbn_max) const
+double param_type::set_dprm(void) const
 {
-  int i;
+  int    i;
+  double dbn_max;
 
-  printf("\n");
+  printf("set_dprm:\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_prm; i++) {
     dbn[i] *= step*bn_scl[i-1];
@@ -120,13 +135,16 @@ void param_type::set_dprm(double *dbn, double *bn, double &dbn_max) const
     printf(" %13.5e", bn[i]);
   }
   printf("\n");
+
+  return dbn_max;
 }
 
 
-void param_type::set_prm(double *bn) const
+void param_type::set_prm(void) const
 {
   int i;
 
+  printf("set_prm:\n");
   for (i = 1; i <= n_prm; i++) {
     if (n[i-1] > 0)
       set_bn(Fnum[i-1], n[i-1], bn[i]);
@@ -134,41 +152,9 @@ void param_type::set_prm(double *bn) const
       set_L(Fnum[i-1], bn[i]);
     else if (n[i-1] == -2)
       set_bn_s(-Fnum[i-1], n[i-1], bn[i]);
+    printf(" %13.5e", bn[i]);
   }
-}
-
-
-double int_2D(const int nx, const int ny,
-	       const double a, const double b, const double c, const double d,
-	       double f(const double, const double))
-{
-  // Cubature trapezoidal rule for f(x,y) for x = [a,b] and y = [c,d].
-  int    i, j;
-  double sum, hx, hy, x, y;
-
-  hx = (b-a)/double(nx-1); hy = (d-c)/double(ny-1);
-
-  sum = f(a,c)+f(a,d)+f(b,c)+f(b,d);
-
-  for (i = 2; i <= nx-1; i++) {
-    x = a + hx*(i-1);
-    sum += 2.0*(f(x,c)+f(x,d));
-  }
-
-  for (j = 2; j <= ny-1; j++) {
-    y = c + hy*(j-1);
-    sum += 2.0*(f(a,y)+f(b,y));
-  }
-
-  for (i = 2; i <= nx-1; i++) {
-    x = a + hx*(i-1);
-    for (j = 2; j <= ny-1; j++) {
-      y = c + hy*(j-1);
-      sum = sum + 4.0*f(x,y);
-    }
-  }
-
-  return 0.25*hx*hy*sum;
+  printf("\n");
 }
 
 
@@ -380,23 +366,24 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 }
 
 	
-void prt_emit(const param_type &b2_prms, const double *b2)
+void prt_emit(const param_type &bn_prms)
 {
   FILE *outf;
 
   std::string file_name = "emit.out";
 
   outf = file_write(file_name.c_str());
-  fprintf(outf, "l2:  drift, l = %7.5f;\n\n", b2[3]);
+  fprintf(outf, "l2:  drift, l = %7.5f;\n\n", bn_prms.bn[3]);
   fprintf(outf, "bh:  bending, l = 0.166667, t = 0.5, k = %8.5f, t1 = 0.0"
-	  ", t2 = 0.0,\n     gap = 0.0, N = Nbend, Method = Meth;\n", b2[1]);
+	  ", t2 = 0.0,\n     gap = 0.0, N = Nbend, Method = Meth;\n",
+	  bn_prms.bn[1]);
   fprintf(outf, "qf:  quadrupole, l = 0.08, k = %8.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[2]);
+	  ", Method = Meth;\n", bn_prms.bn[2]);
   fclose(outf);
 }
 
 
-void fit_emit(param_type &b2_prms, const double eps_x,
+void fit_emit(param_type &bn_prms, const double eps_x,
 	      const double nu_x, const double nu_y)
 {
   // Optimize unit cell for hor. emittance.
@@ -406,25 +393,24 @@ void fit_emit(param_type &b2_prms, const double eps_x,
   const int m_max = 8;
 
   int          n_b2, i, j, m;
-  double       **A, *b, *b2_lim, *b2, *db2;
+  double       **A, *b;
   double       db2_max;
   tps          eps1_x;
   ss_vect<tps> nus;
 
-  n_b2 = b2_prms.n_prm;
-  printf("n_prm = %d\n", b2_prms.n_prm);
+  n_b2 = bn_prms.n_prm;
+  printf("n_prm = %d\n", bn_prms.n_prm);
 
-  b = dvector(1, m_max); b2_lim = dvector(1, n_b2); b2 = dvector(1, n_b2);
-  db2 = dvector(1, n_b2); A = dmatrix(1, m_max, 1, n_b2);
+  b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_b2);
 
-  b2_prms.ini_prm(b2, b2_lim);
+  bn_prms.ini_prm();
 
   danot_(3);
 
   do {
     printf("\n");
     for (i = 1; i <= n_b2; i++) {
-      b2_prms.set_prm_dep(i-1);
+      bn_prms.set_prm_dep(i-1);
 
       get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
 
@@ -438,9 +424,9 @@ void fit_emit(param_type &b2_prms, const double eps_x,
       // A[++m][i] = scl_ksi*h_ijklm_p(nus[4], 0, 0, 0, 0, 1, 7);
 
       for (j = 1; j <= m; j++)
-	A[j][i] *= b2_prms.bn_scl[i-1];
+	A[j][i] *= bn_prms.bn_scl[i-1];
 
-      b2_prms.clr_prm_dep(i-1);
+      bn_prms.clr_prm_dep(i-1);
     }
 
     m = 0;
@@ -452,22 +438,23 @@ void fit_emit(param_type &b2_prms, const double eps_x,
 
     prt_system(m, n_b2, A, b);
 
-    SVD_lim(m, n_b2, A, b, b2_lim, b2_prms.svd_cut, b2, db2);
+    SVD_lim(m, n_b2, A, b, bn_prms.bn_lim, bn_prms.svd_cut, bn_prms.bn,
+	    bn_prms.dbn);
 
-    b2_prms.set_dprm(db2, b2, db2_max);
+    db2_max = bn_prms.set_dprm();
 
     prt_mfile("flat_file.dat");
-  } while (db2_max > b2_prms.bn_tol);
+  } while (db2_max > bn_prms.bn_tol);
 
-  prt_emit(b2_prms, b2);
+  prt_emit(bn_prms);
 
-  free_dvector(b, 1, m_max); free_dvector(b2_lim, 1, n_b2);
-  free_dvector(b2, 1, n_b2); free_dvector(db2, 1, n_b2);
-  free_dmatrix(A, 1, m_max, 1, n_b2);
+  free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_b2);
+  free_dvector(bn_prms.bn_lim, 1, n_b2); free_dvector(bn_prms.bn, 1, n_b2);
+  free_dvector(bn_prms.dbn, 1, n_b2);
 }
 
 
-void prt_match(const param_type &b2_prms, const double *b2)
+void prt_match(const param_type &bn_prms)
 {
   double l4, l5h, l6, l7h, l8;
   FILE *outf;
@@ -477,33 +464,35 @@ void prt_match(const param_type &b2_prms, const double *b2)
   outf = file_write(file_name.c_str());
 
   fprintf(outf, "bm:  bending, l = 0.166667, t = 0.5, k = %8.5f, t1 = 0.0"
-	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n", b2[1]);
+	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n",
+	  bn_prms.bn[1]);
   fprintf(outf, "qfe: quadrupole, l = 0.15, k = %9.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[2]);
+	  ", Method = Meth;\n", bn_prms.bn[2]);
   fprintf(outf, "qde: quadrupole, l = 0.1,  k = %9.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[3]);
+	  ", Method = Meth;\n", bn_prms.bn[3]);
   fprintf(outf, "qm:  quadrupole, l = 0.15, k = %9.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[4]);
+	  ", Method = Meth;\n", bn_prms.bn[4]);
 
   l4  = get_L(get_Fnum("l4"), 1);  l5h = get_L(get_Fnum("l5h"), 1);
   l6  = get_L(get_Fnum("l6"), 1);  l7h = get_L(get_Fnum("l7h"), 1);
   l8  = get_L(get_Fnum("l8"), 1);
   
   fprintf(outf, "\nl4:  drift, l = %7.5f;\n", l4);
-  fprintf(outf, "l5h: drift, l = %7.5f;\n", l5h+b2[10]/2e0);
-  fprintf(outf, "l6:  drift, l = %7.5f;\n", l6-b2[10]+b2[9]);
-  fprintf(outf, "l7h: drift, l = %7.5f;\n", l7h-b2[9]/2e0+b2[11]/2e0);
-  fprintf(outf, "l8:  drift, l = %7.5f;\n", l8-b2[11]);
+  fprintf(outf, "l5h: drift, l = %7.5f;\n", l5h+bn_prms.bn[10]/2e0);
+  fprintf(outf, "l6:  drift, l = %7.5f;\n", l6-bn_prms.bn[10]+bn_prms.bn[9]);
+  fprintf(outf, "l7h: drift, l = %7.5f;\n",
+	  l7h-bn_prms.bn[9]/2e0+bn_prms.bn[11]/2e0);
+  fprintf(outf, "l8:  drift, l = %7.5f;\n", l8-bn_prms.bn[11]);
 
-  fprintf(outf, "\nL_bm  = %8.5f\n", b2[9]);
-  fprintf(outf, "L_qfe = %8.5f\n", b2[10]);
-  fprintf(outf, "L_qde = %8.5f\n", b2[11]);
+  fprintf(outf, "\nL_bm  = %8.5f\n", bn_prms.bn[9]);
+  fprintf(outf, "L_qfe = %8.5f\n", bn_prms.bn[10]);
+  fprintf(outf, "L_qde = %8.5f\n", bn_prms.bn[11]);
 
   fclose(outf);
 }
 
 
-void fit_match(param_type &b2_prms,
+void fit_match(param_type &bn_prms,
 	       const double beta0_x, const double beta0_y, const double eta0_x,
 	       const double beta1_x, const double beta1_y)
 {
@@ -513,7 +502,7 @@ void fit_match(param_type &b2_prms,
   const int m_max = 8;
 
   int          n_b2, i, j, m, loc;
-  double       **A, *b, *b2_lim, *b2, *db2, db2_max;
+  double       **A, *b, db2_max;
   ss_vect<tps> AA_tp, A_disp;
 
   const double scl_eta  = 1e1,
@@ -522,12 +511,11 @@ void fit_match(param_type &b2_prms,
                eta0[]   = {eta0_x,  0e0},
 	       etap0[]  = {0e0,     0e0};
 
-  n_b2 = b2_prms.n_prm;
+  n_b2 = bn_prms.n_prm;
 
-  b = dvector(1, m_max); b2_lim = dvector(1, n_b2); b2 = dvector(1, n_b2);
-  db2 = dvector(1, n_b2); A = dmatrix(1, m_max, 1, n_b2);
+  b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_b2);
 
-  b2_prms.ini_prm(b2, b2_lim);
+  bn_prms.ini_prm();
 
   danot_(3);
 
@@ -535,7 +523,7 @@ void fit_match(param_type &b2_prms,
 
   do {
     for (i = 1; i <= n_b2; i++) {
-      b2_prms.set_prm_dep(i-1);
+      bn_prms.set_prm_dep(i-1);
 
       get_twiss(alpha0, beta0, eta0, etap0);
       AA_tp = elem_tps[n_elem-1].A1*tp_S(2, elem_tps[n_elem-1].A1);
@@ -550,9 +538,9 @@ void fit_match(param_type &b2_prms,
       A[++m][i] = h_ijklm_p(AA_tp[y_], 0, 0, 1, 0, 0, 7);
 
       for (j = 1; j <= m; j++)
-	A[j][i] *= b2_prms.bn_scl[i-1];
+	A[j][i] *= bn_prms.bn_scl[i-1];
 
-      b2_prms.clr_prm_dep(i-1);
+      bn_prms.clr_prm_dep(i-1);
     }
 
     m = 0;
@@ -565,16 +553,17 @@ void fit_match(param_type &b2_prms,
 
     prt_system(m, n_b2, A, b);
 
-    SVD_lim(m, n_b2, A, b, b2_lim, b2_prms.svd_cut, b2, db2);
+    SVD_lim(m, n_b2, A, b, bn_prms.bn_lim, bn_prms.svd_cut, bn_prms.bn,
+	    bn_prms.dbn);
 
-    b2_prms.set_dprm(db2, b2, db2_max);
-  } while (db2_max > b2_prms.bn_tol);
+    db2_max = bn_prms.set_dprm();
+  } while (db2_max > bn_prms.bn_tol);
 
-  prt_match(b2_prms, b2);
+  prt_match(bn_prms);
 
-  free_dvector(b, 1, m_max); free_dvector(b2_lim, 1, n_b2);
-  free_dvector(b2, 1, n_b2); free_dvector(db2, 1, n_b2);
-  free_dmatrix(A, 1, m_max, 1, n_b2);
+  free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_b2);
+  free_dvector(bn_prms.bn_lim, 1, n_b2); free_dvector(bn_prms.bn, 1, n_b2);
+  free_dvector(bn_prms.dbn, 1, n_b2);
 }
 
 
@@ -595,7 +584,8 @@ double f_match(double *b2)
 	       beta0[] = {3.0,     3.0},
                beta1[] = {1.35633, 1.91479};
 
-  b2_prms.set_prm(b2);
+  dvcopy(b2, bn_prms.n_prm, bn_prms.bn);
+  bn_prms.set_prm();
 
   // Exit of 2nd BM.
   loc1 = get_loc(get_Fnum("bm"), 2);
@@ -631,8 +621,8 @@ double f_match(double *b2)
   chi2 += sqr(scl_ksi*(h_ijklm(K_re, 1, 1, 0, 0, 1)));
   chi2 += sqr(scl_ksi*(h_ijklm(K_re, 0, 0, 1, 1, 1)));
   if ((fabs(tr[X_]) > 2e0) || (fabs(tr[Y_]) > 2e0)) chi2 += 1e10;
-  for (i = 1; i <= b2_prms.n_prm; i++)
-    if (fabs(b2[i]) > b2_prms.bn_max[i-1]) chi2 += 1e10;
+  for (i = 1; i <= bn_prms.n_prm; i++)
+    if (fabs(b2[i]) > bn_prms.bn_max[i-1]) chi2 += 1e10;
 
   if (chi2 < chi2_ref) {
     printf("\nchi2: %12.5e, %12.5e\n", chi2, chi2_ref);
@@ -647,12 +637,12 @@ double f_match(double *b2)
 	   h_ijklm(K_re, 1, 1, 0, 0, 1),
 	   h_ijklm(K_re, 0, 0, 1, 1, 1));
     printf("b2s: ");
-    for (i = 1; i <= b2_prms.n_prm; i++)
+    for (i = 1; i <= bn_prms.n_prm; i++)
       printf("%9.5f", b2[i]);
     printf("\n");
 
     prt_mfile("flat_file.dat");
-    prt_match(b2_prms, b2);
+    prt_match(bn_prms);
 
     get_S();
     prt_lat("linlat.out");
@@ -664,59 +654,55 @@ double f_match(double *b2)
 }
 
 
-void opt_match(param_type &b2_prms)
+void opt_match(param_type &bn_prms)
 {
   // Minimize linear linear chromaticity for super period.
   // Lattice: super period.
 
   int    n_b2, i, j, iter;
-  double *b2, *b2_lim, **xi, fret;
+  double **xi, fret;
 
-  n_b2 = b2_prms.n_prm;
+  n_b2 = bn_prms.n_prm;
 
-  b2 = dvector(1, n_b2); b2_lim = dvector(1, n_b2);
   xi = dmatrix(1, n_b2, 1, n_b2);
 
-  b2_prms.ini_prm(b2, b2_lim);
+  bn_prms.ini_prm();
 
   // Set initial directions (unit vectors).
   for (i = 1; i <= n_b2; i++)
     for (j = 1; j <= n_b2; j++)
       xi[i][j] = (i == j)? 1e0 : 0e0;
 
-  dpowell(b2, xi, n_b2, b2_prms.bn_tol, &iter, &fret, f_match);
+  dpowell(bn_prms.bn, xi, n_b2, bn_prms.bn_tol, &iter, &fret, f_match);
 
-  free_dvector(b2, 1, n_b2);  free_dvector(b2_lim, 1, n_b2);
   free_dmatrix(xi, 1, n_b2, 1, n_b2);
 }
 
 
-void fit_3rd_achrom(param_type &b4_prms)
+void fit_3rd_achrom(param_type &bn_prms)
 {
   // Third order achromat.
 
-  const int m_max = 6;
-
   int          n_b4, i, j, m;
-  double       **A, *b, *b4_lim, *b4, *db4;
+  double       **A, *b;
   double       db4_max;
   tps          K_re, K_im;
   ss_vect<tps> nus;
 
-  n_b4 = b4_prms.n_prm;
+  const int m_max = 6;
 
-  b = dvector(1, m_max); b4_lim = dvector(1, n_b4);
-  b4 = dvector(1, n_b4); db4 = dvector(1, n_b4);
-  A = dmatrix(1, m_max, 1, n_b4);
+  n_b4 = bn_prms.n_prm;
 
-  b4_prms.ini_prm(b4, b4_lim);
+  b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_b4);
+
+  bn_prms.ini_prm();
 
   danot_(5);
 
   do {
     printf("\n");
     for (i = 1; i <= n_b4; i++) {
-      b4_prms.set_prm_dep(i-1);
+      bn_prms.set_prm_dep(i-1);
 
       get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); CtoR(K, K_re, K_im);
 
@@ -728,9 +714,9 @@ void fit_3rd_achrom(param_type &b4_prms)
       // A[++m][i] = h_ijklm_p(K_re, 0, 0, 1, 1, 2, 7);
 
       for (j = 1; j <= m; j++)
-	A[j][i] *= b4_prms.bn_scl[i-1];
+	A[j][i] *= bn_prms.bn_scl[i-1];
 
-      b4_prms.clr_prm_dep(i-1);
+      bn_prms.clr_prm_dep(i-1);
     }
 
     m = 0;
@@ -742,19 +728,38 @@ void fit_3rd_achrom(param_type &b4_prms)
 
     prt_system(m, n_b4, A, b);
 
-    SVD_lim(m, n_b4, A, b, b4_lim, b4_prms.svd_cut, b4, db4);
+    SVD_lim(m, n_b4, A, b, bn_prms.bn_lim, bn_prms.svd_cut, bn_prms.bn,
+	    bn_prms.dbn);
 
-    b4_prms.set_dprm(db4, b4, db4_max);
-  } while (db4_max > b4_prms.bn_tol);
+    db4_max = bn_prms.set_dprm();
+  } while (db4_max > bn_prms.bn_tol);
 
-  free_dvector(b, 1, m_max);
-  free_dvector(b4_lim, 1, n_b4); free_dvector(b4, 1, n_b4);
-  free_dvector(db4, 1, n_b4);
-  free_dmatrix(A, 1, m_max, 1, n_b4);
+  free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_b4);
+  free_dvector(bn_prms.bn_lim, 1, n_b4); free_dvector(bn_prms.bn, 1, n_b4);
+  free_dvector(bn_prms.dbn, 1, n_b4);
 }
 
 
-void prt_dnu_mult(const param_type &b4_prms, const double *b4)
+void min_dnu_prt(const param_type &bn_prms)
+{
+  FILE *outf;
+
+  std::string file_name = "dnu.out";
+
+  outf = file_write(file_name.c_str());
+  fprintf(outf, "o1: multipole, l = 0.0, N = Nsext, Method = Meth,"
+	        "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[1]);
+  fprintf(outf, "o2: multipole, l = 0.0, N = Nsext, Method = Meth,"
+	        "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[2]);
+  fprintf(outf, "o3: multipole, l = 0.0, N = Nsext, Method = Meth,"
+	        "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[3]);
+  fprintf(outf, "o4: multipole, l = 0.0, N = Nsext, Method = Meth,"
+	        "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[4]);
+  fclose(outf);
+}
+
+
+void min_dnu_prt2(const param_type &bn_prms)
 {
   FILE *outf;
 
@@ -763,321 +768,238 @@ void prt_dnu_mult(const param_type &b4_prms, const double *b4)
   outf = file_write(file_name.c_str());
   fprintf(outf, "o1: multipole, l = 0.0, N = Nsext, Method = Meth,"
 	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
-	  b4[1], b4[5]);
+	  bn_prms.bn[1], bn_prms.bn[5]);
   fprintf(outf, "o2: multipole, l = 0.0, N = Nsext, Method = Meth,"
 	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
-	  b4[2], b4[6]);
+	  bn_prms.bn[2], bn_prms.bn[6]);
   fprintf(outf, "o3: multipole, l = 0.0, N = Nsext, Method = Meth,"
 	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
-	  b4[3], b4[7]);
+	  bn_prms.bn[3], bn_prms.bn[7]);
   fprintf(outf, "o4: multipole, l = 0.0, N = Nsext, Method = Meth,"
 	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
-	  b4[4], b4[8]);
+	  bn_prms.bn[4], bn_prms.bn[8]);
   fclose(outf);
 }
 
 
-void fit_dnu(param_type &b4_prms)
+double get_chi2(const int n, const double data[])
 {
-  // Control tune foot print.
+  int    j;
+  double chi2 = 0e0;
 
-  const int m_max = 15;
-
-  int          n_b4, i, j, m;
-  double       **A, *b, *b4_lim, *b4, *db4;
-  double       db4_max, twoJ[2];
-  tps          K_re, K_im, h, h_re, h_im;
-  ss_vect<tps> Id_scl, nus;
-
-  const double scl_dnu = 1e3,
-               A_max[] = {1.0e-3, 1.0e-3}, delta = 3e-2,
-               beta[]  = {3.0, 3.0};                     // Center of straight.
-
-  n_b4 = b4_prms.n_prm;
-
-  b = dvector(1, m_max); b4_lim = dvector(1, n_b4); b4 = dvector(1, n_b4);
-  db4 = dvector(1, n_b4); A = dmatrix(1, m_max, 1, n_b4);
-
-  for (j = 0; j < 2; j++)
-    twoJ[j] = sqr(A_max[j])/beta[j];
-
-  Id_scl.identity();
-  Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
-  Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
-  Id_scl[delta_] *= delta;
-
-  b4_prms.ini_prm(b4, b4_lim);
-
-  do {
-    printf("\n");
-    for (i = 1; i <= n_b4; i++) {
-      b4_prms.set_prm_dep(i-1);
-
-      danot_(NO-1);
-      get_Map();
-      danot_(NO);
-      K = MapNorm(Map, g, A1, A0, Map_res, 1);
-      CtoR(K, K_re, K_im); nus = dHdJ(K);
-      K_re = K_re*Id_scl; nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
-
-      twoJ[X_] = 1e0; twoJ[Y_] = 1e0;
-
-      m = 0;
-      A[++m][i] = scl_dnu*h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7);
-      A[++m][i] = scl_dnu*h_ijklm_p(K_re, 0, 0, 2, 2, 0, 7);
-      A[++m][i] = scl_dnu*h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7);
-
-      A[++m][i] = scl_dnu*h_ijklm_p(K_re, 3, 3, 0, 0, 0, 7);
-      A[++m][i] = scl_dnu*h_ijklm_p(K_re, 0, 0, 3, 3, 0, 7);
-      A[++m][i] = scl_dnu*h_ijklm_p(K_re, 2, 2, 1, 1, 0, 7);
-      A[++m][i] = scl_dnu*h_ijklm_p(K_re, 1, 1, 2, 2, 0, 7);
-
-      A[++m][i] =
-      	h_ijklm_p(nus[3], 1, 1, 0, 0, 0, 7)
-      	+ 2e0*h_ijklm_p(nus[3], 2, 2, 0, 0, 0, 7)*twoJ[X_];
-      A[++m][i] =
-      	h_ijklm_p(nus[3], 0, 0, 1, 1, 0, 7)
-      	+ 2e0*h_ijklm_p(nus[3], 0, 0, 2, 2, 0, 7)*twoJ[Y_];
-      A[++m][i] =
-      	h_ijklm_p(nus[4], 0, 0, 1, 1, 0, 7)
-      	+ 2e0*h_ijklm_p(nus[4], 0, 0, 2, 2, 0, 7)*twoJ[Y_];
-      // A[++m][i] =
-      // 	h_ijklm_p(nus[4], 1, 1, 0, 0, 0, 7)
-      // 	+ 2e0*h_ijklm_p(nus[4], 2, 2, 0, 0, 0, 7)*twoJ[X_];
-
-      for (j = 1; j <= m; j++)
-	A[j][i] *= b4_prms.bn_scl[i-1];
-
-      b4_prms.clr_prm_dep(i-1);
-    }
-
-    m = 0;
-    b[++m] = -scl_dnu*h_ijklm(K_re, 2, 2, 0, 0, 0);
-    b[++m] = -scl_dnu*h_ijklm(K_re, 0, 0, 2, 2, 0);
-    b[++m] = -scl_dnu*h_ijklm(K_re, 1, 1, 1, 1, 0);
-
-    b[++m] = -scl_dnu*h_ijklm(K_re, 3, 3, 0, 0, 0);
-    b[++m] = -scl_dnu*h_ijklm(K_re, 0, 0, 3, 3, 0);
-    b[++m] = -scl_dnu*h_ijklm(K_re, 2, 2, 1, 1, 0);
-    b[++m] = -scl_dnu*h_ijklm(K_re, 1, 1, 2, 2, 0);
-
-    b[++m] =
-      -(h_ijklm(nus[3], 1, 1, 0, 0, 0)
-    	+ 2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]);
-    b[++m] =
-      -(h_ijklm(nus[3], 0, 0, 1, 1, 0)
-    	+ 2e0*h_ijklm(nus[3], 0, 0, 2, 2, 0)*twoJ[Y_]);
-    b[++m] =
-      -(h_ijklm(nus[4], 0, 0, 1, 1, 0)
-    	+ 2e0*h_ijklm(nus[4], 0, 0, 2, 2, 0)*twoJ[Y_]);
-    // b[++m] =
-    //   -(h_ijklm(nus[4], 1, 1, 0, 0, 0)
-    // 	+ 2e0*h_ijklm(nus[4], 2, 2, 0, 0, 0)*twoJ[X_]);
-
-    prt_system(m, n_b4, A, b);
-
-    SVD_lim(m, n_b4, A, b, b4_lim, b4_prms.svd_cut, b4, db4);
-
-    b4_prms.set_dprm(db4, b4, db4_max);
-
-    prt_mfile("flat_file.fit");
-    prt_dnu_mult(b4_prms, b4);
-  } while (db4_max > b4_prms.bn_tol);
-
-  free_dvector(b, 1, m_max); free_dvector(b4_lim, 1, n_b4);
-  free_dvector(b4, 1, n_b4); free_dvector(db4, 1, n_b4);
-  free_dmatrix(A, 1, m_max, 1, n_b4);
-}
-
-
-void prt_dnu(const param_type &b4_prms, const double *b4)
-{
-  FILE *outf;
-
-  std::string file_name = "dnu.out";
-
-  outf = file_write(file_name.c_str());
-  fprintf(outf, "o1: multipole, l = 0.0, HOM = (4, %12.5e, 0.0), N = Nsext,\n"
-	        "    Method = Meth;\n", b4[1]);
-  fprintf(outf, "o2: multipole, l = 0.0, HOM = (4, %12.5e, 0.0), N = Nsext,\n"
-	        "    Method = Meth;\n", b4[2]);
-  fprintf(outf, "o3: multipole, l = 0.0, HOM = (4, %12.5e, 0.0), N = Nsext,\n"
-	        "    Method = Meth;\n", b4[3]);
-  fclose(outf);
-}
-
-
-double f_int_dnu(const double twoJx, const double twoJy)
-{
-  int    i, j;
-  double sum = 0e0;
-  
-  for (i = 0; i < 2*n_max+1; i++)
-    for (j = 0; j < 2*n_max+1; j++)
-      if (dnu_xy[i][j] != 0e0)
-	sum += dnu_xy[i][j]*pow(twoJx, i)*pow(twoJy, j);
-
-  // Correct for 2J vs. J.
-  return fabs(sum/4e0);
-}
-
-
-void prt_dnu(const int i, const int j, const dnu1_type dnu[],
-	     const double twoJ[])
-{
-  printf("%1d %1d %11.3e %11.3e\n",
-	 i, j,
-	 dnu[X_][i][j]*pow(twoJ[X_], i)*pow(twoJ[Y_], j),
-	 dnu[Y_][i][j]*pow(twoJ[X_], i)*pow(twoJ[Y_], j));
-}
-
-
-double f_dnu(double *b4)
-{
-  // Minimize tune footprint for super period.
-  // Lattice: super period.
-
-  static double chi2_ref = 1e30;
-
-  int          i, j, k, l;
-  double       chi2, twoJ[2], dnu_int;
-  dnu1_type    dnu[2];
-  ss_vect<tps> nus, dnus1, dnus2, IC[2];
-
-  const int    n_int   = 25;
-  const double scl_dnu = 1e8,
-               A_max[] = {1.0e-3, 1.0e-3},
-               beta2[] = {3.0, 3.0};       // Optics at center of straight.
-
-  b4_prms.set_prm(b4);
-
-  for (k = 0; k < 2; k++)
-    twoJ[k] = sqr(A_max[k])/beta2[k];
-
-  IC[0].zero(); IC[0][x_] = sqrt(twoJ[X_]); IC[0][px_] = sqrt(twoJ[X_]);
-  IC[1].zero(); IC[1][y_] = sqrt(twoJ[Y_]); IC[1][py_] = sqrt(twoJ[Y_]);
-
-  danot_(NO-1);
-  get_Map();
-  danot_(NO);
-  K = MapNorm(Map, g, A1, A0, Map_res, 1);
-  nus = dHdJ(K);
-  // Truncate.
-  danot_(4);
-  dnus1 = dHdJ(nus[0]); dnus2 = dHdJ(nus[1]);
-  danot_(NO);
-
-  // Remove constant part.
-  for (k = 0; k < 2; k++)
-    nus[3+k] -= nus[3+k].cst();
-
-  for (i = 0; i < 2*n_max+1; i++)
-    for (j = 0; j < 2*n_max+1; j++) {
-      if ((i < n_max+1) && (j < n_max+1))
-	for (k = 0; k < 2; k++)
-	  dnu[k][i][j] = 0e0;
-      dnu_xy[i][j] = 0e0;
-    }
-
-  for (i = 0; i < n_max+1; i++)
-    for (j = 0; j < n_max+1; j++)
-      // if (i+j <= n_max)
-	for (k = 0; k < 2; k++)
-	  dnu[k][i][j] = h_ijklm(nus[3+k], i, i, j, j, 0);
-
-  for (i = 0; i < n_max+1; i++)
-    for (j = 0; j < n_max+1; j++)
-      for (k = 0; k < n_max+1; k++)
-	for (l = 0; l < n_max+1; l++)
-	  dnu_xy[i+k][j+l] += dnu[X_][i][j]*dnu[Y_][k][l];
-
-  dnu_int = int_2D(n_int, n_int, 0e0, twoJ[X_], 0e0, twoJ[Y_], f_int_dnu);
-
-  chi2 = 0e0;
-  // chi2 += sqr((dnus1[3]*IC[0]).cst());
-  // chi2 += sqr((dnus1[4]*IC[1]).cst());
-  // chi2 += sqr((dnus2[4]*IC[1]).cst());
-  // chi2 += sqr((dnus2[3]*IC[0]).cst());
-  chi2 += sqr(dnu[X_][1][0]+2e0*dnu[X_][2][0]*twoJ[X_]);
-  chi2 += sqr(dnu[X_][0][1]+2e0*dnu[X_][0][2]*twoJ[Y_]);
-  chi2 += sqr(dnu[Y_][0][1]+2e0*dnu[Y_][0][2]*twoJ[Y_]);
-  chi2 += sqr(dnu[Y_][1][0]+2e0*dnu[Y_][2][0]*twoJ[X_]);
-
-  chi2 += sqr(scl_dnu*dnu_int/(twoJ[X_]*twoJ[Y_]));
-
-  for (i = 1; i <= b4_prms.n_prm; i++)
-    if (fabs(b4[i]) > b4_prms.bn_max[i-1]) chi2 += 1e10;
-
-  if (chi2 < chi2_ref) {
-    printf("\nchi2: %12.5e, %12.5e\n\n", chi2, chi2_ref);
-
-    printf("dnu:\n");
-    prt_dnu(1, 0, dnu, twoJ);
-    prt_dnu(0, 1, dnu, twoJ);
-    printf("\n");
-    prt_dnu(2, 0, dnu, twoJ);
-    prt_dnu(0, 2, dnu, twoJ);
-    prt_dnu(1, 1, dnu, twoJ);
-    if (n_max > 2) {
-      printf("\n");
-      prt_dnu(3, 0, dnu, twoJ);
-      prt_dnu(0, 3, dnu, twoJ);
-      prt_dnu(2, 1, dnu, twoJ);
-      prt_dnu(1, 2, dnu, twoJ);
-    }
-
-    printf("\ndnu_int: %10.3e\n", dnu_int/(twoJ[X_]*twoJ[Y_]));
-
-    printf("dnu_dJ: %11.3e %11.3e %11.3e %11.3e\n",
-	   dnu[X_][1][0]+2e0*dnu[X_][2][0]*twoJ[X_],
-	   dnu[X_][0][1]+2e0*dnu[X_][0][2]*twoJ[Y_],
-	   dnu[Y_][0][1]+2e0*dnu[Y_][0][2]*twoJ[Y_],
-	   dnu[Y_][1][0]+2e0*dnu[Y_][2][0]*twoJ[X_]);
-    printf("dnu_dJ: %11.3e %11.3e %11.3e %11.3e\n",
-	   -M_PI*(dnus1[3]*IC[0]).cst(), -M_PI*(dnus1[4]*IC[1]).cst(),
-	   -M_PI*(dnus2[4]*IC[1]).cst(), -M_PI*(dnus2[3]*IC[0]).cst());
-
-    printf("\nb4s:");
-    for (i = 1; i <= b4_prms.n_prm; i++)
-      printf("%13.5e", b4[i]);
-    printf("\n");
-  }
-  
-  prt_mfile("flat_file.fit");
-  prt_dnu(b4_prms, b4);
-
-  chi2_ref = min(chi2, chi2_ref);
+  for (j = 1; j <= n; j++) chi2 += sqr(data[j]);
 
   return chi2;
 }
 
 
-void opt_dnu(param_type &b4_prms)
+double min_dnu_f(double b4s[])
 {
-  // Minimize tune footprint for super period.
-  // Lattice: super period.
+  int                 i;
+  double              f, twoJ[2];
+  tps                 K_re, K_im;
+  ss_vect<tps>        nus;
+  std::vector<double> b;
 
-  int    n_b4, i, j, iter;
-  double *b4, *b4_lim, **xi, fret;
+  dvcopy(b4s, bn_prms.n_prm, bn_prms.bn); bn_prms.set_prm();
 
-  n_b4 = b4_prms.n_prm;
+  danot_(NO-2);
+  get_Map();
+  danot_(NO-1);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  CtoR(K, K_re, K_im); nus = dHdJ(K);
+  K_re = K_re*Id_scl; nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
 
-  b4 = dvector(1, n_b4); b4_lim = dvector(1, n_b4);
-  xi = dmatrix(1, n_b4, 1, n_b4);
+  twoJ[X_] = 1e0; twoJ[Y_] = 1e0;
+ 
+  b.push_back(-scl_dnu*h_ijklm(K_re, 2, 2, 0, 0, 0));
+  b.push_back(-scl_dnu*h_ijklm(K_re, 0, 0, 2, 2, 0));
+  b.push_back(-scl_dnu*h_ijklm(K_re, 1, 1, 1, 1, 0));
 
-  b4_prms.ini_prm(b4, b4_lim);
+  b.push_back(-scl_dnu*h_ijklm(K_re, 3, 3, 0, 0, 0));
+  b.push_back(-scl_dnu*h_ijklm(K_re, 0, 0, 3, 3, 0));
+  b.push_back(-scl_dnu*h_ijklm(K_re, 2, 2, 1, 1, 0));
+  b.push_back(-scl_dnu*h_ijklm(K_re, 1, 1, 2, 2, 0));
 
-  // Set initial directions (unit vectors).
-  for (i = 1; i <= n_b4; i++)
-    for (j = 1; j <= n_b4; j++)
-      xi[i][j] = (i == j)? 1e0 : 0e0;
+  b.push_back(-(h_ijklm(nus[3], 1, 1, 0, 0, 0)
+		+2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]));
+  b.push_back(-(h_ijklm(nus[3], 0, 0, 1, 1, 0)
+		+2e0*h_ijklm(nus[3], 0, 0, 2, 2, 0)*twoJ[Y_]));
+  b.push_back(-(h_ijklm(nus[4], 0, 0, 1, 1, 0)
+		+2e0*h_ijklm(nus[4], 0, 0, 2, 2, 0)*twoJ[Y_]));
+  b.push_back(-(h_ijklm(nus[4], 1, 1, 0, 0, 0)
+		+2e0*h_ijklm(nus[4], 2, 2, 0, 0, 0)*twoJ[X_]));
 
-  dpowell(b4, xi, n_b4,  b2_prms.bn_tol, &iter, &fret, f_dnu);
+  printf("b:\n");
+  f = 0e0;
+  for (i = 0; i < (int)b.size(); i++) {
+    f += sqr(b[i]);
+    printf("%11.3e", b[i]);
+  }
+  printf("\n");
 
-  prt_dnu(b4_prms, b4);
+  printf("%4d f = %9.3e\n", n_iter, f);
 
-  free_dvector(b4, 1, n_b4);  free_dvector(b4_lim, 1, n_b4);
-  free_dmatrix(xi, 1, n_b4, 1, n_b4);
+  return f;
+}
+
+
+void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
+{
+  int          n_b4, i, j, m;
+  double       chi2_old, fret, g2, gamma, dg2;
+  double       **A, *b, *bn0;
+  double       twoJ[2];
+  tps          K_re, K_im;
+  ss_vect<tps> nus;
+
+  const int m_max = 15;
+
+  n_b4 = bn_prms.n_prm;
+
+  bn0 = dvector(1, n_b4);
+  b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_b4);
+
+  printf("\n");
+  for (i = 1; i <= n_b4; i++) {
+    bn_prms.set_prm_dep(i-1);
+
+    danot_(NO-1);
+    get_Map();
+    danot_(NO);
+    K = MapNorm(Map, g, A1, A0, Map_res, 1);
+    CtoR(K, K_re, K_im); nus = dHdJ(K);
+    K_re = K_re*Id_scl; nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
+
+    twoJ[X_] = 1e0; twoJ[Y_] = 1e0;
+
+    m = 0;
+    A[++m][i] = scl_dnu*h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7);
+    A[++m][i] = scl_dnu*h_ijklm_p(K_re, 0, 0, 2, 2, 0, 7);
+    A[++m][i] = scl_dnu*h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7);
+
+    A[++m][i] = scl_dnu*h_ijklm_p(K_re, 3, 3, 0, 0, 0, 7);
+    A[++m][i] = scl_dnu*h_ijklm_p(K_re, 0, 0, 3, 3, 0, 7);
+    A[++m][i] = scl_dnu*h_ijklm_p(K_re, 2, 2, 1, 1, 0, 7);
+    A[++m][i] = scl_dnu*h_ijklm_p(K_re, 1, 1, 2, 2, 0, 7);
+
+    A[++m][i] =
+      h_ijklm_p(nus[3], 1, 1, 0, 0, 0, 7)
+      + 2e0*h_ijklm_p(nus[3], 2, 2, 0, 0, 0, 7)*twoJ[X_];
+    A[++m][i] =
+      h_ijklm_p(nus[3], 0, 0, 1, 1, 0, 7)
+      + 2e0*h_ijklm_p(nus[3], 0, 0, 2, 2, 0, 7)*twoJ[Y_];
+    A[++m][i] =
+      h_ijklm_p(nus[4], 0, 0, 1, 1, 0, 7)
+      + 2e0*h_ijklm_p(nus[4], 0, 0, 2, 2, 0, 7)*twoJ[Y_];
+    A[++m][i] =
+      h_ijklm_p(nus[4], 1, 1, 0, 0, 0, 7)
+      + 2e0*h_ijklm_p(nus[4], 2, 2, 0, 0, 0, 7)*twoJ[X_];
+
+    for (j = 1; j <= m; j++)
+      A[j][i] *= bn_prms.bn_scl[i-1];
+
+    bn_prms.clr_prm_dep(i-1);
+  }
+
+  m = 0;
+  b[++m] = -scl_dnu*h_ijklm(K_re, 2, 2, 0, 0, 0);
+  b[++m] = -scl_dnu*h_ijklm(K_re, 0, 0, 2, 2, 0);
+  b[++m] = -scl_dnu*h_ijklm(K_re, 1, 1, 1, 1, 0);
+
+  b[++m] = -scl_dnu*h_ijklm(K_re, 3, 3, 0, 0, 0);
+  b[++m] = -scl_dnu*h_ijklm(K_re, 0, 0, 3, 3, 0);
+  b[++m] = -scl_dnu*h_ijklm(K_re, 2, 2, 1, 1, 0);
+  b[++m] = -scl_dnu*h_ijklm(K_re, 1, 1, 2, 2, 0);
+
+  b[++m] =
+    -(h_ijklm(nus[3], 1, 1, 0, 0, 0)
+      + 2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]);
+  b[++m] =
+    -(h_ijklm(nus[3], 0, 0, 1, 1, 0)
+      + 2e0*h_ijklm(nus[3], 0, 0, 2, 2, 0)*twoJ[Y_]);
+  b[++m] =
+    -(h_ijklm(nus[4], 0, 0, 1, 1, 0)
+      + 2e0*h_ijklm(nus[4], 0, 0, 2, 2, 0)*twoJ[Y_]);
+  b[++m] =
+    -(h_ijklm(nus[4], 1, 1, 0, 0, 0)
+      + 2e0*h_ijklm(nus[4], 2, 2, 0, 0, 0)*twoJ[X_]);
+
+  chi2_old = chi2; chi2 = get_chi2(m, b);
+
+  prt_system(m, n_b4, A, b);
+  printf("\n%4d %8.1e -> %8.1e\n", n_iter, chi2_old, chi2);
+
+  SVD_lim(m, n_b4, A, b, bn_prms.bn_lim, bn_prms.svd_cut, bn_prms.bn,
+	  bn_prms.dbn);
+
+  dvcopy(bn_prms.bn, n_b4, bn0);
+
+  if (n_iter == 1) {
+    for (i = 1; i <= n_b4; i++) {
+      g_[i] = bn_prms.dbn[i]; h_[i] = g_[i];
+    }
+  } else {
+    dg2 = g2 = 0e0;
+    for (i = 1; i <= n_b4; i++) {
+      g2 += sqr(g[i]); dg2 += (bn_prms.dbn[i]-g[i])*bn_prms.dbn[i];
+    }
+    if (g2 != 0e0) {
+      gamma = dg2/g2;
+      for (i = 1; i <= n_b4; i++) {
+	g_[i] = bn_prms.dbn[i]; bn_prms.dbn[i] = h_[i] = g_[i] + gamma*h_[i];
+      }
+    } else {
+      printf("g.g = 0\n"); exit(0);
+    }
+  }
+
+  printf("\n");
+  d_linmin(bn_prms.bn, bn_prms.dbn, n_b4, &fret, min_dnu_f);
+
+  // bn_prms.set_prm();
+
+  printf("dbn:\n");
+  db4_max = 0e0;
+  for (i = 1; i <= n_b4; i++) {
+    db4_max = max(fabs((bn_prms.bn[i]-bn0[i])), db4_max);
+    printf("%11.3e", bn_prms.bn[i]-bn0[i]);
+  }
+  printf("\n");
+
+  prt_mfile("flat_file.fit");
+  min_dnu_prt(bn_prms);
+
+  free_dvector(bn0, 1, n_b4);
+  free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_b4);
+}
+
+
+void min_dnu(void)
+{
+  // Control tune foot print; conjugate gradient method.
+  std::string str;
+  int         n_b4;
+  double      *g, *h, dbn_max, chi2;
+
+  const int    n_iter_max = 1000;
+  const double bn_tol     = 1e-5;
+
+  n_b4 = bn_prms.n_prm;
+
+  g = dvector(1, n_b4); h = dvector(1, n_b4);
+
+  bn_prms.ini_prm();
+
+  n_iter = 0; chi2 = 0e0;
+  do {
+    n_iter++;
+    min_dnu_grad(chi2, dbn_max, g, h);
+  } while ((dbn_max > bn_tol) && (n_iter < n_iter_max));
+
+  free_dvector(g, 1, n_b4); free_dvector(h, 1, n_b4);
+  free_dvector(bn_prms.bn_lim, 1, n_b4); free_dvector(bn_prms.bn, 1, n_b4);
+  free_dvector(bn_prms.dbn, 1, n_b4);
 }
 
 
@@ -1100,19 +1022,18 @@ void chk_lat(double nu[], double ksi[])
 
 int main(int argc, char *argv[])
 {
-  double        Jx, Jy;
+  int           j;
+  double        twoJ[2];
   tps           eps1_x, K_re, K_im, g_re, g_im, h_re, h_im, H_re, H_im;
-  ss_vect<tps>  Id_scl;
   std::ofstream outf;
-  
-  const double max_Ax = 2.5e-3, max_Ay = 2.5e-3, max_delta = 3e-2;
   
   const double eps_x   = 15e-3,
                nu[]    = {4.0/15.0, 1.0/15.0},
-               beta0[] = {0.38133, 5.00190},   // Optics and dispersion
-	       eta0_x  = 0.00382435,           // at center of dipole.
-	       beta1[] = {1.35633, 1.91479},   // Optics at center of SFh.
-	       beta2[] = {3.0,     3.0};       // Optics at center of straight.
+               beta0[] = {0.38133, 5.00190},   // Center of dipole.
+	       eta0_x  = 0.00382435, 
+	       beta1[] = {1.35633, 1.91479},   // Center of SFh.
+	       beta2[] = {3.0, 3.0},           // Center of straight.
+               A_max[] = {1.0e-3, 1.0e-3}, delta = 3e-2;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -1130,8 +1051,6 @@ int main(int argc, char *argv[])
 
   danot_(1);
 
-  Jx = sqr(max_Ax)/(2.0*beta2[X_]); Jy = sqr(max_Ay)/(2.0*beta2[Y_]);
-
   get_nu_ksi();
 
   // tst_eps_x();
@@ -1144,104 +1063,89 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    b2_prms.add_prm("bh",  2, 30.0, 1.0);
-    b2_prms.add_prm("qfh",  2, 30.0, 1.0);
-    b2_prms.add_prm("l2", -1,  0.5, 0.01);
+    bn_prms.add_prm("bh",  2, 30.0, 1.0);
+    bn_prms.add_prm("qfh",  2, 30.0, 1.0);
+    bn_prms.add_prm("l2", -1,  0.5, 0.01);
 
-    b2_prms.bn_tol = 1e-5; b2_prms.svd_cut = 1e-8;  b2_prms.step = 0.5;
+    bn_prms.bn_tol = 1e-5; bn_prms.svd_cut = 1e-8;  bn_prms.step = 0.5;
 
-    fit_emit(b2_prms, eps_x, nu[X_], nu[Y_]);
+    fit_emit(bn_prms, eps_x, nu[X_], nu[Y_]);
   }
 
   if (false) {
-    b2_prms.add_prm("bm",   2, 25.0, 1.0);
-    b2_prms.add_prm("qfe",  2, 25.0, 1.0);
-    b2_prms.add_prm("qde",  2, 50.0, 1.0);
-    b2_prms.add_prm("qm",   2, 25.0, 1.0);
+    bn_prms.add_prm("bm",   2, 25.0, 1.0);
+    bn_prms.add_prm("qfe",  2, 25.0, 1.0);
+    bn_prms.add_prm("qde",  2, 50.0, 1.0);
+    bn_prms.add_prm("qm",   2, 25.0, 1.0);
 
-    b2_prms.add_prm("bm",  -2,  0.2, 1.0);
-    b2_prms.add_prm("qfe", -2,  0.2, 1.0);
-    b2_prms.add_prm("qde", -2,  0.2, 1.0);
-    b2_prms.add_prm("qm",  -2,  0.2, 1.0);
+    bn_prms.add_prm("bm",  -2,  0.2, 1.0);
+    bn_prms.add_prm("qfe", -2,  0.2, 1.0);
+    bn_prms.add_prm("qde", -2,  0.2, 1.0);
+    bn_prms.add_prm("qm",  -2,  0.2, 1.0);
 
-    b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-6;  b2_prms.step = 0.5;
+    bn_prms.bn_tol = 1e-6; bn_prms.svd_cut = 1e-6;  bn_prms.step = 0.5;
 
-    fit_match(b2_prms, beta0[X_], beta0[Y_], eta0_x, beta1[X_], beta1[Y_]);
+    fit_match(bn_prms, beta0[X_], beta0[Y_], eta0_x, beta1[X_], beta1[Y_]);
   }
 
   if (false) {
-    b2_prms.add_prm("bm",   2, 25.0, 1.0);
-    b2_prms.add_prm("qfe",  2, 25.0, 1.0);
-    b2_prms.add_prm("qde",  2, 30.0, 1.0);
-    b2_prms.add_prm("qm",   2, 25.0, 1.0);
+    bn_prms.add_prm("bm",   2, 25.0, 1.0);
+    bn_prms.add_prm("qfe",  2, 25.0, 1.0);
+    bn_prms.add_prm("qde",  2, 30.0, 1.0);
+    bn_prms.add_prm("qm",   2, 25.0, 1.0);
 
-    b2_prms.add_prm("l5h", -1, 0.2,  0.1);
-    b2_prms.add_prm("l6",  -1, 0.5,  0.1);
-    b2_prms.add_prm("l7h", -1, 0.5,  0.1);
-    b2_prms.add_prm("l8",  -1, 0.5,  0.1);
+    bn_prms.add_prm("l5h", -1, 0.2,  0.1);
+    bn_prms.add_prm("l6",  -1, 0.5,  0.1);
+    bn_prms.add_prm("l7h", -1, 0.5,  0.1);
+    bn_prms.add_prm("l8",  -1, 0.5,  0.1);
 
-    b2_prms.bn_tol = 1e-15; b2_prms.svd_cut = 0e0; b2_prms.step = 0.0;
+    bn_prms.bn_tol = 1e-15; bn_prms.svd_cut = 0e0; bn_prms.step = 0.0;
 
     no_mpoles(Sext);
-    opt_match(b2_prms);
+    opt_match(bn_prms);
   }
 
   if (false) {
-    b4_prms.add_prm("o1", 4, 1e6, 1.0);
-    b4_prms.add_prm("o2", 4, 1e6, 1.0);
-    b4_prms.add_prm("o3", 4, 1e6, 1.0);
+    bn_prms.add_prm("o1", 4, 1e6, 1.0);
+    bn_prms.add_prm("o2", 4, 1e6, 1.0);
+    bn_prms.add_prm("o3", 4, 1e6, 1.0);
 
-    b4_prms.bn_tol = 1e-5; b4_prms.svd_cut = 1e-3; b4_prms.step = 1.0;
+    bn_prms.bn_tol = 1e-5; bn_prms.svd_cut = 1e-3; bn_prms.step = 1.0;
 
     no_mpoles(Oct); no_mpoles(Dodec);
 
-    fit_3rd_achrom(b4_prms);
+    fit_3rd_achrom(bn_prms);
 
     prt_mfile("flat_file.fit");
   }
 
   if (true) {
-    b4_prms.add_prm("o1", 4, 1e6, 1.0);
-    b4_prms.add_prm("o2", 4, 1e6, 1.0);
-    b4_prms.add_prm("o3", 4, 1e6, 1.0);
-    b4_prms.add_prm("o4", 4, 1e6, 1.0);
+    for (j = 0; j < 2; j++)
+      twoJ[j] = sqr(A_max[j])/beta2[j];
 
-    // b4_prms.add_prm("o1", 6, 1e9, 1.0);
-    // b4_prms.add_prm("o2", 6, 1e9, 1.0);
-    // b4_prms.add_prm("o3", 6, 1e9, 1.0);
-    // b4_prms.add_prm("o4", 6, 1e9, 1.0);
-
-    b4_prms.bn_tol = 1e-4; b4_prms.svd_cut = 1e-10; b4_prms.step = 0.1;
-
-    no_mpoles(Oct); no_mpoles(Dodec);
-
-    fit_dnu(b4_prms);
-
-    prt_mfile("flat_file.fit");
-  }
-
-  if (false) {
-    b4_prms.add_prm("o1", 4, 1e5, 1.0);
-    b4_prms.add_prm("o2", 4, 1e5, 1.0);
-    b4_prms.add_prm("o3", 4, 1e5, 1.0);
-
-    b4_prms.add_prm("o1", 6, 1e10, 1.0);
-    b4_prms.add_prm("o2", 6, 1e10, 1.0);
-    b4_prms.add_prm("o3", 6, 1e10, 1.0);
-
-    b4_prms.bn_tol = 1e-5; b4_prms.svd_cut = 0e0; b4_prms.step = 0.0;
-
-    no_mpoles(Oct); no_mpoles(Dodec);
-
-    opt_dnu(b4_prms);
-  }
-
-  if (false) {
     Id_scl.identity();
-    Id_scl[x_] *= sqrt(2.0*Jx); Id_scl[px_] *= sqrt(2.0*Jx);
-    Id_scl[y_] *= sqrt(2.0*Jy); Id_scl[py_] *= sqrt(2.0*Jy);
-    Id_scl[delta_] *= max_delta;
+    Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
+    Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
+    Id_scl[delta_] *= delta;
 
+    bn_prms.add_prm("o1", 4, 5e5, 1.0);
+    bn_prms.add_prm("o2", 4, 5e5, 1.0);
+    bn_prms.add_prm("o3", 4, 5e5, 1.0);
+    bn_prms.add_prm("o4", 4, 5e5, 1.0);
+
+    // bn_prms.add_prm("o1", 6, 1e9, 1.0);
+    // bn_prms.add_prm("o2", 6, 1e9, 1.0);
+    // bn_prms.add_prm("o3", 6, 1e9, 1.0);
+    // bn_prms.add_prm("o4", 6, 1e9, 1.0);
+
+    bn_prms.bn_tol = 1e-4; bn_prms.svd_cut = 1e-10; bn_prms.step = 1.0;
+
+    // no_mpoles(Oct); no_mpoles(Dodec);
+
+    min_dnu();
+  }
+
+   if (false) {
     danot_(NO);
 
     get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
@@ -1250,9 +1154,9 @@ int main(int argc, char *argv[])
     CtoR(get_H()*Id_scl, H_re, H_im);
 
     file_wr(outf, "map.dat"); outf << Map; outf.close();
-    file_wr(outf, "K.dat"); outf << K_re*Id_scl; outf.close();
-    file_wr(outf, "g.dat"); outf << g_im*Id_scl; outf.close();
-    file_wr(outf, "h.dat"); outf << h_re*Id_scl; outf.close();
-    file_wr(outf, "H.dat"); outf << H_re*Id_scl; outf.close();
+    file_wr(outf, "K.dat");   outf << K_re*Id_scl; outf.close();
+    file_wr(outf, "g.dat");   outf << g_im*Id_scl; outf.close();
+    file_wr(outf, "h.dat");   outf << h_re*Id_scl; outf.close();
+    file_wr(outf, "H.dat");   outf << H_re*Id_scl; outf.close();
   }
 }
