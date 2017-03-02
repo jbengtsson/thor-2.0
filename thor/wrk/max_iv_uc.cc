@@ -787,7 +787,8 @@ double get_chi2(const int n, const double data[])
   int    j;
   double chi2 = 0e0;
 
-  for (j = 1; j <= n; j++) chi2 += sqr(data[j]);
+  for (j = 1; j <= n; j++)
+    chi2 += sqr(data[j]);
 
   return chi2;
 }
@@ -925,7 +926,7 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
   chi2_old = chi2; chi2 = get_chi2(m, b);
 
   prt_system(m, n_b4, A, b);
-  printf("\n%4d %11.3e -> %11.3e\n", n_iter, chi2_old, chi2);
+  printf("\n%4d %9.3e -> %9.3e\n", n_iter, chi2_old, chi2);
 
   SVD_lim(m, n_b4, A, b, bn_prms.bn_lim, bn_prms.svd_cut, bn_prms.bn,
 	  bn_prms.dbn);
@@ -939,7 +940,7 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
   } else {
     dg2 = g2 = 0e0;
     for (i = 1; i <= n_b4; i++) {
-      g2 += sqr(g[i]); dg2 += (bn_prms.dbn[i]-g[i])*bn_prms.dbn[i];
+      g2 += sqr(g_[i]); dg2 += (bn_prms.dbn[i]-g[i])*bn_prms.dbn[i];
     }
     if (g2 != 0e0) {
       gamma = dg2/g2;
@@ -947,14 +948,15 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
 	g_[i] = bn_prms.dbn[i]; bn_prms.dbn[i] = h_[i] = g_[i] + gamma*h_[i];
       }
     } else {
-      printf("g.g = 0\n"); exit(0);
+      printf("g.g = 0\n");
+      exit(0);
     }
   }
 
   printf("\n");
   d_linmin(bn_prms.bn, bn_prms.dbn, n_b4, &fret, min_dnu_f);
 
-  printf("final bn:\n");
+  printf("\nfinal bn:\n");
   for (i = 1; i <= n_b4; i++) {
     bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
     printf("%11.3e", bn_prms.bn[i]);
