@@ -801,7 +801,9 @@ double min_dnu_f(double b4s[])
   ss_vect<tps>        nus;
   std::vector<double> b;
 
-  dvcopy(b4s, bn_prms.n_prm, bn_prms.bn); bn_prms.set_prm();
+  // Do not change parameters.
+  for (i = 1; i <= bn_prms.n_prm; i++)
+    set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], b4s[i]);
 
   danot_(NO-2);
   get_Map();
@@ -830,15 +832,10 @@ double min_dnu_f(double b4s[])
   b.push_back(-(h_ijklm(nus[4], 1, 1, 0, 0, 0)
 		+2e0*h_ijklm(nus[4], 2, 2, 0, 0, 0)*twoJ[X_]));
 
-  printf("b:\n");
   f = 0e0;
-  for (i = 0; i < (int)b.size(); i++) {
+  for (i = 0; i < (int)b.size(); i++)
     f += sqr(b[i]);
-    printf("%11.3e", b[i]);
-  }
-  printf("\n");
-
-  printf("%4d f = %9.3e\n", n_iter, f);
+  printf("%3d f = %9.3e\n", n_iter, f);
 
   return f;
 }
@@ -928,7 +925,7 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
   chi2_old = chi2; chi2 = get_chi2(m, b);
 
   prt_system(m, n_b4, A, b);
-  printf("\n%4d %8.1e -> %8.1e\n", n_iter, chi2_old, chi2);
+  printf("\n%4d %11.3e -> %11.3e\n", n_iter, chi2_old, chi2);
 
   SVD_lim(m, n_b4, A, b, bn_prms.bn_lim, bn_prms.svd_cut, bn_prms.bn,
 	  bn_prms.dbn);
@@ -957,7 +954,12 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
   printf("\n");
   d_linmin(bn_prms.bn, bn_prms.dbn, n_b4, &fret, min_dnu_f);
 
-  // bn_prms.set_prm();
+  printf("final bn:\n");
+  for (i = 1; i <= n_b4; i++) {
+    bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
+    printf("%11.3e", bn_prms.bn[i]);
+  }
+  printf("\n");
 
   printf("dbn:\n");
   db4_max = 0e0;
@@ -1140,7 +1142,7 @@ int main(int argc, char *argv[])
 
     bn_prms.bn_tol = 1e-4; bn_prms.svd_cut = 1e-10; bn_prms.step = 1.0;
 
-    // no_mpoles(Oct); no_mpoles(Dodec);
+    no_mpoles(Oct); no_mpoles(Dodec);
 
     min_dnu();
   }
