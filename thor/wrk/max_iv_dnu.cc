@@ -43,7 +43,7 @@ ss_vect<tps> Id_scl;
 
 const int n_prm_max = 8;
 
-const double scl_dnu = 1e7, scl_2d = 5e0;
+const double scl_dnu = 1e5, scl_2d = 5e0;
 
 
 void param_type::add_prm(const std::string Fname, const int n,
@@ -420,9 +420,10 @@ double min_dnu_f(double *b4s)
  
   b.push_back(scl_dnu*(h_ijklm(K_re, 2, 2, 0, 0, 0)
 		       -h_ijklm(K_re, 0, 0, 2, 2, 0)));
-
   b.push_back(scl_dnu*(h_ijklm(K_re, 3, 3, 0, 0, 0)
 	      -h_ijklm(K_re, 0, 0, 3, 3, 0)));
+
+  b.push_back(scl_dnu*(h_ijklm(K_re, 2, 2, 0, 0, 0)));
   b.push_back(scl_dnu*(h_ijklm(K_re, 1, 1, 1, 1, 0)));
   b.push_back(scl_dnu*(h_ijklm(K_re, 2, 2, 1, 1, 0)));
   b.push_back(scl_dnu*(h_ijklm(K_re, 1, 1, 2, 2, 0)));
@@ -490,6 +491,7 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
       scl_dnu*(h_ijklm_p(K_re, 3, 3, 0, 0, 0, 7)
 	       -h_ijklm_p(K_re, 0, 0, 3, 3, 0, 7));
 
+    A[++m][i] = scl_dnu*(h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7));
     A[++m][i] = scl_dnu*(h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7));
     A[++m][i] = scl_dnu*(h_ijklm_p(K_re, 2, 2, 1, 1, 0, 7));
     A[++m][i] = scl_dnu*(h_ijklm_p(K_re, 1, 1, 2, 2, 0, 7));
@@ -507,6 +509,8 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
   m = 0;
   b[++m] = -scl_dnu*(h_ijklm(K_re, 2, 2, 0, 0, 0)-h_ijklm(K_re, 0, 0, 2, 2, 0));
   b[++m] = -scl_dnu*(h_ijklm(K_re, 3, 3, 0, 0, 0)-h_ijklm(K_re, 0, 0, 3, 3, 0));
+
+  b[++m] = -scl_dnu*(h_ijklm(K_re, 2, 2, 0, 0, 0));
   b[++m] = -scl_dnu*(h_ijklm(K_re, 1, 1, 1, 1, 0));
   b[++m] = -scl_dnu*(h_ijklm(K_re, 2, 2, 1, 1, 0));
   b[++m] = -scl_dnu*(h_ijklm(K_re, 1, 1, 2, 2, 0));
@@ -590,7 +594,7 @@ int main(int argc, char *argv[])
   tps    K_re, K_im;
   
   const double beta[]  = {3.0, 3.0},                     // Center of straight.
-               A_max[] = {1.0e-3, 1.0e-3}, delta = 3e-2;
+               A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -623,14 +627,14 @@ int main(int argc, char *argv[])
   bn_prms.add_prm("o3", 4, 1e6, 1.0);
   bn_prms.add_prm("o4", 4, 1e6, 1.0);
 
-  // bn_prms.add_prm("o1", 6, 1e9, 1.0);
-  // bn_prms.add_prm("o2", 6, 1e9, 1.0);
-  // bn_prms.add_prm("o3", 6, 1e9, 1.0);
-  // bn_prms.add_prm("o4", 6, 1e9, 1.0);
+  bn_prms.add_prm("o1", 6, 1e9, 1.0);
+  bn_prms.add_prm("o2", 6, 1e9, 1.0);
+  bn_prms.add_prm("o3", 6, 1e9, 1.0);
+  bn_prms.add_prm("o4", 6, 1e9, 1.0);
 
-  bn_prms.bn_tol = 1e-4; bn_prms.svd_cut = 1e-12; bn_prms.step = 0.01;
+  bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-12; bn_prms.step = 0.01;
 
-  // no_mpoles(Oct); no_mpoles(Dodec);
+  no_mpoles(Oct); no_mpoles(Dodec);
 
   min_dnu(true);
 

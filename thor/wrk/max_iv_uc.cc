@@ -842,12 +842,11 @@ double min_dnu_f(double *b4s)
 
   if (chi2 < chi2_ref) {
     printf("\n%3d chi2: %12.5e -> %12.5e\n", n_powell, chi2_ref, chi2);
-    printf("b:\n");
+    printf("b % bn:\n");
     for (i = 0; i < (int)b.size(); i++)
       printf("%11.3e", b[i]);
     printf("\n");
     chi2 += sqr(b[i]);
-    printf("bn:\n");
     for (i = 1; i <= bn_prms.n_prm; i++) 
       printf("%11.3e", b4s[i]);
     printf("\n");
