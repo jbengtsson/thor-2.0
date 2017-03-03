@@ -1,4 +1,4 @@
-#define NO 6
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -830,11 +830,11 @@ double min_dnu_f(double b4s[])
   b.push_back(h_ijklm(nus[3], 1, 1, 0, 0, 0)
 	      +2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]);
   b.push_back(scl_2d*(h_ijklm(nus[3], 0, 0, 1, 1, 0)
-	       +2e0*h_ijklm(nus[3], 0, 0, 2, 2, 0)*twoJ[Y_]));
-  b.push_back(scl_2d*(h_ijklm(nus[4], 0, 0, 1, 1, 0)
-	       +2e0*h_ijklm(nus[4], 0, 0, 2, 2, 0)*twoJ[Y_]));
-  b.push_back(h_ijklm(nus[4], 1, 1, 0, 0, 0)
-	      +2e0*h_ijklm(nus[4], 2, 2, 0, 0, 0)*twoJ[X_]);
+		      +2e0*h_ijklm(nus[3], 0, 0, 2, 2, 0)*twoJ[Y_]));
+  b.push_back(h_ijklm(nus[4], 0, 0, 1, 1, 0)
+	      +2e0*h_ijklm(nus[4], 0, 0, 2, 2, 0)*twoJ[Y_]);
+  b.push_back(scl_2d*(h_ijklm(nus[4], 1, 1, 0, 0, 0)
+		      +2e0*h_ijklm(nus[4], 2, 2, 0, 0, 0)*twoJ[X_]));
 
   chi2 = 0e0;
   for (i = 0; i < (int)b.size(); i++)
@@ -859,11 +859,46 @@ double min_dnu_f(double b4s[])
 }
 
 
-void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
+void conj_grad(const int n_iter, double bn[], double dbn[],
+	       double *g, double *h)
+{
+  // Conjugate gradient method.
+  int    n_bn, i;
+  double fret, g2, gamma, dg2;
+
+  n_bn = bn_prms.n_prm;
+
+  if (n_iter == 1) {
+    for (i = 1; i <= n_bn; i++) {
+      g[i] = dbn[i]; h[i] = g[i];
+    }
+  } else {
+    dg2 = g2 = 0e0;
+    for (i = 1; i <= n_bn; i++) {
+      g2 += sqr(g[i]); dg2 += (dbn[i]-g[i])*dbn[i];
+    }
+    if (g2 != 0e0) {
+      gamma = dg2/g2;
+      for (i = 1; i <= n_bn; i++) {
+	g[i] = dbn[i]; dbn[i] = h[i] = g[i] + gamma*h[i];
+      }
+    } else {
+      printf("g.g = 0\n");
+      exit(0);
+    }
+  }
+
+  printf("\n");
+  d_linmin(bn, dbn, n_bn, &fret, min_dnu_f);
+}
+
+
+void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
+		  const bool cg_meth)
 {
   int          n_b4, i, j, m;
-  double       chi2_old, fret, g2, gamma, dg2;
-  double       **A, *b, *bn0;
+  double       chi2_ref;
+  double       **A, *b, *bn_ref;
   double       twoJ[2];
   tps          K_re, K_im;
   ss_vect<tps> nus;
@@ -872,16 +907,16 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
 
   n_b4 = bn_prms.n_prm;
 
-  bn0 = dvector(1, n_b4);
+  bn_ref = dvector(1, n_b4);
   b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_b4);
 
   printf("\n");
   for (i = 1; i <= n_b4; i++) {
     bn_prms.set_prm_dep(i-1);
 
-    danot_(NO-1);
+    danot_(6);
     get_Map();
-    danot_(NO);
+    danot_(7);
     K = MapNorm(Map, g, A1, A0, Map_res, 1);
     CtoR(K, K_re, K_im); nus = dHdJ(K);
     K_re = K_re*Id_scl; nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
@@ -905,11 +940,11 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
       scl_2d*(h_ijklm_p(nus[3], 0, 0, 1, 1, 0, 7)
 	      +2e0*h_ijklm_p(nus[3], 0, 0, 2, 2, 0, 7)*twoJ[Y_]);
     A[++m][i] =
-       scl_2d*(h_ijklm_p(nus[4], 0, 0, 1, 1, 0, 7)
-	       +2e0*h_ijklm_p(nus[4], 0, 0, 2, 2, 0, 7)*twoJ[Y_]);
+       h_ijklm_p(nus[4], 0, 0, 1, 1, 0, 7)
+      +2e0*h_ijklm_p(nus[4], 0, 0, 2, 2, 0, 7)*twoJ[Y_];
     A[++m][i] =
-      h_ijklm_p(nus[4], 1, 1, 0, 0, 0, 7)
-      +2e0*h_ijklm_p(nus[4], 2, 2, 0, 0, 0, 7)*twoJ[X_];
+      scl_2d*(h_ijklm_p(nus[4], 1, 1, 0, 0, 0, 7)
+	      +2e0*h_ijklm_p(nus[4], 2, 2, 0, 0, 0, 7)*twoJ[X_]);
 
     for (j = 1; j <= m; j++)
       A[j][i] *= bn_prms.bn_scl[i-1];
@@ -932,71 +967,48 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_)
       +2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]);
   b[++m] =
     -scl_2d*(h_ijklm(nus[3], 0, 0, 1, 1, 0)
-      +2e0*h_ijklm(nus[3], 0, 0, 2, 2, 0)*twoJ[Y_]);
+	     +2e0*h_ijklm(nus[3], 0, 0, 2, 2, 0)*twoJ[Y_]);
   b[++m] =
-    -scl_2d*(h_ijklm(nus[4], 0, 0, 1, 1, 0)
+    -(h_ijklm(nus[4], 0, 0, 1, 1, 0)
       +2e0*h_ijklm(nus[4], 0, 0, 2, 2, 0)*twoJ[Y_]);
   b[++m] =
-    -(h_ijklm(nus[4], 1, 1, 0, 0, 0)
-      +2e0*h_ijklm(nus[4], 2, 2, 0, 0, 0)*twoJ[X_]);
+    -scl_2d*(h_ijklm(nus[4], 1, 1, 0, 0, 0)
+	     +2e0*h_ijklm(nus[4], 2, 2, 0, 0, 0)*twoJ[X_]);
 
-  chi2_old = chi2; chi2 = get_chi2(m, b);
+  chi2_ref = chi2; chi2 = get_chi2(m, b);
 
   prt_system(m, n_b4, A, b);
-  printf("\n%4d %9.3e -> %9.3e\n", n_iter, chi2_old, chi2);
+  printf("\n%4d %9.3e -> %9.3e\n", n_iter, chi2_ref, chi2);
 
   SVD_lim(m, n_b4, A, b, bn_prms.bn_lim, bn_prms.svd_cut, bn_prms.bn,
 	  bn_prms.dbn);
 
-  dvcopy(bn_prms.bn, n_b4, bn0);
+  dvcopy(bn_prms.bn, n_b4, bn_ref);
+  if (cg_meth)
+    conj_grad(n_iter, bn_prms.bn, bn_prms.dbn, g_, h_);
+  else
+    bn_prms.set_dprm();
 
-  if (n_iter == 1) {
-    for (i = 1; i <= n_b4; i++) {
-      g_[i] = bn_prms.dbn[i]; h_[i] = g_[i];
-    }
-  } else {
-    dg2 = g2 = 0e0;
-    for (i = 1; i <= n_b4; i++) {
-      g2 += sqr(g_[i]); dg2 += (bn_prms.dbn[i]-g_[i])*bn_prms.dbn[i];
-    }
-    if (g2 != 0e0) {
-      gamma = dg2/g2;
-      for (i = 1; i <= n_b4; i++) {
-	g_[i] = bn_prms.dbn[i]; bn_prms.dbn[i] = h_[i] = g_[i] + gamma*h_[i];
-      }
-    } else {
-      printf("g.g = 0\n");
-      exit(0);
-    }
-  }
-
-  printf("\n");
-  d_linmin(bn_prms.bn, bn_prms.dbn, n_b4, &fret, min_dnu_f);
-
-  printf("\nfinal bn:\n");
-  for (i = 1; i <= n_b4; i++) {
+  for (i = 1; i <= n_b4; i++)
     bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
-    printf("%11.3e", bn_prms.bn[i]);
-  }
-  printf("\n");
 
-  printf("dbn:\n");
+  printf("\nbn & dbn:\n");
+  for (i = 1; i <= n_b4; i++)
+    printf("%13.5e", bn_prms.bn[i]);
+  printf("\n");
   db4_max = 0e0;
   for (i = 1; i <= n_b4; i++) {
-    db4_max = max(fabs((bn_prms.bn[i]-bn0[i])), db4_max);
-    printf("%11.3e", bn_prms.bn[i]-bn0[i]);
+    db4_max = max(fabs((bn_prms.bn[i]-bn_ref[i])), db4_max);
+    printf("%13.5e", bn_prms.bn[i]-bn_ref[i]);
   }
   printf("\n");
 
-  prt_mfile("flat_file.fit");
-  min_dnu_prt(bn_prms);
-
-  free_dvector(bn0, 1, n_b4);
+  free_dvector(bn_ref, 1, n_b4);
   free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_b4);
 }
 
 
-void min_dnu(void)
+void min_dnu(const bool cg_meth)
 {
   // Control tune foot print; conjugate gradient method.
   std::string str;
@@ -1015,7 +1027,14 @@ void min_dnu(void)
   n_iter = 0; chi2 = 0e0;
   do {
     n_iter++;
-    min_dnu_grad(chi2, dbn_max, g, h);
+
+    min_dnu_grad(chi2, dbn_max, g, h, cg_meth);
+
+    prt_mfile("flat_file.fit");
+    if (n_b4 <= 4)
+      min_dnu_prt(bn_prms);
+    else
+      min_dnu_prt2(bn_prms);
   } while ((dbn_max > bn_tol) && (n_iter < n_iter_max));
 
   free_dvector(g, 1, n_b4); free_dvector(h, 1, n_b4);
@@ -1163,32 +1182,6 @@ int main(int argc, char *argv[])
     prt_mfile("flat_file.fit");
   }
 
-  if (false) {
-    for (j = 0; j < 2; j++)
-      twoJ[j] = sqr(A_max[j])/beta2[j];
-
-    Id_scl.identity();
-    Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
-    Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
-    Id_scl[delta_] *= delta;
-
-    bn_prms.add_prm("o1", 4, 1e6, 1.0);
-    bn_prms.add_prm("o2", 4, 1e6, 1.0);
-    bn_prms.add_prm("o3", 4, 1e6, 1.0);
-    bn_prms.add_prm("o4", 4, 1e6, 1.0);
-
-    bn_prms.add_prm("o1", 6, 1e9, 1.0);
-    bn_prms.add_prm("o2", 6, 1e9, 1.0);
-    bn_prms.add_prm("o3", 6, 1e9, 1.0);
-    bn_prms.add_prm("o4", 6, 1e9, 1.0);
-
-    bn_prms.bn_tol = 1e-4; bn_prms.svd_cut = 1e-14; bn_prms.step = 1.0;
-
-    no_mpoles(Oct); no_mpoles(Dodec);
-
-    min_dnu();
-  }
-
   if (true) {
     for (j = 0; j < 2; j++)
       twoJ[j] = sqr(A_max[j])/beta2[j];
@@ -1207,6 +1200,32 @@ int main(int argc, char *argv[])
     bn_prms.add_prm("o2", 6, 1e9, 1.0);
     bn_prms.add_prm("o3", 6, 1e9, 1.0);
     bn_prms.add_prm("o4", 6, 1e9, 1.0);
+
+    bn_prms.bn_tol = 1e-4; bn_prms.svd_cut = 1e-10; bn_prms.step = 0.1;
+
+    no_mpoles(Oct); no_mpoles(Dodec);
+
+    min_dnu(false);
+  }
+
+  if (false) {
+    for (j = 0; j < 2; j++)
+      twoJ[j] = sqr(A_max[j])/beta2[j];
+
+    Id_scl.identity();
+    Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
+    Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
+    Id_scl[delta_] *= delta;
+
+    bn_prms.add_prm("o1", 4, 1e6, 1.0);
+    bn_prms.add_prm("o2", 4, 1e6, 1.0);
+    bn_prms.add_prm("o3", 4, 1e6, 1.0);
+    bn_prms.add_prm("o4", 4, 1e6, 1.0);
+
+    // bn_prms.add_prm("o1", 6, 1e9, 1.0);
+    // bn_prms.add_prm("o2", 6, 1e9, 1.0);
+    // bn_prms.add_prm("o3", 6, 1e9, 1.0);
+    // bn_prms.add_prm("o4", 6, 1e9, 1.0);
 
     bn_prms.bn_tol = 1e-4; bn_prms.svd_cut = 1e-14; bn_prms.step = 1.0;
 
