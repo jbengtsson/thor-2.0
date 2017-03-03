@@ -43,7 +43,7 @@ ss_vect<tps> Id_scl;
 
 const int n_prm_max = 8;
 
-const double scl_dnu = 1e4, scl_2d = 5e0;
+const double scl_dnu = 1e5, scl_2d = 5e0;
 
 
 void param_type::add_prm(const std::string Fname, const int n,
@@ -794,7 +794,7 @@ double get_chi2(const int n, const double data[])
 }
 
 
-double min_dnu_f(double b4s[])
+double min_dnu_f(double *b4s)
 {
   int                 i;
   static double       chi2_ref = 1e30;
@@ -860,7 +860,7 @@ double min_dnu_f(double b4s[])
 
 
 void conj_grad(const int n_iter, double bn[], double dbn[],
-	       double *g, double *h)
+	       double *g, double *h, double (*f)(double *))
 {
   // Conjugate gradient method.
   int    n_bn, i;
@@ -889,7 +889,7 @@ void conj_grad(const int n_iter, double bn[], double dbn[],
   }
 
   printf("\n");
-  d_linmin(bn, dbn, n_bn, &fret, min_dnu_f);
+  d_linmin(bn, dbn, n_bn, &fret, f);
 }
 
 
@@ -910,6 +910,8 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
   bn_ref = dvector(1, n_b4);
   b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_b4);
 
+  twoJ[X_] = 1e0; twoJ[Y_] = 1e0;
+
   printf("\n");
   for (i = 1; i <= n_b4; i++) {
     bn_prms.set_prm_dep(i-1);
@@ -920,8 +922,6 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
     K = MapNorm(Map, g, A1, A0, Map_res, 1);
     CtoR(K, K_re, K_im); nus = dHdJ(K);
     K_re = K_re*Id_scl; nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
-
-    twoJ[X_] = 1e0; twoJ[Y_] = 1e0;
 
     m = 0;
     A[++m][i] = scl_dnu*h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7);
@@ -978,14 +978,14 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
   chi2_ref = chi2; chi2 = get_chi2(m, b);
 
   prt_system(m, n_b4, A, b);
-  printf("\n%4d %9.3e -> %9.3e\n", n_iter, chi2_ref, chi2);
+  printf("\n%4d %12.5e -> %12.5e\n", n_iter, chi2_ref, chi2);
 
   SVD_lim(m, n_b4, A, b, bn_prms.bn_lim, bn_prms.svd_cut, bn_prms.bn,
 	  bn_prms.dbn);
 
   dvcopy(bn_prms.bn, n_b4, bn_ref);
   if (cg_meth)
-    conj_grad(n_iter, bn_prms.bn, bn_prms.dbn, g_, h_);
+    conj_grad(n_iter, bn_prms.bn, bn_prms.dbn, g_, h_, min_dnu_f);
   else
     bn_prms.set_dprm();
 
@@ -1182,7 +1182,7 @@ int main(int argc, char *argv[])
     prt_mfile("flat_file.fit");
   }
 
-  if (true) {
+  if (false) {
     for (j = 0; j < 2; j++)
       twoJ[j] = sqr(A_max[j])/beta2[j];
 
@@ -1201,14 +1201,14 @@ int main(int argc, char *argv[])
     bn_prms.add_prm("o3", 6, 1e9, 1.0);
     bn_prms.add_prm("o4", 6, 1e9, 1.0);
 
-    bn_prms.bn_tol = 1e-4; bn_prms.svd_cut = 1e-10; bn_prms.step = 0.1;
+    bn_prms.bn_tol = 1e-4; bn_prms.svd_cut = 1e-10; bn_prms.step = 0.01;
 
-    no_mpoles(Oct); no_mpoles(Dodec);
+    // no_mpoles(Oct); no_mpoles(Dodec);
 
     min_dnu(false);
   }
 
-  if (false) {
+  if (true) {
     for (j = 0; j < 2; j++)
       twoJ[j] = sqr(A_max[j])/beta2[j];
 

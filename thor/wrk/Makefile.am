@@ -1,9 +1,10 @@
-bin_PROGRAMS = H_min max_iv_match max_iv_uc \
+bin_PROGRAMS = H_min max_iv_match max_iv_uc max_iv_dnu \
 	       vlad vlad_2 vlad_3 vlad_4 vlad_5
 
 H_min_SOURCES        = H_min.cc
 max_iv_match_SOURCES = max_iv_match.cc
 max_iv_uc_SOURCES    = max_iv_uc.cc
+max_iv_dnu_SOURCES   = max_iv_dnu.cc
 vlad_SOURCES         = vlad.cc
 vlad_2_SOURCES       = vlad_2.cc
 vlad_3_SOURCES       = vlad_3.cc
