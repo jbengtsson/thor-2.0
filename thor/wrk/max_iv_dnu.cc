@@ -43,7 +43,7 @@ ss_vect<tps> Id_scl;
 
 const int n_prm_max = 8;
 
-const double scl_dnu = 1e5, scl_2d = 5e0;
+const double scl_dnu[] = {1e4, 1e5, 1e-2};
 
 
 void param_type::add_prm(const std::string Fname, const int n,
@@ -165,7 +165,7 @@ void no_mpoles(const int n)
   printf("\nzeroing multipoles: %d\n", n);
   for (j = 0; j < n_elem; j++)
     if (elem[j].kind == Mpole)
-	set_bn(elem[j].Fnum, elem[j].Knum, n, 0e0);
+      set_bn(elem[j].Fnum, elem[j].Knum, n, 0e0);
 }
 
 
@@ -314,13 +314,13 @@ void min_dnu_prt(const param_type &bn_prms)
 
   outf = file_write(file_name.c_str());
   fprintf(outf, "o1: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[1]);
+	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[1]);
   fprintf(outf, "o2: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[2]);
+	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[2]);
   fprintf(outf, "o3: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[3]);
+	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[3]);
   fprintf(outf, "o4: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[4]);
+	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[4]);
   fclose(outf);
 }
 
@@ -333,16 +333,16 @@ void min_dnu_prt2(const param_type &bn_prms)
 
   outf = file_write(file_name.c_str());
   fprintf(outf, "o1: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
+	  "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
 	  bn_prms.bn[1], bn_prms.bn[5]);
   fprintf(outf, "o2: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
+	  "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
 	  bn_prms.bn[2], bn_prms.bn[6]);
   fprintf(outf, "o3: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
+	  "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
 	  bn_prms.bn[3], bn_prms.bn[7]);
   fprintf(outf, "o4: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	        "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
+	  "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
 	  bn_prms.bn[4], bn_prms.bn[8]);
   fclose(outf);
 }
@@ -418,18 +418,17 @@ double min_dnu_f(double *b4s)
 
   twoJ[X_] = 1e0; twoJ[Y_] = 1e0;
  
-  b.push_back(scl_dnu*(h_ijklm(K_re, 2, 2, 0, 0, 0)
-		       -h_ijklm(K_re, 0, 0, 2, 2, 0)));
-  b.push_back(scl_dnu*(h_ijklm(K_re, 3, 3, 0, 0, 0)
-	      -h_ijklm(K_re, 0, 0, 3, 3, 0)));
+  b.push_back(scl_dnu[0]*(h_ijklm(K_re, 2, 2, 0, 0, 0)));
+  b.push_back(scl_dnu[0]*(h_ijklm(K_re, 0, 0, 2, 2, 0)));
 
-  b.push_back(scl_dnu*(h_ijklm(K_re, 2, 2, 0, 0, 0)));
-  b.push_back(scl_dnu*(h_ijklm(K_re, 1, 1, 1, 1, 0)));
-  b.push_back(scl_dnu*(h_ijklm(K_re, 2, 2, 1, 1, 0)));
-  b.push_back(scl_dnu*(h_ijklm(K_re, 1, 1, 2, 2, 0)));
+  b.push_back(scl_dnu[1]*(h_ijklm(K_re, 1, 1, 1, 1, 0)));
+  b.push_back(scl_dnu[1]*(h_ijklm(K_re, 2, 2, 1, 1, 0)));
+  b.push_back(scl_dnu[1]*(h_ijklm(K_re, 1, 1, 2, 2, 0)));
 
-  b.push_back(h_ijklm(nus[3], 1, 1, 0, 0, 0)
-	      +2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]);
+  b.push_back(scl_dnu[2]*(h_ijklm(nus[3], 1, 1, 0, 0, 0)
+			  +2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]));
+  b.push_back(scl_dnu[2]*(h_ijklm(nus[4], 0, 0, 1, 1, 0)
+			  +2e0*h_ijklm(nus[4], 0, 0, 2, 2, 0)*twoJ[Y_]));
 
   chi2 = 0e0;
   for (i = 0; i < (int)b.size(); i++)
@@ -484,40 +483,40 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
     K_re = K_re*Id_scl; nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
 
     m = 0;
-    A[++m][i] =
-      scl_dnu*(h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7)
-	       -h_ijklm_p(K_re, 0, 0, 2, 2, 0, 7));
-    A[++m][i] =
-      scl_dnu*(h_ijklm_p(K_re, 3, 3, 0, 0, 0, 7)
-	       -h_ijklm_p(K_re, 0, 0, 3, 3, 0, 7));
+    A[++m][i] = scl_dnu[0]*(h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7));
+    A[++m][i] = scl_dnu[0]*(h_ijklm_p(K_re, 0, 0, 2, 2, 0, 7));
 
-    A[++m][i] = scl_dnu*(h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7));
-    A[++m][i] = scl_dnu*(h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7));
-    A[++m][i] = scl_dnu*(h_ijklm_p(K_re, 2, 2, 1, 1, 0, 7));
-    A[++m][i] = scl_dnu*(h_ijklm_p(K_re, 1, 1, 2, 2, 0, 7));
+    A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7));
+    A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 2, 2, 1, 1, 0, 7));
+    A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 1, 1, 2, 2, 0, 7));
 
     A[++m][i] =
-      h_ijklm_p(nus[3], 1, 1, 0, 0, 0, 7)
-      + 2e0*h_ijklm_p(nus[3], 2, 2, 0, 0, 0, 7)*twoJ[X_];
+      scl_dnu[2]*(h_ijklm_p(nus[3], 1, 1, 0, 0, 0, 7)
+		  +2e0*h_ijklm_p(nus[3], 2, 2, 0, 0, 0, 7)*twoJ[X_]);
+    A[++m][i] =
+      scl_dnu[2]*(h_ijklm_p(nus[4], 0, 0, 1, 1, 0, 7)
+		  +2e0*h_ijklm_p(nus[4], 0, 0, 2, 2, 0, 7)*twoJ[Y_]);
 
-  for (j = 1; j <= m; j++)
+    for (j = 1; j <= m; j++)
       A[j][i] *= bn_prms.bn_scl[i-1];
 
     bn_prms.clr_prm_dep(i-1);
   }
 
   m = 0;
-  b[++m] = -scl_dnu*(h_ijklm(K_re, 2, 2, 0, 0, 0)-h_ijklm(K_re, 0, 0, 2, 2, 0));
-  b[++m] = -scl_dnu*(h_ijklm(K_re, 3, 3, 0, 0, 0)-h_ijklm(K_re, 0, 0, 3, 3, 0));
+  b[++m] = -scl_dnu[0]*(h_ijklm(K_re, 2, 2, 0, 0, 0));
+  b[++m] = -scl_dnu[0]*(h_ijklm(K_re, 0, 0, 2, 2, 0));
 
-  b[++m] = -scl_dnu*(h_ijklm(K_re, 2, 2, 0, 0, 0));
-  b[++m] = -scl_dnu*(h_ijklm(K_re, 1, 1, 1, 1, 0));
-  b[++m] = -scl_dnu*(h_ijklm(K_re, 2, 2, 1, 1, 0));
-  b[++m] = -scl_dnu*(h_ijklm(K_re, 1, 1, 2, 2, 0));
+  b[++m] = -scl_dnu[1]*(h_ijklm(K_re, 1, 1, 1, 1, 0));
+  b[++m] = -scl_dnu[1]*(h_ijklm(K_re, 2, 2, 1, 1, 0));
+  b[++m] = -scl_dnu[1]*(h_ijklm(K_re, 1, 1, 2, 2, 0));
 
   b[++m] =
-    -(h_ijklm(nus[3], 1, 1, 0, 0, 0)
-      +2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]);
+    -scl_dnu[2]*(h_ijklm(nus[3], 1, 1, 0, 0, 0)
+		 +2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]);
+  b[++m] =
+    -scl_dnu[2]*(h_ijklm(nus[4], 0, 0, 1, 1, 0)
+		 +2e0*h_ijklm(nus[4], 0, 0, 2, 2, 0)*twoJ[Y_]);
 
   chi2_ref = chi2; chi2 = get_chi2(m, b);
 
@@ -594,55 +593,55 @@ int main(int argc, char *argv[])
   tps    K_re, K_im;
   
   const double beta[]  = {3.0, 3.0},                     // Center of straight.
-               A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
+    A_max[] = {1.0e-3, 1.0e-3}, delta = 3e-2;
 
-  rad_on    = false; H_exact        = false; totpath_on   = false;
-  cavity_on = false; quad_fringe_on = false; emittance_on = false;
-  IBS_on    = false;
+    rad_on    = false; H_exact        = false; totpath_on   = false;
+    cavity_on = false; quad_fringe_on = false; emittance_on = false;
+    IBS_on    = false;
 
-  rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
+    rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
   
-  // Initialize the symplectic integrator after energy has been defined.
-  ini_si();
+    // Initialize the symplectic integrator after energy has been defined.
+    ini_si();
 
-  // Disable log messages from TPSALib and LieLib.
-  idprset(-1);
+    // Disable log messages from TPSALib and LieLib.
+    idprset(-1);
 
-  daeps_(1e-25);
+    daeps_(1e-25);
 
-  danot_(1);
+    danot_(1);
 
-  get_nu_ksi();
+    get_nu_ksi();
 
-  for (j = 0; j < 2; j++)
-    twoJ[j] = sqr(A_max[j])/beta[j];
+    for (j = 0; j < 2; j++)
+      twoJ[j] = sqr(A_max[j])/beta[j];
 
-  Id_scl.identity();
-  Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
-  Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
-  Id_scl[delta_] *= delta;
+    Id_scl.identity();
+    Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
+    Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
+    Id_scl[delta_] *= delta;
 
-  bn_prms.add_prm("o1", 4, 1e6, 1.0);
-  bn_prms.add_prm("o2", 4, 1e6, 1.0);
-  bn_prms.add_prm("o3", 4, 1e6, 1.0);
-  bn_prms.add_prm("o4", 4, 1e6, 1.0);
+    bn_prms.add_prm("o1", 4, 1e6, 1.0);
+    bn_prms.add_prm("o2", 4, 1e6, 1.0);
+    bn_prms.add_prm("o3", 4, 1e6, 1.0);
+    bn_prms.add_prm("o4", 4, 1e6, 1.0);
 
-  bn_prms.add_prm("o1", 6, 1e9, 1.0);
-  bn_prms.add_prm("o2", 6, 1e9, 1.0);
-  bn_prms.add_prm("o3", 6, 1e9, 1.0);
-  bn_prms.add_prm("o4", 6, 1e9, 1.0);
+    // bn_prms.add_prm("o1", 6, 1e9, 1.0);
+    // bn_prms.add_prm("o2", 6, 1e9, 1.0);
+    // bn_prms.add_prm("o3", 6, 1e9, 1.0);
+    // bn_prms.add_prm("o4", 6, 1e9, 1.0);
 
-  bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-12; bn_prms.step = 0.01;
+    bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-15; bn_prms.step = 0.01;
 
-  no_mpoles(Oct); no_mpoles(Dodec);
+    no_mpoles(Oct); no_mpoles(Dodec);
 
-  min_dnu(true);
+    min_dnu(true);
 
-  danot_(6);
-  get_Map();
-  danot_(7);
-  K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
-  CtoR(K, K_re, K_im);
+    danot_(6);
+    get_Map();
+    danot_(7);
+    K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
+    CtoR(K, K_re, K_im);
 
-  std::cout << K_re*Id_scl;
+    std::cout << K_re*Id_scl;
 }
