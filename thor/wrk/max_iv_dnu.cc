@@ -71,13 +71,13 @@ void param_type::ini_prm(void)
     bn_lim[i] = bn_max[i-1];
     if (n[i-1] > 0)
       // Multipole.
-      bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
+      bn[i] = get_bn(Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
     else if (n[i-1] == -1)
       // Drift.
-      bn[i] = get_L(Fnum[i-1], 1);
+      bn[i] = get_L(Fnum[i-1], 1)/bn_scl[i-1];
     else if (n[i-1] == -2)
       // Location.
-      bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
+      bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
     printf("%13.5e", bn[i]);
   }
   printf("\n");
@@ -120,7 +120,7 @@ double param_type::set_dprm(void) const
   printf("set_dprm:\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_prm; i++) {
-    dbn[i] *= step*bn_scl[i-1];
+    dbn[i] *= bn_scl[i-1]*step;
     if (n[i-1] > 0) {
       set_dbn(Fnum[i-1], n[i-1], dbn[i]);
       bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
@@ -132,7 +132,7 @@ double param_type::set_dprm(void) const
       bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
     }
     dbn_max = max(fabs(dbn[i]), dbn_max);
-    printf(" %13.5e", bn[i]);
+    printf(" %13.5e", bn_scl[i-1]*bn[i]);
   }
   printf("\n");
 
@@ -147,12 +147,12 @@ void param_type::set_prm(void) const
   printf("set_prm:\n");
   for (i = 1; i <= n_prm; i++) {
     if (n[i-1] > 0)
-      set_bn(Fnum[i-1], n[i-1], bn[i]);
+      set_bn(Fnum[i-1], n[i-1], bn_scl[i-1]*bn[i]);
     else if (n[i-1] == -1)
-      set_L(Fnum[i-1], bn[i]);
+      set_L(Fnum[i-1], bn_scl[i-1]*bn[i]);
     else if (n[i-1] == -2)
-      set_bn_s(-Fnum[i-1], n[i-1], bn[i]);
-    printf(" %13.5e", bn[i]);
+      set_bn_s(-Fnum[i-1], n[i-1], bn_scl[i-1]*bn[i]);
+    printf(" %13.5e", bn_scl[i-1]*bn[i]);
   }
   printf("\n");
 }
@@ -314,13 +314,13 @@ void min_dnu_prt(const param_type &bn_prms)
 
   outf = file_write(file_name.c_str());
   fprintf(outf, "o1: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[1]);
+	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[0]*bn_prms.bn[1]);
   fprintf(outf, "o2: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[2]);
+	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[1]*bn_prms.bn[2]);
   fprintf(outf, "o3: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[3]);
+	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[2]*bn_prms.bn[3]);
   fprintf(outf, "o4: multipole, l = 0.0, N = Nsext, Method = Meth,"
-	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn[4]);
+	  "\n    HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[3]*bn_prms.bn[4]);
   fclose(outf);
 }
 
@@ -334,16 +334,16 @@ void min_dnu_prt2(const param_type &bn_prms)
   outf = file_write(file_name.c_str());
   fprintf(outf, "o1: multipole, l = 0.0, N = Nsext, Method = Meth,"
 	  "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
-	  bn_prms.bn[1], bn_prms.bn[5]);
+	  bn_prms.bn_scl[0]*bn_prms.bn[1], bn_prms.bn_scl[4]*bn_prms.bn[5]);
   fprintf(outf, "o2: multipole, l = 0.0, N = Nsext, Method = Meth,"
 	  "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
-	  bn_prms.bn[2], bn_prms.bn[6]);
+	  bn_prms.bn_scl[1]*bn_prms.bn[2], bn_prms.bn_scl[5]*bn_prms.bn[6]);
   fprintf(outf, "o3: multipole, l = 0.0, N = Nsext, Method = Meth,"
 	  "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
-	  bn_prms.bn[3], bn_prms.bn[7]);
+	  bn_prms.bn_scl[2]*bn_prms.bn[3], bn_prms.bn_scl[6]*bn_prms.bn[7]);
   fprintf(outf, "o4: multipole, l = 0.0, N = Nsext, Method = Meth,"
 	  "\n    HOM = (4, %12.5e, 0.0, 6, %12.5e, 0.0);\n",
-	  bn_prms.bn[4], bn_prms.bn[8]);
+	  bn_prms.bn_scl[3]*bn_prms.bn[4], bn_prms.bn_scl[7]*bn_prms.bn[8]);
   fclose(outf);
 }
 
@@ -407,7 +407,7 @@ double min_dnu_f(double *b4s)
 
   // Do not change parameters.
   for (i = 1; i <= bn_prms.n_prm; i++)
-    set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], b4s[i]);
+    set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*b4s[i]);
 
   danot_(5);
   get_Map();
@@ -440,7 +440,6 @@ double min_dnu_f(double *b4s)
     for (i = 0; i < (int)b.size(); i++)
       printf("%11.3e", b[i]);
     printf("\n");
-    chi2 += sqr(b[i]);
     for (i = 1; i <= bn_prms.n_prm; i++) 
       printf("%11.3e", b4s[i]);
     printf("\n");
@@ -533,7 +532,8 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
     bn_prms.set_dprm();
 
   for (i = 1; i <= n_b4; i++)
-    bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
+    bn_prms.bn[i] =
+      get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1])/bn_prms.bn_scl[i-1];
 
   printf("\nbn & dbn:\n");
   for (i = 1; i <= n_b4; i++)
@@ -621,27 +621,30 @@ int main(int argc, char *argv[])
     Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
     Id_scl[delta_] *= delta;
 
-    bn_prms.add_prm("o1", 4, 1e6, 1.0);
-    bn_prms.add_prm("o2", 4, 1e6, 1.0);
-    bn_prms.add_prm("o3", 4, 1e6, 1.0);
-    bn_prms.add_prm("o4", 4, 1e6, 1.0);
+    // Line minimization for conjugate gradient methods does not work with
+    // limits.
 
-    // bn_prms.add_prm("o1", 6, 1e9, 1.0);
-    // bn_prms.add_prm("o2", 6, 1e9, 1.0);
-    // bn_prms.add_prm("o3", 6, 1e9, 1.0);
-    // bn_prms.add_prm("o4", 6, 1e9, 1.0);
+    bn_prms.add_prm("o1", 4, 1e8, 1.0);
+    bn_prms.add_prm("o2", 4, 1e8, 1.0);
+    bn_prms.add_prm("o3", 4, 1e8, 1.0);
+    bn_prms.add_prm("o4", 4, 1e8, 1.0);
 
-    bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-15; bn_prms.step = 0.01;
+    bn_prms.add_prm("o1", 6, 1e11, 1e3);
+    bn_prms.add_prm("o2", 6, 1e11, 1e3);
+    bn_prms.add_prm("o3", 6, 1e11, 1e3);
+    bn_prms.add_prm("o4", 6, 1e11, 1e3);
+
+    bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-16; bn_prms.step = 0.01;
 
     no_mpoles(Oct); no_mpoles(Dodec);
 
     min_dnu(true);
 
-    danot_(6);
-    get_Map();
-    danot_(7);
-    K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
-    CtoR(K, K_re, K_im);
+    // danot_(6);
+    // get_Map();
+    // danot_(7);
+    // K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
+    // CtoR(K, K_re, K_im);
 
-    std::cout << K_re*Id_scl;
+    // std::cout << K_re*Id_scl;
 }
