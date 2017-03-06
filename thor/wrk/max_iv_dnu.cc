@@ -44,7 +44,7 @@ ss_vect<tps> Id_scl;
 
 const int n_prm_max = 8;
 
-const double scl_dnu[] = {1e4, 1e5, 1e-2};
+const double scl_dnu[] = {1e3, 1e5, 1e-2};
 
 
 void param_type::add_prm(const std::string Fname, const int n,
@@ -67,7 +67,7 @@ void param_type::ini_prm(void)
   bn_prms.bn_lim = dvector(1, n_prm); bn_prms.bn = dvector(1, n_prm);
   bn_prms.dbn = dvector(1, n_prm);
 
-  printf("\nInitial bn (%d):\n", n_prm);
+  printf("\nInitial bn; (incl. scaling) (%d):\n", n_prm);
   for (i = 1; i <= n_prm; i++) {
     bn_lim[i] = bn_max[i-1];
     if (n[i-1] > 0)
@@ -398,7 +398,7 @@ double min_dnu_f(double *b4s)
   n_powell++;
 
   // Do not change parameters.
-  if (prt) printf("min_dnu_f:\n");
+  if (prt) printf("min_dnu_f (incl. scaling):\n");
   for (i = 1; i <= bn_prms.n_prm; i++) {
     set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*b4s[i]);
     if (prt) printf(" %13.5e", bn_prms.bn_scl[i-1]*b4s[i]);
@@ -549,7 +549,7 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
     bn_prms.bn[i] =
       get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1])/bn_prms.bn_scl[i-1];
 
-  printf("\nbn & dbn:\n");
+  printf("\nbn & dbn (incl. scaling):\n");
   for (i = 1; i <= n_b4; i++)
     printf("%13.5e", bn_prms.bn[i]);
   printf("\n");
@@ -606,7 +606,7 @@ int main(int argc, char *argv[])
   tps    K_re, K_im;
   
   const double beta[]  = {3.0, 3.0},                     // Center of straight.
-    A_max[] = {1.5e-3, 1.5e-3}, delta = 3e-2;
+    A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
 
     rad_on    = false; H_exact        = false; totpath_on   = false;
     cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -620,7 +620,7 @@ int main(int argc, char *argv[])
     // Disable log messages from TPSALib and LieLib.
     idprset(-1);
 
-    daeps_(1e-25);
+    daeps_(1e-30);
 
     danot_(1);
 
@@ -639,10 +639,10 @@ int main(int argc, char *argv[])
     bn_prms.add_prm("o3", 4, 5e5, 1.0);
     bn_prms.add_prm("o4", 4, 5e5, 1.0);
 
-    bn_prms.add_prm("o1", 6, 5e7, 1e2);
-    bn_prms.add_prm("o2", 6, 5e7, 1e2);
-    bn_prms.add_prm("o3", 6, 5e7, 1e2);
-    bn_prms.add_prm("o4", 6, 5e7, 1e2);
+    bn_prms.add_prm("o1", 6, 5e8, 1e1);
+    bn_prms.add_prm("o2", 6, 5e8, 1e1);
+    bn_prms.add_prm("o3", 6, 5e8, 1e1);
+    bn_prms.add_prm("o4", 6, 5e8, 1e1);
 
     bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-16; bn_prms.step = 0.01;
 
