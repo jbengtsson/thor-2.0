@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -39,6 +39,7 @@ public:
 
 param_type   bn_prms;
 int          n_iter, n_powell;
+double       twoJ[2];
 ss_vect<tps> Id_scl;
 
 const int n_prm_max = 8;
@@ -131,8 +132,9 @@ double param_type::set_dprm(void) const
       set_dbn_s(-Fnum[i-1], n[i-1], dbn[i]);
       bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
     }
+    bn[i] /= bn_scl[i-1];
     dbn_max = max(fabs(dbn[i]), dbn_max);
-    printf(" %13.5e", bn_scl[i-1]*bn[i]);
+    printf(" %13.5e", bn[i]);
   }
   printf("\n");
 
@@ -348,18 +350,6 @@ void min_dnu_prt2(const param_type &bn_prms)
 }
 
 
-double get_chi2(const int n, const double data[])
-{
-  int    j;
-  double chi2 = 0e0;
-
-  for (j = 1; j <= n; j++)
-    chi2 += sqr(data[j]);
-
-  return chi2;
-}
-
-
 void conj_grad(const int n_iter, double bn[], double dbn[],
 	       double *g, double *h, double (*f)(double *))
 {
@@ -398,32 +388,43 @@ double min_dnu_f(double *b4s)
 {
   int                 i;
   static double       chi2_ref = 1e30;
-  double              chi2, twoJ[2];
+  double              chi2;
   tps                 K_re, K_im;
   ss_vect<tps>        nus;
   std::vector<double> b;
 
+  const bool prt = false;
+
   n_powell++;
 
   // Do not change parameters.
-  for (i = 1; i <= bn_prms.n_prm; i++)
+  if (prt) printf("min_dnu_f:\n");
+  for (i = 1; i <= bn_prms.n_prm; i++) {
     set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*b4s[i]);
+    if (prt) printf(" %13.5e", bn_prms.bn_scl[i-1]*b4s[i]);
+  }
+  if (prt) printf("\n");
 
-  danot_(5);
+  danot_(NO-1);
   get_Map();
-  danot_(6);
+  danot_(NO);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   CtoR(K, K_re, K_im); nus = dHdJ(K);
-  K_re = K_re*Id_scl; nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
+  K_re = K_re*Id_scl;
+  // nus_scl[3] = nus[3]*Id_scl; nus_scl[4] = nus[4]*Id_scl;
 
-  twoJ[X_] = 1e0; twoJ[Y_] = 1e0;
- 
   b.push_back(scl_dnu[0]*(h_ijklm(K_re, 2, 2, 0, 0, 0)));
   b.push_back(scl_dnu[0]*(h_ijklm(K_re, 0, 0, 2, 2, 0)));
 
   b.push_back(scl_dnu[1]*(h_ijklm(K_re, 1, 1, 1, 1, 0)));
   b.push_back(scl_dnu[1]*(h_ijklm(K_re, 2, 2, 1, 1, 0)));
   b.push_back(scl_dnu[1]*(h_ijklm(K_re, 1, 1, 2, 2, 0)));
+
+  b.push_back(scl_dnu[1]*(h_ijklm(K_re, 4, 4, 0, 0, 0)));
+  b.push_back(scl_dnu[1]*(h_ijklm(K_re, 0, 0, 4, 4, 0)));
+  b.push_back(scl_dnu[1]*(h_ijklm(K_re, 2, 2, 2, 2, 0)));
+  b.push_back(scl_dnu[1]*(h_ijklm(K_re, 3, 3, 1, 1, 0)));
+  b.push_back(scl_dnu[1]*(h_ijklm(K_re, 1, 1, 3, 3, 0)));
 
   b.push_back(scl_dnu[2]*(h_ijklm(nus[3], 1, 1, 0, 0, 0)
 			  +2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]));
@@ -454,12 +455,10 @@ double min_dnu_f(double *b4s)
 void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
 		  const bool cg_meth)
 {
-  int          n_b4, i, j, m;
-  double       chi2_ref;
-  double       **A, *b, *bn_ref;
-  double       twoJ[2];
-  tps          K_re, K_im;
-  ss_vect<tps> nus;
+  int           n_b4, i, j, m;
+  double        chi2_ref, **A, *b, *bn_ref;
+  tps           K_re, K_im;
+  ss_vect<tps>  nus;
 
   const int m_max = 15;
 
@@ -468,18 +467,17 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
   bn_ref = dvector(1, n_b4);
   b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_b4);
 
-  twoJ[X_] = 1e0; twoJ[Y_] = 1e0;
-
   printf("\n");
   for (i = 1; i <= n_b4; i++) {
     bn_prms.set_prm_dep(i-1);
 
-    danot_(6);
+    danot_(NO-1);
     get_Map();
-    danot_(7);
+    danot_(NO);
     K = MapNorm(Map, g, A1, A0, Map_res, 1);
     CtoR(K, K_re, K_im); nus = dHdJ(K);
-    K_re = K_re*Id_scl; nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
+    K_re = K_re*Id_scl;
+    // nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
 
     m = 0;
     A[++m][i] = scl_dnu[0]*(h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7));
@@ -488,6 +486,12 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
     A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7));
     A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 2, 2, 1, 1, 0, 7));
     A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 1, 1, 2, 2, 0, 7));
+
+    A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 4, 4, 0, 0, 0, 7));
+    A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 0, 0, 4, 4, 0, 7));
+    A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 2, 2, 2, 2, 0, 7));
+    A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 3, 3, 1, 1, 0, 7));
+    A[++m][i] = scl_dnu[1]*(h_ijklm_p(K_re, 1, 1, 3, 3, 0, 7));
 
     A[++m][i] =
       scl_dnu[2]*(h_ijklm_p(nus[3], 1, 1, 0, 0, 0, 7)
@@ -510,6 +514,12 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
   b[++m] = -scl_dnu[1]*(h_ijklm(K_re, 2, 2, 1, 1, 0));
   b[++m] = -scl_dnu[1]*(h_ijklm(K_re, 1, 1, 2, 2, 0));
 
+  b[++m] = -scl_dnu[1]*(h_ijklm(K_re, 4, 4, 0, 0, 0));
+  b[++m] = -scl_dnu[1]*(h_ijklm(K_re, 0, 0, 4, 4, 0));
+  b[++m] = -scl_dnu[1]*(h_ijklm(K_re, 2, 2, 2, 2, 0));
+  b[++m] = -scl_dnu[1]*(h_ijklm(K_re, 3, 3, 1, 1, 0));
+  b[++m] = -scl_dnu[1]*(h_ijklm(K_re, 1, 1, 3, 3, 0));
+
   b[++m] =
     -scl_dnu[2]*(h_ijklm(nus[3], 1, 1, 0, 0, 0)
 		 +2e0*h_ijklm(nus[3], 2, 2, 0, 0, 0)*twoJ[X_]);
@@ -517,7 +527,11 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
     -scl_dnu[2]*(h_ijklm(nus[4], 0, 0, 1, 1, 0)
 		 +2e0*h_ijklm(nus[4], 0, 0, 2, 2, 0)*twoJ[Y_]);
 
-  chi2_ref = chi2; chi2 = get_chi2(m, b);
+  chi2_ref = chi2;
+  
+  chi2 = 0e0;
+  for (j = 1; j <= m; j++)
+    chi2 += sqr(b[j]);
 
   prt_system(m, n_b4, A, b);
   printf("\n%4d %12.5e -> %12.5e\n", n_iter, chi2_ref, chi2);
@@ -589,11 +603,10 @@ void min_dnu(const bool cg_meth)
 int main(int argc, char *argv[])
 {
   int    j;
-  double twoJ[2];
   tps    K_re, K_im;
   
   const double beta[]  = {3.0, 3.0},                     // Center of straight.
-    A_max[] = {1.0e-3, 1.0e-3}, delta = 3e-2;
+    A_max[] = {1.5e-3, 1.5e-3}, delta = 3e-2;
 
     rad_on    = false; H_exact        = false; totpath_on   = false;
     cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -621,22 +634,19 @@ int main(int argc, char *argv[])
     Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
     Id_scl[delta_] *= delta;
 
-    // Line minimization for conjugate gradient methods does not work with
-    // limits.
+    bn_prms.add_prm("o1", 4, 5e5, 1.0);
+    bn_prms.add_prm("o2", 4, 5e5, 1.0);
+    bn_prms.add_prm("o3", 4, 5e5, 1.0);
+    bn_prms.add_prm("o4", 4, 5e5, 1.0);
 
-    bn_prms.add_prm("o1", 4, 1e8, 1.0);
-    bn_prms.add_prm("o2", 4, 1e8, 1.0);
-    bn_prms.add_prm("o3", 4, 1e8, 1.0);
-    bn_prms.add_prm("o4", 4, 1e8, 1.0);
-
-    bn_prms.add_prm("o1", 6, 1e11, 1e3);
-    bn_prms.add_prm("o2", 6, 1e11, 1e3);
-    bn_prms.add_prm("o3", 6, 1e11, 1e3);
-    bn_prms.add_prm("o4", 6, 1e11, 1e3);
+    bn_prms.add_prm("o1", 6, 5e7, 1e2);
+    bn_prms.add_prm("o2", 6, 5e7, 1e2);
+    bn_prms.add_prm("o3", 6, 5e7, 1e2);
+    bn_prms.add_prm("o4", 6, 5e7, 1e2);
 
     bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-16; bn_prms.step = 0.01;
 
-    no_mpoles(Oct); no_mpoles(Dodec);
+    // no_mpoles(Oct); no_mpoles(Dodec);
 
     min_dnu(true);
 
