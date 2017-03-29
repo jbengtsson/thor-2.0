@@ -2,16 +2,16 @@
 
 dir=`pwd`
 
-cd "$THOR_LIB"
-
+# Remove autoconf cashe.
 rm -rf autom4te.cache
 rm -rf aclocal.m4
-rm -rf thor/bin/*
-rm -rf thor/lib/*
 
-make distclean
+mkdir -p config
+
+# Configure libtool (for shared libraries).
+libtoolize
 
 ./bootstrap
-./configure --prefix=$THOR_LIB/thor
+./configure --prefix=$dir/thor
 
 make install
