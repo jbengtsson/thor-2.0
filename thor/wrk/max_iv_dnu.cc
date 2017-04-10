@@ -600,15 +600,31 @@ int main(int argc, char *argv[])
   Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
   Id_scl[delta_] *= delta;
 
-  bn_prms.add_prm("o1", 4, 5e5, 1.0);
-  bn_prms.add_prm("o2", 4, 5e5, 1.0);
-  bn_prms.add_prm("o3", 4, 5e5, 1.0);
-  bn_prms.add_prm("o4", 4, 5e5, 1.0);
+  if (false) {
+    // MAX VI:
+    bn_prms.add_prm("o1", 4, 5e5, 1.0);
+    bn_prms.add_prm("o2", 4, 5e5, 1.0);
+    bn_prms.add_prm("o3", 4, 5e5, 1.0);
+    bn_prms.add_prm("o4", 4, 5e5, 1.0);
 
-  bn_prms.add_prm("o1", 6, 5e10, 1.0);
-  bn_prms.add_prm("o2", 6, 5e10, 1.0);
-  bn_prms.add_prm("o3", 6, 5e10, 1.0);
-  bn_prms.add_prm("o4", 6, 5e10, 1.0);
+    bn_prms.add_prm("o1", 6, 5e10, 1.0);
+    bn_prms.add_prm("o2", 6, 5e10, 1.0);
+    bn_prms.add_prm("o3", 6, 5e10, 1.0);
+    bn_prms.add_prm("o4", 6, 5e10, 1.0);
+  } else {
+    // SLS-2:
+    bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sdx",  3, 5e5, 1.0);
+    bn_prms.add_prm("sfxh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd",   3, 5e5, 1.0);
+    bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+
+    bn_prms.add_prm("oxx",   4, 5e10, 1.0);
+    bn_prms.add_prm("oxy",   4, 5e10, 1.0);
+    bn_prms.add_prm("ocxx",  4, 5e10, 1.0);
+    bn_prms.add_prm("ocxx2", 4, 5e10, 1.0);
+  }
 
   bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-16; bn_prms.step = 0.01;
 
