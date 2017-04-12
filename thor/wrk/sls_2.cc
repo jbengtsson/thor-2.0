@@ -268,7 +268,7 @@ void prt_dnu(void)
   CtoR(K, K_re, K_im); nus = dHdJ(K);
   K_re_scl = K_re*Id_scl; nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
 
-  printf("\nnu:\n");
+  printf("\ndnu:\n");
   printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 0, 0, 0));
   printf(" %8.5f",   h_ijklm(nus[3], 0, 0, 1, 1, 0));
   printf(" %8.5f",   h_ijklm(nus[3], 2, 2, 0, 0, 0));
@@ -297,7 +297,7 @@ void prt_dnu(void)
 	 h_ijklm(K_re, 1, 1, 2, 2, 0),
 	 h_ijklm(K_re/(2e0*twoJ[Y_]), 1, 1, 1, 1, 0));
 
-  printf(" %11.3e %11.3e\n",
+  printf("\n %11.3e %11.3e\n",
 	 h_ijklm(K_re, 0, 0, 3, 3, 0),
 	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0));
   printf(" %11.3e %11.3e\n",
