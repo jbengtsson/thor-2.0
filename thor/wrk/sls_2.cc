@@ -10,14 +10,9 @@ extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
 
-const int n_max = NO/2 - 1;
-
-typedef double dnu1_type[n_max+1][n_max+1];
-typedef double dnu2_type[2*n_max+1][2*n_max+1];
-
-dnu2_type dnu_xy;
-
 const bool tune_conf = true;
+
+const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e10, 1e4, 0e0, 1e-1};
 
 struct param_type {
 private:
@@ -43,11 +38,6 @@ param_type   bn_prms;
 int          n_iter, n_powell;
 double       twoJ[2];
 ss_vect<tps> Id_scl;
-
-const int n_prm_max = 8;
-
-const double scl_h = 1e0, scl_dnu[] = {1e10, 1e3, 1e-1};
-
 
 void param_type::add_prm(const std::string Fname, const int n,
 			 const double bn_max, const double bn_scl)
@@ -230,12 +220,35 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
   printf("\n Ax = b:\n");
   for (j = 1; j <= n_b2; j++)
     if (j == 1)
-      printf("%9d", j);
+      printf("%11d", j);
     else
       printf("%11d", j);
   printf("\n");
   for (i = 1; i <= m; i++) {
-    printf("%2d", i);
+    if (i == 1)
+      printf("1st order chromatic\n");
+    else if (i == 4)
+      printf("1st order geometric\n");
+    else if (i == 9)
+      printf("2nd order geometric\n");
+    else if (i == 17)
+      printf("linear chromaticity\n");
+    else if (i == 19)
+      printf("ampl. dependant tune shift\n");
+    else if (i == 22)
+      printf("2nd order chromaticity\n");
+    else if (i == 24)
+      printf("cross terms\n");
+    else if (i == 27)
+      printf("3rd order chromaticity\n");
+    else if (i == 29) {
+      if (!tune_conf)
+	printf("ampl. dependant tune shift\n");
+      else
+	printf("tune confinement\n");
+    }
+
+    printf("%4d", i);
     for (j = 1; j <= n_b2; j++)
       printf("%11.3e", A[i][j]);
     printf("%11.3e\n", b[i]);
@@ -243,39 +256,106 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 }
 
 	
-void min_dnu_prt(const param_type &bn_prms)
+void prt_dnu(void)
 {
+  ss_vect<tps> nus;
+
+  danot_(NO-1);
+  get_Map();
+  danot_(NO);
+  K = MapNorm(Map, g, A1, A0, Map_res, no_tps); nus = dHdJ(K);
+  nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
+
+  printf("\nnu:\n");
+  printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nus[3], 0, 0, 1, 1, 0));
+  printf(" %8.5f",   h_ijklm(nus[3], 2, 2, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 1, 1, 0));
+  printf(" %8.5f\n", h_ijklm(nus[3], 0, 0, 2, 2, 0));
+
+  printf(" %8.5f",   h_ijklm(nus[4], 1, 1, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nus[4], 0, 0, 1, 1, 0));
+  printf(" %8.5f",   h_ijklm(nus[4], 2, 2, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nus[4], 1, 1, 1, 1, 0));
+  printf(" %8.5f\n", h_ijklm(nus[4], 0, 0, 2, 2, 0));
+
+  printf("\n %8.5f", h_ijklm(nus[3], 0, 0, 0, 0, 2));
+  printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 0, 0, 2));
+  printf(" %8.5f\n", h_ijklm(nus[3], 0, 0, 1, 1, 2));
+
+  printf(" %8.5f",   h_ijklm(nus[4], 0, 0, 0, 0, 2));
+  printf(" %8.5f",   h_ijklm(nus[4], 1, 1, 0, 0, 2));
+  printf(" %8.5f\n", h_ijklm(nus[4], 0, 0, 1, 1, 2));
+}
+
+
+void prt_bn(const param_type &bn_prms)
+{
+  int  j, k;
   FILE *outf;
+
+  const int n_sxt = 7;
 
   std::string file_name = "dnu.out";
 
   outf = file_write(file_name.c_str());
 
-  fprintf(outf, "sxxh: sextupole, l = 0.05, k = %12.5e, n = 4"
-	  ", Method = Meth;\n", bn_prms.bn_scl[0]*bn_prms.bn[1]);
-  fprintf(outf, "sxyh: sextupole, l = 0.05, k = %12.5e, n = 4"
-	  ", Method = Meth;\n", bn_prms.bn_scl[1]*bn_prms.bn[2]);
-  fprintf(outf, "syyh: sextupole, l = 0.05, k = %12.5e, n = 4"
-	  ", Method = Meth;\n", bn_prms.bn_scl[2]*bn_prms.bn[3]);
-  fprintf(outf, "sdx:  sextupole, l = 0.10, k = %12.5e, n = 4"
-	  ", Method = Meth;\n", bn_prms.bn_scl[3]*bn_prms.bn[4]);
-  fprintf(outf, "sfxh: sextupole, l = 0.05, k = %12.5e, n = 4"
-	  ", Method = Meth;\n", bn_prms.bn_scl[4]*bn_prms.bn[5]);
-  fprintf(outf, "sd:   sextupole, l = 0.10, k = %12.5e, n = 4"
-	  ", Method = Meth;\n", bn_prms.bn_scl[5]*bn_prms.bn[6]);
-  fprintf(outf, "sfh:  sextupole, l = 0.05, k = %12.5e, n = 4"
-	  ", Method = Meth;\n", bn_prms.bn_scl[6]*bn_prms.bn[7]);
+  k = 0;
 
-  fprintf(outf, "\noxx:   multipole, l = 0.0, n = 4, Method = Meth,"
-	  " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[7]*bn_prms.bn[8]);
-  fprintf(outf, "oxy:   multipole, l = 0.0, n = 4, Method = Meth,"
-	  " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[8]*bn_prms.bn[9]);
-  fprintf(outf, "oyy:   multipole, l = 0.0, n = 4, Method = Meth,"
-	  " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[9]*bn_prms.bn[10]);
-  fprintf(outf, "ocxx:  multipole, l = 0.0, n = 4, Method = Meth,"
-	  " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[10]*bn_prms.bn[11]);
-  fprintf(outf, "ocxx2: multipole, l = 0.0, n = 4, Method = Meth,"
-	  " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[11]*bn_prms.bn[12]);
+  fprintf(outf, "sfh:  sextupole, l = 0.05, k = %12.5e, n = 4"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  // if (bn_prms.n_prm == n_sxt)
+  if (true)
+    fprintf(outf, "sd:   sextupole, l = 0.10, k = %12.5e, n = 4"
+	    ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  else {
+    j = k;
+  }
+  k++;
+  fprintf(outf, "sfmh: sextupole, l = 0.05, k = %12.5e, n = 4"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sdm:  sextupole, l = 0.10, k = %12.5e, n = 4"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
+  k++;
+  fprintf(outf, "sxxh: sextupole, l = 0.05, k = %12.5e, n = 4"
+  	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sxyh: sextupole, l = 0.05, k = %12.5e, n = 4"
+  	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "syyh: sextupole, l = 0.05, k = %12.5e, n = 4"
+  	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
+  if (bn_prms.n_prm > n_sxt) {
+    // k++;
+    // fprintf(outf, "ocx:  multipole, l = 0.0, n = 4, Method = Meth,"
+    // 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    // k++;
+    // fprintf(outf, "ocxm: multipole, l = 0.0, n = 4, Method = Meth,"
+    // 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    // k++;
+    // fprintf(outf, "sd:   multipole, l = 0.10, n = 4, Method = Meth,"
+    // 	    "\n      HOM = (3, %12.5e, 0.0, 4, %12.5e, 0.0);\n",
+    // 	    bn_prms.bn_scl[j]*bn_prms.bn[j+1],
+    // 	    bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    // k++;
+    // fprintf(outf, "ocxm: multipole, l = 0.0, n = 4, Method = Meth,"
+    // 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
+    k++;
+    fprintf(outf, "\noxx:  multipole, l = 0.0, n = 4, Method = Meth,"
+	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    k++;
+    fprintf(outf, "oxy:  multipole, l = 0.0, n = 4, Method = Meth,"
+	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    k++;
+    fprintf(outf, "oyy:  multipole, l = 0.0, n = 4, Method = Meth,"
+	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  }
+
   fclose(outf);
 }
 
@@ -408,24 +488,24 @@ double min_dnu_f(double *b4s)
   CtoR(K, K_re, K_im); CtoR(g, h_re, h_im);
   K_re = K_re*Id_scl; h_im = h_im*Id_scl;
 
-  b.push_back(get_b(scl_h, h_im, 1, 0, 0, 0, 2));
-  b.push_back(get_b(scl_h, h_im, 2, 0, 0, 0, 1));
-  b.push_back(get_b(scl_h, h_im, 0, 0, 2, 0, 1));
+  b.push_back(get_b(scl_h[0], h_im, 1, 0, 0, 0, 2));
+  b.push_back(get_b(scl_h[0], h_im, 2, 0, 0, 0, 1));
+  b.push_back(get_b(scl_h[0], h_im, 0, 0, 2, 0, 1));
 
-  b.push_back(get_b(scl_h, h_im, 1, 0, 1, 1, 0));
-  b.push_back(get_b(scl_h, h_im, 2, 1, 0, 0, 0));
-  b.push_back(get_b(scl_h, h_im, 3, 0, 0, 0, 0));
-  b.push_back(get_b(scl_h, h_im, 1, 0, 0, 2, 0));
-  b.push_back(get_b(scl_h, h_im, 1, 0, 2, 0, 0));
+  b.push_back(get_b(scl_h[0], h_im, 1, 0, 1, 1, 0));
+  b.push_back(get_b(scl_h[0], h_im, 2, 1, 0, 0, 0));
+  b.push_back(get_b(scl_h[0], h_im, 3, 0, 0, 0, 0));
+  b.push_back(get_b(scl_h[0], h_im, 1, 0, 0, 2, 0));
+  b.push_back(get_b(scl_h[0], h_im, 1, 0, 2, 0, 0));
 
-  b.push_back(get_b(scl_h, h_im, 2, 0, 1, 1, 0));
-  b.push_back(get_b(scl_h, h_im, 3, 1, 0, 0, 0));
-  b.push_back(get_b(scl_h, h_im, 4, 0, 0, 0, 0));
-  b.push_back(get_b(scl_h, h_im, 2, 0, 0, 2, 0));
-  b.push_back(get_b(scl_h, h_im, 2, 0, 2, 0, 0));
-  b.push_back(get_b(scl_h, h_im, 0, 0, 4, 0, 0));
-  b.push_back(get_b(scl_h, h_im, 0, 0, 3, 1, 0));
-  b.push_back(get_b(scl_h, h_im, 1, 1, 2, 0, 0));
+  b.push_back(get_b(scl_h[1], h_im, 2, 0, 1, 1, 0));
+  b.push_back(get_b(scl_h[1], h_im, 3, 1, 0, 0, 0));
+  b.push_back(get_b(scl_h[1], h_im, 4, 0, 0, 0, 0));
+  b.push_back(get_b(scl_h[1], h_im, 2, 0, 0, 2, 0));
+  b.push_back(get_b(scl_h[1], h_im, 2, 0, 2, 0, 0));
+  b.push_back(get_b(scl_h[1], h_im, 0, 0, 4, 0, 0));
+  b.push_back(get_b(scl_h[1], h_im, 0, 0, 3, 1, 0));
+  b.push_back(get_b(scl_h[1], h_im, 1, 1, 2, 0, 0));
 
   b.push_back(get_b(scl_dnu[0], K_re, 1, 1, 0, 0, 1));
   b.push_back(get_b(scl_dnu[0], K_re, 0, 0, 1, 1, 1));
@@ -434,16 +514,16 @@ double min_dnu_f(double *b4s)
   b.push_back(get_b(scl_dnu[1], K_re, 0, 0, 2, 2, 0));
   b.push_back(get_b(scl_dnu[1], K_re, 1, 1, 1, 1, 0));
 
-  b.push_back(get_b(scl_dnu[1], K_re, 1, 1, 0, 0, 2));
-  b.push_back(get_b(scl_dnu[1], K_re, 0, 0, 1, 1, 2));
+  b.push_back(get_b(scl_dnu[2], K_re, 1, 1, 0, 0, 2));
+  b.push_back(get_b(scl_dnu[2], K_re, 0, 0, 1, 1, 2));
 
   if (NO >= 6) {
-    b.push_back(get_b(scl_dnu[1], K_re, 2, 2, 0, 0, 1));
-    b.push_back(get_b(scl_dnu[1], K_re, 0, 0, 2, 2, 1));
-    b.push_back(get_b(scl_dnu[1], K_re, 1, 1, 1, 1, 1));
+    b.push_back(get_b(scl_dnu[2], K_re, 2, 2, 0, 0, 1));
+    b.push_back(get_b(scl_dnu[2], K_re, 0, 0, 2, 2, 1));
+    b.push_back(get_b(scl_dnu[2], K_re, 1, 1, 1, 1, 1));
 
-    b.push_back(get_b(scl_dnu[1], K_re, 1, 1, 0, 0, 3));
-    b.push_back(get_b(scl_dnu[1], K_re, 0, 0, 1, 1, 3));
+    b.push_back(get_b(scl_dnu[2], K_re, 1, 1, 0, 0, 3));
+    b.push_back(get_b(scl_dnu[2], K_re, 0, 0, 1, 1, 3));
   }
 
   if (NO >= 7) {
@@ -453,17 +533,17 @@ double min_dnu_f(double *b4s)
       b.push_back(get_b(scl_dnu[1], K_re, 1, 1, 2, 2, 0));
       b.push_back(get_b(scl_dnu[1], K_re, 0, 0, 3, 3, 0));
     } else {
-      b.push_back(scl_dnu[2]*scl_dnu[1]
+      b.push_back(scl_dnu[3]
 		  *(get_b(1e0, K_re, 3, 3, 0, 0, 0)
 		    +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0)));
-      b.push_back(scl_dnu[2]*scl_dnu[1]
+      b.push_back(scl_dnu[3]
 		  *(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 		    +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0)));
 
-      b.push_back(scl_dnu[2]*scl_dnu[1]
+      b.push_back(scl_dnu[3]
 		  *(get_b(1e0, K_re, 1, 1, 2, 2, 0)
 		    +get_b(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0)));
-      b.push_back(scl_dnu[2]*scl_dnu[1]
+      b.push_back(scl_dnu[3]
 		  *(get_b(1e0, K_re, 2, 2, 1, 1, 0)
 		    +get_b(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0)));
     }
@@ -474,7 +554,7 @@ double min_dnu_f(double *b4s)
     chi2 += sqr(b[i]);
 
   if (chi2 < chi2_ref) {
-    min_dnu_prt(bn_prms);
+    prt_bn(bn_prms);
     prt_h_K();
 
     printf("\n%3d chi2: %12.5e -> %12.5e\n", n_powell, chi2_ref, chi2);
@@ -519,24 +599,24 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
     K_re = K_re*Id_scl; h_im = h_im*Id_scl;
 
     m = 0;
-    A[++m][i] = get_a(scl_h, h_im, 1, 0, 0, 0, 2);
-    A[++m][i] = get_a(scl_h, h_im, 2, 0, 0, 0, 1);
-    A[++m][i] = get_a(scl_h, h_im, 0, 0, 2, 0, 1);
+    A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 0, 0, 2);
+    A[++m][i] = get_a(scl_h[0], h_im, 2, 0, 0, 0, 1);
+    A[++m][i] = get_a(scl_h[0], h_im, 0, 0, 2, 0, 1);
 
-    A[++m][i] = get_a(scl_h, h_im, 1, 0, 1, 1, 0);
-    A[++m][i] = get_a(scl_h, h_im, 2, 1, 0, 0, 0);
-    A[++m][i] = get_a(scl_h, h_im, 3, 0, 0, 0, 0);
-    A[++m][i] = get_a(scl_h, h_im, 1, 0, 0, 2, 0);
-    A[++m][i] = get_a(scl_h, h_im, 1, 0, 2, 0, 0);
+    A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 1, 1, 0);
+    A[++m][i] = get_a(scl_h[0], h_im, 2, 1, 0, 0, 0);
+    A[++m][i] = get_a(scl_h[0], h_im, 3, 0, 0, 0, 0);
+    A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 0, 2, 0);
+    A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 2, 0, 0);
 
-    A[++m][i] = get_a(scl_h, h_im, 2, 0, 1, 1, 0);
-    A[++m][i] = get_a(scl_h, h_im, 3, 1, 0, 0, 0);
-    A[++m][i] = get_a(scl_h, h_im, 4, 0, 0, 0, 0);
-    A[++m][i] = get_a(scl_h, h_im, 2, 0, 0, 2, 0);
-    A[++m][i] = get_a(scl_h, h_im, 2, 0, 2, 0, 0);
-    A[++m][i] = get_a(scl_h, h_im, 0, 0, 4, 0, 0);
-    A[++m][i] = get_a(scl_h, h_im, 0, 0, 3, 1, 0);
-    A[++m][i] = get_a(scl_h, h_im, 1, 1, 2, 0, 0);
+    A[++m][i] = get_a(scl_h[1], h_im, 2, 0, 1, 1, 0);
+    A[++m][i] = get_a(scl_h[1], h_im, 3, 1, 0, 0, 0);
+    A[++m][i] = get_a(scl_h[1], h_im, 4, 0, 0, 0, 0);
+    A[++m][i] = get_a(scl_h[1], h_im, 2, 0, 0, 2, 0);
+    A[++m][i] = get_a(scl_h[1], h_im, 2, 0, 2, 0, 0);
+    A[++m][i] = get_a(scl_h[1], h_im, 0, 0, 4, 0, 0);
+    A[++m][i] = get_a(scl_h[1], h_im, 0, 0, 3, 1, 0);
+    A[++m][i] = get_a(scl_h[1], h_im, 1, 1, 2, 0, 0);
 
     A[++m][i] = get_a(scl_dnu[0], K_re, 1, 1, 0, 0, 1);
     A[++m][i] = get_a(scl_dnu[0], K_re, 0, 0, 1, 1, 1);
@@ -545,16 +625,16 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
     A[++m][i] = get_a(scl_dnu[1], K_re, 0, 0, 2, 2, 0);
     A[++m][i] = get_a(scl_dnu[1], K_re, 1, 1, 1, 1, 0);
 
-    A[++m][i] = get_a(scl_dnu[1], K_re, 1, 1, 0, 0, 2);
-    A[++m][i] = get_a(scl_dnu[1], K_re, 0, 0, 1, 1, 2);
+    A[++m][i] = get_a(scl_dnu[2], K_re, 1, 1, 0, 0, 2);
+    A[++m][i] = get_a(scl_dnu[2], K_re, 0, 0, 1, 1, 2);
 
     if (NO >= 6) {
-      A[++m][i] = get_a(scl_dnu[1], K_re, 2, 2, 0, 0, 1);
-      A[++m][i] = get_a(scl_dnu[1], K_re, 0, 0, 2, 2, 1);
-      A[++m][i] = get_a(scl_dnu[1], K_re, 1, 1, 1, 1, 1);
+      A[++m][i] = get_a(scl_dnu[2], K_re, 2, 2, 0, 0, 1);
+      A[++m][i] = get_a(scl_dnu[2], K_re, 0, 0, 2, 2, 1);
+      A[++m][i] = get_a(scl_dnu[2], K_re, 1, 1, 1, 1, 1);
 
-      A[++m][i] = get_a(scl_dnu[1], K_re, 1, 1, 0, 0, 3);
-      A[++m][i] = get_a(scl_dnu[1], K_re, 0, 0, 1, 1, 3);
+      A[++m][i] = get_a(scl_dnu[2], K_re, 1, 1, 0, 0, 3);
+      A[++m][i] = get_a(scl_dnu[2], K_re, 0, 0, 1, 1, 3);
     }
 
     if (NO >= 7) {
@@ -565,20 +645,20 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
 	A[++m][i] = get_a(scl_dnu[1], K_re, 0, 0, 3, 3, 0);
       } else {
 	A[++m][i] =
-	  scl_dnu[2]*scl_dnu[1]
+	  scl_dnu[3]
 	  *(get_a(1e0, K_re, 3, 3, 0, 0, 0)
 	    +get_a(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
 	A[++m][i] =
-	  scl_dnu[2]*scl_dnu[1]
+	  scl_dnu[3]
 	  *(get_a(1e0, K_re, 0, 0, 3, 3, 0)
 	    +get_a(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
 
 	A[++m][i] =
-	  scl_dnu[2]*scl_dnu[1]
+	  scl_dnu[3]
 	  *(get_a(1e0, K_re, 1, 1, 2, 2, 0)
 	    +get_a(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0));
 	A[++m][i] =
-	  scl_dnu[2]*scl_dnu[1]
+	  scl_dnu[3]
 	  *(get_a(scl_dnu[0], K_re, 2, 2, 1, 1, 0)
 	    +get_a(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0));
        }
@@ -591,24 +671,24 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
   }
 
   m = 0;
-  b[++m] = -get_b(scl_h, h_im, 1, 0, 0, 0, 2);
-  b[++m] = -get_b(scl_h, h_im, 2, 0, 0, 0, 1);
-  b[++m] = -get_b(scl_h, h_im, 0, 0, 2, 0, 1);
+  b[++m] = -get_b(scl_h[0], h_im, 1, 0, 0, 0, 2);
+  b[++m] = -get_b(scl_h[0], h_im, 2, 0, 0, 0, 1);
+  b[++m] = -get_b(scl_h[0], h_im, 0, 0, 2, 0, 1);
 
-  b[++m] = -get_b(scl_h, h_im, 1, 0, 1, 1, 0);
-  b[++m] = -get_b(scl_h, h_im, 2, 1, 0, 0, 0);
-  b[++m] = -get_b(scl_h, h_im, 3, 0, 0, 0, 0);
-  b[++m] = -get_b(scl_h, h_im, 1, 0, 0, 2, 0);
-  b[++m] = -get_b(scl_h, h_im, 1, 0, 2, 0, 0);
+  b[++m] = -get_b(scl_h[0], h_im, 1, 0, 1, 1, 0);
+  b[++m] = -get_b(scl_h[0], h_im, 2, 1, 0, 0, 0);
+  b[++m] = -get_b(scl_h[0], h_im, 3, 0, 0, 0, 0);
+  b[++m] = -get_b(scl_h[0], h_im, 1, 0, 0, 2, 0);
+  b[++m] = -get_b(scl_h[0], h_im, 1, 0, 2, 0, 0);
 
-  b[++m] = -get_b(scl_h, h_im, 2, 0, 1, 1, 0);
-  b[++m] = -get_b(scl_h, h_im, 3, 1, 0, 0, 0);
-  b[++m] = -get_b(scl_h, h_im, 4, 0, 0, 0, 0);
-  b[++m] = -get_b(scl_h, h_im, 2, 0, 0, 2, 0);
-  b[++m] = -get_b(scl_h, h_im, 2, 0, 2, 0, 0);
-  b[++m] = -get_b(scl_h, h_im, 0, 0, 4, 0, 0);
-  b[++m] = -get_b(scl_h, h_im, 0, 0, 3, 1, 0);
-  b[++m] = -get_b(scl_h, h_im, 1, 1, 2, 0, 0);
+  b[++m] = -get_b(scl_h[1], h_im, 2, 0, 1, 1, 0);
+  b[++m] = -get_b(scl_h[1], h_im, 3, 1, 0, 0, 0);
+  b[++m] = -get_b(scl_h[1], h_im, 4, 0, 0, 0, 0);
+  b[++m] = -get_b(scl_h[1], h_im, 2, 0, 0, 2, 0);
+  b[++m] = -get_b(scl_h[1], h_im, 2, 0, 2, 0, 0);
+  b[++m] = -get_b(scl_h[1], h_im, 0, 0, 4, 0, 0);
+  b[++m] = -get_b(scl_h[1], h_im, 0, 0, 3, 1, 0);
+  b[++m] = -get_b(scl_h[1], h_im, 1, 1, 2, 0, 0);
 
   b[++m] = -get_b(scl_dnu[0], K_re, 1, 1, 0, 0, 1);
   b[++m] = -get_b(scl_dnu[0], K_re, 0, 0, 1, 1, 1);
@@ -617,16 +697,16 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
   b[++m] = -get_b(scl_dnu[1], K_re, 0, 0, 2, 2, 0);
   b[++m] = -get_b(scl_dnu[1], K_re, 1, 1, 1, 1, 0);
 
-  b[++m] = -get_b(scl_dnu[1], K_re, 1, 1, 0, 0, 2);
-  b[++m] = -get_b(scl_dnu[1], K_re, 0, 0, 1, 1, 2);
+  b[++m] = -get_b(scl_dnu[2], K_re, 1, 1, 0, 0, 2);
+  b[++m] = -get_b(scl_dnu[2], K_re, 0, 0, 1, 1, 2);
 
   if (NO >= 6) {
-    b[++m] = -get_b(scl_dnu[1], K_re, 2, 2, 0, 0, 1);
-    b[++m] = -get_b(scl_dnu[1], K_re, 0, 0, 2, 2, 1);
-    b[++m] = -get_b(scl_dnu[1], K_re, 1, 1, 1, 1, 1);
+    b[++m] = -get_b(scl_dnu[2], K_re, 2, 2, 0, 0, 1);
+    b[++m] = -get_b(scl_dnu[2], K_re, 0, 0, 2, 2, 1);
+    b[++m] = -get_b(scl_dnu[2], K_re, 1, 1, 1, 1, 1);
 
-    b[++m] = -get_b(scl_dnu[1], K_re, 1, 1, 0, 0, 3);
-    b[++m] = -get_b(scl_dnu[1], K_re, 0, 0, 1, 1, 3);
+    b[++m] = -get_b(scl_dnu[2], K_re, 1, 1, 0, 0, 3);
+    b[++m] = -get_b(scl_dnu[2], K_re, 0, 0, 1, 1, 3);
   }
 
   if (NO >= 7) {
@@ -637,20 +717,20 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
       b[++m] = -get_b(scl_dnu[1], K_re, 0, 0, 3, 3, 0);
     } else {
       b[++m] =
-	-scl_dnu[2]*scl_dnu[1]
+	-scl_dnu[3]
 	*(get_b(1e0, K_re, 3, 3, 0, 0, 0)
 	  +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
       b[++m] =
-	-scl_dnu[2]*scl_dnu[1]
+	-scl_dnu[3]
 	*(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 	  +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
 
       b[++m] =
-	-scl_dnu[2]*scl_dnu[1]
+	-scl_dnu[3]
 	*(get_b(1e0, K_re, 1, 1, 2, 2, 0)
 	  +get_b(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0));
       b[++m] =
-	-scl_dnu[2]*scl_dnu[1]
+	-scl_dnu[3]
 	*(get_b(1e0, K_re, 2, 2, 1, 1, 0)
 	  +get_b(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0));
     }
@@ -664,6 +744,8 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
 
   prt_system(m, n_b4, A, b);
   printf("\n%4d %12.5e -> %12.5e\n", n_iter, chi2_ref, chi2);
+
+  prt_dnu();
 
   SVD_lim(m, n_b4, A, b, bn_prms.bn_lim, bn_prms.svd_cut, bn_prms.bn,
 	  bn_prms.dbn);
@@ -714,7 +796,7 @@ void min_dnu(const bool cg_meth)
     min_dnu_grad(chi2, dbn_max, g, h, cg_meth);
 
     prt_mfile("flat_file.fit");
-    min_dnu_prt(bn_prms);
+    prt_bn(bn_prms);
     prt_h_K();
   } while ((dbn_max >  bn_prms.bn_tol) && (n_iter < n_iter_max));
 
@@ -749,10 +831,10 @@ int main(int argc, char *argv[])
   int j;
  
   // Center of straight.
-  const double beta[]  = {3.0, 3.0},
-               A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
-  // const double beta[]  = {7.5, 7.2},
-  //              A_max[] = {6e-3, 6e-3}, delta = 5e-2;
+  // const double beta[]  = {3.0, 3.0},
+  //              A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
+  const double beta[]  = {3.2, 2.1},
+               A_max[] = {8e-3, 8e-3}, delta = 5e-2;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -780,7 +862,7 @@ int main(int argc, char *argv[])
   Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
   Id_scl[delta_] *= delta;
 
-  if (true) {
+  if (false) {
     prt_h_K();
     exit(0);
   }
@@ -798,23 +880,26 @@ int main(int argc, char *argv[])
     bn_prms.add_prm("o4", 6, 5e10, 1.0);
   } else {
     // SLS-2:
+    bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+    bn_prms.add_prm("sd",   3, 5e5, 1.0);
+    bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sdm",  3, 5e5, 1.0);
+
     bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
     bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
     bn_prms.add_prm("syyh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sdx",  3, 5e5, 1.0);
-    bn_prms.add_prm("sfxh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sd",   3, 5e5, 1.0);
-    bn_prms.add_prm("sfh",  3, 5e5, 1.0);
 
-    bn_prms.add_prm("oxx",   4, 5e10, 5.0);
-    bn_prms.add_prm("oxy",   4, 5e10, 5.0);
-    bn_prms.add_prm("oyy",   4, 5e10, 5.0);
-    bn_prms.add_prm("ocxx",  4, 5e10, 5.0);
-    bn_prms.add_prm("ocxx2", 4, 5e10, 5.0);
+    // bn_prms.add_prm("ocx",  4, 5e10, 1.0);
+    // bn_prms.add_prm("ocmx", 4, 5e10, 1.0);
+    // bn_prms.add_prm("sd",   4, 5e10, 1.0);
+
+    bn_prms.add_prm("oxx", 4, 5e10, 1.0);
+    bn_prms.add_prm("oxy", 4, 5e10, 1.0);
+    bn_prms.add_prm("oyy", 4, 5e10, 1.0);
   }
 
   // Step is 1.0 for conjugated gradient method.
-  bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-6; bn_prms.step = 1.0;
+  bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-11; bn_prms.step = 1.0;
 
   no_mpoles(Sext); no_mpoles(Oct);
 
