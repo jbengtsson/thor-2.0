@@ -12,7 +12,7 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 const bool tune_conf = true;
 
-const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e10, 1e-1, 0e0, 1e-9};
+const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e10, 1e0, 0e0, 1e-9};
 
 struct param_type {
 private:
@@ -196,13 +196,14 @@ void get_nu_ksi(void)
 void prt_h_K(void)
 {
   tps           h, h_re, h_im, K_re, K_im;
+  ss_vect<tps>  nus;
   std::ofstream outf;
 
   danot_(NO-1);
   get_Map();
   danot_(NO);
   K = MapNorm(Map, g, A1, A0, Map_res, no_tps); h = get_h();
-  CtoR(K, K_re, K_im); CtoR(g, h_re, h_im);
+  CtoR(K, K_re, K_im); CtoR(g, h_re, h_im); nus =  dHdJ(K);
 
   file_wr(outf, "h.out");
   outf << h_re*Id_scl << h_im*Id_scl;
@@ -210,6 +211,17 @@ void prt_h_K(void)
   file_wr(outf, "K.out");
   outf << K_re*Id_scl << K_im*Id_scl;
   outf.close();
+
+  nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
+
+  daeps_(1e-5);
+
+  file_wr(outf, "nus.out");
+  // Make a trivial evaluation for truncation.
+  outf << 1e0*nus[3] << 1e0*nus[4];
+  outf.close();
+
+  daeps_(1e-30);
 }
 
 
@@ -258,7 +270,7 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 	
 void prt_dnu(void)
 {
-  tps          K_re, K_im, K_re_scl;
+  tps          K_re, K_im;
   ss_vect<tps> nus;
 
   danot_(NO-1);
@@ -266,7 +278,7 @@ void prt_dnu(void)
   danot_(NO);
   K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
   CtoR(K, K_re, K_im); nus = dHdJ(K);
-  K_re_scl = K_re*Id_scl; nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
+  nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
 
   printf("\ndnu:\n");
   printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 0, 0, 0));
