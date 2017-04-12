@@ -676,7 +676,7 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
 	    +get_a(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0));
 	A[++m][i] =
 	  scl_dnu[3]
-	  *(get_a(scl_dnu[0], K_re, 2, 2, 1, 1, 0)
+	  *(get_a(1e0, K_re, 2, 2, 1, 1, 0)
 	    +get_a(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0));
        }
     }
@@ -908,15 +908,22 @@ int main(int argc, char *argv[])
 
     bn_prms.add_prm("ocx",  4, 5e10, 1.0);
     bn_prms.add_prm("ocxm", 4, 5e10, 1.0);
-    // bn_prms.add_prm("sd",   4, 5e10, 1.0);
+    bn_prms.add_prm("sd",   4, 5e10, 1.0);
 
-    bn_prms.add_prm("oxx", 4, 5e10, 1.0);
-    bn_prms.add_prm("oxy", 4, 5e10, 1.0);
-    bn_prms.add_prm("oyy", 4, 5e10, 1.0);
+    bn_prms.add_prm("oxx",  4, 5e10, 1.0);
+    bn_prms.add_prm("oxy",  4, 5e10, 1.0);
+    bn_prms.add_prm("oyy",  4, 5e10, 1.0);
+
+    // bn_prms.add_prm("ocx",  6, 5e10, 1e5);
+    // bn_prms.add_prm("ocxm", 6, 5e10, 1e5);
+
+    // bn_prms.add_prm("oxx",  6, 5e10, 1e5);
+    // bn_prms.add_prm("oxy",  6, 5e10, 1e5);
+    // bn_prms.add_prm("oyy",  6, 5e10, 1e5);
   }
 
   // Step is 1.0 for conjugated gradient method.
-  bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-13; bn_prms.step = 1.0;
+  bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-8; bn_prms.step = 1.0;
 
   // no_mpoles(Sext);
   no_mpoles(Oct);
