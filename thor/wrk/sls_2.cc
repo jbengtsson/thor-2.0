@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -9,6 +9,8 @@ int no_tps   = NO,
 extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
+long int   rseed0, rseed;
+double     normcut_, chi2 = 0e0;
 
 const bool tune_conf = true;
 
@@ -152,6 +154,63 @@ void param_type::set_prm(void) const
 }
 
 
+#define k 19
+#define c 656329L
+#define m 100000001
+
+void iniranf(const long i)
+{
+  rseed0 = i; rseed = i;
+}
+
+void newseed(void)
+{
+  rseed0 = (k*rseed0+c) % m; rseed = (rseed0+54321) % m;
+}
+
+double ranf(void)
+{
+  // Random number [0, 1] with rectangular distribution.
+  rseed = (k*rseed+c) % m; return (rseed/1e8);
+}
+
+#undef k
+#undef c
+#undef m  
+
+
+void setrancut(const double cut)
+{
+
+  printf("\n");
+  printf("setrancut: cut set to %3.1f\n", cut);
+
+  normcut_ = cut;
+}
+
+
+double normranf(void)
+{
+  int     i, j;
+  double  f, w;
+
+  const int  maxiter = 100, n = 12;
+
+  j = 0;
+  do {
+    j++;
+    w = 0.0;
+    for (i = 1; i <= n; i++)
+      w += ranf();
+    f = w - 6.0;
+  } while (fabs(f) > fabs(normcut_) && j <= maxiter);
+
+  if (j > maxiter)
+    fprintf(stdout,"*** fatal error in normranf\n");
+  return f;
+}
+
+
 void no_mpoles(const int n)
 {
   int j;
@@ -190,6 +249,21 @@ void get_nu_ksi(void)
   printf("ksi = [%8.5f, %8.5f]\n",
 	 h_ijklm(nus[0], 0, 0, 0, 0, 1),
 	 h_ijklm(nus[1], 0, 0, 0, 0, 1));
+}
+
+
+void prt_map(void)
+{
+  tps           h, h_re, h_im, K_re, K_im;
+  ss_vect<tps>  nus;
+  std::ofstream outf;
+
+  danot_(NO-1);
+  get_Map();
+
+  file_wr(outf, "map.out");
+  outf << Map[ct_];
+  outf.close();
 }
 
 
@@ -485,6 +559,8 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
   for (i = 1; i <= n_b4; i++)
     printf("%13.5e", bn_prms.bn[i]);
   printf("\n");
+
+  prt_mfile("flat_file.fit");
 
   free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_b4);
 }
@@ -855,10 +931,66 @@ void min_dnu2(void)
 }
 
 
+void prt_ps_long(const int n, const double twoJ[], const double delta)
+{
+  int              i, k;
+  double           twoJ1[2], phi[2], ct_sum, ct_sum2, ct_mean, ct_sigma;
+  double           delta_sum, delta_sum2, delta_mean, delta_sigma;
+  ss_vect<double>  ps, ps_Fl;
+  std::ofstream    outf;
+
+  outf.open("ps_long.out");
+
+  delta_sum = 0e0; delta_sum2 = 0e0;
+  ct_sum = 0e0; ct_sum2 = 0e0;
+
+  ps_Fl.zero();
+  for (i = 1; i <= n; i++) {
+    for (k = 0; k < 2; k++) {
+      phi[k] = 2e0*M_PI*ranf();
+      twoJ1[k] = twoJ[k]*normranf();
+      while (twoJ1[k] < 0e0)
+	twoJ1[k] = twoJ[k]*normranf();
+
+      ps_Fl[2*k] = sqrt(twoJ1[k])*cos(phi[k]);
+      ps_Fl[2*k+1] = -sqrt(twoJ1[k])*sin(phi[k]);
+    }
+
+    ps_Fl[delta_] = delta*normranf();
+
+    delta_sum += ps_Fl[delta_]; delta_sum2 += sqr(ps_Fl[delta_]);
+
+    ps = (A1*ps_Fl).cst();
+
+    ps.propagate(1, n_elem);
+
+    ct_sum += ps[ct_]; ct_sum2 += sqr(ps[ct_]);
+
+    outf << std::scientific << std::setprecision(5)
+	 << std::setw(4) << i << std::setw(13) << ps << std::endl;
+  }
+
+  delta_mean = delta_sum/n;
+  delta_sigma = sqrt((n*delta_sum2-sqr(delta_sum))/(n*(n-1e0)));  
+  ct_mean = ct_sum/n; ct_sigma = sqrt((n*ct_sum2-sqr(ct_sum))/(n*(n-1e0)));  
+
+  std::cout << std::endl;
+  std::cout << std::scientific << std::setprecision(3)
+       << "delta = " << std::setw(11) << delta_mean
+       << " +/-" << std::setw(10) << delta_sigma << std::endl;
+  std::cout << std::scientific << std::setprecision(3)
+       << "ct    = " << std::setw(11) << ct_mean
+       << " +/-" << std::setw(10) << ct_sigma << std::endl;
+
+  outf.close();
+}
+
+
 int main(int argc, char *argv[])
 {
   int j;
  
+  const long int  seed = 1121;
   // Center of straight.
   // const double beta[]  = {3.0, 3.0},
   //              A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
@@ -868,6 +1000,8 @@ int main(int argc, char *argv[])
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
   IBS_on    = false;
+
+  iniranf(seed); setrancut(3e0);
 
   rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
   
@@ -890,6 +1024,21 @@ int main(int argc, char *argv[])
   Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
   Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
   Id_scl[delta_] *= delta;
+
+  if (false) {
+    prt_H_long(10, M_PI, 10e-2, -544.7e3);
+    exit(0);
+  }
+
+  if (false) {
+    prt_ps_long(1000, twoJ, delta);
+    exit(0);
+  }
+
+  if (true) {
+    prt_map();
+    exit(0);
+  }
 
   if (false) {
     prt_h_K();
@@ -929,9 +1078,9 @@ int main(int argc, char *argv[])
     // bn_prms.add_prm("ocx",  6, 5e10, 1e5);
     // bn_prms.add_prm("ocxm", 6, 5e10, 1e5);
 
-    bn_prms.add_prm("oxx",  6, 5e10, 1e5);
-    bn_prms.add_prm("oxy",  6, 5e10, 1e5);
-    bn_prms.add_prm("oyy",  6, 5e10, 1e5);
+    // bn_prms.add_prm("oxx",  6, 5e10, 1e5);
+    // bn_prms.add_prm("oxy",  6, 5e10, 1e5);
+    // bn_prms.add_prm("oyy",  6, 5e10, 1e5);
   }
 
   // Step is 1.0 for conjugated gradient method.
@@ -944,5 +1093,5 @@ int main(int argc, char *argv[])
 
   fit_ksi1(0e0, 0e0);
 
-  min_dnu(true);
+  // min_dnu(true);
 }
