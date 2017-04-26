@@ -28,9 +28,9 @@ enum mpoles { Dip = 1, Quad = 2, Sext = 3, Oct = 4, Dec = 5, Dodec = 6 };
 
 // Max multipole order.
 /* const int mpole_max = Quad; */
-const int mpole_max = Dodec;
 /* const int mpole_max = Dodec; */
 /* const int mpole_max = 12; */
+const int mpole_max = 21;
 
 template<typename T> class mpole_type {
  public:
