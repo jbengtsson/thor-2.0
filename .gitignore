@@ -14,6 +14,8 @@ config.status
 config.log
 aclocal.m4
 *.Po
+*.*~
+*.mod
 
 # Data and graphics files.
 *.dat
