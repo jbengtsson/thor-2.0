@@ -14,3 +14,11 @@ config.status
 config.log
 aclocal.m4
 *.Po
+
+# Data and graphics files.
+*.dat
+*.out
+*.ps
+*.eps
+*.pdf
+*.png
