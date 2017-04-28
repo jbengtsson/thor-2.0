@@ -47,7 +47,8 @@
       do i=1,100
         is(i)=0
       enddo
-      write(*, *) "lieinit:", no, nv
+      idpr=1
+      write(*, *) "lieinit:", no, nv, nd, nd2, ndpt, idpr
       write(*, *) "lieinit: calling daini"
       call daini(no,nv,0)
       if(nis.gt.0)call etallnom(is,nis,'$$IS      ')
