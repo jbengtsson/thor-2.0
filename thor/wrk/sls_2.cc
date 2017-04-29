@@ -3,7 +3,15 @@
 #include "thor_lib.h"
 
 int no_tps   = NO,
-    ndpt_tps = 5;
+
+#define DOF_3 1
+
+#if !DOF_3
+  ndpt_tps = 5;
+#else
+  // Requires that cavity is turned on.
+  ndpt_tps = 0;
+#endif
 
 
 extern tps          K, g;
@@ -931,58 +939,27 @@ void min_dnu2(void)
 }
 
 
-void prt_ps_long(const int n, const double twoJ[], const double delta)
+void prt_ct(const int n, const double delta)
 {
-  int              i, k;
-  double           twoJ1[2], phi[2], ct_sum, ct_sum2, ct_mean, ct_sigma;
-  double           delta_sum, delta_sum2, delta_mean, delta_sigma;
-  ss_vect<double>  ps, ps_Fl;
-  std::ofstream    outf;
+  int             k;
+  double          delta1;
+  ss_vect<double> ps;
+  FILE            *outf;
 
-  outf.open("ps_long.out");
+  outf = file_write("ct.out");
 
-  delta_sum = 0e0; delta_sum2 = 0e0;
-  ct_sum = 0e0; ct_sum2 = 0e0;
+  // cavity_on = true;
 
-  ps_Fl.zero();
-  for (i = 1; i <= n; i++) {
-    for (k = 0; k < 2; k++) {
-      phi[k] = 2e0*M_PI*ranf();
-      twoJ1[k] = twoJ[k]*normranf();
-      while (twoJ1[k] < 0e0)
-	twoJ1[k] = twoJ[k]*normranf();
-
-      ps_Fl[2*k] = sqrt(twoJ1[k])*cos(phi[k]);
-      ps_Fl[2*k+1] = -sqrt(twoJ1[k])*sin(phi[k]);
-    }
-
-    ps_Fl[delta_] = delta*normranf();
-
-    delta_sum += ps_Fl[delta_]; delta_sum2 += sqr(ps_Fl[delta_]);
-
-    ps = (A1*ps_Fl).cst();
-
+  for (k = -n; k <= n; k++) {
+    delta1 = (double)k/(double)n*delta;
+    ps.zero();
+    ps[x_] = 0*2.6e-3; ps[delta_] = delta1;
     ps.propagate(1, n_elem);
 
-    ct_sum += ps[ct_]; ct_sum2 += sqr(ps[ct_]);
-
-    outf << std::scientific << std::setprecision(5)
-	 << std::setw(4) << i << std::setw(13) << ps << std::endl;
+    fprintf(outf, "%3d %13.5e %13.5e\n", k, delta1, ps[ct_]);
   }
 
-  delta_mean = delta_sum/n;
-  delta_sigma = sqrt((n*delta_sum2-sqr(delta_sum))/(n*(n-1e0)));  
-  ct_mean = ct_sum/n; ct_sigma = sqrt((n*ct_sum2-sqr(ct_sum))/(n*(n-1e0)));  
-
-  std::cout << std::endl;
-  std::cout << std::scientific << std::setprecision(3)
-       << "delta = " << std::setw(11) << delta_mean
-       << " +/-" << std::setw(10) << delta_sigma << std::endl;
-  std::cout << std::scientific << std::setprecision(3)
-       << "ct    = " << std::setw(11) << ct_mean
-       << " +/-" << std::setw(10) << ct_sigma << std::endl;
-
-  outf.close();
+  fclose(outf);
 }
 
 
@@ -1009,7 +986,12 @@ int main(int argc, char *argv[])
   ini_si();
 
   // Disable log messages from TPSALib and LieLib.
+#if !DOF_3
   idprset(-1);
+#else
+  idprset(1);
+  cavity_on = true;
+#endif
 
   daeps_(1e-30);
 
@@ -1031,16 +1013,25 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    prt_ps_long(1000, twoJ, delta);
-    exit(0);
-  }
+    if (false) {
+      no_mpoles(Sext);
+      no_mpoles(Oct);
+    }
 
-  if (true) {
-    prt_map();
+    danot_(NO-1);
+    get_Map();
+    prt_alphac();
+
+    prt_ct(100, 8e-2);
     exit(0);
   }
 
   if (false) {
+    prt_map();
+    exit(0);
+  }
+
+  if (true) {
     prt_h_K();
     exit(0);
   }
@@ -1071,9 +1062,9 @@ int main(int argc, char *argv[])
     // bn_prms.add_prm("ocxm", 4, 5e10, 1.0);
     // bn_prms.add_prm("sd",   4, 5e10, 1.0);
 
-    bn_prms.add_prm("oxx",  4, 5e10, 1.0);
-    bn_prms.add_prm("oxy",  4, 5e10, 1.0);
-    bn_prms.add_prm("oyy",  4, 5e10, 1.0);
+    // bn_prms.add_prm("oxx",  4, 5e10, 1.0);
+    // bn_prms.add_prm("oxy",  4, 5e10, 1.0);
+    // bn_prms.add_prm("oyy",  4, 5e10, 1.0);
 
     // bn_prms.add_prm("ocx",  6, 5e10, 1e5);
     // bn_prms.add_prm("ocxm", 6, 5e10, 1e5);
