@@ -1918,11 +1918,11 @@ void prt_H_long(const int n, const double phi_max, const double delta_max,
 	    << "U0               = " << 1e-3*U0 << " keV" << std::endl;
   if (!neg_alphac) 
     std::cout << std::fixed << std::setprecision(2)
-	      << "phi0             = 180 - " << fabs(phi0)*180e0/pi-180e0
+	      << "phi0             = " << fabs(phi0)*180e0/pi-180e0
 	      << " deg" << std::endl;
   else
     std::cout << std::fixed << std::setprecision(2)
-	      << "phi0             = " << fabs(phi0)*180e0/pi-180e0
+	      << "phi0             = 180 - " << fabs(phi0)*180e0/pi-180e0
 	      << " deg" << std::endl;
   std::cout << std::endl;
   std::cout << std::fixed << std::setprecision(2)

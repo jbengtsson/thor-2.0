@@ -1012,9 +1012,9 @@ int main(int argc, char *argv[])
     cavity_on = true; rad_on = true;
     get_Map();
     // MAX-VI:
-    prt_H_long(10, M_PI, 10e-2, -405.6e3, false);
+    // prt_H_long(10, M_PI, 10e-2, -405.6e3, false);
     // SLS-2:
-    // prt_H_long(10, M_PI, 10e-2, -544.7e3, true);
+    prt_H_long(10, M_PI, 10e-2, -544.7e3, true);
     prt_alphac();
     exit(0);
   }
