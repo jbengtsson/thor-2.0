@@ -242,7 +242,7 @@ double H_long(const double phi, const double delta,
 	      const double alphac[]);
 
 void prt_H_long(const int n, const double phi_max, const double delta_max,
-		const double U0);
+		const double U0, const bool neg_alphac);
 
 double arccos_(double x);
 

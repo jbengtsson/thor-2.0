@@ -2,7 +2,7 @@
 
 #include "thor_lib.h"
 
-int no_tps   = NO,
+int no_tps = NO,
 
 #define DOF_3 0
 
@@ -1008,10 +1008,14 @@ int main(int argc, char *argv[])
   Id_scl[delta_] *= delta;
 
   if (true) {
+    danot_(NO-1);
+    cavity_on = true; rad_on = true;
+    get_Map();
     // MAX-VI:
-    prt_H_long(10, M_PI, 6e-2, -405.6e3);
+    prt_H_long(10, M_PI, 10e-2, -405.6e3, false);
     // SLS-2:
-    // prt_H_long(10, M_PI, 10e-2, -544.7e3);
+    // prt_H_long(10, M_PI, 10e-2, -544.7e3, true);
+    prt_alphac();
     exit(0);
   }
 

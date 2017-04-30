@@ -1898,7 +1898,7 @@ double H_long(const double phi, const double delta,
 
 
 void prt_H_long(const int n, const double phi_max, const double delta_max,
-		const double U0)
+		const double U0, const bool neg_alphac)
 {
   int            i, j, h_rf;
   double         V_rf, f_rf, alphac[n_alphac], phi, delta, H, delta_rf, phi0;
@@ -1908,26 +1908,32 @@ void prt_H_long(const int n, const double phi_max, const double delta_max,
 
   get_alphac(alphac); get_cav(get_Fnum("cav"), 1, h_rf, V_rf, f_rf);
 
-  phi0 = pi - fabs(asin(U0/V_rf));
+  phi0 = - fabs(asin(U0/V_rf));
+  if (neg_alphac) phi0 += pi;
 
   delta_rf = sqrt(-V_rf*cos(pi+phi0)*(2e0-(pi-2e0*(pi+phi0))*tan(pi+phi0))
 	     /(alphac[0]*pi*h_rf*E0*1e9));
   std::cout << std::endl;
   std::cout << std::fixed << std::setprecision(1)
 	    << "U0               = " << 1e-3*U0 << " keV" << std::endl;
-  std::cout << std::fixed << std::setprecision(2)
-	    << "phi0             = 180 - " << fabs(phi0)*180e0/pi-180e0
-	    << " deg" << std::endl;
+  if (!neg_alphac) 
+    std::cout << std::fixed << std::setprecision(2)
+	      << "phi0             = 180 - " << fabs(phi0)*180e0/pi-180e0
+	      << " deg" << std::endl;
+  else
+    std::cout << std::fixed << std::setprecision(2)
+	      << "phi0             = " << fabs(phi0)*180e0/pi-180e0
+	      << " deg" << std::endl;
   std::cout << std::endl;
   std::cout << std::fixed << std::setprecision(2)
 	    << "RF bucket height = " << 1e2*delta_rf << "%" << std::endl;
 
   for (i = -n; i <= n ; i++) {
     for (j = -n; j <= n ; j++) {
-      phi = phi0 + i*phi_max/n; delta = j*delta_max/n;
-      H = H_long(phi, delta, h_rf, V_rf, pi, alphac);
+      phi = i*phi_max/n; delta = j*delta_max/n;
+      H = H_long(phi, delta, h_rf, V_rf, pi+phi0, alphac);
       os << std::fixed
-	 << std::setprecision(2)<< std::setw(8) << phi*180e0/pi
+	 << std::setprecision(2)<< std::setw(8) <<  (phi0+phi)*180e0/pi
 	 << std::setprecision(5) << std::setw(10) << 1e2*delta
 	 << std::scientific << std::setw(13) << H << std::endl;
     }
