@@ -4,7 +4,7 @@
 
 int no_tps   = NO,
 
-#define DOF_3 1
+#define DOF_3 0
 
 #if !DOF_3
   ndpt_tps = 5;
@@ -1007,8 +1007,11 @@ int main(int argc, char *argv[])
   Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
   Id_scl[delta_] *= delta;
 
-  if (false) {
-    prt_H_long(10, M_PI, 10e-2, -544.7e3);
+  if (true) {
+    // MAX-VI:
+    prt_H_long(10, M_PI, 6e-2, -405.6e3);
+    // SLS-2:
+    // prt_H_long(10, M_PI, 10e-2, -544.7e3);
     exit(0);
   }
 
@@ -1031,7 +1034,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (true) {
+  if (false) {
     prt_h_K();
     exit(0);
   }
