@@ -64,7 +64,7 @@ typedef struct {
 } wiggler_type;
 
 typedef struct {
-  double V_rf, f_rf;
+  double V_rf, f_rf, phi_rf;
   int    h_rf;
 } cavity_type;
 

@@ -22,7 +22,7 @@ double     normcut_, chi2 = 0e0;
 
 const bool tune_conf = true;
 
-const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e10, 1e0, 0e0, 1e-9};
+const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e10, 1e0, 1e-9, 1e-9};
 
 struct param_type {
 private:
@@ -277,15 +277,15 @@ void prt_map(void)
 
 void prt_h_K(void)
 {
-  tps           h, h_re, h_im, K_re, K_im;
+  tps           h_re, h_im, K_re, K_im;
   ss_vect<tps>  nus;
   std::ofstream outf;
 
   danot_(NO-1);
   get_Map();
   danot_(NO);
-  K = MapNorm(Map, g, A1, A0, Map_res, no_tps); h = get_h();
-  CtoR(K, K_re, K_im); CtoR(g, h_re, h_im); nus =  dHdJ(K);
+  K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
+  CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im); nus = dHdJ(K);
 
   file_wr(outf, "h.out");
   outf << h_re*Id_scl << h_im*Id_scl;
@@ -405,8 +405,6 @@ void prt_bn(const param_type &bn_prms)
   int  j, k;
   FILE *outf;
 
-  const int n_sxt = 7;
-
   std::string file_name = "dnu.out";
 
   outf = file_write(file_name.c_str());
@@ -416,22 +414,15 @@ void prt_bn(const param_type &bn_prms)
   fprintf(outf, "sfh:  sextupole, l = 0.05, k = %12.5e, n = 4"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  // if (bn_prms.n_prm == n_sxt)
-  if (true)
-    fprintf(outf, "sd:   sextupole, l = 0.10, k = %12.5e, n = 4"
-	    ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  else {
-    j = k;
-  }
-  k++;
-  fprintf(outf, "sfmh: sextupole, l = 0.05, k = %12.5e, n = 4"
+  fprintf(outf, "sd:   sextupole, l = 0.10, k = %12.5e, n = 4"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
   k++;
   fprintf(outf, "sdm:  sextupole, l = 0.10, k = %12.5e, n = 4"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
   k++;
-  fprintf(outf, "sxxh: sextupole, l = 0.05, k = %12.5e, n = 4"
+  fprintf(outf, "\nsxxh: sextupole, l = 0.05, k = %12.5e, n = 4"
   	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
   fprintf(outf, "sxyh: sextupole, l = 0.05, k = %12.5e, n = 4"
@@ -440,21 +431,13 @@ void prt_bn(const param_type &bn_prms)
   fprintf(outf, "syyh: sextupole, l = 0.05, k = %12.5e, n = 4"
   	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
-  if (bn_prms.n_prm > n_sxt) {
-    // k++;
-    // fprintf(outf, "ocx:  multipole, l = 0.0, n = 4, Method = Meth,"
-    // 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-    // k++;
-    // fprintf(outf, "ocxm: multipole, l = 0.0, n = 4, Method = Meth,"
-    // 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-    // k++;
-    // fprintf(outf, "sd:   multipole, l = 0.10, n = 4, Method = Meth,"
-    // 	    "\n      HOM = (3, %12.5e, 0.0, 4, %12.5e, 0.0);\n",
-    // 	    bn_prms.bn_scl[j]*bn_prms.bn[j+1],
-    // 	    bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-    // k++;
-    // fprintf(outf, "ocxm: multipole, l = 0.0, n = 4, Method = Meth,"
-    // 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  if (true) {
+    k++;
+    fprintf(outf, "\nocx:  multipole, l = 0.0, n = 4, Method = Meth,"
+	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    k++;
+    fprintf(outf, "ocxm: multipole, l = 0.0, n = 4, Method = Meth,"
+	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
     k++;
     fprintf(outf, "\noxx:  multipole, l = 0.0, n = 4, Method = Meth,"
@@ -971,7 +954,7 @@ int main(int argc, char *argv[])
   // Center of straight.
   // const double beta[]  = {3.0, 3.0},
   //              A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
-  const double beta[]  = {3.2, 2.1},
+  const double beta[]  = {3.2, 3.3},
                A_max[] = {6e-3, 4e-3}, delta = 5e-2;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
@@ -1007,7 +990,7 @@ int main(int argc, char *argv[])
   Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
   Id_scl[delta_] *= delta;
 
-  if (true) {
+  if (false) {
     danot_(NO-1);
     cavity_on = true; rad_on = true;
     get_Map();
@@ -1058,38 +1041,32 @@ int main(int argc, char *argv[])
     // SLS-2:
     bn_prms.add_prm("sfh",  3, 5e5, 1.0);
     bn_prms.add_prm("sd",   3, 5e5, 1.0);
-    bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+
     bn_prms.add_prm("sdm",  3, 5e5, 1.0);
 
     bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
     bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
     bn_prms.add_prm("syyh", 3, 5e5, 1.0);
 
-    // bn_prms.add_prm("ocx",  4, 5e10, 1.0);
-    // bn_prms.add_prm("ocxm", 4, 5e10, 1.0);
-    // bn_prms.add_prm("sd",   4, 5e10, 1.0);
+    if (true) {
+      bn_prms.add_prm("ocx",  4, 5e10, 1.0);
+      bn_prms.add_prm("ocxm", 4, 5e10, 1.0);
+      bn_prms.add_prm("sd",   4, 5e10, 1.0);
 
-    // bn_prms.add_prm("oxx",  4, 5e10, 1.0);
-    // bn_prms.add_prm("oxy",  4, 5e10, 1.0);
-    // bn_prms.add_prm("oyy",  4, 5e10, 1.0);
-
-    // bn_prms.add_prm("ocx",  6, 5e10, 1e5);
-    // bn_prms.add_prm("ocxm", 6, 5e10, 1e5);
-
-    // bn_prms.add_prm("oxx",  6, 5e10, 1e5);
-    // bn_prms.add_prm("oxy",  6, 5e10, 1e5);
-    // bn_prms.add_prm("oyy",  6, 5e10, 1e5);
+      bn_prms.add_prm("oxx",  4, 5e10, 1.0);
+      bn_prms.add_prm("oxy",  4, 5e10, 1.0);
+      bn_prms.add_prm("oyy",  4, 5e10, 1.0);
+    }
   }
 
   // Step is 1.0 for conjugated gradient method.
   bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-10; bn_prms.step = 1.0;
 
-  no_mpoles(Sext);
-  no_mpoles(Oct); no_mpoles(Dodec);
+  no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
 
   bn_prms.ini_prm();
 
   fit_ksi1(0e0, 0e0);
 
-  // min_dnu(true);
+  min_dnu(true);
 }

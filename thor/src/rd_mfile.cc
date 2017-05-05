@@ -42,7 +42,8 @@
 
      wiggler:    L [m], lambda [m], BoBrho [m^-1], k_x [m]
 
-     cavity:	 cavity voltage/beam energy [eV], omega/c, beam energy [eV]
+     cavity:	 cavity voltage/beam energy [eV], omega/c, beam energy [eV],
+                 phi
 
      thin kick:	 hor., ver. displacement, roll angle (total)
 		 no of nonzero multipole coeff.
@@ -218,9 +219,9 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	elem[ind].cavity = new cavity_type;
 
 	inf.getline(line, max_str);
-	sscanf(line, "%lf %lf %d %lf",
+	sscanf(line, "%lf %lf %d %lf %lf",
 	       &elem[ind].cavity->V_rf, &elem[ind].cavity->f_rf,
-	       &elem[ind].cavity->h_rf, &E0);
+	       &elem[ind].cavity->h_rf, &E0, &elem[ind].cavity->phi_rf);
 	elem[ind].cavity->V_rf = elem[ind].cavity->V_rf*E0;
 	elem[ind].cavity->f_rf = elem[ind].cavity->f_rf*clight/(2.0*pi);
 	E0 = E0/1e9; L = 0.0;
