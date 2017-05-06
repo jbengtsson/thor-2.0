@@ -405,7 +405,8 @@ void prt_bn(const param_type &bn_prms)
   int  j, k;
   FILE *outf;
 
-  std::string file_name = "dnu.out";
+  const std::string file_name = "dnu.out";
+  const int         n_sext = 6;
 
   outf = file_write(file_name.c_str());
 
@@ -413,9 +414,17 @@ void prt_bn(const param_type &bn_prms)
 
   fprintf(outf, "sfh:  sextupole, l = 0.05, k = %12.5e, n = 4"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
   k++;
-  fprintf(outf, "sd:   sextupole, l = 0.10, k = %12.5e, n = 4"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  if (bn_prms.bn_scl.size() == n_sext) {
+    fprintf(outf, "sd:   sextupole, l = 0.10, k = %12.5e, n = 4"
+	    ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  } else {
+    fprintf(outf, "sd:   multipole, l = 0.10, n = 4, Method = Meth,"
+	    "\n      HOM = (3, %12.5e, 0.0, 4, %12.5e, 0.0);\n",
+	    bn_prms.bn_scl[k]*bn_prms.bn[k+1],
+	    bn_prms.bn_scl[k]*bn_prms.bn[9]);
+  }
 
   k++;
   fprintf(outf, "sdm:  sextupole, l = 0.10, k = %12.5e, n = 4"
@@ -438,6 +447,9 @@ void prt_bn(const param_type &bn_prms)
     k++;
     fprintf(outf, "ocxm: multipole, l = 0.0, n = 4, Method = Meth,"
 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
+    k++;
+    // sd.
 
     k++;
     fprintf(outf, "\noxx:  multipole, l = 0.0, n = 4, Method = Meth,"
