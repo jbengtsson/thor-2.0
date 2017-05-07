@@ -277,15 +277,33 @@ void prt_map(void)
 
 void prt_h_K(void)
 {
+  int           k;
+  double        mu[2];
   tps           h_re, h_im, K_re, K_im;
-  ss_vect<tps>  nus;
+  ss_vect<tps>  nus, R_half;
   std::ofstream outf;
 
   danot_(NO-1);
   get_Map();
   danot_(NO);
-  K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
-  CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im); nus = dHdJ(K);
+  K = MapNorm(Map, g, A1, A0, Map_res, no_tps); nus = dHdJ(K);
+  CtoR(K, K_re, K_im);
+
+#if 0
+  // Compute h at symmetry point of lattice; for a lattice with two super
+  // periods.
+  printf("\nprt_h_K: nu/2 = [%7.5f, %7.5f]\n",
+	 nus[0].cst()/2e0, nus[1].cst()/2e0);
+  R_half.identity();
+  mu[0] = 2e0*M_PI*nus[0].cst()/2e0; mu[1] = 2e0*M_PI*nus[1].cst()/2e0;
+  for (k = 0; k < 2; k++) {
+    R_half[2*k]   =  cos(mu[k])*tps(0e0, 2*k+1) + sin(mu[k])*tps(0e0, 2*k+2);
+    R_half[2*k+1] = -sin(mu[k])*tps(0e0, 2*k+1) + cos(mu[k])*tps(0e0, 2*k+2);
+  }
+  CtoR(get_h()*Inv(R_half), h_re, h_im);
+#else
+  CtoR(get_h(), h_re, h_im);
+#endif
 
   file_wr(outf, "h.out");
   outf << h_re*Id_scl << h_im*Id_scl;
@@ -961,13 +979,16 @@ void prt_ct(const int n, const double delta)
 int main(int argc, char *argv[])
 {
   int j;
- 
+
   const long int  seed = 1121;
   // Center of straight.
-  // const double beta[]  = {3.0, 3.0},
-  //              A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
+#if 1
+  const double beta[]  = {3.0, 3.0},
+               A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
+#else
   const double beta[]  = {3.2, 3.3},
                A_max[] = {6e-3, 4e-3}, delta = 5e-2;
+#endif
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -1033,7 +1054,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (false) {
+  if (true) {
     prt_h_K();
     exit(0);
   }
