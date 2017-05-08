@@ -22,7 +22,7 @@ double     normcut_, chi2 = 0e0;
 
 const bool tune_conf = true;
 
-const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
+const double scl_h[] = {1e1, 1e1}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
 
 struct param_type {
 private:
@@ -373,48 +373,49 @@ void prt_bn(const param_type &bn_prms)
   outf = file_write(file_name.c_str());
 
   k = 0;
-  fprintf(outf, "sfh:   sextupole, l = 0.05, k = %12.5e, n = 4"
+  fprintf(outf, "sfh:   sextupole, l = 0.05, k = %12.5e, n = 3"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "sdh:   sextupole, l = 0.05, k = %12.5e, n = 4"
+  fprintf(outf, "sdh:   sextupole, l = 0.05, k = %12.5e, n = 3"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "sfmh:  sextupole, l = 0.05, k = %12.5e, n = 4"
+  fprintf(outf, "sfmh:  sextupole, l = 0.05, k = %12.5e, n = 3"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "sdmh:   sextupole, l = 0.05, k = %12.5e, n = 4"
+  fprintf(outf, "sdmh:  sextupole, l = 0.05, k = %12.5e, n = 3"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "\nsxxh: sextupole, l = 0.05, k = %12.5e, n = 4"
+  fprintf(outf, "\nsxxh: sextupole, l = 0.05, k = %12.5e, n = 3"
   	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "sxyh: sextupole, l = 0.05, k = %12.5e, n = 4"
+  fprintf(outf, "sxyh: sextupole, l = 0.05, k = %12.5e, n = 3"
   	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "syyh: sextupole, l = 0.05, k = %12.5e, n = 4"
+  fprintf(outf, "syyh: sextupole, l = 0.05, k = %12.5e, n = 3"
   	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
   if (true) {
     k++;
-    fprintf(outf, "\nocx:  multipole, l = 0.0, n = 4, Method = Meth,"
+    fprintf(outf, "\nocx:  multipole, l = 0.0, n = 1, Method = Meth,"
 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
     k++;
-    fprintf(outf, "ocxm: multipole, l = 0.0, n = 4, Method = Meth,"
-	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-    fprintf(outf, "ocy:  multipole, l = 0.0, n = 4, Method = Meth,"
+    fprintf(outf, "ocxm: multipole, l = 0.0, n = 1, Method = Meth,"
 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
     k++;
-    fprintf(outf, "ocym: multipole, l = 0.0, n = 4, Method = Meth,"
+    fprintf(outf, "ocy:  multipole, l = 0.0, n = 1, Method = Meth,"
+	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    k++;
+    fprintf(outf, "ocym: multipole, l = 0.0, n = 1, Method = Meth,"
 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
     k++;
-    fprintf(outf, "\noxx:  multipole, l = 0.0, n = 4, Method = Meth,"
+    fprintf(outf, "\noxx:  multipole, l = 0.0, n = 1, Method = Meth,"
 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
     k++;
-    fprintf(outf, "oxy:  multipole, l = 0.0, n = 4, Method = Meth,"
+    fprintf(outf, "oxy:  multipole, l = 0.0, n = 1, Method = Meth,"
 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
     k++;
-    fprintf(outf, "oyy:  multipole, l = 0.0, n = 4, Method = Meth,"
+    fprintf(outf, "oyy:  multipole, l = 0.0, n = 1, Method = Meth,"
 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   }
 
