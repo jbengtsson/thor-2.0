@@ -1572,15 +1572,16 @@ void get_A1(const double alphax, const double betax,
 
 tps get_h(void)
 {
+  // Parallel transport nonlinear kick to start of lattice.
+  tps          h;
   ss_vect<tps> Map1, R;
 
-  // Parallel transport nonlinear kick to start of lattice,
-  // assumes left to right evaluation.
-
-  if (true)
+  if (true) {
     // Dragt-Finn factorization
-    return LieFact_DF(Inv(A0*A1)*Map*A0*A1, R)*R;
-  else {
+    h = LieFact_DF(Inv(A0*A1)*Map*A0*A1, R);
+    R[6] = tps(0e0, 7); h = h*R;
+    return h;
+  } else {
     // single Lie exponent
     danot_(1); Map1 = Map; danot_(no_tps);
     return LieFact(Inv(A0*A1)*Map*Inv(Map1)*A0*A1);
