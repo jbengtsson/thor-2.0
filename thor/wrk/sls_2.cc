@@ -1,4 +1,4 @@
-#define NO 5
+#define NO 6
 
 #include "thor_lib.h"
 
@@ -22,7 +22,7 @@ double     normcut_, chi2 = 0e0;
 
 const bool tune_conf = true;
 
-const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e10, 1e0, 1e-9, 1e-9};
+const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
 
 struct param_type {
 private:
@@ -162,63 +162,6 @@ void param_type::set_prm(void) const
 }
 
 
-#define k 19
-#define c 656329L
-#define m 100000001
-
-void iniranf(const long i)
-{
-  rseed0 = i; rseed = i;
-}
-
-void newseed(void)
-{
-  rseed0 = (k*rseed0+c) % m; rseed = (rseed0+54321) % m;
-}
-
-double ranf(void)
-{
-  // Random number [0, 1] with rectangular distribution.
-  rseed = (k*rseed+c) % m; return (rseed/1e8);
-}
-
-#undef k
-#undef c
-#undef m  
-
-
-void setrancut(const double cut)
-{
-
-  printf("\n");
-  printf("setrancut: cut set to %3.1f\n", cut);
-
-  normcut_ = cut;
-}
-
-
-double normranf(void)
-{
-  int     i, j;
-  double  f, w;
-
-  const int  maxiter = 100, n = 12;
-
-  j = 0;
-  do {
-    j++;
-    w = 0.0;
-    for (i = 1; i <= n; i++)
-      w += ranf();
-    f = w - 6.0;
-  } while (fabs(f) > fabs(normcut_) && j <= maxiter);
-
-  if (j > maxiter)
-    fprintf(stdout,"*** fatal error in normranf\n");
-  return f;
-}
-
-
 void no_mpoles(const int n)
 {
   int j;
@@ -344,16 +287,18 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else if (i == 9)
       printf("2nd order geometric\n");
     else if (i == 17)
+      printf("2nd order chromatic\n");
+    else if (i == 25)
       printf("linear chromaticity\n");
-    else if (i == 19)
-      printf("ampl. dependant tune shift\n");
-    else if (i == 22)
-      printf("2nd order chromaticity\n");
-    else if (i == 24)
-      printf("cross terms\n");
     else if (i == 27)
+      printf("ampl. dependant tune shift\n");
+    else if (i == 30)
+      printf("2nd order chromaticity\n");
+    else if (i == 32)
+      printf("cross terms\n");
+    else if (i == 35)
       printf("3rd order chromaticity\n");
-    else if (i == 29) {
+    else if (i == 37) {
       if (!tune_conf)
 	printf("ampl. dependant tune shift\n");
       else
@@ -626,6 +571,15 @@ double min_dnu_f(double *b4s)
   b.push_back(get_b(scl_h[1], h_re, 0, 0, 3, 1, 0));
   b.push_back(get_b(scl_h[1], h_re, 1, 1, 2, 0, 0));
 
+  b.push_back(get_b(scl_h[1], h_re, 2, 0, 1, 1, 1));
+  b.push_back(get_b(scl_h[1], h_re, 3, 1, 0, 0, 1));
+  b.push_back(get_b(scl_h[1], h_re, 4, 0, 0, 0, 1));
+  b.push_back(get_b(scl_h[1], h_re, 2, 0, 0, 2, 1));
+  b.push_back(get_b(scl_h[1], h_re, 2, 0, 2, 0, 1));
+  b.push_back(get_b(scl_h[1], h_re, 0, 0, 4, 0, 1));
+  b.push_back(get_b(scl_h[1], h_re, 0, 0, 3, 1, 1));
+  b.push_back(get_b(scl_h[1], h_re, 1, 1, 2, 0, 1));
+
   b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1));
   b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1));
 
@@ -674,7 +628,6 @@ double min_dnu_f(double *b4s)
 
   if (chi2 < chi2_ref) {
     prt_bn(bn_prms);
-    prt_h_K();
 
     printf("\n%3d chi2: %12.5e -> %12.5e\n", n_powell, chi2_ref, chi2);
     printf("b & bn:\n");
@@ -736,6 +689,15 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
     A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 4, 0, 0);
     A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 3, 1, 0);
     A[++m][i] = get_a(scl_h[1], h_re, 1, 1, 2, 0, 0);
+
+    A[++m][i] = get_a(scl_h[1], h_re, 2, 0, 1, 1, 1);
+    A[++m][i] = get_a(scl_h[1], h_re, 3, 1, 0, 0, 1);
+    A[++m][i] = get_a(scl_h[1], h_re, 4, 0, 0, 0, 1);
+    A[++m][i] = get_a(scl_h[1], h_re, 2, 0, 0, 2, 1);
+    A[++m][i] = get_a(scl_h[1], h_re, 2, 0, 2, 0, 1);
+    A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 4, 0, 1);
+    A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 3, 1, 1);
+    A[++m][i] = get_a(scl_h[1], h_re, 1, 1, 2, 0, 1);
 
     A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1);
     A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1);
@@ -808,6 +770,15 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
   b[++m] = -get_b(scl_h[1], h_re, 0, 0, 4, 0, 0);
   b[++m] = -get_b(scl_h[1], h_re, 0, 0, 3, 1, 0);
   b[++m] = -get_b(scl_h[1], h_re, 1, 1, 2, 0, 0);
+
+  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 1, 1, 1);
+  b[++m] = -get_b(scl_h[1], h_re, 3, 1, 0, 0, 1);
+  b[++m] = -get_b(scl_h[1], h_re, 4, 0, 0, 0, 1);
+  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 0, 2, 1);
+  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 2, 0, 1);
+  b[++m] = -get_b(scl_h[1], h_re, 0, 0, 4, 0, 1);
+  b[++m] = -get_b(scl_h[1], h_re, 0, 0, 3, 1, 1);
+  b[++m] = -get_b(scl_h[1], h_re, 1, 1, 2, 0, 1);
 
   b[++m] = -get_b(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1);
   b[++m] = -get_b(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1);
@@ -916,7 +887,6 @@ void min_dnu(const bool cg_meth)
 
     prt_mfile("flat_file.fit");
     prt_bn(bn_prms);
-    prt_h_K();
   } while ((dbn_max >  bn_prms.bn_tol) && (n_iter < n_iter_max));
 
   free_dvector(g, 1, n_b4); free_dvector(h, 1, n_b4);
@@ -986,8 +956,6 @@ int main(int argc, char *argv[])
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
   IBS_on    = false;
-
-  iniranf(seed); setrancut(3e0);
 
   rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
   
@@ -1087,7 +1055,7 @@ int main(int argc, char *argv[])
   }
 
   // Step is 1.0 for conjugated gradient method.
-  bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-10; bn_prms.step = 1.0;
+  bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-12; bn_prms.step = 1.0;
 
   // no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
 
