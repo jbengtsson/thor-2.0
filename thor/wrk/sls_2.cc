@@ -17,12 +17,11 @@ int no_tps = NO,
 extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
-long int   rseed0, rseed;
-double     normcut_, chi2 = 0e0;
+double chi2 = 0e0;
 
 const bool tune_conf = true;
 
-const double scl_h[] = {1e1, 1e1}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
+const double scl_h[] = {1e0, 1e0, 1e1}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
 
 struct param_type {
 private:
@@ -287,18 +286,16 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else if (i == 9)
       printf("2nd order geometric\n");
     else if (i == 17)
-      printf("2nd order chromatic\n");
-    else if (i == 25)
       printf("linear chromaticity\n");
-    else if (i == 27)
+    else if (i == 19)
       printf("ampl. dependant tune shift\n");
-    else if (i == 30)
+    else if (i == 22)
       printf("2nd order chromaticity\n");
-    else if (i == 32)
+    else if (i == 24)
       printf("cross terms\n");
-    else if (i == 35)
+    else if (i == 27)
       printf("3rd order chromaticity\n");
-    else if (i == 37) {
+    else if (i == 29) {
       if (!tune_conf)
 	printf("ampl. dependant tune shift\n");
       else
@@ -572,15 +569,6 @@ double min_dnu_f(double *b4s)
   b.push_back(get_b(scl_h[1], h_re, 0, 0, 3, 1, 0));
   b.push_back(get_b(scl_h[1], h_re, 1, 1, 2, 0, 0));
 
-  b.push_back(get_b(scl_h[1], h_re, 2, 0, 1, 1, 1));
-  b.push_back(get_b(scl_h[1], h_re, 3, 1, 0, 0, 1));
-  b.push_back(get_b(scl_h[1], h_re, 4, 0, 0, 0, 1));
-  b.push_back(get_b(scl_h[1], h_re, 2, 0, 0, 2, 1));
-  b.push_back(get_b(scl_h[1], h_re, 2, 0, 2, 0, 1));
-  b.push_back(get_b(scl_h[1], h_re, 0, 0, 4, 0, 1));
-  b.push_back(get_b(scl_h[1], h_re, 0, 0, 3, 1, 1));
-  b.push_back(get_b(scl_h[1], h_re, 1, 1, 2, 0, 1));
-
   b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1));
   b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1));
 
@@ -691,15 +679,6 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
     A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 3, 1, 0);
     A[++m][i] = get_a(scl_h[1], h_re, 1, 1, 2, 0, 0);
 
-    A[++m][i] = get_a(scl_h[1], h_re, 2, 0, 1, 1, 1);
-    A[++m][i] = get_a(scl_h[1], h_re, 3, 1, 0, 0, 1);
-    A[++m][i] = get_a(scl_h[1], h_re, 4, 0, 0, 0, 1);
-    A[++m][i] = get_a(scl_h[1], h_re, 2, 0, 0, 2, 1);
-    A[++m][i] = get_a(scl_h[1], h_re, 2, 0, 2, 0, 1);
-    A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 4, 0, 1);
-    A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 3, 1, 1);
-    A[++m][i] = get_a(scl_h[1], h_re, 1, 1, 2, 0, 1);
-
     A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1);
     A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1);
 
@@ -771,15 +750,6 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
   b[++m] = -get_b(scl_h[1], h_re, 0, 0, 4, 0, 0);
   b[++m] = -get_b(scl_h[1], h_re, 0, 0, 3, 1, 0);
   b[++m] = -get_b(scl_h[1], h_re, 1, 1, 2, 0, 0);
-
-  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 1, 1, 1);
-  b[++m] = -get_b(scl_h[1], h_re, 3, 1, 0, 0, 1);
-  b[++m] = -get_b(scl_h[1], h_re, 4, 0, 0, 0, 1);
-  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 0, 2, 1);
-  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 2, 0, 1);
-  b[++m] = -get_b(scl_h[1], h_re, 0, 0, 4, 0, 1);
-  b[++m] = -get_b(scl_h[1], h_re, 0, 0, 3, 1, 1);
-  b[++m] = -get_b(scl_h[1], h_re, 1, 1, 2, 0, 1);
 
   b[++m] = -get_b(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1);
   b[++m] = -get_b(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1);
@@ -944,7 +914,6 @@ int main(int argc, char *argv[])
 {
   int j;
 
-  const long int  seed = 1121;
   // Center of straight.
 #if 0
   const double beta[]  = {3.0, 3.0},
@@ -985,7 +954,7 @@ int main(int argc, char *argv[])
   Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
   Id_scl[delta_] *= delta;
 
-  if (false) {
+  if (true) {
     danot_(NO-1);
     cavity_on = true; rad_on = true;
     get_Map();
