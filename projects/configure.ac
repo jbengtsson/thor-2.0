@@ -3,8 +3,8 @@
 AC_INIT(thor, 1.0)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/thor.cc)
+AM_INIT_AUTOMAKE()
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE([subdir-objects])
 # Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
@@ -26,4 +26,4 @@ AC_C_INLINE
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile src/Makefile)
