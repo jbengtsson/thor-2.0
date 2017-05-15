@@ -2,10 +2,8 @@
 #AC_INIT(thor/src/field.cc)
 AC_INIT(thor, 1.0)
 AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_SRCDIR(thor/src/field.cc)
-#AM_INIT_AUTOMAKE(thor, 1.0)
+AC_CONFIG_SRCDIR(src/thor.cc)
 AM_CONFIG_HEADER(config.h)
-#AM_INIT_AUTOMAKE
 AM_INIT_AUTOMAKE([subdir-objects])
 # Checks for programs.
 AC_PROG_AWK
@@ -14,11 +12,8 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_CPP
 AC_PROG_RANLIB
-#AC_PROG_CXX(gjb)
 AC_PROG_CXX
-#AC_PROG_F77(g77)
 AC_PROG_F77(gfortran)
-#AC_PROG_F77(g95)
 
 # Checks for libraries.
 
@@ -31,6 +26,4 @@ AC_C_INLINE
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
-AC_OUTPUT(Makefile
-          TPSA/Makefile
-          thor/Makefile thor/src/Makefile)
+AC_OUTPUT(Makefile)
