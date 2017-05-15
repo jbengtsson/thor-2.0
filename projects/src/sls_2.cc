@@ -954,7 +954,7 @@ int main(int argc, char *argv[])
   Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
   Id_scl[delta_] *= delta;
 
-  if (true) {
+  if (false) {
     danot_(NO-1);
     cavity_on = true; rad_on = true;
     get_Map();
