@@ -27,8 +27,8 @@
 !      parameter (lda=100000, lst=1000000000, lea=500000, lia=80000,         &
 !     &           lno=16, lnv=7)
 !      parameter (lda=200000, lst=2000000000, lea=500000, lia=80000,         &
-!      parameter (lda=30000, lst=200000000, lea=500000, lia=80000,         &
-      parameter (lda=200000, lst=800000000, lea=500000, lia=80000,      &
+      parameter (lda=100000, lst=200000000, lea=500000, lia=80000,      &
+!      parameter (lda=200000, lst=800000000, lea=500000, lia=80000,      &
      &           lno=16, lnv=7)
 
 

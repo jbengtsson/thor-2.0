@@ -231,7 +231,7 @@ void prt_h_K(void)
   K = MapNorm(Map, g, A1, A0, Map_res, no_tps); nus = dHdJ(K);
   CtoR(K, K_re, K_im);
 
-#if 1
+#if 0
   // Compute h at symmetry point of lattice; for a lattice with two super
   // periods.
   printf("\nprt_h_K: nu/2 = [%7.5f, %7.5f]\n",
@@ -985,7 +985,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (false) {
+  if (true) {
     prt_h_K();
     exit(0);
   }
