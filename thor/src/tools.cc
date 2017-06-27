@@ -64,7 +64,7 @@ void set_to_cout(std::ofstream &fp_out)
 {
   // redirect to cout
   fp_out.copyfmt(std::cout); fp_out.clear(std::cout.rdstate());
-  fp_out.basic_ios<char>::rdbuf(std::cout.rdbuf());
+  fp_out.std::basic_ios<char>::rdbuf(std::cout.rdbuf());
 }
 
 
