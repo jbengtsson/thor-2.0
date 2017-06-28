@@ -1,4 +1,4 @@
-#define NO 6
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -19,9 +19,10 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 double chi2 = 0e0;
 
-const bool tune_conf = true;
+const bool tune_conf = false;
 
-const double scl_h[] = {1e0, 1e0, 1e1}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
+// const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
+const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e0, 0*1e-9};
 
 struct param_type {
 private:
@@ -360,7 +361,7 @@ void prt_dnu(void)
  }
 
 
-void prt_bn(const param_type &bn_prms)
+void prt_bn1(const param_type &bn_prms)
 {
   int  j, k;
   FILE *outf;
@@ -415,6 +416,104 @@ void prt_bn(const param_type &bn_prms)
     fprintf(outf, "oyy:  multipole, l = 0.0, n = 1, Method = Meth,"
 	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   }
+
+  fclose(outf);
+}
+
+
+void prt_bn(const param_type &bn_prms)
+{
+  int  j, k;
+  FILE *outf;
+
+  const std::string file_name = "dnu.out";
+
+  outf = file_write(file_name.c_str());
+
+  k = 0;
+  fprintf(outf, "\nts1a:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "\ts1ab: sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts2a:  sextupole, l = 0.19,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts2ab: sextupole, l = 0.19,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts1b:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts2b:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts1c:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts2c:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts1d:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts2d:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts1e:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts2e:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
+  fclose(outf);
+}
+
+
+void prt_bn3(const param_type &bn_prms)
+{
+  int  j, k;
+  FILE *outf;
+
+  const std::string file_name = "dnu.out";
+
+  outf = file_write(file_name.c_str());
+
+  k = 0;
+  fprintf(outf, "\nts1a:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts2a:  sextupole, l = 0.19,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts1b:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts2b:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts1c:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "ts2c:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
+  k++;
+  fprintf(outf, "\ns1:    sextupole, l = 0.175, k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "s2:    sextupole, l = 0.175, k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "s3:    sextupole, l = 0.175, k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "s4:    sextupole, l = 0.175, k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "s5:    sextupole, l = 0.175, k = %12.5e, n = 3"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
   fclose(outf);
 }
@@ -518,6 +617,7 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
   printf("\n");
 
   prt_mfile("flat_file.fit");
+  prt_bn(bn_prms);
 
   free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_b4);
 }
@@ -915,13 +1015,12 @@ int main(int argc, char *argv[])
   int j;
 
   // Center of straight.
-#if 0
-  const double beta[]  = {3.0, 3.0},
-               A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
-#else
-  const double beta[]  = {3.4, 1.9},
-               A_max[] = {6e-3, 4e-3}, delta = 5e-2;
-#endif
+  // const double beta[]  = {3.0, 3.0},
+  //              A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
+  // const double beta[]  = {3.4, 1.9},
+  //              A_max[] = {6e-3, 4e-3}, delta = 5e-2;
+  const double beta[]  = {9.9, 5.4},
+               A_max[] = {15e-3, 8e-3}, delta = 3e-2;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -985,12 +1084,13 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (true) {
+  if (false) {
     prt_h_K();
     exit(0);
   }
 
-  if (false) {
+  switch (3) {
+  case 1:
     // MAX VI:
     bn_prms.add_prm("o1", 4, 5e5, 1.0);
     bn_prms.add_prm("o2", 4, 5e5, 1.0);
@@ -1001,7 +1101,8 @@ int main(int argc, char *argv[])
     bn_prms.add_prm("o2", 6, 5e10, 1.0);
     bn_prms.add_prm("o3", 6, 5e10, 1.0);
     bn_prms.add_prm("o4", 6, 5e10, 1.0);
-  } else {
+    break;
+  case 2:
     // SLS-2:
     bn_prms.add_prm("sfh",  3, 5e5, 1.0);
     bn_prms.add_prm("sdh",   3, 5e5, 1.0);
@@ -1022,16 +1123,47 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("oxy",  4, 5e10, 1.0);
       bn_prms.add_prm("oyy",  4, 5e10, 1.0);
     }
+    break;
+  case 3:
+    // DIAMOND:
+    if (true) {
+      bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1ab", 3, 5e5, 1.0);
+      bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2ab", 3, 5e5, 1.0);
+      bn_prms.add_prm("ts1b",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2b",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1c",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2c",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1d",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2d",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1e",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2e",  3, 5e5, 1.0);
+    } else {
+      bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1b",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2b",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1c",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2c",  3, 5e5, 1.0);
+
+      bn_prms.add_prm("s1",    3, 5e5, 1.0);
+      bn_prms.add_prm("s2",    3, 5e5, 1.0);
+      bn_prms.add_prm("s3",    3, 5e5, 1.0);
+      bn_prms.add_prm("s4",    3, 5e5, 1.0);
+      bn_prms.add_prm("s5",    3, 5e5, 1.0);
+    }
+    break;
   }
 
   // Step is 1.0 for conjugated gradient method.
-  bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-12; bn_prms.step = 1.0;
+  bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-10; bn_prms.step = 1.0;
 
-  // no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
+  no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
 
   bn_prms.ini_prm();
 
-  // fit_ksi1(0e0, 0e0);
+  fit_ksi1(0e0, 0e0);
 
   min_dnu(true);
 }
