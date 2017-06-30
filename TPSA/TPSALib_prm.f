@@ -33,10 +33,6 @@
 !     &           lno=16, lnv=7)
 !     For laptop.
       parameter (lda=100000, lst=230000000, lea=500000, lia=80000,         &
-=======
-      parameter (lda=200000, lst=500000000, lea=500000, lia=80000,      &
-!      parameter (lda=200000, lst=800000000, lea=500000, lia=80000,      &
->>>>>>> 6c4fa198940fd14bb224437553c353fffb7f3838
      &           lno=16, lnv=7)
 !      parameter (lda=200000, lst=800000000, lea=500000, lia=80000,      &
 !     &           lno=16, lnv=7)
