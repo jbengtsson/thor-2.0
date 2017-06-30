@@ -240,6 +240,10 @@ extern "C" {
   void dlnsrch(int n, double xold[], double fold, double g[], double p[],
 	       double x[], double *f, double stpmax, int *check,
 	       double (*func)(double []));
+  void dmrqmin(double x[], double y[], double sig[], int ndata, double a[],
+	       int ia[], int ma, double **covar, double **alpha, double *chisq,
+	       void (*funcs)(double, double [], double *, double [], int),
+	       double *alamda);
   double dpythag(double a, double b);
   void drealft(double data[], unsigned long n, int isign);
   void dsprsax(double sa[], unsigned long ija[], double x[], double b[],
