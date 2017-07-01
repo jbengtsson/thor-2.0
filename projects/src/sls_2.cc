@@ -1,4 +1,4 @@
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -17,12 +17,14 @@ int no_tps = NO,
 extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
-double chi2 = 0e0;
+double chi2 = 0e0, *f, **A;
 
-const bool tune_conf = false;
+const bool tune_conf = true;
+
+const int n_prt = 8;
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
-const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e0, 0*1e-9};
+const double scl_h[] = {1e0, 1e-1}, scl_dnu[] = {1e5, 1e0, 1e0, 1e-13};
 
 struct param_type {
 private:
@@ -82,8 +84,9 @@ void param_type::ini_prm(void)
       // Location.
       bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
     printf("%13.5e", bn[i]);
+    if (i % n_prt == 0) printf("\n");
   }
-  printf("\n");
+  if (n_prm % n_prt != 0) printf("\n");
 }
 
 
@@ -137,8 +140,9 @@ double param_type::set_dprm(void) const
     bn[i] /= bn_scl[i-1];
     dbn_max = max(fabs(dbn[i]), dbn_max);
     printf(" %13.5e", bn[i]);
+    if (i % n_prt == 0) printf("\n");
   }
-  printf("\n");
+  if (n_prm % n_prt != 0) printf("\n");
 
   return dbn_max;
 }
@@ -157,8 +161,9 @@ void param_type::set_prm(void) const
     else if (n[i-1] == -2)
       set_bn_s(-Fnum[i-1], n[i-1], bn_scl[i-1]*bn[i]);
     printf(" %13.5e", bn_scl[i-1]*bn[i]);
+    if (i % n_prt == 0) printf("\n");
   }
-  printf("\n");
+  if (n_prm % n_prt != 0) printf("\n");
 }
 
 
@@ -311,15 +316,11 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 }
 
 	
-void prt_dnu(void)
+void prt_dnu(tps &K)
 {
   tps          K_re, K_im;
   ss_vect<tps> nus;
 
-  danot_(NO-1);
-  get_Map();
-  danot_(NO);
-  K = MapNorm(Map, g, A1, A0, Map_res, no_tps);
   CtoR(K, K_re, K_im); nus = dHdJ(K);
   nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
 
@@ -612,9 +613,11 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
     bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
 
   printf("\nfit ksi:\n");
-  for (i = 1; i <= n_bn; i++)
+  for (i = 1; i <= n_bn; i++) {
     printf("%13.5e", bn_prms.bn[i]);
-  printf("\n");
+    if (i % n_prt == 0) printf("\n");
+  }
+  if (n_bn % n_prt != 0) printf("\n");
 
   prt_mfile("flat_file.fit");
   prt_bn(bn_prms);
@@ -623,7 +626,7 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 }
 
 
-double min_dnu_f(double *b4s)
+double get_f(double *bns)
 {
   int                 i;
   static double       chi2_ref = 1e30;
@@ -636,10 +639,10 @@ double min_dnu_f(double *b4s)
   n_powell++;
 
   // Do not change parameters.
-  if (prt) printf("min_dnu_f (incl. scaling):\n");
+  if (prt) printf("get_f (incl. scaling):\n");
   for (i = 1; i <= bn_prms.n_prm; i++) {
-    set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*b4s[i]);
-    if (prt) printf(" %13.5e", bn_prms.bn_scl[i-1]*b4s[i]);
+    set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*bns[i]);
+    if (prt) printf(" %13.5e", bn_prms.bn_scl[i-1]*bns[i]);
   }
   if (prt) printf("\n");
 
@@ -724,7 +727,7 @@ double min_dnu_f(double *b4s)
       printf("%11.3e", b[i]);
     printf("\n");
     for (i = 1; i <= bn_prms.n_prm; i++) 
-      printf("%11.3e", b4s[i]);
+      printf("%11.3e", bns[i]);
     printf("\n");
   }
 
@@ -734,30 +737,12 @@ double min_dnu_f(double *b4s)
 }
 
 
-void min_dnu_f_der(double x, double *bn, double *yfit, double *dyda, int n)
+void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 {
-  int    n_bn, i, j, m;
-  double *b, **A;
+  int    i, j;
   tps    h_re, h_im, K_re, K_im, K_re_scl;
 
-  const bool prt = true;
-  const int  m_max = 50;
-
-  n_bn = bn_prms.n_prm;
-
-  b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_bn);
-
-  n_powell++;
-
-  // Do not change parameters.
-  if (prt) printf("min_dnu_f (incl. scaling):\n");
-  for (i = 1; i <= bn_prms.n_prm; i++) {
-    set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*bn[i]);
-    if (prt) printf(" %13.5e", bn_prms.bn_scl[i-1]*bn[i]);
-  }
-  if (prt) printf("\n");
-
-  printf("\n");
+  // printf("\n");
   for (i = 1; i <= n_bn; i++) {
     bn_prms.set_prm_dep(i-1);
 
@@ -841,271 +826,108 @@ void min_dnu_f_der(double x, double *bn, double *yfit, double *dyda, int n)
   }
 
   m = 0;
-  b[++m] = -get_b(scl_h[0], h_re, 1, 0, 0, 0, 2);
-  b[++m] = -get_b(scl_h[0], h_re, 2, 0, 0, 0, 1);
-  b[++m] = -get_b(scl_h[0], h_re, 0, 0, 2, 0, 1);
+  f[++m] = get_b(scl_h[0], h_re, 1, 0, 0, 0, 2);
+  f[++m] = get_b(scl_h[0], h_re, 2, 0, 0, 0, 1);
+  f[++m] = get_b(scl_h[0], h_re, 0, 0, 2, 0, 1);
 
-  b[++m] = -get_b(scl_h[0], h_re, 1, 0, 1, 1, 0);
-  b[++m] = -get_b(scl_h[0], h_re, 2, 1, 0, 0, 0);
-  b[++m] = -get_b(scl_h[0], h_re, 3, 0, 0, 0, 0);
-  b[++m] = -get_b(scl_h[0], h_re, 1, 0, 0, 2, 0);
-  b[++m] = -get_b(scl_h[0], h_re, 1, 0, 2, 0, 0);
+  f[++m] = get_b(scl_h[0], h_re, 1, 0, 1, 1, 0);
+  f[++m] = get_b(scl_h[0], h_re, 2, 1, 0, 0, 0);
+  f[++m] = get_b(scl_h[0], h_re, 3, 0, 0, 0, 0);
+  f[++m] = get_b(scl_h[0], h_re, 1, 0, 0, 2, 0);
+  f[++m] = get_b(scl_h[0], h_re, 1, 0, 2, 0, 0);
 
-  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 1, 1, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 3, 1, 0, 0, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 4, 0, 0, 0, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 0, 2, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 2, 0, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 0, 0, 4, 0, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 0, 0, 3, 1, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 1, 1, 2, 0, 0);
+  f[++m] = get_b(scl_h[1], h_re, 2, 0, 1, 1, 0);
+  f[++m] = get_b(scl_h[1], h_re, 3, 1, 0, 0, 0);
+  f[++m] = get_b(scl_h[1], h_re, 4, 0, 0, 0, 0);
+  f[++m] = get_b(scl_h[1], h_re, 2, 0, 0, 2, 0);
+  f[++m] = get_b(scl_h[1], h_re, 2, 0, 2, 0, 0);
+  f[++m] = get_b(scl_h[1], h_re, 0, 0, 4, 0, 0);
+  f[++m] = get_b(scl_h[1], h_re, 0, 0, 3, 1, 0);
+  f[++m] = get_b(scl_h[1], h_re, 1, 1, 2, 0, 0);
 
-  b[++m] = -get_b(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1);
-  b[++m] = -get_b(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1);
+  f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1);
+  f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1);
 
-  b[++m] = -get_b(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 0);
-  b[++m] = -get_b(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 0);
-  b[++m] = -get_b(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 0);
+  f[++m] = get_b(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 0);
+  f[++m] = get_b(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 0);
+  f[++m] = get_b(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 0);
 
-  b[++m] = -get_b(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 2);
-  b[++m] = -get_b(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 2);
+  f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 2);
+  f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 2);
 
   if (NO >= 6) {
-    b[++m] = -get_b(scl_dnu[2], K_re_scl, 2, 2, 0, 0, 1);
-    b[++m] = -get_b(scl_dnu[2], K_re_scl, 0, 0, 2, 2, 1);
-    b[++m] = -get_b(scl_dnu[2], K_re_scl, 1, 1, 1, 1, 1);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 0, 0, 1);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 2, 2, 1);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 1, 1, 1);
 
-    b[++m] = -get_b(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 3);
-    b[++m] = -get_b(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 3);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 3);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 3);
   }
 
   if (NO >= 7) {
     if (!tune_conf) {
-      b[++m] = -get_b(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0);
-      b[++m] = -get_b(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0);
-      b[++m] = -get_b(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0);
-      b[++m] = -get_b(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
+      f[++m] = get_b(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0);
+      f[++m] = get_b(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0);
+      f[++m] = get_b(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0);
+      f[++m] = get_b(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
     } else {
-      b[++m] =
-	-scl_dnu[3]
+      f[++m] =
+	scl_dnu[3]
 	*(get_b(1e0, K_re, 3, 3, 0, 0, 0)
 	  +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
-      b[++m] =
-	-scl_dnu[3]
+      f[++m] =
+	scl_dnu[3]
 	*(get_b(1e0, K_re, 1, 1, 2, 2, 0)
 	  +get_b(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0));
 
-      b[++m] =
-	-scl_dnu[3]
+      f[++m] =
+	scl_dnu[3]
 	*(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 	  +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
-      b[++m] =
-	-scl_dnu[3]
+      f[++m] =
+	scl_dnu[3]
 	*(get_b(1e0, K_re, 2, 2, 1, 1, 0)
 	  +get_b(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0));
     }
   }
 
-  prt_system(m, n_bn, A, b);
-
   chi2 = 0e0;
   for (j = 1; j <= m; j++)
-    chi2 += sqr(b[j]);
+    chi2 += sqr(f[j]);
 
-  printf("\n%4d chi2: %12.5e\n", n_iter, chi2);
-
-  prt_dnu();
-
-  for (i = 1; i <= n_bn; i++) {
-    dyda[i] = 0e0;
-    for (j = 1; j <= m; j++)
-      dyda[i] += 2e0*b[j]*A[j][i];
-  }
-
-  free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_bn);
+  // prt_system(m, n_bn, A, f);
+  prt_dnu(K);
 }
 
 
-void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
-		  const bool cg_meth)
+void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
+		   const bool cg_meth)
 {
-  int    n_bn, i, j, m;
-  double chi2_ref, **A, *b, *bn_ref;
-  tps    h_re, h_im, K_re, K_im, K_re_scl;
+  int    n_bn, i, m;
+  double chi2_ref, **A, *f, *b, *bn_ref;
 
   const int m_max = 50;
 
   n_bn = bn_prms.n_prm;
 
-  bn_ref = dvector(1, n_bn);
-  b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_bn);
-
-  printf("\n");
-  for (i = 1; i <= n_bn; i++) {
-    bn_prms.set_prm_dep(i-1);
-
-    danot_(NO-1);
-    get_Map();
-    danot_(NO);
-    K = MapNorm(Map, g, A1, A0, Map_res, 1);
-    CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
-    K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl;
-
-    m = 0;
-    A[++m][i] = get_a(scl_h[0], h_re, 1, 0, 0, 0, 2);
-    A[++m][i] = get_a(scl_h[0], h_re, 2, 0, 0, 0, 1);
-    A[++m][i] = get_a(scl_h[0], h_re, 0, 0, 2, 0, 1);
-
-    A[++m][i] = get_a(scl_h[0], h_re, 1, 0, 1, 1, 0);
-    A[++m][i] = get_a(scl_h[0], h_re, 2, 1, 0, 0, 0);
-    A[++m][i] = get_a(scl_h[0], h_re, 3, 0, 0, 0, 0);
-    A[++m][i] = get_a(scl_h[0], h_re, 1, 0, 0, 2, 0);
-    A[++m][i] = get_a(scl_h[0], h_re, 1, 0, 2, 0, 0);
-
-    A[++m][i] = get_a(scl_h[1], h_re, 2, 0, 1, 1, 0);
-    A[++m][i] = get_a(scl_h[1], h_re, 3, 1, 0, 0, 0);
-    A[++m][i] = get_a(scl_h[1], h_re, 4, 0, 0, 0, 0);
-    A[++m][i] = get_a(scl_h[1], h_re, 2, 0, 0, 2, 0);
-    A[++m][i] = get_a(scl_h[1], h_re, 2, 0, 2, 0, 0);
-    A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 4, 0, 0);
-    A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 3, 1, 0);
-    A[++m][i] = get_a(scl_h[1], h_re, 1, 1, 2, 0, 0);
-
-    A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1);
-    A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1);
-
-    A[++m][i] = get_a(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 0);
-    A[++m][i] = get_a(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 0);
-    A[++m][i] = get_a(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 0);
-
-    A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 2);
-    A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 2);
-
-    if (NO >= 6) {
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 0, 0, 1);
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 2, 2, 1);
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 1, 1, 1);
-
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 3);
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 3);
-    }
-
-    if (NO >= 7) {
-      if (!tune_conf) {
-	A[++m][i] = get_a(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0);
-	A[++m][i] = get_a(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0);
-	A[++m][i] = get_a(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0);
-	A[++m][i] = get_a(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
-      } else {
-	A[++m][i] =
-	  scl_dnu[3]
-	  *(get_a(1e0, K_re, 3, 3, 0, 0, 0)
-	    +get_a(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
-	A[++m][i] =
-	  scl_dnu[3]
-	  *(get_a(1e0, K_re, 1, 1, 2, 2, 0)
-	    +get_a(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0));
-
-	A[++m][i] =
-	  scl_dnu[3]
-	  *(get_a(1e0, K_re, 0, 0, 3, 3, 0)
-	    +get_a(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
-	A[++m][i] =
-	  scl_dnu[3]
-	  *(get_a(1e0, K_re, 2, 2, 1, 1, 0)
-	    +get_a(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0));
-       }
-    }
-
-    for (j = 1; j <= m; j++)
-      A[j][i] *= bn_prms.bn_scl[i-1];
-
-    bn_prms.clr_prm_dep(i-1);
-  }
-
-  m = 0;
-  b[++m] = -get_b(scl_h[0], h_re, 1, 0, 0, 0, 2);
-  b[++m] = -get_b(scl_h[0], h_re, 2, 0, 0, 0, 1);
-  b[++m] = -get_b(scl_h[0], h_re, 0, 0, 2, 0, 1);
-
-  b[++m] = -get_b(scl_h[0], h_re, 1, 0, 1, 1, 0);
-  b[++m] = -get_b(scl_h[0], h_re, 2, 1, 0, 0, 0);
-  b[++m] = -get_b(scl_h[0], h_re, 3, 0, 0, 0, 0);
-  b[++m] = -get_b(scl_h[0], h_re, 1, 0, 0, 2, 0);
-  b[++m] = -get_b(scl_h[0], h_re, 1, 0, 2, 0, 0);
-
-  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 1, 1, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 3, 1, 0, 0, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 4, 0, 0, 0, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 0, 2, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 2, 0, 2, 0, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 0, 0, 4, 0, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 0, 0, 3, 1, 0);
-  b[++m] = -get_b(scl_h[1], h_re, 1, 1, 2, 0, 0);
-
-  b[++m] = -get_b(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1);
-  b[++m] = -get_b(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1);
-
-  b[++m] = -get_b(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 0);
-  b[++m] = -get_b(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 0);
-  b[++m] = -get_b(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 0);
-
-  b[++m] = -get_b(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 2);
-  b[++m] = -get_b(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 2);
-
-  if (NO >= 6) {
-    b[++m] = -get_b(scl_dnu[2], K_re_scl, 2, 2, 0, 0, 1);
-    b[++m] = -get_b(scl_dnu[2], K_re_scl, 0, 0, 2, 2, 1);
-    b[++m] = -get_b(scl_dnu[2], K_re_scl, 1, 1, 1, 1, 1);
-
-    b[++m] = -get_b(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 3);
-    b[++m] = -get_b(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 3);
-  }
-
-  if (NO >= 7) {
-    if (!tune_conf) {
-      b[++m] = -get_b(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0);
-      b[++m] = -get_b(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0);
-      b[++m] = -get_b(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0);
-      b[++m] = -get_b(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
-    } else {
-      b[++m] =
-	-scl_dnu[3]
-	*(get_b(1e0, K_re, 3, 3, 0, 0, 0)
-	  +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
-      b[++m] =
-	-scl_dnu[3]
-	*(get_b(1e0, K_re, 1, 1, 2, 2, 0)
-	  +get_b(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0));
-
-      b[++m] =
-	-scl_dnu[3]
-	*(get_b(1e0, K_re, 0, 0, 3, 3, 0)
-	  +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
-      b[++m] =
-	-scl_dnu[3]
-	*(get_b(1e0, K_re, 2, 2, 1, 1, 0)
-	  +get_b(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0));
-    }
-  }
+  bn_ref = dvector(1, n_bn); f = dvector(1, m_max); b = dvector(1, m_max);
+  A = dmatrix(1, m_max, 1, n_bn);
 
   chi2_ref = chi2;
   
-  chi2 = 0e0;
-  for (j = 1; j <= m; j++)
-    chi2 += sqr(b[j]);
+  get_f_grad(n_bn, f, A, chi2, m);
 
-  prt_system(m, n_bn, A, b);
   printf("\n%4d chi2: %12.5e -> %12.5e\n", n_iter, chi2_ref, chi2);
 
-  prt_dnu();
+  for (i = 1; i <= m; i++)
+    b[i] = -f[i];
 
   SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_cut, bn_prms.bn,
 	  bn_prms.dbn);
 
   dvcopy(bn_prms.bn, n_bn, bn_ref);
   if (cg_meth)
-    conj_grad(n_iter, bn_prms.bn, bn_prms.dbn, g_, h_, min_dnu_f);
+    conj_grad(n_iter, bn_prms.bn, bn_prms.dbn, g_, h_, get_f);
   else
     bn_prms.set_dprm();
 
@@ -1117,19 +939,19 @@ void min_dnu_grad(double &chi2, double &db4_max, double *g_, double *h_,
   for (i = 1; i <= n_bn; i++)
     printf("%13.5e", bn_prms.bn[i]);
   printf("\n");
-  db4_max = 0e0;
+  dbn_max = 0e0;
   for (i = 1; i <= n_bn; i++) {
-    db4_max = max(fabs((bn_prms.bn[i]-bn_ref[i])), db4_max);
+    dbn_max = max(fabs((bn_prms.bn[i]-bn_ref[i])), dbn_max);
     printf("%13.5e", bn_prms.bn[i]-bn_ref[i]);
   }
   printf("\n");
 
-  free_dvector(bn_ref, 1, n_bn);
+  free_dvector(bn_ref, 1, n_bn); free_dvector(f, 1, m_max);
   free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_bn);
 }
 
 
-void min_dnu(const bool cg_meth)
+void min_conj_grad(const bool cg_meth)
 {
   // Control tune foot print; conjugate gradient method.
   std::string str;
@@ -1146,19 +968,15 @@ void min_dnu(const bool cg_meth)
   do {
     n_iter++;
 
-    min_dnu_grad(chi2, dbn_max, g, h, cg_meth);
+    min_conj_grad(chi2, dbn_max, g, h, cg_meth);
 
     prt_mfile("flat_file.fit");
     prt_bn(bn_prms);
   } while ((dbn_max >  bn_prms.bn_tol) && (n_iter < n_iter_max));
-
-  free_dvector(g, 1, n_bn); free_dvector(h, 1, n_bn);
-  free_dvector(bn_prms.bn_lim, 1, n_bn); free_dvector(bn_prms.bn, 1, n_bn);
-  free_dvector(bn_prms.dbn, 1, n_bn);
 }
 
 
-void min_dnu2(void)
+void min_powell(void)
 {
   int    n_bn, i, j, iter;
   double **xi, fret;
@@ -1172,58 +990,117 @@ void min_dnu2(void)
     for (j = 1; j <= n_bn; j++)
       xi[i][j] = (i == j)? 1e0 : 0e0;
 
-  dpowell(bn_prms.bn, xi, n_bn, bn_prms.bn_tol, &iter, &fret, min_dnu_f);
+  dpowell(bn_prms.bn, xi, n_bn, bn_prms.bn_tol, &iter, &fret, get_f);
 
   free_dmatrix(xi, 1, n_bn, 1, n_bn);
 }
 
-
-void min_dnu3(void)
+void prt_lev_marq(void)
 {
-  int    n_bn, i, n, *ia;
+  int i;
+
+  prt_bn(bn_prms);
+
+  printf("%3d bn:\n", n_powell);
+  for (i = 1; i <= bn_prms.n_prm; i++) {
+    bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
+    printf("%11.3e", bn_prms.bn[i]);
+    if (i % n_prt == 0) printf("\n");
+  }
+  if (bn_prms.n_prm % n_prt != 0) printf("\n");
+  prt_mfile("flat_file.fit");
+}
+
+
+void get_f_der(double x, double *bn, double *yfit, double *dyda, int n)
+{
+  int        i, m1;
+  static int m;
+  double     chi2;
+
+  const bool prt = false;
+
+  m1 = (int)(x+0.5);
+  if (prt) printf(" %d", m1);
+
+  if (m1 == 1) {
+    n_powell++;
+    for (i = 1; i <= n; i++)
+      set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*bn[i]);
+    get_f_grad(n, f, A, chi2, m);
+  }
+
+  if (prt && (m1 == m)) {
+    printf("\n");
+    for (i = 1; i <= n; i++) {
+      printf("%13.5e", bn_prms.bn_scl[i-1]*bn[i]);
+      if (i % n_prt == 0) printf("\n");
+    }
+    if (n % n_prt != 0) printf("\n");
+  }
+
+  *yfit = f[m1];
+  
+  for (i = 1; i <= n; i++)
+    dyda[i] = A[m1][i];
+}
+
+
+void min_lev_marq(void)
+{
+  int    n_data, n_bn, i, n, *ia;
   double *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
 
-  const int n_data = 1;
+  if (NO == 5 )
+    n_data = 23;
+  else if (NO == 7) 
+    n_data = 32;
+  else {
+    printf("min_lev_marq: undef. parameter NO = %d\n", NO);
+    exit(0);
+  }
 
   n_bn = bn_prms.n_prm;
 
+  f = dvector(1, n_data); A = dmatrix(1, n_data, 1, n_bn);
+
   ia = ivector(1, n_bn);
-  x = dvector(1, 1); y = dvector(1, 1); sigma = dvector(1, 1);
+  x = dvector(1, n_data); y = dvector(1, n_data); sigma = dvector(1, n_data);
   covar = dmatrix(1, n_bn, 1, n_bn); alpha = dmatrix(1, n_bn, 1, n_bn);
 
+  for (i = 1; i <= n_bn; i++)
+    ia[i] = 1;
+
   for (i = 1; i <= n_data; i++) {
-    ia[i] = 1; sigma[i] = 1e0;
+    sigma[i] = 1e0; x[i] = i; y[i] = 0e0;
   }
 
-  alambda = -1e0;
+  alambda = -1e0; alambda0 = 1e-3;
   dmrqmin(x, y, sigma, n_data, bn_prms.bn, ia, n_bn, covar, alpha, &chisq,
-  	  min_dnu_f_der, &alambda);
-
-  n = 0; alambda0 = alambda;
+  	  get_f_der, &alambda);
+  printf("\nalambda = %7.1e, chi2 = %10.3e\n", alambda, chisq);
+  if (alambda < alambda0) prt_lev_marq();
+  alambda0 = alambda;
+ 
+  n = 0;
   do {
     n++;
-    printf("\nalambda = %9.1e\n", alambda);
     dmrqmin(x, y, sigma, n_data, bn_prms.bn, ia, n_bn,  covar, alpha, &chisq,
-	    min_dnu_f_der, &alambda);
-
-    if (alambda < alambda0) {
-      prt_bn(bn_prms);
-
-      printf("\n%3d bn:\n", n_powell);
-      for (i = 1; i <= n_bn; i++) 
-	printf("%11.3e", bn_prms.bn[i]);
-      printf("\n");
-    }
-
+	    get_f_der, &alambda);
+    printf("\nalambda = %7.1e, chi2 = %10.3e\n", alambda, chisq);
+    if (alambda < alambda0) prt_lev_marq();
     alambda0 = alambda;
   } while (n < 25);
 
   alambda = 0e0;
   dmrqmin(x, y, sigma, n_data, bn_prms.bn, ia, n_bn,  covar, alpha, &chisq,
-  	  min_dnu_f_der, &alambda);
+  	  get_f_der, &alambda);
+
+  free_dvector(f, 1, n_data); free_dmatrix(A, 1, n_data, 1, n_bn);
 
   free_ivector(ia, 1, n_bn);
-  free_dvector(x, 1, 1); free_dvector(y, 1, 1); free_dvector(sigma, 1, 1);
+  free_dvector(x, 1, n_data); free_dvector(y, 1, n_data);
+  free_dvector(sigma, 1, n_data);
   free_dmatrix(covar, 1, n_bn, 1, n_bn); free_dmatrix(alpha, 1, n_bn, 1, n_bn);
 }
 
@@ -1259,10 +1136,10 @@ int main(int argc, char *argv[])
   // Center of straight.
   // const double beta[]  = {3.0, 3.0},
   //              A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
-  // const double beta[]  = {3.4, 1.9},
-  //              A_max[] = {6e-3, 4e-3}, delta = 5e-2;
-  const double beta[]  = {9.9, 5.4},
-               A_max[] = {15e-3, 8e-3}, delta = 3e-2;
+  const double beta[]  = {3.4, 1.9},
+               A_max[] = {5e-3, 3e-3}, delta = 4e-2;
+  // const double beta[]  = {9.9, 5.4},
+  //              A_max[] = {15e-3, 8e-3}, delta = 3e-2;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -1331,7 +1208,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  switch (3) {
+  switch (2) {
   case 1:
     // MAX VI:
     bn_prms.add_prm("o1", 4, 5e5, 1.0);
@@ -1347,9 +1224,9 @@ int main(int argc, char *argv[])
   case 2:
     // SLS-2:
     bn_prms.add_prm("sfh",  3, 5e5, 1.0);
-    bn_prms.add_prm("sdh",   3, 5e5, 1.0);
-    bn_prms.add_prm("sfmh",  3, 5e5, 1.0);
-    bn_prms.add_prm("sdmh",  3, 5e5, 1.0);
+    bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+    bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
 
     bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
     bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
@@ -1401,13 +1278,13 @@ int main(int argc, char *argv[])
   // Step is 1.0 for conjugated gradient method.
   bn_prms.bn_tol = 1e-1; bn_prms.svd_cut = 1e-10; bn_prms.step = 1.0;
 
-  no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
+  // no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
 
   bn_prms.ini_prm();
 
   fit_ksi1(0e0, 0e0);
 
-  // min_dnu(true);
+  // min_conj_grad(true);
 
-  min_dnu3();
+  min_lev_marq();
 }
