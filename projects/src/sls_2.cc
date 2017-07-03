@@ -1249,7 +1249,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  switch (3) {
+  switch (2) {
   case 1:
     // MAX VI:
     bn_prms.add_prm("o1", 4, 5e5, 1.0);
@@ -1264,7 +1264,7 @@ int main(int argc, char *argv[])
     break;
   case 2:
     // SLS-2:
-    if (false) {
+    if (true) {
       bn_prms.add_prm("sfh",  3, 5e5, 1.0);
       bn_prms.add_prm("sdh",  3, 5e5, 1.0);
       bn_prms.add_prm("sfmh", 3, 5e5, 1.0);

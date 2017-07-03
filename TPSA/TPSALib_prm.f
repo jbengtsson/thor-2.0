@@ -32,9 +32,9 @@
 !     &           lno=16, lnv=7)
 !     For laptop.
 !     NO = 7:
-      parameter (lda=100000, lst=400000000, lea=500000, lia=80000,         &
+!      parameter (lda=100000, lst=400000000, lea=500000, lia=80000,         &
 !     NO = 9:
-!      parameter (lda=100000, lst=700000000, lea=500000, lia=80000,         &
+      parameter (lda=100000, lst=700000000, lea=500000, lia=80000,         &
      &           lno=16, lnv=7)
 !      parameter (lda=200000, lst=800000000, lea=500000, lia=80000,      &
 !     &           lno=16, lnv=7)
