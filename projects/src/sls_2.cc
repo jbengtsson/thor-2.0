@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -19,13 +19,13 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 double chi2 = 0e0, *f, **A;
 
-const bool tune_conf = true;
+const bool tune_conf = false;
 
 const int n_prt = 8;
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
-const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e-1, 1e-15},
-             scl_ksi[] = {1e5, 0*1e0};
+const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e0, 1e-15},
+             scl_ksi[] = {1e5, 1e0};
 
 struct param_type {
 private:
@@ -1177,10 +1177,10 @@ int main(int argc, char *argv[])
   // Center of straight.
   // const double beta[]  = {3.0, 3.0},
   //              A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
-  const double beta[]  = {3.4, 1.9},
-               A_max[] = {6e-3, 4e-3}, delta = 5e-2;
-  // const double beta[]  = {9.9, 5.4},
-  //              A_max[] = {15e-3, 8e-3}, delta = 3e-2;
+  // const double beta[]  = {3.4, 1.9},
+  //              A_max[] = {6e-3, 4e-3}, delta = 5e-2;
+  const double beta[]  = {9.9, 5.4},
+               A_max[] = {15e-3, 8e-3}, delta = 3e-2;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -1249,7 +1249,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  switch (2) {
+  switch (3) {
   case 1:
     // MAX VI:
     bn_prms.add_prm("o1", 4, 5e5, 1.0);
@@ -1286,7 +1286,7 @@ int main(int argc, char *argv[])
     break;
   case 3:
     // DIAMOND:
-    if (false) {
+    if (true) {
       bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
       bn_prms.add_prm("ts1ab", 3, 5e5, 1.0);
       bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
@@ -1323,7 +1323,7 @@ int main(int argc, char *argv[])
 
   bn_prms.ini_prm();
 
-  // fit_ksi1(0e0, 0e0);
+  fit_ksi1(0e0, 0e0);
 
   // min_conj_grad(true);
 
