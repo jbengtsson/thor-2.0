@@ -24,7 +24,8 @@ const bool tune_conf = true;
 const int n_prt = 8;
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
-const double scl_h[] = {1e0, 1e-1}, scl_dnu[] = {1e5, 1e0, 1e0, 1e-13};
+const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e-1, 1e-15},
+             scl_ksi[] = {1e5, 0*1e0};
 
 struct param_type {
 private:
@@ -83,7 +84,7 @@ void param_type::ini_prm(void)
     else if (n[i-1] == -2)
       // Location.
       bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
-    printf("%13.5e", bn[i]);
+    printf(" %12.5e", bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_prm % n_prt != 0) printf("\n");
@@ -139,7 +140,7 @@ double param_type::set_dprm(void) const
     }
     bn[i] /= bn_scl[i-1];
     dbn_max = max(fabs(dbn[i]), dbn_max);
-    printf(" %13.5e", bn[i]);
+    printf(" %12.5e", bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_prm % n_prt != 0) printf("\n");
@@ -160,7 +161,7 @@ void param_type::set_prm(void) const
       set_L(Fnum[i-1], bn_scl[i-1]*bn[i]);
     else if (n[i-1] == -2)
       set_bn_s(-Fnum[i-1], n[i-1], bn_scl[i-1]*bn[i]);
-    printf(" %13.5e", bn_scl[i-1]*bn[i]);
+    printf(" %12.5e", bn_scl[i-1]*bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_prm % n_prt != 0) printf("\n");
@@ -301,7 +302,9 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
       printf("cross terms\n");
     else if (i == 27)
       printf("3rd order chromaticity\n");
-    else if (i == 29) {
+    else if (i == 29)
+      printf("ampl. dependant tune shift\n");
+    else if (i == 34) {
       if (!tune_conf)
 	printf("ampl. dependant tune shift\n");
       else
@@ -326,16 +329,28 @@ void prt_dnu(tps &K)
 
   printf("\ndnu:\n");
   printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 0, 0, 0));
-  printf(" %8.5f",   h_ijklm(nus[3], 0, 0, 1, 1, 0));
+  printf(" %8.5f,",  h_ijklm(nus[3], 0, 0, 1, 1, 0));
+
   printf(" %8.5f",   h_ijklm(nus[3], 2, 2, 0, 0, 0));
   printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 1, 1, 0));
-  printf(" %8.5f\n", h_ijklm(nus[3], 0, 0, 2, 2, 0));
+  printf(" %8.5f,",  h_ijklm(nus[3], 0, 0, 2, 2, 0));
+
+  printf(" %8.5f",   h_ijklm(nus[3], 3, 3, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nus[3], 2, 2, 1, 1, 0));
+  printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 2, 2, 0));
+  printf(" %8.5f\n", h_ijklm(nus[3], 0, 0, 3, 3, 0));
 
   printf(" %8.5f",   h_ijklm(nus[4], 1, 1, 0, 0, 0));
-  printf(" %8.5f",   h_ijklm(nus[4], 0, 0, 1, 1, 0));
+  printf(" %8.5f,",  h_ijklm(nus[4], 0, 0, 1, 1, 0));
+
   printf(" %8.5f",   h_ijklm(nus[4], 2, 2, 0, 0, 0));
   printf(" %8.5f",   h_ijklm(nus[4], 1, 1, 1, 1, 0));
-  printf(" %8.5f\n", h_ijklm(nus[4], 0, 0, 2, 2, 0));
+  printf(" %8.5f,",  h_ijklm(nus[4], 0, 0, 2, 2, 0));
+
+  printf(" %8.5f",   h_ijklm(nus[4], 3, 3, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nus[4], 2, 2, 1, 1, 0));
+  printf(" %8.5f",   h_ijklm(nus[4], 1, 1, 2, 2, 0));
+  printf(" %8.5f\n", h_ijklm(nus[4], 0, 0, 3, 3, 0));
 
   printf("\n %8.5f", h_ijklm(nus[3], 0, 0, 0, 0, 2));
   printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 0, 0, 2));
@@ -614,7 +629,7 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 
   printf("\nfit ksi:\n");
   for (i = 1; i <= n_bn; i++) {
-    printf("%13.5e", bn_prms.bn[i]);
+    printf(" %12.5e", bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_bn % n_prt != 0) printf("\n");
@@ -642,7 +657,7 @@ double get_f(double *bns)
   if (prt) printf("get_f (incl. scaling):\n");
   for (i = 1; i <= bn_prms.n_prm; i++) {
     set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*bns[i]);
-    if (prt) printf(" %13.5e", bn_prms.bn_scl[i-1]*bns[i]);
+    if (prt) printf(" %12.5e", bn_prms.bn_scl[i-1]*bns[i]);
   }
   if (prt) printf("\n");
 
@@ -672,43 +687,51 @@ double get_f(double *bns)
   b.push_back(get_b(scl_h[1], h_re, 0, 0, 3, 1, 0));
   b.push_back(get_b(scl_h[1], h_re, 1, 1, 2, 0, 0));
 
-  b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1));
-  b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1));
+  b.push_back(get_b(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1));
+  b.push_back(get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1));
 
-  b.push_back(get_b(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 0));
-  b.push_back(get_b(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 0));
-  b.push_back(get_b(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 0));
+  b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 0));
+  b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 0));
+  b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 0));
 
-  b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 2));
-  b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 2));
+  b.push_back(get_b(scl_ksi[1], K_re_scl, 1, 1, 0, 0, 2));
+  b.push_back(get_b(scl_ksi[1], K_re_scl, 0, 0, 1, 1, 2));
 
   if (NO >= 6) {
-    b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 0, 0, 1));
-    b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 2, 2, 1));
-    b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 1, 1, 1));
+    b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 1));
+    b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 1));
+    b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 1));
 
-    b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 3));
-    b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 3));
+    b.push_back(get_b(scl_ksi[1], K_re_scl, 1, 1, 0, 0, 3));
+    b.push_back(get_b(scl_ksi[1], K_re_scl, 0, 0, 1, 1, 3));
   }
 
   if (NO >= 7) {
     if (!tune_conf) {
-      b.push_back(get_b(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0));
-      b.push_back(get_b(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0));
-      b.push_back(get_b(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0));
+      b.push_back(get_b(scl_dnu[0], K_re_scl, 3, 3, 0, 0, 0));
+      b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0));
+      b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0));
+      b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 3, 3, 0));
     } else {
-      b.push_back(scl_dnu[3]
+      if (NO >= 9) {
+	b.push_back(get_b(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0));
+	b.push_back(get_b(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0));
+	b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0));
+	b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0));
+	b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0));
+      }
+
+      b.push_back(scl_dnu[1]
 		  *(get_b(1e0, K_re, 3, 3, 0, 0, 0)
 		    +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0)));
-      b.push_back(scl_dnu[3]
+      b.push_back(scl_dnu[1]
 		  *(get_b(1e0, K_re, 1, 1, 2, 2, 0)
 		    +get_b(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0)));
 
-      b.push_back(scl_dnu[3]
+      b.push_back(scl_dnu[1]
 		  *(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 		    +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0)));
-      b.push_back(scl_dnu[3]
+      b.push_back(scl_dnu[1]
 		  *(get_b(1e0, K_re, 2, 2, 1, 1, 0)
 		    +get_b(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0)));
     }
@@ -773,47 +796,55 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 3, 1, 0);
     A[++m][i] = get_a(scl_h[1], h_re, 1, 1, 2, 0, 0);
 
-    A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1);
-    A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1);
+    A[++m][i] = get_a(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
+    A[++m][i] = get_a(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
 
-    A[++m][i] = get_a(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 0);
-    A[++m][i] = get_a(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 0);
-    A[++m][i] = get_a(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 0);
+    A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 0);
+    A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 0);
+    A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 0);
 
-    A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 2);
-    A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 2);
+    A[++m][i] = get_a(scl_ksi[1], K_re_scl, 1, 1, 0, 0, 2);
+    A[++m][i] = get_a(scl_ksi[1], K_re_scl, 0, 0, 1, 1, 2);
 
     if (NO >= 6) {
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 0, 0, 1);
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 2, 2, 1);
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 1, 1, 1);
+      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 1);
+      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 1);
+      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 1);
 
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 3);
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 3);
+      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 1, 1, 0, 0, 3);
+      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 0, 0, 1, 1, 3);
     }
 
     if (NO >= 7) {
       if (!tune_conf) {
-	A[++m][i] = get_a(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0);
-	A[++m][i] = get_a(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0);
-	A[++m][i] = get_a(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0);
-	A[++m][i] = get_a(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
+	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 3, 3, 0, 0, 0);
+	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0);
+	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
+	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 3, 3, 0);
       } else {
+	if (NO >= 9) {
+	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0);
+	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0);
+	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0);
+	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0);
+	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0);
+	}
+
 	A[++m][i] =
-	  scl_dnu[3]
+	  scl_dnu[1]
 	  *(get_a(1e0, K_re, 3, 3, 0, 0, 0)
 	    +get_a(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
 	A[++m][i] =
-	  scl_dnu[3]
+	  scl_dnu[1]
 	  *(get_a(1e0, K_re, 1, 1, 2, 2, 0)
 	    +get_a(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0));
 
 	A[++m][i] =
-	  scl_dnu[3]
+	  scl_dnu[1]
 	  *(get_a(1e0, K_re, 0, 0, 3, 3, 0)
 	    +get_a(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
 	A[++m][i] =
-	  scl_dnu[3]
+	  scl_dnu[1]
 	  *(get_a(1e0, K_re, 2, 2, 1, 1, 0)
 	    +get_a(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0));
        }
@@ -845,47 +876,55 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   f[++m] = get_b(scl_h[1], h_re, 0, 0, 3, 1, 0);
   f[++m] = get_b(scl_h[1], h_re, 1, 1, 2, 0, 0);
 
-  f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 0, 0, 1);
-  f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 1, 1, 1);
+  f[++m] = get_b(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
+  f[++m] = get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
 
-  f[++m] = get_b(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 0);
-  f[++m] = get_b(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 0);
-  f[++m] = get_b(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 0);
+  f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 0);
+  f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 0);
+  f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 0);
 
-  f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 2);
-  f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 2);
+  f[++m] = get_b(scl_ksi[1], K_re_scl, 1, 1, 0, 0, 2);
+  f[++m] = get_b(scl_ksi[1], K_re_scl, 0, 0, 1, 1, 2);
 
   if (NO >= 6) {
-    f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 0, 0, 1);
-    f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 2, 2, 1);
-    f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 1, 1, 1);
+    f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 1);
+    f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 1);
+    f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 1);
 
-    f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 0, 0, 3);
-    f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 1, 1, 3);
+    f[++m] = get_b(scl_ksi[1], K_re_scl, 1, 1, 0, 0, 3);
+    f[++m] = get_b(scl_ksi[1], K_re_scl, 0, 0, 1, 1, 3);
   }
 
   if (NO >= 7) {
     if (!tune_conf) {
-      f[++m] = get_b(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0);
-      f[++m] = get_b(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0);
-      f[++m] = get_b(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
+      f[++m] = get_b(scl_dnu[0], K_re_scl, 3, 3, 0, 0, 0);
+      f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0);
+      f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
+      f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 3, 3, 0);
     } else {
+      if (NO >= 9) {
+	f[++m] = get_b(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0);
+	f[++m] = get_b(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0);
+	f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0);
+	f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0);
+	f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0);
+      }
+
       f[++m] =
-	scl_dnu[3]
+	scl_dnu[1]
 	*(get_b(1e0, K_re, 3, 3, 0, 0, 0)
 	  +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
       f[++m] =
-	scl_dnu[3]
+	scl_dnu[1]
 	*(get_b(1e0, K_re, 1, 1, 2, 2, 0)
 	  +get_b(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0));
 
       f[++m] =
-	scl_dnu[3]
+	scl_dnu[1]
 	*(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 	  +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
       f[++m] =
-	scl_dnu[3]
+	scl_dnu[1]
 	*(get_b(1e0, K_re, 2, 2, 1, 1, 0)
 	  +get_b(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0));
     }
@@ -894,9 +933,6 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   chi2 = 0e0;
   for (j = 1; j <= m; j++)
     chi2 += sqr(f[j]);
-
-  // prt_system(m, n_bn, A, f);
-  prt_dnu(K);
 }
 
 
@@ -937,12 +973,12 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
 
   printf("\nbn & dbn (incl. scaling):\n");
   for (i = 1; i <= n_bn; i++)
-    printf("%13.5e", bn_prms.bn[i]);
+    printf(" %12.5e", bn_prms.bn[i]);
   printf("\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_bn; i++) {
     dbn_max = max(fabs((bn_prms.bn[i]-bn_ref[i])), dbn_max);
-    printf("%13.5e", bn_prms.bn[i]-bn_ref[i]);
+    printf(" %12.5e", bn_prms.bn[i]-bn_ref[i]);
   }
   printf("\n");
 
@@ -995,13 +1031,16 @@ void min_powell(void)
   free_dmatrix(xi, 1, n_bn, 1, n_bn);
 }
 
-void prt_lev_marq(void)
+void prt_lev_marq(const int m, const int n)
 {
   int i;
 
+  prt_system(m, n, A, f);
+  prt_dnu(K);
+
   prt_bn(bn_prms);
 
-  printf("%3d bn:\n", n_powell);
+  printf("\n%d bn:\n", n_powell);
   for (i = 1; i <= bn_prms.n_prm; i++) {
     bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
     printf("%11.3e", bn_prms.bn[i]);
@@ -1033,7 +1072,7 @@ void get_f_der(double x, double *bn, double *yfit, double *dyda, int n)
   if (prt && (m1 == m)) {
     printf("\n");
     for (i = 1; i <= n; i++) {
-      printf("%13.5e", bn_prms.bn_scl[i-1]*bn[i]);
+      printf(" %12.5e", bn_prms.bn_scl[i-1]*bn[i]);
       if (i % n_prt == 0) printf("\n");
     }
     if (n % n_prt != 0) printf("\n");
@@ -1055,6 +1094,8 @@ void min_lev_marq(void)
     n_data = 23;
   else if (NO == 7) 
     n_data = 32;
+  else if (NO == 9) 
+    n_data = 37;
   else {
     printf("min_lev_marq: undef. parameter NO = %d\n", NO);
     exit(0);
@@ -1078,8 +1119,8 @@ void min_lev_marq(void)
   alambda = -1e0; alambda0 = 1e-3;
   dmrqmin(x, y, sigma, n_data, bn_prms.bn, ia, n_bn, covar, alpha, &chisq,
   	  get_f_der, &alambda);
-  printf("\nalambda = %7.1e, chi2 = %10.3e\n", alambda, chisq);
-  if (alambda < alambda0) prt_lev_marq();
+  printf("\nalambda = %7.1e, chi2 = %9.3e\n", alambda, chisq);
+  if (alambda < alambda0) prt_lev_marq(n_data, n_bn);
   alambda0 = alambda;
  
   n = 0;
@@ -1087,8 +1128,8 @@ void min_lev_marq(void)
     n++;
     dmrqmin(x, y, sigma, n_data, bn_prms.bn, ia, n_bn,  covar, alpha, &chisq,
 	    get_f_der, &alambda);
-    printf("\nalambda = %7.1e, chi2 = %10.3e\n", alambda, chisq);
-    if (alambda < alambda0) prt_lev_marq();
+    printf("\nalambda = %7.1e, chi2 = %9.3e\n", alambda, chisq);
+    if (alambda < alambda0) prt_lev_marq(n_data, n_bn);
     alambda0 = alambda;
   } while (n < 25);
 
@@ -1122,7 +1163,7 @@ void prt_ct(const int n, const double delta)
     ps[x_] = 0*2.6e-3; ps[delta_] = delta1;
     ps.propagate(1, n_elem);
 
-    fprintf(outf, "%3d %13.5e %13.5e\n", k, delta1, ps[ct_]);
+    fprintf(outf, "%3d %12.5e %12.5e\n", k, delta1, ps[ct_]);
   }
 
   fclose(outf);
@@ -1137,7 +1178,7 @@ int main(int argc, char *argv[])
   // const double beta[]  = {3.0, 3.0},
   //              A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
   const double beta[]  = {3.4, 1.9},
-               A_max[] = {5e-3, 3e-3}, delta = 4e-2;
+               A_max[] = {6e-3, 4e-3}, delta = 5e-2;
   // const double beta[]  = {9.9, 5.4},
   //              A_max[] = {15e-3, 8e-3}, delta = 3e-2;
 
@@ -1223,16 +1264,16 @@ int main(int argc, char *argv[])
     break;
   case 2:
     // SLS-2:
-    bn_prms.add_prm("sfh",  3, 5e5, 1.0);
-    bn_prms.add_prm("sdh",  3, 5e5, 1.0);
-    bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+    if (false) {
+      bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+      bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+      bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+      bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
 
-    bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
-    bn_prms.add_prm("syyh", 3, 5e5, 1.0);
-
-    if (true) {
+      bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
+      bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
+      bn_prms.add_prm("syyh", 3, 5e5, 1.0);
+    } else {
       bn_prms.add_prm("ocx",  4, 5e10, 1.0);
       bn_prms.add_prm("ocxm", 4, 5e10, 1.0);
       bn_prms.add_prm("ocy",  4, 5e10, 1.0);
@@ -1282,7 +1323,7 @@ int main(int argc, char *argv[])
 
   bn_prms.ini_prm();
 
-  fit_ksi1(0e0, 0e0);
+  // fit_ksi1(0e0, 0e0);
 
   // min_conj_grad(true);
 
