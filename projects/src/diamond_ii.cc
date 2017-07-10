@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -24,7 +24,7 @@ const bool tune_conf = true;
 const int n_prt = 8;
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
-const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e0, 1e-15},
+const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e0, 1e-14},
              scl_ksi[] = {1e5, 1e0};
 
 struct param_type {
@@ -321,60 +321,57 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 	
 void prt_dnu(tps &K)
 {
-  tps          K_re, K_im;
+  tps          K_re, K_im, nu_scl[2];
   ss_vect<tps> nus;
 
   CtoR(K, K_re, K_im); nus = dHdJ(K);
-  nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
+  nu_scl[0] = nus[3]*Id_scl; nu_scl[1] = nus[4]*Id_scl;
 
   printf("\ndnu:\n");
-  printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 0, 0, 0));
-  printf(" %8.5f,",  h_ijklm(nus[3], 0, 0, 1, 1, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[0], 1, 1, 0, 0, 0));
+  printf(" %8.5f,",  h_ijklm(nu_scl[0], 0, 0, 1, 1, 0));
 
-  printf(" %8.5f",   h_ijklm(nus[3], 2, 2, 0, 0, 0));
-  printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 1, 1, 0));
-  printf(" %8.5f,",  h_ijklm(nus[3], 0, 0, 2, 2, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[0], 2, 2, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[0], 1, 1, 1, 1, 0));
+  printf(" %8.5f,",  h_ijklm(nu_scl[0], 0, 0, 2, 2, 0));
 
-  printf(" %8.5f",   h_ijklm(nus[3], 3, 3, 0, 0, 0));
-  printf(" %8.5f",   h_ijklm(nus[3], 2, 2, 1, 1, 0));
-  printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 2, 2, 0));
-  printf(" %8.5f\n", h_ijklm(nus[3], 0, 0, 3, 3, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[0], 3, 3, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[0], 2, 2, 1, 1, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[0], 1, 1, 2, 2, 0));
+  printf(" %8.5f\n", h_ijklm(nu_scl[0], 0, 0, 3, 3, 0));
 
-  printf(" %8.5f",   h_ijklm(nus[4], 1, 1, 0, 0, 0));
-  printf(" %8.5f,",  h_ijklm(nus[4], 0, 0, 1, 1, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[1], 1, 1, 0, 0, 0));
+  printf(" %8.5f,",  h_ijklm(nu_scl[1], 0, 0, 1, 1, 0));
 
-  printf(" %8.5f",   h_ijklm(nus[4], 2, 2, 0, 0, 0));
-  printf(" %8.5f",   h_ijklm(nus[4], 1, 1, 1, 1, 0));
-  printf(" %8.5f,",  h_ijklm(nus[4], 0, 0, 2, 2, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[1], 2, 2, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[1], 1, 1, 1, 1, 0));
+  printf(" %8.5f,",  h_ijklm(nu_scl[1], 0, 0, 2, 2, 0));
 
-  printf(" %8.5f",   h_ijklm(nus[4], 3, 3, 0, 0, 0));
-  printf(" %8.5f",   h_ijklm(nus[4], 2, 2, 1, 1, 0));
-  printf(" %8.5f",   h_ijklm(nus[4], 1, 1, 2, 2, 0));
-  printf(" %8.5f\n", h_ijklm(nus[4], 0, 0, 3, 3, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[1], 3, 3, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[1], 2, 2, 1, 1, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[1], 1, 1, 2, 2, 0));
+  printf(" %8.5f\n", h_ijklm(nu_scl[1], 0, 0, 3, 3, 0));
 
-  printf("\n %8.5f", h_ijklm(nus[3], 0, 0, 0, 0, 2));
-  printf(" %8.5f",   h_ijklm(nus[3], 1, 1, 0, 0, 2));
-  printf(" %8.5f\n", h_ijklm(nus[3], 0, 0, 1, 1, 2));
+  printf("\n %8.5f", h_ijklm(nu_scl[0], 0, 0, 0, 0, 2));
+  printf(" %8.5f",   h_ijklm(nu_scl[0], 1, 1, 0, 0, 2));
+  printf(" %8.5f\n", h_ijklm(nu_scl[0], 0, 0, 1, 1, 2));
 
-  printf(" %8.5f",   h_ijklm(nus[4], 0, 0, 0, 0, 2));
-  printf(" %8.5f",   h_ijklm(nus[4], 1, 1, 0, 0, 2));
-  printf(" %8.5f\n", h_ijklm(nus[4], 0, 0, 1, 1, 2));
+  printf(" %8.5f",   h_ijklm(nu_scl[1], 0, 0, 0, 0, 2));
+  printf(" %8.5f",   h_ijklm(nu_scl[1], 1, 1, 0, 0, 2));
+  printf(" %8.5f\n", h_ijklm(nu_scl[1], 0, 0, 1, 1, 2));
 
   printf("\nTune confinement:\n");
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(K_re, 3, 3, 0, 0, 0),
 	 h_ijklm(K_re/(3e0*twoJ[X_]), 2, 2, 0, 0, 0));
   printf(" %11.3e %11.3e\n",
-	 h_ijklm(K_re, 1, 1, 2, 2, 0),
-	 h_ijklm(K_re/(2e0*twoJ[Y_]), 1, 1, 1, 1, 0));
-
-  printf("\n %11.3e %11.3e\n",
 	 h_ijklm(K_re, 0, 0, 3, 3, 0),
 	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0));
-  printf(" %11.3e %11.3e\n",
-	 h_ijklm(K_re, 2, 2, 1, 1, 0),
-	 h_ijklm(K_re/(2e0*twoJ[X_]), 1, 1, 1, 1, 0));
- }
+  printf(" %11.3e %11.3e %11.3e\n",
+	 h_ijklm(K_re*Id_scl, 1, 1, 1, 1, 0),
+	 h_ijklm(K_re*Id_scl, 2, 2, 1, 1, 0),
+	 h_ijklm(K_re*Id_scl, 1, 1, 2, 2, 0));
+}
 
 
 void prt_bn1(const param_type &bn_prms)
@@ -721,19 +718,14 @@ double get_f(double *bns)
 	b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0));
       }
 
+      b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0));
+      b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0));
       b.push_back(scl_dnu[1]
 		  *(get_b(1e0, K_re, 3, 3, 0, 0, 0)
 		    +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0)));
       b.push_back(scl_dnu[1]
-		  *(get_b(1e0, K_re, 1, 1, 2, 2, 0)
-		    +get_b(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0)));
-
-      b.push_back(scl_dnu[1]
 		  *(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 		    +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0)));
-      b.push_back(scl_dnu[1]
-		  *(get_b(1e0, K_re, 2, 2, 1, 1, 0)
-		    +get_b(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0)));
     }
   }
 
@@ -830,23 +822,16 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0);
 	}
 
+	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0);
+	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
 	A[++m][i] =
 	  scl_dnu[1]
 	  *(get_a(1e0, K_re, 3, 3, 0, 0, 0)
 	    +get_a(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
 	A[++m][i] =
 	  scl_dnu[1]
-	  *(get_a(1e0, K_re, 1, 1, 2, 2, 0)
-	    +get_a(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0));
-
-	A[++m][i] =
-	  scl_dnu[1]
 	  *(get_a(1e0, K_re, 0, 0, 3, 3, 0)
 	    +get_a(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
-	A[++m][i] =
-	  scl_dnu[1]
-	  *(get_a(1e0, K_re, 2, 2, 1, 1, 0)
-	    +get_a(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0));
        }
     }
 
@@ -910,23 +895,16 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 	f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0);
       }
 
+      f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0);
+      f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
       f[++m] =
 	scl_dnu[1]
 	*(get_b(1e0, K_re, 3, 3, 0, 0, 0)
 	  +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
       f[++m] =
 	scl_dnu[1]
-	*(get_b(1e0, K_re, 1, 1, 2, 2, 0)
-	  +get_b(1e0/(2e0*twoJ[Y_]), K_re, 1, 1, 1, 1, 0));
-
-      f[++m] =
-	scl_dnu[1]
 	*(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 	  +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
-      f[++m] =
-	scl_dnu[1]
-	*(get_b(1e0, K_re, 2, 2, 1, 1, 0)
-	  +get_b(1e0/(2e0*twoJ[X_]), K_re, 1, 1, 1, 1, 0));
     }
   }
 
@@ -1328,6 +1306,8 @@ int main(int argc, char *argv[])
     bn_prms.add_prm("s2d", 3, 5e5, 1.0);
     bn_prms.add_prm("sx1", 3, 5e5, 1.0);
     bn_prms.add_prm("sy1", 3, 5e5, 1.0);
+
+    bn_prms.add_prm("s3",  3, 5e5, 1.0);
     break;
   }
 
