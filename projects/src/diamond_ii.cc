@@ -19,7 +19,7 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 double chi2 = 0e0, *f, **A;
 
-const bool tune_conf = false;
+const bool tune_conf = true;
 
 const int n_prt = 8;
 
@@ -1031,6 +1031,7 @@ void min_powell(void)
   free_dmatrix(xi, 1, n_bn, 1, n_bn);
 }
 
+
 void prt_lev_marq(const int m, const int n)
 {
   int i;
@@ -1104,6 +1105,9 @@ void min_lev_marq(void)
   n_bn = bn_prms.n_prm;
 
   f = dvector(1, n_data); A = dmatrix(1, n_data, 1, n_bn);
+
+  get_f_grad(n_bn, f, A, chi2, n_data);
+  prt_system(n_data, n_bn, A, f);
 
   ia = ivector(1, n_bn);
   x = dvector(1, n_data); y = dvector(1, n_data); sigma = dvector(1, n_data);
