@@ -1165,7 +1165,7 @@ int main(int argc, char *argv[])
   //              A_max[] = {15e-3, 8e-3}, delta = 3e-2;
   // DIAMOND-II.
   const double beta[]  = {10.6, 8.6},
-               A_max[] = {6e-3, 3e-3}, delta = 3e-2;
+               A_max[] = {5e-3, 3e-3}, delta = 3e-2;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
