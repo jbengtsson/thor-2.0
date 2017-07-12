@@ -19,7 +19,7 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 double chi2 = 0e0, *f, **A;
 
-const bool tune_conf = true;
+const bool tune_conf = false;
 
 const int n_prt = 8;
 
@@ -304,7 +304,7 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
       printf("3rd order chromaticity\n");
     else if (i == 29)
       printf("ampl. dependant tune shift\n");
-    else if (i == 34) {
+    else if (i == 33) {
       if (!tune_conf)
 	printf("ampl. dependant tune shift\n");
       else
@@ -374,116 +374,6 @@ void prt_dnu(tps &K)
 }
 
 
-void prt_bn1(const param_type &bn_prms)
-{
-  int  k;
-  FILE *outf;
-
-  const std::string file_name = "dnu.out";
-
-  outf = file_write(file_name.c_str());
-
-  k = 0;
-  fprintf(outf, "sfh:   sextupole, l = 0.05, k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "sdh:   sextupole, l = 0.05, k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "sfmh:  sextupole, l = 0.05, k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "sdmh:  sextupole, l = 0.05, k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "\nsxxh: sextupole, l = 0.05, k = %12.5e, n = 3"
-  	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "sxyh: sextupole, l = 0.05, k = %12.5e, n = 3"
-  	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "syyh: sextupole, l = 0.05, k = %12.5e, n = 3"
-  	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-
-  if (true) {
-    k++;
-    fprintf(outf, "\nocx:  multipole, l = 0.0, n = 1, Method = Meth,"
-	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-    k++;
-    fprintf(outf, "ocxm: multipole, l = 0.0, n = 1, Method = Meth,"
-	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-    k++;
-    fprintf(outf, "ocy:  multipole, l = 0.0, n = 1, Method = Meth,"
-	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-    k++;
-    fprintf(outf, "ocym: multipole, l = 0.0, n = 1, Method = Meth,"
-	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-
-    k++;
-    fprintf(outf, "\noxx:  multipole, l = 0.0, n = 1, Method = Meth,"
-	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-    k++;
-    fprintf(outf, "oxy:  multipole, l = 0.0, n = 1, Method = Meth,"
-	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-    k++;
-    fprintf(outf, "oyy:  multipole, l = 0.0, n = 1, Method = Meth,"
-	    " HOM = (4, %12.5e, 0.0);\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  }
-
-  fclose(outf);
-}
-
-
-void prt_bn2(const param_type &bn_prms)
-{
-  int  k;
-  FILE *outf;
-
-  const std::string file_name = "dnu.out";
-
-  outf = file_write(file_name.c_str());
-
-  k = 0;
-  fprintf(outf, "\nts1a:  sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts1ab: sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts2a:  sextupole, l = 0.19,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts2ab: sextupole, l = 0.19,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts1b:  sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts2b:  sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts1c:  sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts2c:  sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts1d:  sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts2d:  sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts1e:  sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts2e:  sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-
-  fclose(outf);
-}
-
-
 void prt_bn(const param_type &bn_prms)
 {
   int  k;
@@ -494,38 +384,25 @@ void prt_bn(const param_type &bn_prms)
   outf = file_write(file_name.c_str());
 
   k = 0;
-  fprintf(outf, "\nts1a:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+  fprintf(outf, "\ns1b: sextupole, l = 0.25,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts2a:  sextupole, l = 0.19,  k = %12.5e, n = 3"
+  fprintf(outf, "s1d: sextupole, l = 0.25,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts1b:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+  fprintf(outf, "s2b: sextupole, l = 0.25,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts2b:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+  fprintf(outf, "s2d: sextupole, l = 0.25,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts1c:  sextupole, l = 0.29,  k = %12.5e, n = 3"
+  fprintf(outf, "sx1: sextupole, l = 0.25,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts2c:  sextupole, l = 0.29,  k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-
-  k++;
-  fprintf(outf, "\ns1:    sextupole, l = 0.175, k = %12.5e, n = 3"
+  fprintf(outf, "sy2: sextupole, l = 0.2,   k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "s2:    sextupole, l = 0.175, k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "s3:    sextupole, l = 0.175, k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "s4:    sextupole, l = 0.175, k = %12.5e, n = 3"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "s5:    sextupole, l = 0.175, k = %12.5e, n = 3"
+  fprintf(outf, "s3:  sextupole, l = 0.0,   k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
   fclose(outf);
@@ -710,14 +587,6 @@ double get_f(double *bns)
       b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0));
       b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 3, 3, 0));
     } else {
-      if (NO >= 9) {
-	b.push_back(get_b(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0));
-	b.push_back(get_b(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0));
-	b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0));
-	b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0));
-	b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0));
-      }
-
       b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0));
       b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0));
       b.push_back(scl_dnu[1]
@@ -727,6 +596,14 @@ double get_f(double *bns)
 		  *(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 		    +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0)));
     }
+  }
+
+  if (NO >= 9) {
+    b.push_back(get_b(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0));
+    b.push_back(get_b(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0));
+    b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0));
+    b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0));
+    b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0));
   }
 
   chi2 = 0e0;
@@ -814,14 +691,6 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
 	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 3, 3, 0);
       } else {
-	if (NO >= 9) {
-	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0);
-	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0);
-	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0);
-	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0);
-	  A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0);
-	}
-
 	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0);
 	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
 	A[++m][i] =
@@ -833,6 +702,14 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 	  *(get_a(1e0, K_re, 0, 0, 3, 3, 0)
 	    +get_a(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
        }
+    }
+
+    if (NO >= 9) {
+      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0);
+      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0);
+      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0);
+      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0);
     }
 
     for (j = 1; j <= m; j++)
@@ -887,14 +764,6 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
       f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 3, 3, 0);
     } else {
-      if (NO >= 9) {
-	f[++m] = get_b(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0);
-	f[++m] = get_b(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0);
-	f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0);
-	f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0);
-	f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0);
-      }
-
       f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0);
       f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
       f[++m] =
@@ -906,6 +775,14 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 	*(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 	  +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
     }
+  }
+
+  if (NO >= 9) {
+    f[++m] = get_b(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0);
+    f[++m] = get_b(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0);
+    f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0);
+    f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0);
+    f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0);
   }
 
   chi2 = 0e0;
@@ -1188,6 +1065,10 @@ int main(int argc, char *argv[])
 
   danot_(1);
 
+  printf("\nscl_h:   %7.1e, %7.1e\n", scl_h[0], scl_h[1]);
+  printf("scl_dnu: %7.1e, %7.1e\n", scl_dnu[0], scl_dnu[1]);
+  printf("scl_ksi: %7.1e, %7.1e\n", scl_ksi[0], scl_ksi[1]);
+
   get_nu_ksi();
 
   for (j = 0; j < 2; j++)
@@ -1318,7 +1199,7 @@ int main(int argc, char *argv[])
 
   bn_prms.ini_prm();
 
-  fit_ksi1(0e0, 0e0);
+  // fit_ksi1(0e0, 0e0);
 
   // min_conj_grad(true);
 
