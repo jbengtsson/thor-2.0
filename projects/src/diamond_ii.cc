@@ -1,4 +1,4 @@
-#define NO 9
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -399,7 +399,7 @@ void prt_bn(const param_type &bn_prms)
   fprintf(outf, "sx1: sextupole, l = 0.25,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "sy2: sextupole, l = 0.2,   k = %12.5e, n = nsext"
+  fprintf(outf, "sy1: sextupole, l = 0.2,   k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
   fprintf(outf, "s3:  sextupole, l = 0.0,   k = %12.5e, n = nsext"
@@ -1198,6 +1198,8 @@ int main(int argc, char *argv[])
   // no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
 
   bn_prms.ini_prm();
+
+  // prt_bn(bn_prms);
 
   // fit_ksi1(0e0, 0e0);
 
