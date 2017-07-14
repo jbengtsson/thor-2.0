@@ -1201,7 +1201,7 @@ int main(int argc, char *argv[])
 
   // prt_bn(bn_prms);
 
-  // fit_ksi1(0e0, 0e0);
+  fit_ksi1(0e0, 0e0);
 
   // min_conj_grad(true);
 
