@@ -18,6 +18,7 @@ aclocal.m4
 *.mod
 
 # Data and graphics files.
+bin
 *.dat
 *.out
 *.ps
