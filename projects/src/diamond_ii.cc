@@ -541,7 +541,7 @@ double get_f(double *bns)
   danot_(NO);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
-  K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl;
+  K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl; h_im = h_im*Id_scl;
 
   b.push_back(get_b(scl_h[0], h_re, 1, 0, 0, 0, 2));
   b.push_back(get_b(scl_h[0], h_re, 2, 0, 0, 0, 1));
@@ -665,7 +665,7 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     danot_(NO);
     K = MapNorm(Map, g, A1, A0, Map_res, 1);
     CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
-    K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl;
+    K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl; h_im = h_im*Id_scl;
 
     m = 0;
     A[++m][i] = get_a(scl_h[0], h_re, 1, 0, 0, 0, 2);
@@ -1011,7 +1011,7 @@ void min_lev_marq(void)
   double *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
 
   if (NO == 5 )
-    n_data = 23 + 16;
+    n_data = 23;
   else if (NO == 7) 
     n_data = 32;
   else if (NO == 9) 
@@ -1024,14 +1024,13 @@ void min_lev_marq(void)
 
   n_bn = bn_prms.n_prm;
 
+  ia = ivector(1, n_bn);
+  x = dvector(1, n_data); y = dvector(1, n_data); sigma = dvector(1, n_data);
+  covar = dmatrix(1, n_bn, 1, n_bn); alpha = dmatrix(1, n_bn, 1, n_bn);
   f_lm = dvector(1, n_data); A_lm = dmatrix(1, n_data, 1, n_bn);
 
   get_f_grad(n_bn, f_lm, A_lm, chi2, n_data);
   prt_system(n_data, n_bn, A_lm, f_lm);
-
-  ia = ivector(1, n_bn);
-  x = dvector(1, n_data); y = dvector(1, n_data); sigma = dvector(1, n_data);
-  covar = dmatrix(1, n_bn, 1, n_bn); alpha = dmatrix(1, n_bn, 1, n_bn);
 
   for (i = 1; i <= n_bn; i++)
     ia[i] = 1;
@@ -1062,7 +1061,6 @@ void min_lev_marq(void)
   	  get_f_der, &alambda);
 
   free_dvector(f_lm, 1, n_data); free_dmatrix(A_lm, 1, n_data, 1, n_bn);
-
   free_ivector(ia, 1, n_bn);
   free_dvector(x, 1, n_data); free_dvector(y, 1, n_data);
   free_dvector(sigma, 1, n_data);
