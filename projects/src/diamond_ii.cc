@@ -17,9 +17,9 @@ int no_tps = NO,
 extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
-double chi2 = 0e0, *f, **A;
+double chi2 = 0e0, *f_lm, **A_lm;
 
-const bool tune_conf = false;
+const bool symm = false, tune_conf = false;
 
 const int n_prt = 8;
 
@@ -276,7 +276,7 @@ void prt_h_K(void)
 
 void prt_system(const int m, const int n_b2, double **A, double *b)
 {
-  int i, j;
+  int i, j, d;
 
   printf("\n Ax = b:\n");
   for (j = 1; j <= n_b2; j++)
@@ -285,6 +285,7 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else
       printf("%11d", j);
   printf("\n");
+  d = (symm)? 0 : 16;
   for (i = 1; i <= m; i++) {
     if (i == 1)
       printf("1st order chromatic\n");
@@ -561,6 +562,27 @@ double get_f(double *bns)
   b.push_back(get_b(scl_h[1], h_re, 0, 0, 3, 1, 0));
   b.push_back(get_b(scl_h[1], h_re, 1, 1, 2, 0, 0));
 
+  if (!symm) {
+    b.push_back(get_b(scl_h[0], h_im, 1, 0, 0, 0, 2));
+    b.push_back(get_b(scl_h[0], h_im, 2, 0, 0, 0, 1));
+    b.push_back(get_b(scl_h[0], h_im, 0, 0, 2, 0, 1));
+
+    b.push_back(get_b(scl_h[0], h_im, 1, 0, 1, 1, 0));
+    b.push_back(get_b(scl_h[0], h_im, 2, 1, 0, 0, 0));
+    b.push_back(get_b(scl_h[0], h_im, 3, 0, 0, 0, 0));
+    b.push_back(get_b(scl_h[0], h_im, 1, 0, 0, 2, 0));
+    b.push_back(get_b(scl_h[0], h_im, 1, 0, 2, 0, 0));
+
+    b.push_back(get_b(scl_h[1], h_im, 2, 0, 1, 1, 0));
+    b.push_back(get_b(scl_h[1], h_im, 3, 1, 0, 0, 0));
+    b.push_back(get_b(scl_h[1], h_im, 4, 0, 0, 0, 0));
+    b.push_back(get_b(scl_h[1], h_im, 2, 0, 0, 2, 0));
+    b.push_back(get_b(scl_h[1], h_im, 2, 0, 2, 0, 0));
+    b.push_back(get_b(scl_h[1], h_im, 0, 0, 4, 0, 0));
+    b.push_back(get_b(scl_h[1], h_im, 0, 0, 3, 1, 0));
+    b.push_back(get_b(scl_h[1], h_im, 1, 1, 2, 0, 0));
+  }
+
   b.push_back(get_b(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1));
   b.push_back(get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1));
 
@@ -665,6 +687,27 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 3, 1, 0);
     A[++m][i] = get_a(scl_h[1], h_re, 1, 1, 2, 0, 0);
 
+    if (!symm) {
+      A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 0, 0, 2);
+      A[++m][i] = get_a(scl_h[0], h_im, 2, 0, 0, 0, 1);
+      A[++m][i] = get_a(scl_h[0], h_im, 0, 0, 2, 0, 1);
+
+      A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 1, 1, 0);
+      A[++m][i] = get_a(scl_h[0], h_im, 2, 1, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[0], h_im, 3, 0, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 0, 2, 0);
+      A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 2, 0, 0);
+
+      A[++m][i] = get_a(scl_h[1], h_im, 2, 0, 1, 1, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 3, 1, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 4, 0, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 2, 0, 0, 2, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 2, 0, 2, 0, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 0, 0, 4, 0, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 0, 0, 3, 1, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 1, 1, 2, 0, 0);
+    }
+
     A[++m][i] = get_a(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
     A[++m][i] = get_a(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
 
@@ -737,6 +780,27 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   f[++m] = get_b(scl_h[1], h_re, 0, 0, 4, 0, 0);
   f[++m] = get_b(scl_h[1], h_re, 0, 0, 3, 1, 0);
   f[++m] = get_b(scl_h[1], h_re, 1, 1, 2, 0, 0);
+
+  if (!symm) {
+    f[++m] = get_b(scl_h[0], h_im, 1, 0, 0, 0, 2);
+    f[++m] = get_b(scl_h[0], h_im, 2, 0, 0, 0, 1);
+    f[++m] = get_b(scl_h[0], h_im, 0, 0, 2, 0, 1);
+
+    f[++m] = get_b(scl_h[0], h_im, 1, 0, 1, 1, 0);
+    f[++m] = get_b(scl_h[0], h_im, 2, 1, 0, 0, 0);
+    f[++m] = get_b(scl_h[0], h_im, 3, 0, 0, 0, 0);
+    f[++m] = get_b(scl_h[0], h_im, 1, 0, 0, 2, 0);
+    f[++m] = get_b(scl_h[0], h_im, 1, 0, 2, 0, 0);
+
+    f[++m] = get_b(scl_h[1], h_im, 2, 0, 1, 1, 0);
+    f[++m] = get_b(scl_h[1], h_im, 3, 1, 0, 0, 0);
+    f[++m] = get_b(scl_h[1], h_im, 4, 0, 0, 0, 0);
+    f[++m] = get_b(scl_h[1], h_im, 2, 0, 0, 2, 0);
+    f[++m] = get_b(scl_h[1], h_im, 2, 0, 2, 0, 0);
+    f[++m] = get_b(scl_h[1], h_im, 0, 0, 4, 0, 0);
+    f[++m] = get_b(scl_h[1], h_im, 0, 0, 3, 1, 0);
+    f[++m] = get_b(scl_h[1], h_im, 1, 1, 2, 0, 0);
+  }
 
   f[++m] = get_b(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
   f[++m] = get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
@@ -891,7 +955,7 @@ void prt_lev_marq(const int m, const int n)
 {
   int i;
 
-  prt_system(m, n, A, f);
+  prt_system(m, n, A_lm, f_lm);
   prt_dnu(K);
 
   prt_bn(bn_prms);
@@ -922,7 +986,7 @@ void get_f_der(double x, double *bn, double *yfit, double *dyda, int n)
     n_powell++;
     for (i = 1; i <= n; i++)
       set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*bn[i]);
-    get_f_grad(n, f, A, chi2, m);
+    get_f_grad(n, f_lm, A_lm, chi2, m);
   }
 
   if (prt && (m1 == m)) {
@@ -934,10 +998,10 @@ void get_f_der(double x, double *bn, double *yfit, double *dyda, int n)
     if (n % n_prt != 0) printf("\n");
   }
 
-  *yfit = f[m1];
+  *yfit = f_lm[m1];
   
   for (i = 1; i <= n; i++)
-    dyda[i] = A[m1][i];
+    dyda[i] = A_lm[m1][i];
 }
 
 
@@ -947,7 +1011,7 @@ void min_lev_marq(void)
   double *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
 
   if (NO == 5 )
-    n_data = 23;
+    n_data = 23 + 16;
   else if (NO == 7) 
     n_data = 32;
   else if (NO == 9) 
@@ -956,13 +1020,14 @@ void min_lev_marq(void)
     printf("min_lev_marq: undef. parameter NO = %d\n", NO);
     exit(0);
   }
+  if (!symm )n_data += 16;
 
   n_bn = bn_prms.n_prm;
 
-  f = dvector(1, n_data); A = dmatrix(1, n_data, 1, n_bn);
+  f_lm = dvector(1, n_data); A_lm = dmatrix(1, n_data, 1, n_bn);
 
-  get_f_grad(n_bn, f, A, chi2, n_data);
-  prt_system(n_data, n_bn, A, f);
+  get_f_grad(n_bn, f_lm, A_lm, chi2, n_data);
+  prt_system(n_data, n_bn, A_lm, f_lm);
 
   ia = ivector(1, n_bn);
   x = dvector(1, n_data); y = dvector(1, n_data); sigma = dvector(1, n_data);
@@ -996,7 +1061,7 @@ void min_lev_marq(void)
   dmrqmin(x, y, sigma, n_data, bn_prms.bn, ia, n_bn,  covar, alpha, &chisq,
   	  get_f_der, &alambda);
 
-  free_dvector(f, 1, n_data); free_dmatrix(A, 1, n_data, 1, n_bn);
+  free_dvector(f_lm, 1, n_data); free_dmatrix(A_lm, 1, n_data, 1, n_bn);
 
   free_ivector(ia, 1, n_bn);
   free_dvector(x, 1, n_data); free_dvector(y, 1, n_data);
@@ -1038,11 +1103,12 @@ int main(int argc, char *argv[])
   //              A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
   // const double beta[]  = {3.4, 1.9},
   //              A_max[] = {6e-3, 4e-3}, delta = 5e-2;
-  // const double beta[]  = {9.9, 5.4},
-  //              A_max[] = {15e-3, 8e-3}, delta = 3e-2;
+  // DIAMOND.
+  const double beta[]  = {9.9, 5.4},
+               A_max[] = {15e-3, 8e-3}, delta = 3e-2;
   // DIAMOND-II.
-  const double beta[]  = {10.6, 8.6},
-               A_max[] = {5e-3, 3e-3}, delta = 3e-2;
+  // const double beta[]  = {10.6, 8.6},
+  //              A_max[] = {5e-3, 3e-3}, delta = 3e-2;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -1115,7 +1181,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  switch (4) {
+  switch (3) {
   case 1:
     // MAX VI:
     bn_prms.add_prm("o1", 4, 5e5, 1.0);
@@ -1179,6 +1245,7 @@ int main(int argc, char *argv[])
       // bn_prms.add_prm("s4",    3, 5e5, 1.0);
       // bn_prms.add_prm("s5",    3, 5e5, 1.0);
     }
+    break;
   case 4:
     // DIAMOND-II:
     bn_prms.add_prm("s1b", 3, 5e5, 1.0);
