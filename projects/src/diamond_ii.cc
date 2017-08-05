@@ -19,9 +19,10 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 double chi2 = 0e0, *f_lm, **A_lm;
 
-const bool symm = true, tune_conf = false;
+const bool symm = false, tune_conf = false;
 
-const int lat_case = 5, n_prt = 8;
+// DIAMOND 3, DIAMOND-II 4-BA 4, DIAMOND-II 5-BA 6.
+const int lat_case = 3, n_prt = 8;
 
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
@@ -258,16 +259,15 @@ void prt_h_K(void)
   file_wr(outf, "h.out");
   outf << h_re*Id_scl << h_im*Id_scl;
   outf.close();
+
   file_wr(outf, "K.out");
   outf << K_re*Id_scl << K_im*Id_scl;
   outf.close();
 
   nus[3] = nus[3]*Id_scl; nus[4] = nus[4]*Id_scl;
-
   daeps_(1e-5);
-
   file_wr(outf, "nus.out");
-  // Make a trivial evaluation for truncation.
+  // Remove numeric noise.
   outf << 1e0*nus[3] << 1e0*nus[4];
   outf.close();
 
@@ -497,6 +497,9 @@ void prt_bn(const param_type &bn_prms)
 {
 
   switch (lat_case) {
+  case 3:
+    prt_bn_3(bn_prms);
+    break;
   case 5:
     prt_bn_5(bn_prms);
     break;
@@ -1114,7 +1117,7 @@ void min_lev_marq(void)
     printf("min_lev_marq: undef. parameter NO = %d\n", NO);
     exit(0);
   }
-  if (!symm )n_data += 16;
+  if (!symm) n_data += 16;
 
   n_bn = bn_prms.n_prm;
 
@@ -1223,9 +1226,10 @@ int main(int argc, char *argv[])
 
     danot_(1);
 
-    printf("\nscl_h:   %7.1e, %7.1e\n", scl_h[0], scl_h[1]);
-    printf("scl_dnu: %7.1e, %7.1e\n", scl_dnu[0], scl_dnu[1]);
-    printf("scl_ksi: %7.1e, %7.1e\n", scl_ksi[0], scl_ksi[1]);
+    printf("\nscl_h:     %7.1e, %7.1e\n", scl_h[0], scl_h[1]);
+    printf("scl_dnu:   %7.1e, %7.1e\n", scl_dnu[0], scl_dnu[1]);
+    printf("scl_ksi:   %7.1e, %7.1e\n", scl_ksi[0], scl_ksi[1]);
+    printf("symmetric: %d\n", symm);
 
     get_nu_ksi();
 
@@ -1376,7 +1380,7 @@ int main(int argc, char *argv[])
 
     // prt_bn(bn_prms);
 
-    // fit_ksi1(0e0, 0e0);
+    fit_ksi1(0e0, 0e0);
 
     // min_conj_grad(true);
 
