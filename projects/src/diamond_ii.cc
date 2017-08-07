@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -19,15 +19,28 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 double chi2 = 0e0, *f_lm, **A_lm;
 
-const bool symm = false, tune_conf = false;
+const bool symm = true, tune_conf = false;
 
-// DIAMOND 3, DIAMOND-II 4-BA 4, DIAMOND-II 5-BA 6.
-const int lat_case = 3, n_prt = 8;
+// MAX-IV           1,
+// SLS-2            2,
+// DIAMOND          3,
+// DIAMOND-II 4-BA  4,
+// DIAMOND-II 6-BA  5.
+const int lat_case = 5, n_prt = 8;
+
+// Center of straight.
+const double
+  beta_inj[][2] = {{3.0, 3.0}, {3.4, 1.9}, {9.9, 5.4}, {10.6, 8.6}, {9.4, 2.7}},
+  A_max[][2] =
+    {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {5e-3, 3e-3}, {6e-3, 4e-3}},
+  delta_max[] = {3e-2, 5e-2, 3e-2, 3e-2, 3e-2};
 
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
-const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e0, 1e-14},
-  scl_ksi[] = {1e5, 1e0};
+const double scl_h[]   = {1e0, 1e-1},
+             scl_dnu[] = {1e-1, 1e-14},
+             scl_ksi[] = {1e5, 1e-1};
+
 
 struct param_type {
 private:
@@ -487,6 +500,12 @@ void prt_bn_5(const param_type &bn_prms)
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
   fprintf(outf, "sf1:  sextupole, l = 0.14, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sh1a: sextupole, l = 0.14, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sh1e: sextupole, l = 0.14, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
   fclose(outf);
@@ -1193,18 +1212,6 @@ int main(int argc, char *argv[])
 {
   int j;
 
-  // Center of straight.
-  // const double beta[]  = {3.0, 3.0},
-  //              A_max[] = {1.2e-3, 1.2e-3}, delta = 3e-2;
-  // const double beta[]  = {3.4, 1.9},
-  //              A_max[] = {6e-3, 4e-3}, delta = 5e-2;
-  // DIAMOND.
-  const double beta[]  = {9.9, 5.4},
-    A_max[] = {15e-3, 8e-3}, delta = 3e-2;
-    // DIAMOND-II.
-    // const double beta[]  = {10.6, 8.6},
-    //              A_max[] = {5e-3, 3e-3}, delta = 3e-2;
-
     rad_on    = false; H_exact        = false; totpath_on   = false;
     cavity_on = false; quad_fringe_on = false; emittance_on = false;
     IBS_on    = false;
@@ -1227,19 +1234,24 @@ int main(int argc, char *argv[])
     danot_(1);
 
     printf("\nscl_h:     %7.1e, %7.1e\n", scl_h[0], scl_h[1]);
-    printf("scl_dnu:   %7.1e, %7.1e\n", scl_dnu[0], scl_dnu[1]);
+    printf("scl_dnu:          %7.1e, %7.1e\n", scl_dnu[0], scl_dnu[1]);
     printf("scl_ksi:   %7.1e, %7.1e\n", scl_ksi[0], scl_ksi[1]);
     printf("symmetric: %d\n", symm);
+    printf("/nA_max:     %7.1e, %7.1e\n",
+	   A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
+    printf("delta_max: %7.1e\n", delta_max[lat_case-1]);
+    printf("beta_inj:  %7.1e, %7.1e\n",
+	   beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
 
     get_nu_ksi();
 
     for (j = 0; j < 2; j++)
-      twoJ[j] = sqr(A_max[j])/beta[j];
+      twoJ[j] =	sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
 
     Id_scl.identity();
     Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
     Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
-    Id_scl[delta_] *= delta;
+    Id_scl[delta_] *= delta_max[lat_case-1];
 
     if (false) {
       danot_(NO-1);
@@ -1368,6 +1380,8 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("sf21", 3, 5e5, 1.0);
       bn_prms.add_prm("sd31", 3, 5e5, 1.0);
       bn_prms.add_prm("sf1",  3, 5e5, 1.0);
+      bn_prms.add_prm("sh1a", 3, 5e5, 1.0);
+      bn_prms.add_prm("sh1e", 3, 5e5, 1.0);
       break;
     }
 
