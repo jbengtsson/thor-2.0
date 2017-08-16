@@ -1,4 +1,4 @@
-#define NO 9
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -23,22 +23,24 @@ const bool symm = true, tune_conf = false;
 
 // MAX-IV           1,
 // SLS-2            2,
-// DIAMOND          3,
-// DIAMOND-II 4-BA  4,
-// DIAMOND-II 6-BA  5.
-const int lat_case = 5, n_prt = 8;
+// DIAMOND          3, with VMX 4,
+// DIAMOND-II 4-BA  5,
+// DIAMOND-II 6-BA  6.
+const int lat_case = 4, n_prt = 8;
 
 // Center of straight.
 const double
-  beta_inj[][2] = {{3.0, 3.0}, {3.4, 1.9}, {9.9, 5.4}, {10.6, 8.6}, {9.4, 2.7}},
+  beta_inj[][2] = {{3.0, 3.0}, {3.4, 1.9}, {9.9, 5.4}, {9.9, 5.4}, {10.6, 8.6},
+		   {9.4, 2.7}},
   A_max[][2] =
-    {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {5e-3, 3e-3}, {6e-3, 4e-3}},
-  delta_max[] = {3e-2, 5e-2, 3e-2, 3e-2, 3e-2};
+    {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
+     {6e-3, 4e-3}},
+  delta_max[] = {3e-2, 5e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
-const double scl_h[]   = {1e0, 1e-1},
-             scl_dnu[] = {1e-1, 1e-14},
+const double scl_h[]   = {1e0, 1e0},
+             scl_dnu[] = {1e0, 1e-14},
              scl_ksi[] = {1e5, 1e-1};
 
 
@@ -457,9 +459,9 @@ void prt_bn_3(const param_type &bn_prms)
   k++;
   fprintf(outf, "ts2c:  sextupole, l = 0.29, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "ts1d:  sextupole, l = 0.29, k = %12.5e, n = nsext"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  // k++;
+  // fprintf(outf, "ts1d:  sextupole, l = 0.29, k = %12.5e, n = nsext"
+  // 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
   fprintf(outf, "ts2d:  sextupole, l = 0.29, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
@@ -470,11 +472,29 @@ void prt_bn_3(const param_type &bn_prms)
   fprintf(outf, "ts2e:  sextupole, l = 0.29, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
+  if (lat_case == 4) {
+    k++;
+    fprintf(outf, "s1:    sextupole, l = 0.175, k = %12.5e, n = nsext"
+	    ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    k++;
+    fprintf(outf, "s2:    sextupole, l = 0.175, k = %12.5e, n = nsext"
+	    ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    k++;
+    fprintf(outf, "s3:    sextupole, l = 0.175, k = %12.5e, n = nsext"
+	    ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    k++;
+    fprintf(outf, "s4:    sextupole, l = 0.175, k = %12.5e, n = nsext"
+	    ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    k++;
+    fprintf(outf, "s5:    sextupole, l = 0.175, k = %12.5e, n = nsext"
+	    ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  }
+
   fclose(outf);
 }
 
 
-void prt_bn_5(const param_type &bn_prms)
+void prt_bn_6(const param_type &bn_prms)
 {
   int  k;
   FILE *outf;
@@ -499,7 +519,7 @@ void prt_bn_5(const param_type &bn_prms)
   fprintf(outf, "sd31: sextupole, l = 0.14, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "sf1:  sextupole, l = 0.14, k = %12.5e, n = nsext"
+  fprintf(outf, "sf1:  sextupole, l = 0.07, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
   fprintf(outf, "sh1a: sextupole, l = 0.14, k = %12.5e, n = nsext"
@@ -516,11 +536,11 @@ void prt_bn(const param_type &bn_prms)
 {
 
   switch (lat_case) {
-  case 3:
+  case 3 ... 4:
     prt_bn_3(bn_prms);
     break;
-  case 5:
-    prt_bn_5(bn_prms);
+  case 6:
+    prt_bn_6(bn_prms);
     break;
   }
 }
@@ -1234,10 +1254,10 @@ int main(int argc, char *argv[])
     danot_(1);
 
     printf("\nscl_h:     %7.1e, %7.1e\n", scl_h[0], scl_h[1]);
-    printf("scl_dnu:          %7.1e, %7.1e\n", scl_dnu[0], scl_dnu[1]);
+    printf("scl_dnu:   %7.1e, %7.1e\n", scl_dnu[0], scl_dnu[1]);
     printf("scl_ksi:   %7.1e, %7.1e\n", scl_ksi[0], scl_ksi[1]);
     printf("symmetric: %d\n", symm);
-    printf("/nA_max:     %7.1e, %7.1e\n",
+    printf("\nA_max:     %7.1e, %7.1e\n",
 	   A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
     printf("delta_max: %7.1e\n", delta_max[lat_case-1]);
     printf("beta_inj:  %7.1e, %7.1e\n",
@@ -1324,7 +1344,7 @@ int main(int argc, char *argv[])
 	bn_prms.add_prm("oyy",  4, 5e10, 1.0);
       }
       break;
-    case 3:
+    case 3 ... 4:
       // DIAMOND:
       if (true) {
 	bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
@@ -1335,17 +1355,19 @@ int main(int argc, char *argv[])
 	bn_prms.add_prm("ts2b",  3, 5e5, 1.0);
 	bn_prms.add_prm("ts1c",  3, 5e5, 1.0);
 	bn_prms.add_prm("ts2c",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts1d",  3, 5e5, 1.0);
+	// bn_prms.add_prm("ts1d",  3, 5e5, 1.0);
 	bn_prms.add_prm("ts2d",  3, 5e5, 1.0);
 	bn_prms.add_prm("ts1e",  3, 5e5, 1.0);
 	bn_prms.add_prm("ts2e",  3, 5e5, 1.0);
 
-	// VMX.
-	// bn_prms.add_prm("s1",    3, 5e5, 1.0);
-	// bn_prms.add_prm("s2",    3, 5e5, 1.0);
-	// bn_prms.add_prm("s3",    3, 5e5, 1.0);
-	// bn_prms.add_prm("s4",    3, 5e5, 1.0);
-	// bn_prms.add_prm("s5",    3, 5e5, 1.0);
+	if (lat_case == 4) {
+	  // VMX.
+	  bn_prms.add_prm("s1", 3, 5e5, 1.0);
+	  bn_prms.add_prm("s2", 3, 5e5, 1.0);
+	  bn_prms.add_prm("s3", 3, 5e5, 1.0);
+	  bn_prms.add_prm("s4", 3, 5e5, 1.0);
+	  bn_prms.add_prm("s5", 3, 5e5, 1.0);
+	}
       } else {
 	bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
 	bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
@@ -1361,7 +1383,7 @@ int main(int argc, char *argv[])
 	// bn_prms.add_prm("s5",    3, 5e5, 1.0);
       }
       break;
-    case 4:
+    case 5:
       // DIAMOND-II, 4-BA:
       bn_prms.add_prm("s1b", 3, 5e5, 1.0);
       bn_prms.add_prm("s1d", 3, 5e5, 1.0);
@@ -1372,7 +1394,7 @@ int main(int argc, char *argv[])
 
       bn_prms.add_prm("s3",  3, 5e5, 1.0);
       break;
-    case 5:
+    case 6:
       // DIAMOND-II, 6-BA:
       bn_prms.add_prm("sd1",  3, 5e5, 1.0);
       bn_prms.add_prm("sd2",  3, 5e5, 1.0);
