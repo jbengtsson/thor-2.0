@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -26,7 +26,7 @@ const bool symm = true, tune_conf = false;
 // DIAMOND          3, with VMX 4,
 // DIAMOND-II 4-BA  5,
 // DIAMOND-II 6-BA  6.
-const int lat_case = 4, n_prt = 8;
+const int lat_case = 3, n_prt = 8;
 
 // Center of straight.
 const double
@@ -40,7 +40,7 @@ const double
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
 const double scl_h[]   = {1e0, 1e0},
-             scl_dnu[] = {1e0, 1e-14},
+             scl_dnu[] = {1e-1, 1e-14},
              scl_ksi[] = {1e5, 1e-1};
 
 
@@ -436,40 +436,40 @@ void prt_bn_3(const param_type &bn_prms)
   outf = file_write(file_name.c_str());
 
   k = 0;
-  fprintf(outf, "\nts1a:  sextupole, l = 0.29, k = %12.5e, n = nsext"
+  fprintf(outf, "\nts1a:  sextupole, l = 0.29,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts1ab: sextupole, l = 0.29, k = %12.5e, n = nsext"
+  fprintf(outf, "ts1ab: sextupole, l = 0.29,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts2a:  sextupole, l = 0.19, k = %12.5e, n = nsext"
+  fprintf(outf, "ts2a:  sextupole, l = 0.19,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts2ab: sextupole, l = 0.19, k = %12.5e, n = nsext"
+  fprintf(outf, "ts2ab: sextupole, l = 0.19,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts1b:  sextupole, l = 0.29, k = %12.5e, n = nsext"
+  fprintf(outf, "ts1b:  sextupole, l = 0.29,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts2b:  sextupole, l = 0.29, k = %12.5e, n = nsext"
+  fprintf(outf, "ts2b:  sextupole, l = 0.29,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts1c:  sextupole, l = 0.29, k = %12.5e, n = nsext"
+  fprintf(outf, "ts1c:  sextupole, l = 0.29,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts2c:  sextupole, l = 0.29, k = %12.5e, n = nsext"
+  fprintf(outf, "ts2c:  sextupole, l = 0.29,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   // k++;
-  // fprintf(outf, "ts1d:  sextupole, l = 0.29, k = %12.5e, n = nsext"
+  // fprintf(outf, "ts1d:  sextupole, l = 0.29,  k = %12.5e, n = nsext"
   // 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts2d:  sextupole, l = 0.29, k = %12.5e, n = nsext"
+  fprintf(outf, "ts2d:  sextupole, l = 0.29,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts1e:  sextupole, l = 0.29, k = %12.5e, n = nsext"
+  fprintf(outf, "ts1e:  sextupole, l = 0.29,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "ts2e:  sextupole, l = 0.29, k = %12.5e, n = nsext"
+  fprintf(outf, "ts2e:  sextupole, l = 0.29,  k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
   if (lat_case == 4) {
@@ -1228,6 +1228,180 @@ void prt_ct(const int n, const double delta)
 }
 
 
+void fit_tune(const double nu_x, const double nu_y,
+	      const std::vector<int> &b2_Fam,
+	      const double eps, const bool prt)
+{
+  // Periodic solution: [nu_x, nu_y, beta_x, beta_y]
+
+  int           i, j, n_b2;
+  double        **A, *b, *b2_lim, *b2, *db2, step;
+  double        nu_fract[2], dnu[2];
+  ss_vect<tps>  nus, dnus;
+  std::ofstream quad_out;
+
+  const bool    debug = true;
+  const int     m     = 2;
+  const double  s_cut = 1e-7, step0 = 1.0;
+
+  n_b2 = b2_Fam.size();
+
+  b = dvector(1, m); b2_lim = dvector(1, n_b2);
+  b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
+  A = dmatrix(1, m, 1, n_b2);
+
+  nu_fract[X_] = fract(nu_x); nu_fract[Y_] = fract(nu_y);
+  std::cout << std::endl;
+  std::cout << std::fixed << std::setprecision(5)
+       << "fit_tune: nu_x = " << nu_fract[X_] << ", nu_y = " << nu_fract[Y_]
+       << std::endl;
+
+  for (i = 1; i <= n_b2; i++) {
+    if (b2_Fam[i-1] > 0) {
+      b2_lim[i] = b2_max; b2[i] = get_bn(b2_Fam[i-1], 1, Quad);
+    } else {
+      b2_lim[i] = ds_max; b2[i] = get_L(abs(b2_Fam[i-1]), 1);
+    }
+  }
+
+  danot_(3);
+
+  get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+
+  dnu[X_] = nus[3].cst() - nu_fract[X_];
+  dnu[Y_] = nus[4].cst() - nu_fract[Y_];
+  
+  while ((fabs(dnu[X_]) > eps) || (fabs(dnu[Y_]) > eps)) {
+    step = step0;
+    for (i = 1; i <= n_b2; i++) {
+      for (j = 1; j <= get_n_Kids(abs(b2_Fam[i-1])); j++)
+	if (b2_Fam[i-1] > 0)
+	  set_bn_par(b2_Fam[i-1], j, Quad, 7);
+	else
+	  set_s_par(abs(b2_Fam[i-1]), j, 7);
+
+      get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+
+      A[1][i] = -h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
+      A[2][i] = -h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
+
+      if (b2_Fam[i-1] < 0)
+	for (j = 1; j <= m; j++)
+	  A[j][i] *= scl_ds;
+
+      for (j = 1; j <= get_n_Kids(abs(b2_Fam[i-1])); j++)
+	if (b2_Fam[i-1] > 0)
+	  clr_bn_par(b2_Fam[i-1], j, Quad);
+	else
+	  clr_s_par(abs(b2_Fam[i-1]), j);
+    }
+
+    b[1] = dnu[X_]; b[2] = dnu[Y_];
+
+    SVD_lim(m, n_b2, A, b, b2_lim, s_cut, b2, db2);
+
+    for (i = 1; i <= n_b2; i++) {
+      set_dbn_s(b2_Fam[i-1], Quad, step*db2[i]);
+      b2[i] = get_bn_s(b2_Fam[i-1], 1, Quad);
+    }
+
+    get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1);
+
+    while (!stable) {
+      // roll back
+      for (i = 1; i <= n_b2; i++) {
+	set_dbn_s(b2_Fam[i-1], Quad, -step*db2[i]);
+	b2[i] = get_bn_s(b2_Fam[i-1], 1, Quad);
+      }
+
+      step /= 2.0;
+      std::cout << std::endl;
+      std::cout << std::scientific << std::setprecision(3)
+		<< "step = " << step << std::endl;
+
+      for (i = 1; i <= n_b2; i++) {
+	set_dbn_s(b2_Fam[i-1], Quad, step*db2[i]);
+	b2[i] = get_bn_s(b2_Fam[i-1], 1, Quad);
+      }
+	
+      get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1);
+    }
+      
+    nus = dHdJ(K);
+
+    dnu[X_] = nus[3].cst() - nu_fract[X_];
+    dnu[Y_] = nus[4].cst() - nu_fract[Y_];
+    
+    if (debug) {
+      std::cout << std::endl;
+      std::cout << " Ax = b:" << std::endl;
+      std::cout << std::endl;
+      for (i = 1; i <= m; i++) {
+	for (j = 1; j <= n_b2; j++)
+	  std::cout << std::scientific << std::setprecision(3)
+		    << std::setw(11) << A[i][j];
+	std::cout << std::scientific << std::setprecision(3)
+		  << std::setw(11) << b[i] << std::endl;
+      }
+	
+      std::cout << std::endl;
+      std::cout << std::fixed << std::setprecision(5)
+	   << "dnu_x = " << dnu[X_] << ", dnu_y = " << dnu[Y_]
+	   << std::endl;
+    }
+   
+    std::cout << std::endl;
+    std::cout << std::fixed << std::setprecision(5)
+	      << "nu_x = " << nus[3].cst() << ", nu_y = " << nus[4].cst()
+	      << std::endl;
+  }
+
+  if (prt) {
+    quad_out.open("fit_tune.dat", std::ios::out);
+    quad_out << std::endl;
+    quad_out << "n = 1:" << std::endl;
+    for (i = 1; i <= n_b2; i++)
+      for (j = 1; j <= get_n_Kids(abs(b2_Fam[i-1])); j++)
+	if (b2_Fam[i-1] > 0)
+	  quad_out << std::fixed << std::setprecision(7) 
+		   << std::setw(6) << get_Name(b2_Fam[i-1]) << "(" << j
+		   << ") = " << std::setw(11) << get_bn(b2_Fam[i-1], j, Quad)
+		   << std::setw(2) << Quad << std::endl;
+	else {
+	  quad_out << std::fixed << std::setprecision(7) 
+		   << std::setw(6) << get_Name(abs(b2_Fam[i-1])) << "("
+		   << j << ") = "
+		   << std::setw(11) << get_L(abs(b2_Fam[i-1]), j)
+		   << std::setw(3) << -Quad << std::endl;
+	}
+    quad_out.close();
+  }
+
+  free_dvector(b, 1, m);
+  free_dvector(b2_lim, 1, n_b2); free_dvector(b2, 1, n_b2);
+  free_dvector(db2, 1, n_b2);
+  free_dmatrix(A, 1, m, 1, n_b2);
+}
+
+
+void fit_tune(const double nu_x, const double nu_y)
+{
+  std::vector<int> b2_Fam;
+
+  const double eps = 1e-5;
+
+  // DIAMOND.
+  b2_Fam.push_back(get_Fnum("q1d"));
+  b2_Fam.push_back(get_Fnum("q2d"));
+  b2_Fam.push_back(get_Fnum("q3d"));
+  b2_Fam.push_back(get_Fnum("q1b"));
+  b2_Fam.push_back(get_Fnum("q2b"));
+  b2_Fam.push_back(get_Fnum("q3b"));
+ 
+  fit_tune(nu_x, nu_y, b2_Fam, eps, true);
+}
+
+
 int main(int argc, char *argv[])
 {
   int j;
@@ -1264,6 +1438,12 @@ int main(int argc, char *argv[])
 	   beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
 
     get_nu_ksi();
+
+    if (false) {
+      fit_tune(28.15, 13.22);
+      get_nu_ksi();
+      exit(0);
+    }
 
     for (j = 0; j < 2; j++)
       twoJ[j] =	sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
