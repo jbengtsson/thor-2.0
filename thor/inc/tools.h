@@ -24,7 +24,11 @@ void prt_lin_map(const int n_DOF, const ss_vect<tps> &map);
 
 double get_code(elem_type<double> &elem);
 
+void prt_lat(const int i0, const int i1, const char *file_name);
+
 void prt_lat(const char *file_name);
+
+void prt_lat(const int i0, const int i1, const char *file_name, const int n);
 
 void prt_lat(const char *file_name, const int n);
 

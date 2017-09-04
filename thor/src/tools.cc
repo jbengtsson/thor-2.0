@@ -112,7 +112,7 @@ double get_code(elem_type<double> &elem)
   return code;
 }
 
-void prt_lat(const char *file_name)
+void prt_lat(const int i0, const int i1, const char *file_name)
 {
   long int i;
   FILE     *outf;
@@ -126,7 +126,7 @@ void prt_lat(const char *file_name)
   fprintf(outf, "                   [m]           [m]\n");
   fprintf(outf, "#\n");
 
-  for (i = 0; i < n_elem; i++) {
+  for (i = i0; i < i1; i++) {
     fprintf(outf, "%4ld %15s %9.5f %4.1f"
 	    " %9.5f %8.5f %8.5f %8.5f %8.5f"
 	    " %9.5f %8.5f %8.5f %8.5f %8.5f\n",
@@ -140,6 +140,10 @@ void prt_lat(const char *file_name)
   fclose(outf);
 }
 
+void prt_lat(const char *file_name)
+{
+  prt_lat(0, n_elem, file_name);
+}
 
 void get_dnu(const int n, const ss_vect<tps> &A, double dnu[])
 {
@@ -259,7 +263,7 @@ void get_twoJ(const int n_DOF, const ss_vect<tps> &ps,
 }
 
 
-void prt_lat(const char *fname, const int n)
+void prt_lat(const int i0, const int i1, const char *fname, const int n)
 {
   long int           i;
   int                j, k;
@@ -282,7 +286,7 @@ void prt_lat(const char *fname, const int n)
   fprintf(outf, "                   [m]           [m]\n");
   fprintf(outf, "#\n");
 
-  for (i = 0; i < n_elem; i++) {
+  for (i = i0; i < i1; i++) {
     if ((i != 0) &&
 	((elem[i].kind == Drift) ||
 	 ((elem[i].kind == Mpole) && (elem[i].L != 0e0)))) {
@@ -363,6 +367,12 @@ void prt_lat(const char *fname, const int n)
   }
 
   fclose(outf);
+}
+
+
+void prt_lat(const char *fname, const int n)
+{
+  prt_lat(0, n_elem, fname, n);
 }
 
 
