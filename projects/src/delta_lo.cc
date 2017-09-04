@@ -118,7 +118,7 @@ double get_bn_s1(const int Fnum, const int Knum, const int n)
   if (Fnum > 0)
     bn = get_bn(Fnum, Knum, n);
   else {
-    k = get_loc(abs(Fnum), Knum);
+    k = get_loc(abs(Fnum), Knum) - 1;
 
     switch (elem[k-1].Name[1]) {
     case 'u':
@@ -148,7 +148,7 @@ void set_bn_s1(const int Fnum, const int Knum, const int n, const double bn)
     set_bn(Fnum, Knum, n, bn);
   else {
     // Point to multipole.
-    loc = get_loc(abs(Fnum), Knum);
+    loc = get_loc(abs(Fnum), Knum) - 1;
 
     if (elem[loc-1].Name[1] == 'u') {
       strcpy(name, elem[loc-1].Name); name[1] = 'd';
@@ -220,19 +220,23 @@ void get_twiss(const int i0, const int i1, const ss_vect<tps> &A)
     dnu1[k] = 0e0;
   A1 = A;
   for (j = i0; j <= i1; j++) {
-    A1.propagate(j, j);
-    elem_tps[j-1].A1 = get_A_CS(2, A1, dnu2);
+    A1.propagate(j+1, j+1);
+    elem_tps[j].A1 = get_A_CS(2, A1, dnu2);
 
     // Store linear optics for convenience.
     get_ab(A1, alpha1, beta1, dnu2, eta1, etap1);
     for (k = 0; k < 2; k++) {
-      elem[j-1].Alpha[k] = alpha1[k]; elem[j-1].Beta[k] = beta1[k];
-      elem[j-1].Eta[k] = eta1[k]; elem[j-1].Etap[k] = etap1[k];
+      elem[j].Alpha[k] = alpha1[k]; elem[j].Beta[k] = beta1[k];
+      elem[j].Eta[k] = eta1[k]; elem[j].Etap[k] = etap1[k];
     }
     // Assumes dnu < 360 degrees.
     for (k = 0; k < 2; k++) {
-      elem[j-1].Nu[k] = floor(elem[j-2].Nu[k]) + dnu2[k];
-      if ((dnu2[k] < dnu1[k]) && (elem[j-1].L >= 0e0)) elem[j-1].Nu[k] += 1e0;
+      if (j == 0)
+	elem[j].Nu[k] = 0e0;
+      else {
+	elem[j].Nu[k] = floor(elem[j-1].Nu[k]) + dnu2[k];
+	if ((dnu2[k] < dnu1[k]) && (elem[j].L >= 0e0)) elem[j].Nu[k] += 1e0;
+      }
     }
     for (k = 0; k < 2; k++)
       dnu1[k] = dnu2[k];
@@ -262,7 +266,7 @@ void get_twiss(void)
   // Include dispersion.
   A1[x_]  += A0[x_][delta_]*tps(0e0, delta_+1);
   A1[px_] += A0[px_][delta_]*tps(0e0, delta_+1);
-  get_twiss(0+1, n_elem, A1);
+  get_twiss(0, n_elem, A1);
 }
 
 
@@ -393,7 +397,7 @@ double f_match(double *b2)
   b2_prms.set_prm(b2);
 
   Ascr = get_A(ic[0], ic[1], ic[2], ic[3]);
-  get_twiss(loc[0]+1, loc[4]+1, Ascr);
+  get_twiss(loc[0], loc[4], Ascr);
 
   // get_dnu_dp(loc[0], loc[5], ic[0], ic[1], 1e-5, dksi);
 
@@ -414,7 +418,7 @@ double f_match(double *b2)
   chi2 += 1e6*sqr(elem[loc[3]].Beta[X_]-8.0); 
 
   for (i = 1; i <= b2_prms.n_prm; i++) {
-    loc1 = get_loc(b2_prms.Fnum[i-1], 1);
+    loc1 = get_loc(b2_prms.Fnum[i-1], 1) - 1;
     L = elem[loc1].L;
     if (i == 3) {
       // Upstream of the quadrupole.
@@ -472,14 +476,14 @@ double f_match(double *b2)
       printf("beta_x  = %8.5f beta_y  = %8.5f\n",
 	     elem[loc[3]].Beta[X_], elem[loc[3]].Beta[Y_]);
 
-      loc1 = get_loc(get_Fnum("s_s_1"), 1);
-      loc2 = get_loc(get_Fnum("s_s_1"), 2);
+      loc1 = get_loc(get_Fnum("s_s_1"), 1) - 1;
+      loc2 = get_loc(get_Fnum("s_s_1"), 2) - 1;
       printf("\nLength of 1st straight: %6.3f m\n", elem[loc2].S-elem[loc1].S);
-      loc1 = get_loc(get_Fnum("s_s_2"), 1);
-      loc2 = get_loc(get_Fnum("s_s_2"), 2);
+      loc1 = get_loc(get_Fnum("s_s_2"), 1) - 1;
+      loc2 = get_loc(get_Fnum("s_s_2"), 2) - 1;
       printf("Length of 2nd straight: %6.3f m\n", elem[loc2].S-elem[loc1].S);
-      loc1 = get_loc(get_Fnum("s_s_3"), 1);
-      loc2 = get_loc(get_Fnum("s_s_3"), 2);
+      loc1 = get_loc(get_Fnum("s_s_3"), 1) - 1;
+      loc2 = get_loc(get_Fnum("s_s_3"), 2) - 1;
       printf("Length of 3rd straight: %6.3f m\n", elem[loc2].S-elem[loc1].S);
 
       prt_match(b2_prms, b2);
@@ -521,7 +525,7 @@ void fit_match(param_type &b2_prms)
   loc[4] = get_loc(get_Fnum("b20"), 5) - 1;
 
   Ascr = get_A(ic[0], ic[1], ic[2], ic[3]);
-  get_twiss(loc[0]+1, loc[4]+1, Ascr);
+  get_twiss(loc[0], loc[4], Ascr);
 
   prt_lin_opt(loc);
   printf("\n%8.5f %8.5f\n",
@@ -543,7 +547,7 @@ void fit_match(param_type &b2_prms)
 
   b2_prms.set_prm(b2);
   Ascr = get_A(ic[0], ic[1], ic[2], ic[3]);
-  get_twiss(loc[0]+1, loc[4]+1, Ascr);
+  get_twiss(loc[0], loc[4], Ascr);
 
   prt_lat(loc[0], loc[4], "linlat1.out");
   prt_lat(loc[0], loc[4], "linlat.out", 10);
@@ -578,10 +582,12 @@ int main(int argc, char *argv[])
   no_mpoles(Sext);
   no_mpoles(Oct);
 
-  get_twiss();
-  prt_lat("linlat1.out");
-  prt_lat("linlat.out", 10);
-  exit(0);
+  if (false) {
+    get_twiss();
+    prt_lat("linlat1.out");
+    prt_lat("linlat.out", 10);
+    exit(0);
+  }
   
   if (true) {
     b2_prms.add_prm("q01",  2, -4.2, 4.2, 1.0);
@@ -607,6 +613,8 @@ int main(int argc, char *argv[])
     b2_prms.add_prm("eq06", -2,  0.0,  0.05, 1.0);
 
     b2_prms.add_prm("b10",  -2, -0.01, 0.01,  1.0);
+
+    printf("%3d", get_loc(get_Fnum("q01"),  1));
 
     // U561 + U562: 2.14.
     // b2_prms.add_prm("u561", -1, 2.14, 2.14, 1.0);
