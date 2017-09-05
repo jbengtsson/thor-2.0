@@ -380,6 +380,48 @@ void get_twiss(void)
 }
 
 
+void get_der(const char *prm_name)
+{
+  int          loc, loc0, loc1, Fnum;
+  double       beta_x[3], s;
+  ss_vect<tps> Ascr, AA_tp;
+
+  const double eps = 1e-10;
+  
+  loc = get_loc(get_Fnum("ef2"), 16) - 1;
+
+  loc0 = get_loc(get_Fnum("qf031"), 1) - 1;
+  loc1 = get_loc(get_Fnum("b20"), 5) - 1;
+  Ascr = get_A(ic[0], ic[1], ic[2], ic[3]);
+  get_twiss(loc0, loc1, Ascr);
+
+  AA_tp = elem_tps[loc].A1*tp_S(2, elem_tps[loc].A1);
+  beta_x[1] = h_ijklm(AA_tp[x_], 1, 0, 0, 0, 0);
+
+  Fnum = get_Fnum(prm_name);
+
+  s = get_bn_s1(Fnum, 1);
+
+  set_bn_s1(Fnum, s-eps);
+
+  Ascr = get_A(ic[0], ic[1], ic[2], ic[3]);
+  get_twiss(loc0, loc1, Ascr);
+
+  AA_tp = elem_tps[loc].A1*tp_S(2, elem_tps[loc].A1);
+  beta_x[0] = h_ijklm(AA_tp[x_], 1, 0, 0, 0, 0);
+
+  set_bn_s1(Fnum, s+eps);
+
+  Ascr = get_A(ic[0], ic[1], ic[2], ic[3]);
+  get_twiss(loc0, loc1, Ascr);
+
+  AA_tp = elem_tps[loc].A1*tp_S(2, elem_tps[loc].A1);
+  beta_x[2] = h_ijklm(AA_tp[x_], 1, 0, 0, 0, 0);
+
+  printf("der = %10.3e\n", (beta_x[2]-beta_x[0])/(2e0*eps));
+}
+
+
 double get_a(const double scale, const tps &t,
 	     const int i, const int j, const int k, const int l, const int m)
 {
@@ -542,16 +584,12 @@ void prt_lin_opt(void)
 
 void prt_lev_marq(const int m, const int n, double *b2)
 {
-  int          loc1, loc2;
-  ss_vect<tps> Ascr;
+  int loc1, loc2;
 
   prt_system(m, n, A_lm, f_lm);
 
   printf("\n%d bn:\n", n_powell);
   prt_b2(bn_prms, b2);
-
-  Ascr = get_A(ic[0], ic[1], ic[2], ic[3]);
-  get_twiss(loc[0], loc[4], Ascr);
 
   // Downstream of 10 degree dipole.
   printf("\nDownstream of 10 degree dipole:\n");
@@ -775,6 +813,15 @@ int main(int argc, char *argv[])
     exit(0);
   }
   
+  if (false) {
+    printf("\n");
+    get_der("q01");
+    get_der("q03");
+    get_der("eq01");
+    get_der("eq02");
+    // exit(0);
+  }
+
   bn_prms.add_prm("qf031",  2, -5.0, 5.0, 1.0);
   bn_prms.add_prm("qd041",  2, -5.0, 5.0, 1.0);
 
@@ -789,18 +836,20 @@ int main(int argc, char *argv[])
   bn_prms.add_prm("eq05",   2, -5.0, 5.0, 1.0);
   bn_prms.add_prm("eq06",   2, -5.0, 5.0, 1.0);
 
-  bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e0);
-  bn_prms.add_prm("q03",  -2,  0.0,  0.05, 1e0);
+  if (true) {
+    bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e0);
+    bn_prms.add_prm("q03",  -2,  0.0,  0.05, 1e0);
 
-  bn_prms.add_prm("eq01", -2,  0.0,  0.05, 1e0);
-  bn_prms.add_prm("eq02", -2,  0.0,  0.05, 1e0);
-  // bn_prms.add_prm("q02",  -2,  0.0,  0.05, 1e0);
+    bn_prms.add_prm("eq01", -2,  0.0,  0.05, 1e0);
+    bn_prms.add_prm("eq02", -2,  0.0,  0.05, 1e0);
+    // bn_prms.add_prm("q02",  -2,  0.0,  0.05, 1e0);
 
-  bn_prms.add_prm("eq04", -2, -0.05, 0.05, 1e0);
-  bn_prms.add_prm("eq05", -2,  0.0,  0.05, 1e0);
-  bn_prms.add_prm("eq06", -2,  0.0,  0.05, 1e0);
+    bn_prms.add_prm("eq04", -2, -0.05, 0.05, 1e0);
+    bn_prms.add_prm("eq05", -2,  0.0,  0.05, 1e0);
+    bn_prms.add_prm("eq06", -2,  0.0,  0.05, 1e0);
 
-  // bn_prms.add_prm("b10",  -2, -0.01, 0.01, 1e0);
+    // bn_prms.add_prm("b10",  -2, -0.01, 0.01, 1e0);
+  }
 
   // U561 + U562: 2.14.
   // bn_prms.add_prm("u561", -1, 2.14, 2.14, 1.0);
