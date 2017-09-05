@@ -18,8 +18,16 @@ int no_tps = NO,
 // Provided, roughly periodic:
 // const double ic[][2] =
 //   {{1.05266, -0.25384}, {0.62733, 5.60502}, {0.06552, 0.0}, {-0.10478, 0.0}};
+// const double ic[][2] =
+//   {{1.15199, -0.22236}, {0.65878, 5.53043 }, {0.03741, 0.0}, {-0.04304, 0.0}};
+// Upstream of QD04.
+// Periodic.
+// const double ic[][2] =
+//   {{4.10172, -2.96036}, {2.69522, 4.71532}, {0.12263, 0.0}, {-0.16484, 0.0}};
+// Upstream of QF03.
+// Periodic.
 const double ic[][2] =
-  {{1.15199, -0.22236}, {0.65878, 5.53043 }, {0.03741, 0.0}, {-0.04304, 0.0}};
+  {{-6.00257, 2.31594}, {7.43795, 2.74922}, {0.18750, 0.0}, {0.16825, 0.0}};
 
 int    loc[10], n;
 double chi2 = 0e0, *f_lm, **A_lm;
@@ -470,40 +478,97 @@ void prt_b2(const param_type &b2_prms)
 
   outf = file_write(file_name.c_str());
 
-  k = 0;
-  fprintf(outf, "Q01:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
-	  ", Method = Meth;\n", bn_prms.bn[++k]);
-  fprintf(outf, "Q03:  quadrupole, l = 0.434, k = %8.5f, N = Nquad"
-	  ", Method = Meth;\n", bn_prms.bn[++k]);
+  k = 1;
+  fprintf(outf, "QF031: quadrupole, l = 0.217, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n",
+	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+  k++;
+  fprintf(outf, "QD041: quadrupole, l = 0.117, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n",
+	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
-  fprintf(outf, "\nEQ01: quadrupole, l = 0.234, k = %8.5f, N = Nquad"
-	  ", Method = Meth;\n", bn_prms.bn[++k]);
-  fprintf(outf, "EQ02: quadrupole, l = 0.234, k = %8.5f, N = Nquad"
-	  ", Method = Meth;\n", bn_prms.bn[++k]);
-  fprintf(outf, "Q02:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
-	  ", Method = Meth;\n", bn_prms.bn[++k]);
+  k++;
+  fprintf(outf, "\nQ01:   quadrupole, l = 0.234, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n",
+	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+  k++;
+  fprintf(outf, "Q03:   quadrupole, l = 0.434, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n",
+	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
-  fprintf(outf, "EQ04: quadrupole, l = 0.234, k = %8.5f, N = Nquad"
-	  ", Method = Meth;\n", bn_prms.bn[++k]);
-  fprintf(outf, "EQ05: quadrupole, l = 0.234, k = %8.5f, N = Nquad"
-	  ", Method = Meth;\n", bn_prms.bn[++k]);
-  fprintf(outf, "EQ06: quadrupole, l = 0.234, k = %8.5f, N = Nquad"
-	  ", Method = Meth;\n", bn_prms.bn[++k]);
+  k++;
+  fprintf(outf, "\nEQ01:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n",
+	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+  k++;
+  fprintf(outf, "EQ02:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n",
+	  bn_bounded(b2_prms.bn[k],
+		     b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+  // k++;
+  // fprintf(outf, "Q02:   quadrupole, l = 0.234, k = %8.5f, N = Nquad"
+  // 	  ", Method = Meth;\n",
+  // 	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
-  // fprintf(outf, "\nD_Q01_L  = %8.5f;\n", bn_prms.bn[++k]);
-  // fprintf(outf, "D_Q03_L  = %8.5f;\n", bn_prms.bn[++k]);
+  k++;
+  fprintf(outf, "EQ04:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n",
+	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+  k++;
+  fprintf(outf, "EQ05:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n",
+	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+  k++;
+  fprintf(outf, "EQ06:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n",
+	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
-  // fprintf(outf, "\nD_EQ01_L = %8.5f;\n", bn_prms.bn[++k]);
-  // fprintf(outf, "D_EQ02_L = %8.5f;\n", bn_prms.bn[++k]);
-  // fprintf(outf, "D_Q02_L  = %8.5f;\n", bn_prms.bn[++k]);
+  if (false) {
+    k++;
+    fprintf(outf, "\nD_Q01_L  = %8.5f;\n",
+	    bn_bounded(b2_prms.bn[k],
+		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+    k++;
+    fprintf(outf, "D_Q03_L  = %8.5f;\n",
+	    bn_bounded(b2_prms.bn[k],
+		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
-  // fprintf(outf, "D_EQ04_L = %8.5f;\n", bn_prms.bn[++k]);
-  // fprintf(outf, "D_EQ05_L = %8.5f;\n", bn_prms.bn[++k]);
-  // fprintf(outf, "D_EQ06_L = %8.5f;\n", bn_prms.bn[++k]);
+    k++;
+    fprintf(outf, "\nD_EQ01_L = %8.5f;\n",
+	    bn_bounded(b2_prms.bn[k],
+		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+    k++;
+    fprintf(outf, "D_EQ02_L = %8.5f;\n",
+	    bn_bounded(b2_prms.bn[k],
+		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+    // k++;
+    // fprintf(outf, "D_Q02_L  = %8.5f;\n",
+    // 	    bn_bounded(b2_prms.bn[k],
+    // 		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
-  // fprintf(outf, "\nD_B10_L  = %8.5f;\n", bn_prms.bn[++k]);
+    k++;
+    fprintf(outf, "\nD_EQ04_L = %8.5f;\n",
+	    bn_bounded(b2_prms.bn[k],
+		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+    k++;
+    fprintf(outf, "D_EQ05_L = %8.5f;\n",
+	    bn_bounded(b2_prms.bn[k],
+		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+    k++;
+    fprintf(outf, "D_EQ06_L = %8.5f;\n",
+	    bn_bounded(b2_prms.bn[k],
+		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
-  // fprintf(outf, "\nU561: drift, L = %8.5f;\n", b2[18]);
+    // k++;
+    // fprintf(outf, "\nD_B10_L  = %8.5f;\n",
+    // 	    bn_bounded(b2_prms.bn[k],
+    // 		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+
+    // k++;
+    // fprintf(outf, "\nU561: drift, L = %8.5f;\n",
+    // 	    bn_bounded(b2_prms.bn[18],
+    // 		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+  }
 
   fclose(outf);
 }
@@ -596,7 +661,7 @@ void prt_lev_marq(const int m, const int n)
 
   prt_mfile("flat_file.fit");
   prt_lat(loc[0], loc[4], "linlat1.out");
-  prt_lat(loc[0], loc[4], "linlat.out", 10);
+  // prt_lat(loc[0], loc[4], "linlat.out", 10);
 }
 
 
@@ -699,7 +764,7 @@ void min_lev_marq(void)
   double       *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
   ss_vect<tps> Ascr;
 
-  const int n_bn = bn_prms.n_prm, n_iter = 500;
+  const int n_bn = bn_prms.n_prm, n_iter = 50;
 
   n_data = 8;
 
@@ -708,8 +773,14 @@ void min_lev_marq(void)
   covar = dmatrix(1, n_bn, 1, n_bn); alpha = dmatrix(1, n_bn, 1, n_bn);
   f_lm = dvector(1, n_data); A_lm = dmatrix(1, n_data, 1, n_bn);
 
+  // Upstream of QF03.
+  loc[0] = get_loc(get_Fnum("qf031"), 1) - 1;
+  // Upstream of QD04.
+  // loc[0] = get_loc(get_Fnum("qd041"), 1) - 1;
   // Upstream of 20 degree dipole.
-  loc[0] = get_loc(get_Fnum("sb"),  7) - 1;
+  // loc[0] = get_loc(get_Fnum("sb"), 7) - 1;
+   // Upstream of 20 degree dipole.
+  // loc[0] = get_loc(get_Fnum("sb"),  7) - 1;
   // Downstream of 10 degree dipole.
   loc[1] = get_loc(get_Fnum("b10"), 1) - 1;
   // Center of 1st straight.
@@ -795,18 +866,21 @@ int main(int argc, char *argv[])
     exit(0);
   }
   
-  bn_prms.add_prm("q01",  2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("q03",  2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("qf031",  2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("qd041",  2, -5.0, 5.0, 1.0);
 
-  bn_prms.add_prm("eq01", 2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("eq02", 2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("q02",  2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("q01",    2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("q03",    2, -5.0, 5.0, 1.0);
 
-  bn_prms.add_prm("eq04", 2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("eq05", 2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("eq06", 2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq01",   2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq02",   2, -5.0, 5.0, 1.0);
+  // bn_prms.add_prm("q02",    2, -5.0, 5.0, 1.0);
 
-  bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e-2);
+  bn_prms.add_prm("eq04",   2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq05",   2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq06",   2, -5.0, 5.0, 1.0);
+
+  // bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e-2);
   // bn_prms.add_prm("q03",  -2,  0.0,  0.05, 1e-2);
 
   // bn_prms.add_prm("eq01", -2,  0.0,  0.05, 1e-2);
