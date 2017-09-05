@@ -623,7 +623,7 @@ void prt_lev_marq(const int m, const int n, double *b2)
 
   prt_mfile("flat_file.fit");
   prt_lat(loc[0], loc[4], "linlat1.out");
-  // prt_lat(loc[0], loc[4], "linlat.out", 10);
+  prt_lat(loc[0]+1, loc[4], "linlat.out", 10);
 }
 
 
