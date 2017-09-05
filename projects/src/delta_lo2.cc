@@ -67,8 +67,8 @@ void param_type::add_prm(const std::string Fname, const int n,
 {
   Fnum.push_back(get_Fnum(Fname.c_str()));
   this->n.push_back(n);
-  this->bn_min.push_back(bn_min);
-  this->bn_max.push_back(bn_max);
+  this->bn_min.push_back(bn_scl*bn_min);
+  this->bn_max.push_back(bn_scl*bn_max);
   this->bn_scl.push_back(bn_scl);
   n_prm = Fnum.size();
 }
@@ -806,7 +806,7 @@ int main(int argc, char *argv[])
   bn_prms.add_prm("eq05", 2, -5.0, 5.0, 1.0);
   bn_prms.add_prm("eq06", 2, -5.0, 5.0, 1.0);
 
-  // bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e-2);
+  bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e-2);
   // bn_prms.add_prm("q03",  -2,  0.0,  0.05, 1e-2);
 
   // bn_prms.add_prm("eq01", -2,  0.0,  0.05, 1e-2);
