@@ -126,7 +126,7 @@ void prt_lat(const int i0, const int i1, const char *file_name)
   fprintf(outf, "                   [m]           [m]\n");
   fprintf(outf, "#\n");
 
-  for (i = i0; i < i1; i++) {
+  for (i = i0; i <= i1; i++) {
     fprintf(outf, "%4ld %15s %9.5f %4.1f"
 	    " %9.5f %8.5f %8.5f %8.5f %8.5f"
 	    " %9.5f %8.5f %8.5f %8.5f %8.5f\n",
@@ -286,7 +286,7 @@ void prt_lat(const int i0, const int i1, const char *fname, const int n)
   fprintf(outf, "                   [m]           [m]\n");
   fprintf(outf, "#\n");
 
-  for (i = i0; i < i1; i++) {
+  for (i = i0; i <= i1; i++) {
     if ((i != 0) &&
 	((elem[i].kind == Drift) ||
 	 ((elem[i].kind == Mpole) && (elem[i].L != 0e0)))) {
@@ -1302,7 +1302,7 @@ void clr_bn_par(const int Fnum, const int n)
 }
 
 
-void set_L_par(const int Fnum, const int Knum, const int n, const int j)
+void set_L_par(const int Fnum, const int Knum, const int j)
 {
   // Set parameter dependence.
   int    k;
@@ -1313,17 +1313,17 @@ void set_L_par(const int Fnum, const int Knum, const int n, const int j)
 }
 
 
-void set_L_par(const int Fnum, const int n, const int j)
+void set_L_par(const int Fnum, const int j)
 {
   // Set parameter dependence.
   int k;
 
   for (k = 1; k <= get_n_Kids(Fnum); k++)
-    set_L_par(Fnum, k, n, j);
+    set_L_par(Fnum, k, j);
 }
 
 
-void clr_L_par(const int Fnum, const int Knum, const int n)
+void clr_L_par(const int Fnum, const int Knum)
 {
   // Clear parameter dependence.
   int    k;
@@ -1334,13 +1334,13 @@ void clr_L_par(const int Fnum, const int Knum, const int n)
 }
 
 
-void clr_L_par(const int Fnum, const int n)
+void clr_L_par(const int Fnum)
 {
   // Clear parameter dependence.
   int k;
 
   for (k = 1; k <= get_n_Kids(Fnum); k++)
-    clr_L_par(Fnum, k, n);
+    clr_L_par(Fnum, k);
 }
 
 

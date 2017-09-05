@@ -1,5 +1,6 @@
 bin_PROGRAMS = H_min max_iv_match max_iv_uc max_iv_dnu \
-	       vlad vlad_2 vlad_3 vlad_4 vlad_5 sls_2 diamond_ii delta delta_lo
+	       vlad vlad_2 vlad_3 vlad_4 vlad_5 sls_2 diamond_ii delta \
+               delta_lo delta_lo2
 
 H_min_SOURCES        = H_min.cc
 max_iv_match_SOURCES = max_iv_match.cc
@@ -14,6 +15,7 @@ sls_2_SOURCES        = sls_2.cc
 diamond_ii_SOURCES   = diamond_ii.cc
 delta_SOURCES        = delta.cc
 delta_lo_SOURCES     = delta_lo.cc
+delta_lo2_SOURCES    = delta_lo2.cc
 
 LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
 	  -L$(NUM_REC)/lib -lnum_rec \

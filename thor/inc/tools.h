@@ -145,13 +145,13 @@ void clr_bn_par(const int Fnum, const int Knum, const int n);
 
 void clr_bn_par(const int Fnum, const int n);
 
-void set_L_par(const int Fnum, const int Knum, const int n, const int j);
+void set_L_par(const int Fnum, const int Knum, const int j);
 
-void set_L_par(const int Fnum, const int n, const int j);
+void set_L_par(const int Fnum, const int j);
 
-void clr_L_par(const int Fnum, const int Knum, const int n);
+void clr_L_par(const int Fnum, const int Knum);
 
-void clr_L_par(const int Fnum, const int n);
+void clr_L_par(const int Fnum);
 
 void set_s_par(const int Fnum, const int Knum, const int j);
 
