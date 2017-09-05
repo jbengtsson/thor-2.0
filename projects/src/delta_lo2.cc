@@ -190,7 +190,7 @@ void get_s_loc(const int Fnum, const int Knum, int loc[])
     strcpy(name, elem[loc[1]+1].Name); name[1] = 'd';
     loc[2] = get_loc(get_Fnum(name), Knum) - 1;
   } else {
-    printf("\nset_s1_par: configuration error %s (%d)\n",
+    printf("\nget_s_loc: configuration error %s (%d)\n",
 	   elem[loc[1]].Name, loc[1]);
     exit(1);
   }
@@ -706,7 +706,7 @@ void min_lev_marq(void)
   double       *b2, *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
   ss_vect<tps> Ascr;
 
-  const int n_bn = bn_prms.n_prm, n_iter = 500;
+  const int n_bn = bn_prms.n_prm, n_iter = 50;
 
   n_data = 8;
 
@@ -724,6 +724,7 @@ void min_lev_marq(void)
   // loc[0] = get_loc(get_Fnum("sb"), 7) - 1;
    // Upstream of 20 degree dipole.
   // loc[0] = get_loc(get_Fnum("sb"),  7) - 1;
+
   // Downstream of 10 degree dipole.
   loc[1] = get_loc(get_Fnum("b10"), 1) - 1;
   // Center of 1st straight.
@@ -822,21 +823,21 @@ int main(int argc, char *argv[])
     // exit(0);
   }
 
-  bn_prms.add_prm("qf031",  2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("qd041",  2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("qf031",  2, -6.0, 6.0, 1.0);
+  // bn_prms.add_prm("qd041",  2, -6.0, 6.0, 1.0);
 
-  bn_prms.add_prm("q01",    2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("q03",    2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("q01",    2, -6.0, 6.0, 1.0);
+  // bn_prms.add_prm("q02",    2, -6.0, 6.0, 1.0);
+  bn_prms.add_prm("q03",    2, -6.0, 6.0, 1.0);
 
-  bn_prms.add_prm("eq01",   2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("eq02",   2, -5.0, 5.0, 1.0);
-  // bn_prms.add_prm("q02",    2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq01",   2, -6.0, 6.0, 1.0);
+  bn_prms.add_prm("eq02",   2, -6.0, 6.0, 1.0);
 
-  bn_prms.add_prm("eq04",   2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("eq05",   2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("eq06",   2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq03",   2, -6.0, 6.0, 1.0);
+  bn_prms.add_prm("eq04",   2, -6.0, 6.0, 1.0);
+  bn_prms.add_prm("eq05",   2, -6.0, 6.0, 1.0);
 
-  if (true) {
+  if (false) {
     bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e0);
     bn_prms.add_prm("q03",  -2,  0.0,  0.05, 1e0);
 
@@ -844,9 +845,9 @@ int main(int argc, char *argv[])
     bn_prms.add_prm("eq02", -2,  0.0,  0.05, 1e0);
     // bn_prms.add_prm("q02",  -2,  0.0,  0.05, 1e0);
 
-    bn_prms.add_prm("eq04", -2, -0.05, 0.05, 1e0);
+    bn_prms.add_prm("eq03", -2, -0.05, 0.05, 1e0);
+    bn_prms.add_prm("eq04", -2,  0.0,  0.05, 1e0);
     bn_prms.add_prm("eq05", -2,  0.0,  0.05, 1e0);
-    bn_prms.add_prm("eq06", -2,  0.0,  0.05, 1e0);
 
     // bn_prms.add_prm("b10",  -2, -0.01, 0.01, 1e0);
   }
