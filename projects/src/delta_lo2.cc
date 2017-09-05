@@ -52,13 +52,13 @@ private:
 
 public:
   int                 m_constr, n_prm;
-  double              *bn;
   std::vector<double> bn_min, bn_max, bn_scl;
   std::vector<int>    Fnum, n;
 
   void add_prm(const std::string Fname, const int n,
 	       const double bn_min, const double bn_max, const double bn_scl);
-  void ini_prm(void);
+  void ini_prm(double *bn);
+  void set_prm(double *bn) const;
   void set_prm_dep(const int k) const;
   void clr_prm_dep(const int k) const;
 };
@@ -82,13 +82,11 @@ void param_type::add_prm(const std::string Fname, const int n,
 }
 
 
-void param_type::ini_prm(void)
+void param_type::ini_prm(double *bn)
 {
   int i;
 
   n_prm = Fnum.size();
-
-  bn_prms.bn = dvector(1, n_prm);
 
   printf("\nInitial bn; (incl. scaling) (%d):\n", n_prm);
   for (i = 1; i <= n_prm; i++) {
@@ -134,19 +132,25 @@ void param_type::clr_prm_dep(const int k) const
 }
 
 
-void set_prm(const int Fnum, const int n, const double bn,
-	     const double bn_min, const double bn_max)
+void param_type::set_prm(double *bn) const
 {
+  int    i;
   double bn_ext;
 
-  // Bounded.
-  bn_ext = bn_bounded(bn, bn_min, bn_max);
-  if (n > 0)
-    set_bn(Fnum, n, bn_ext);
-  else if (n == -1)
-    set_L(Fnum, bn_ext);
-  else if (n == -2)
-    set_bn_s1(Fnum, bn_ext);
+  printf("\nset_prm:\n");
+  for (i = 1; i <= n_prm; i++) {
+    // Bounded.
+    bn_ext = bn_bounded(bn_scl[i-1]*bn[i], bn_min[i-1], bn_max[i-1]);
+    if (n[i-1] > 0)
+      set_bn(Fnum[i-1], n[i-1], bn_ext);
+    else if (n[i-1] == -1)
+      set_L(Fnum[i-1], bn_ext);
+    else if (n[i-1] == -2)
+      set_bn_s1(Fnum[i-1], bn_ext);
+    printf(" %12.5e", bn_ext);
+    if (i % n_prt == 0) printf("\n");
+  }
+  if (n_prm % n_prt != 0) printf("\n");
 }
 
 
@@ -163,64 +167,69 @@ double bn_bounded(const double bn_internal,
   return bn_min + (sin(bn_internal)+1e0)*(bn_max-bn_min)/2e0;
 }
 
+void get_s_loc(const int Fnum, const int Knum, int loc[])
+{
+  char name[name_length];
+  
+  // Point to multipole.
+  loc[1] = get_loc(Fnum, Knum) - 1;
+  if (elem[loc[1]-1].Name[1] == 'u') {
+    loc[0] = loc[1] - 1;
+    strcpy(name, elem[loc[1]-1].Name); name[1] = 'd';
+    loc[2] = get_loc(get_Fnum(name), Knum) - 1;
+  } else if (elem[loc[1]-1].Name[1] == 'd') {
+    loc[2] = loc[1] - 1;
+    strcpy(name, elem[loc[1]-1].Name); name[1] = 'u';
+    loc[0] = get_loc(get_Fnum(name), Knum) - 1;
+  } else if (elem[loc[1]+1].Name[1] == 'd') {
+    loc[2] = loc[1] + 1;
+    strcpy(name, elem[loc[1]+1].Name); name[1] = 'u';
+    loc[0] = get_loc(get_Fnum(name), Knum) - 1;
+  } else if (elem[loc[1]+1].Name[1] == 'u') {
+    loc[0] = loc[1] + 1;
+    strcpy(name, elem[loc[1]+1].Name); name[1] = 'd';
+    loc[2] = get_loc(get_Fnum(name), Knum) - 1;
+  } else {
+    printf("\nset_s1_par: configuration error %s (%d)\n",
+	   elem[loc[1]].Name, loc[1]);
+    exit(1);
+  }
+}
+
+
 
 double get_bn_s1(const int Fnum, const int Knum)
 {
-  int    loc;
+  
+  int    loc[3];
   double ds;
 
-  loc = get_loc(Fnum, Knum) - 1;
-  switch (elem[loc-1].Name[1]) {
-  case 'u':
-    ds = elem[loc-1].L;
-    break;
-  case 'd':
-    ds = -elem[loc-1].L;
-    break;
-  default:
-    printf("/nget_bn_s1: configuration error %s (%d)\n",
-	   elem[loc].Name, loc);
-    exit(1);
-    break;
-  }
+  const bool prt = false;
 
+  get_s_loc(Fnum, Knum, loc);
+  ds = elem[loc[0]].L;
+  if (prt)
+    printf("\nget_bn_s1: %s %s(%d) %s %10.3e %10.3e\n",
+	   elem_tps[loc[0]].Name, elem[loc[1]].Name, Knum, elem[loc[2]].Name,
+	   elem[loc[0]].L, elem[loc[2]].L);
+ 
   return ds;
 }
 
 
 void set_bn_s1(const int Fnum, const int Knum, const double ds)
 {
-  char name[name_length];
-  int  loc, loc_d;
+  int loc[3];
 
-  // Point to multipole.
-  loc = get_loc(Fnum, Knum) - 1;
+  const bool prt = false;
 
-  if (elem[loc-1].Name[1] == 'u') {
-    strcpy(name, elem[loc-1].Name); name[1] = 'd';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    set_L(elem[loc-1].Fnum, Knum, ds);
-    set_L(elem[loc_d].Fnum, Knum, -ds);
-  } else if (elem[loc-1].Name[1] == 'd') {
-    strcpy(name, elem[loc-1].Name); name[1] = 'u';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    set_L(elem[loc-1].Fnum, Knum, -ds);
-    set_L(elem[loc_d].Fnum, Knum, ds);
-  } else if (elem[loc+1].Name[1] == 'd') {
-    strcpy(name, elem[loc+1].Name); name[1] = 'u';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    set_L(elem[loc+1].Fnum, Knum, -ds);
-    set_L(elem[loc_d].Fnum, Knum, ds);
-  } else if (elem[loc+1].Name[1] == 'u') {
-    strcpy(name, elem[loc+1].Name); name[1] = 'd';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    set_L(elem[loc+1].Fnum, Knum, ds);
-    set_L(elem[loc_d].Fnum, Knum, -ds);
-  } else {
-    printf("\nset_bn_s1: configuration error %s (%d)\n",
-	   elem[loc].Name, loc);
-    exit(1);
-  }
+  get_s_loc(Fnum, Knum, loc);
+  set_L(elem[loc[0]].Fnum, Knum, ds);
+  set_L(elem[loc[2]].Fnum, Knum, -ds);
+  if (prt)
+    printf("\nset_bn_s1: %s %s(%d) %s %10.3e %10.3e\n",
+	   elem[loc[0]].Name, elem[loc[1]].Name, Knum, elem[loc[2]].Name,
+	   ds, -ds);
 }
 
 
@@ -235,50 +244,18 @@ void set_bn_s1(const int Fnum, const double ds)
 
 void set_s1_par(const int Fnum, const int Knum, const int j)
 {
-  char   name[name_length];
-  int    loc, loc_d;
+  int    loc[3];
   double L;
 
   const bool prt = false;
 
-  // Point to multipole.
-  loc = get_loc(Fnum, Knum) - 1;
-
-  if (prt) printf("\nset_s1_par: %s, %d\n", elem[loc].Name, Knum);
-
-  if (elem[loc-1].Name[1] == 'u') {
-    strcpy(name, elem[loc-1].Name); name[1] = 'd';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    L = elem_tps[loc-1].L.cst(); elem_tps[loc-1].L = tps(L, j);
-    L = elem_tps[loc_d].L.cst(); elem_tps[loc_d].L = -tps(-L, j);
-    if (prt)
-      printf("set_s1_par: %s %s\n", elem_tps[loc-1].Name, elem[loc_d].Name);
-  } else if (elem[loc-1].Name[1] == 'd') {
-    strcpy(name, elem[loc-1].Name); name[1] = 'u';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    L = elem_tps[loc-1].L.cst(); elem_tps[loc-1].L = -tps(-L, j);
-    L = elem_tps[loc_d].L.cst(); elem_tps[loc_d].L = tps(L, j);
-    if (prt)
-      printf("set_s1_par: %s %s\n", elem_tps[loc-1].Name, elem[loc_d].Name);
-  } else if (elem[loc+1].Name[1] == 'd') {
-    strcpy(name, elem[loc+1].Name); name[1] = 'u';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    L = elem_tps[loc+1].L.cst(); elem_tps[loc+1].L = -tps(-L, j);
-    L = elem_tps[loc_d].L.cst(); elem_tps[loc_d].L = tps(L, j);
-    if (prt)
-      printf("set_s1_par: %s %s\n", elem_tps[loc+1].Name, elem[loc_d].Name);
-  } else if (elem[loc+1].Name[1] == 'u') {
-    strcpy(name, elem[loc+1].Name); name[1] = 'd';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    L = elem_tps[loc+1].L.cst(); elem_tps[loc+1].L = tps(L, j);
-    L = elem_tps[loc_d].L.cst(); elem_tps[loc_d].L = -tps(-L, j);
-    if (prt)
-      printf("set_s1_par: %s %s\n", elem_tps[loc+1].Name, elem[loc_d].Name);
-  } else {
-    printf("\nset_s1_par: configuration error %s (%d)\n",
-	   elem[loc].Name, loc);
-    exit(1);
-  }
+  get_s_loc(Fnum, Knum, loc);
+  L = elem_tps[loc[0]].L.cst(); elem_tps[loc[0]].L = tps(L, j);
+  L = elem_tps[loc[2]].L.cst(); elem_tps[loc[2]].L = -tps(-L, j);
+  if (prt)
+    printf("\nset_s1_par: %s %s(%d) %s %10.3e %10.3e\n",
+	   elem_tps[loc[0]].Name, elem[loc[1]].Name, Knum, elem[loc[2]].Name,
+	   elem_tps[loc[0]].L.cst(), elem_tps[loc[2]].L.cst());
 }
 
 
@@ -293,50 +270,18 @@ void set_s1_par(const int Fnum, const int j)
 
 void clr_s1_par(const int Fnum, const int Knum)
 {
-  char   name[name_length];
-  int    loc, loc_d;
+  int    loc[3];
   double L;
 
-  const bool  prt = false;
+  const bool prt = false;
 
-  // Point to multipole.
-  loc = get_loc(Fnum, Knum) - 1;
-
-  if (prt) printf("\nclr_s1_par: %s %d\n", elem[loc].Name, Knum);
-
-  if (elem[loc-1].Name[1] == 'u') {
-    strcpy(name, elem[loc-1].Name); name[1] = 'd';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    L = elem_tps[loc-1].L.cst(); elem_tps[loc-1].L = L;
-    L = elem_tps[loc_d].L.cst(); elem_tps[loc_d].L = L;
-    if (prt)
-      printf("%s %s\n", elem_tps[loc-1].Name, elem[loc_d].Name);
-  } else if (elem[loc-1].Name[1] == 'd') {
-    strcpy(name, elem[loc-1].Name); name[1] = 'u';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    L = elem_tps[loc-1].L.cst(); elem_tps[loc-1].L = L;
-    L = elem_tps[loc_d].L.cst(); elem_tps[loc_d].L = L;
-    if (prt)
-      printf("%s %s\n", elem_tps[loc-1].Name, elem[loc_d].Name);
-  } else if (elem[loc+1].Name[1] == 'd') {
-    strcpy(name, elem[loc+1].Name); name[1] = 'u';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    L = elem_tps[loc+1].L.cst(); elem_tps[loc+1].L = L;
-    L = elem_tps[loc_d].L.cst(); elem_tps[loc_d].L = L;
-    if (prt)
-      printf("%s %s\n", elem_tps[loc+1].Name, elem[loc_d].Name);
-  } else if (elem[loc+1].Name[1] == 'u') {
-    strcpy(name, elem[loc+1].Name); name[1] = 'd';
-    loc_d = get_loc(get_Fnum(name), Knum) - 1;
-    L = elem_tps[loc+1].L.cst(); elem_tps[loc+1].L = L;
-    L = elem_tps[loc_d].L.cst(); elem_tps[loc_d].L = L;
-    if (prt)
-      printf("%s %s\n", elem_tps[loc+1].Name, elem[loc_d].Name);
-  } else {
-    printf("\nset_s1_par: configuration error %s (%d)\n",
-	   elem[loc].Name, loc);
-    exit(1);
-  }
+  get_s_loc(Fnum, Knum, loc);
+  L = elem_tps[loc[0]].L.cst(); elem_tps[loc[0]].L = L;
+  L = elem_tps[loc[2]].L.cst(); elem_tps[loc[2]].L = L;
+  if (prt)
+    printf("\nclr_s1_par: %s %s(%d) %s %10.3e %10.3e\n",
+	   elem_tps[loc[0]].Name, elem[loc[1]].Name, Knum, elem[loc[2]].Name,
+	   elem_tps[loc[0]].L.cst(), elem_tps[loc[2]].L.cst());
 }
 
 
@@ -469,7 +414,7 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 }
 
 
-void prt_b2(const param_type &b2_prms)
+void prt_b2(const param_type &b2_prms, double *b2)
 {
   int  k;
   FILE *outf;
@@ -481,93 +426,83 @@ void prt_b2(const param_type &b2_prms)
   k = 1;
   fprintf(outf, "QF031: quadrupole, l = 0.217, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
-	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
   k++;
   fprintf(outf, "QD041: quadrupole, l = 0.117, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
-	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
   k++;
   fprintf(outf, "\nQ01:   quadrupole, l = 0.234, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
-	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
   k++;
   fprintf(outf, "Q03:   quadrupole, l = 0.434, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
-	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
   k++;
   fprintf(outf, "\nEQ01:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
-	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
   k++;
   fprintf(outf, "EQ02:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
-	  bn_bounded(b2_prms.bn[k],
+	  bn_bounded(b2[k],
 		     b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
   // k++;
   // fprintf(outf, "Q02:   quadrupole, l = 0.234, k = %8.5f, N = Nquad"
   // 	  ", Method = Meth;\n",
-  // 	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+  // 	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
   k++;
   fprintf(outf, "EQ04:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
-	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
   k++;
   fprintf(outf, "EQ05:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
-	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
   k++;
   fprintf(outf, "EQ06:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
-	  bn_bounded(b2_prms.bn[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
   if (false) {
     k++;
     fprintf(outf, "\nD_Q01_L  = %8.5f;\n",
-	    bn_bounded(b2_prms.bn[k],
-		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
     k++;
     fprintf(outf, "D_Q03_L  = %8.5f;\n",
-	    bn_bounded(b2_prms.bn[k],
-		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
     k++;
     fprintf(outf, "\nD_EQ01_L = %8.5f;\n",
-	    bn_bounded(b2_prms.bn[k],
-		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
     k++;
     fprintf(outf, "D_EQ02_L = %8.5f;\n",
-	    bn_bounded(b2_prms.bn[k],
-		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
     // k++;
     // fprintf(outf, "D_Q02_L  = %8.5f;\n",
-    // 	    bn_bounded(b2_prms.bn[k],
-    // 		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+    // 	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
     k++;
     fprintf(outf, "\nD_EQ04_L = %8.5f;\n",
-	    bn_bounded(b2_prms.bn[k],
-		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
     k++;
     fprintf(outf, "D_EQ05_L = %8.5f;\n",
-	    bn_bounded(b2_prms.bn[k],
-		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
     k++;
     fprintf(outf, "D_EQ06_L = %8.5f;\n",
-	    bn_bounded(b2_prms.bn[k],
-		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
     // k++;
     // fprintf(outf, "\nD_B10_L  = %8.5f;\n",
-    // 	    bn_bounded(b2_prms.bn[k],
-    // 		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+    // 	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
     // k++;
     // fprintf(outf, "\nU561: drift, L = %8.5f;\n",
-    // 	    bn_bounded(b2_prms.bn[18],
-    // 		       b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+    // 	    bn_bounded(b2[18], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
   }
 
   fclose(outf);
@@ -605,26 +540,15 @@ void prt_lin_opt(void)
 }
 
 
-void prt_lev_marq(const int m, const int n)
+void prt_lev_marq(const int m, const int n, double *b2)
 {
-  int          i, loc1, loc2;
+  int          loc1, loc2;
   ss_vect<tps> Ascr;
 
   prt_system(m, n, A_lm, f_lm);
 
-  prt_b2(bn_prms);
-
   printf("\n%d bn:\n", n_powell);
-  for (i = 1; i <= bn_prms.n_prm; i++) {
-    bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
-    printf("%11.3e", bn_prms.bn[i]);
-    if (i % n_prt == 0) printf("\n");
-    // Bounded.
-    bn_prms.bn[i] =
-      bn_internal(bn_prms.bn[i]/bn_prms.bn_scl[i-1],
-    		  bn_prms.bn_min[i-1], bn_prms.bn_max[i-1]);
-  }
-  if (bn_prms.n_prm % n_prt != 0) printf("\n");
+  prt_b2(bn_prms, b2);
 
   Ascr = get_A(ic[0], ic[1], ic[2], ic[3]);
   get_twiss(loc[0], loc[4], Ascr);
@@ -665,11 +589,14 @@ void prt_lev_marq(const int m, const int n)
 }
 
 
-void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
+void get_f_grad(const int n_bn, double *b2, double *f, double **A,
+		double &chi2, int &m)
 {
   int          i, j;
   tps          h_re, h_im, K_re, K_im, K_re_scl;
   ss_vect<tps> Ascr, AA_tp[3], A_disp[3];
+
+  bn_prms.set_prm(b2);
 
   // printf("\n");
   for (i = 1; i <= n_bn; i++) {
@@ -715,40 +642,17 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 }
 
 
-void get_f_der(double x, double *bn, double *yfit, double *dyda, int n)
+void get_f_der(double x, double *b2, double *yfit, double *dyda, int n)
 {
   int        i, m1;
   static int m;
   double     chi2;
 
-  const bool prt = false;
-
   m1 = (int)(x+0.5);
-  if (prt) printf(" %d", m1);
 
   if (m1 == 1) {
     n_powell++;
-
-    // Don't change best values.
-    printf("\nget_f_der:\n");
-    for (i = 1; i <= n; i++) {
-      set_prm(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*bn[i],
-	      bn_prms.bn_min[i-1], bn_prms.bn_max[i-1]);
-      printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
-      if (i % n_prt == 0) printf("\n");
-    }
-    if (n % n_prt != 0) printf("\n");
-
-    get_f_grad(n, f_lm, A_lm, chi2, m);
-  }
-
-  if (prt && (m1 == m)) {
-    printf("\n");
-    for (i = 1; i <= n; i++) {
-      printf(" %12.5e", bn_prms.bn_scl[i-1]*bn[i]);
-      if (i % n_prt == 0) printf("\n");
-    }
-    if (n % n_prt != 0) printf("\n");
+    get_f_grad(n, b2, f_lm, A_lm, chi2, m);
   }
 
   *yfit = f_lm[m1];
@@ -761,13 +665,14 @@ void get_f_der(double x, double *bn, double *yfit, double *dyda, int n)
 void min_lev_marq(void)
 {
   int          n_data, i, n, *ia;
-  double       *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
+  double       *b2, *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
   ss_vect<tps> Ascr;
 
-  const int n_bn = bn_prms.n_prm, n_iter = 50;
+  const int n_bn = bn_prms.n_prm, n_iter = 500;
 
   n_data = 8;
 
+  b2 = dvector(1, n_bn);
   ia = ivector(1, n_bn);
   x = dvector(1, n_data); y = dvector(1, n_data); sigma = dvector(1, n_data);
   covar = dmatrix(1, n_bn, 1, n_bn); alpha = dmatrix(1, n_bn, 1, n_bn);
@@ -795,7 +700,9 @@ void min_lev_marq(void)
 
   prt_lin_opt();
 
-  get_f_grad(n_bn, f_lm, A_lm, chi2, n_data);
+  bn_prms.ini_prm(b2);
+
+  get_f_grad(n_bn, b2, f_lm, A_lm, chi2, n_data);
   prt_system(n_data, n_bn, A_lm, f_lm);
 
   for (i = 1; i <= n_bn; i++)
@@ -806,27 +713,29 @@ void min_lev_marq(void)
   }
 
   alambda = -1e0; alambda0 = 1e-3;
-  dmrqmin(x, y, sigma, n_data, bn_prms.bn, ia, n_bn, covar, alpha, &chisq,
+  dmrqmin(x, y, sigma, n_data, b2, ia, n_bn, covar, alpha, &chisq,
 	  get_f_der, &alambda);
   printf("\nalambda = %7.1e, chi2 = %9.3e\n", alambda, chisq);
-  if (alambda < alambda0) prt_lev_marq(n_data, n_bn);
+  if (alambda < alambda0) prt_lev_marq(n_data, n_bn, b2);
   alambda0 = alambda;
 
   n = 0;
   do {
     n++;
-    dmrqmin(x, y, sigma, n_data, bn_prms.bn, ia, n_bn,  covar, alpha, &chisq,
+    dmrqmin(x, y, sigma, n_data, b2, ia, n_bn,  covar, alpha, &chisq,
 	    get_f_der, &alambda);
     printf("\nalambda = %7.1e, chi2 = %9.3e\n", alambda, chisq);
-    if (alambda < alambda0) prt_lev_marq(n_data, n_bn);
+    if (alambda < alambda0) prt_lev_marq(n_data, n_bn, b2);
     alambda0 = alambda;
   } while (n < n_iter);
 
   alambda = 0e0;
-  dmrqmin(x, y, sigma, n_data, bn_prms.bn, ia, n_bn,  covar, alpha, &chisq,
+  dmrqmin(x, y, sigma, n_data, b2, ia, n_bn,  covar, alpha, &chisq,
 	  get_f_der, &alambda);
 
-  free_dvector(f_lm, 1, n_data); free_dmatrix(A_lm, 1, n_data, 1, n_bn);
+  free_dvector(b2, 1, n_bn);
+  free_dvector(f_lm, 1, n_data);
+  free_dmatrix(A_lm, 1, n_data, 1, n_bn);
   free_ivector(ia, 1, n_bn);
   free_dvector(x, 1, n_data); free_dvector(y, 1, n_data);
   free_dvector(sigma, 1, n_data);
@@ -880,23 +789,21 @@ int main(int argc, char *argv[])
   bn_prms.add_prm("eq05",   2, -5.0, 5.0, 1.0);
   bn_prms.add_prm("eq06",   2, -5.0, 5.0, 1.0);
 
-  // bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e-2);
-  // bn_prms.add_prm("q03",  -2,  0.0,  0.05, 1e-2);
+  bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e0);
+  bn_prms.add_prm("q03",  -2,  0.0,  0.05, 1e0);
 
-  // bn_prms.add_prm("eq01", -2,  0.0,  0.05, 1e-2);
-  // bn_prms.add_prm("eq02", -2,  0.0,  0.05, 1e-2);
-  // bn_prms.add_prm("q02",  -2,  0.0,  0.05, 1e-2);
+  bn_prms.add_prm("eq01", -2,  0.0,  0.05, 1e0);
+  bn_prms.add_prm("eq02", -2,  0.0,  0.05, 1e0);
+  // bn_prms.add_prm("q02",  -2,  0.0,  0.05, 1e0);
 
-  // bn_prms.add_prm("eq04", -2, -0.05, 0.05, 1e-2);
-  // bn_prms.add_prm("eq05", -2,  0.0,  0.05, 1e-2);
-  // bn_prms.add_prm("eq06", -2,  0.0,  0.05, 1e-2);
+  bn_prms.add_prm("eq04", -2, -0.05, 0.05, 1e0);
+  bn_prms.add_prm("eq05", -2,  0.0,  0.05, 1e0);
+  bn_prms.add_prm("eq06", -2,  0.0,  0.05, 1e0);
 
-  // bn_prms.add_prm("b10",  -2, -0.01, 0.01, 1e-2);
+  // bn_prms.add_prm("b10",  -2, -0.01, 0.01, 1e0);
 
   // U561 + U562: 2.14.
   // bn_prms.add_prm("u561", -1, 2.14, 2.14, 1.0);
-
-  bn_prms.ini_prm();
 
   min_lev_marq();
 }
