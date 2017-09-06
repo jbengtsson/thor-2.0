@@ -27,7 +27,7 @@ int no_tps = NO,
 // Upstream of QF03.
 // Periodic.
 const double ic[][2] =
-  {{-6.00257, 2.31594}, {7.43795, 2.74922}, {0.18750, 0.0}, {0.16825, 0.0}};
+  {{-6.70823, 2.37735}, {8.18446, 2.77147}, {0.01612, 0.0}, {0.02906, 0.0}};
 
 int    loc[10], n;
 double chi2 = 0e0, *f_lm, **A_lm;
@@ -498,7 +498,7 @@ void prt_b2(const param_type &b2_prms, double *b2)
 		     b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
   k++;
-  fprintf(outf, "EQ03:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
+  fprintf(outf, "\nEQ03:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
 	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
   k++;
@@ -623,7 +623,7 @@ void prt_lev_marq(const int m, const int n, double *b2)
 
   prt_mfile("flat_file.fit");
   prt_lat(loc[0], loc[4], "linlat1.out");
-  prt_lat(loc[0]+1, loc[4], "linlat.out", 10);
+  prt_lat(loc[0]+1, loc[4]-1, "linlat.out", 10);
 }
 
 
@@ -731,8 +731,11 @@ void min_lev_marq(void)
   loc[2] = get_loc(get_Fnum("ef2"), 4) - 1;
   // Center of 2nd straight.
   loc[3] = get_loc(get_Fnum("ef2"), 16) - 1;
+
   // Downstream of 20 degree dipole.
-  loc[4] = get_loc(get_Fnum("b20"), 5) - 1;
+  // loc[4] = get_loc(get_Fnum("b20"), 5) - 1;
+  // Downstream of QF03.
+  loc[4] = get_loc(get_Fnum("qf031"), 4) - 1;
 
   Ascr = get_A(ic[0], ic[1], ic[2], ic[3]);
   get_twiss(loc[0], loc[4], Ascr);
@@ -828,7 +831,7 @@ int main(int argc, char *argv[])
 
   bn_prms.add_prm("q01",    2, -5.0, 5.0, 1.0);
   bn_prms.add_prm("q02",    2, -5.0, 5.0, 1.0);
-  // bn_prms.add_prm("q03",    2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("q03",    2, -5.0, 5.0, 1.0);
 
   bn_prms.add_prm("eq01",   2, -5.0, 5.0, 1.0);
   bn_prms.add_prm("eq02",   2, -5.0, 5.0, 1.0);
@@ -840,7 +843,7 @@ int main(int argc, char *argv[])
   if (true) {
     bn_prms.add_prm("q01",  -2,  0.0,  0.10, 1e0);
     bn_prms.add_prm("q02",  -2,  0.0,  0.10, 1e0);
-    // bn_prms.add_prm("q03",  -2,  0.0,  0.10, 1e0);
+    bn_prms.add_prm("q03",  -2,  0.0,  0.10, 1e0);
 
     bn_prms.add_prm("eq01", -2,  0.0,  0.10, 1e0);
     bn_prms.add_prm("eq02", -2,  0.0,  0.10, 1e0);
@@ -849,7 +852,7 @@ int main(int argc, char *argv[])
     bn_prms.add_prm("eq04", -2,  0.0,  0.10, 1e0);
     bn_prms.add_prm("eq05", -2,  0.0,  0.10, 1e0);
 
-    // bn_prms.add_prm("b10",  -2, -0.01, 0.01, 1e0);
+    // bn_prms.add_prm("b10",  -2, -0.02, 0.02, 1e0);
   }
 
   // U561 + U562: 2.14.
