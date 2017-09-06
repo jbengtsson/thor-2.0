@@ -27,14 +27,14 @@ int no_tps = NO,
 // Upstream of QF03.
 // Periodic.
 const double ic[][2] =
-  {{-6.70823, 2.37735}, {8.18446, 2.77147}, {0.01612, 0.0}, {0.02906, 0.0}};
+  {{-5.66627, 2.37465}, {7.07181, 2.86889}, {0.19967, 0.0}, {0.17750, 0.0}};
 
-int    loc[10], n;
+int    loc[10], n, n_strength;
 double chi2 = 0e0, *f_lm, **A_lm;
 
 const int n_prt = 8;
 
-const double scl_eta = 1e4, scl_beta = 1e0, scl_alpha = 1e3;
+const double scl_eta = 1e4, scl_beta = 1e0, scl_alpha = 1e3, scl_bn = 1e2;
 
 double bn_internal(const double bn_bounded,
 		   const double bn_min, const double bn_max);
@@ -147,7 +147,7 @@ void param_type::set_prm(double *bn) const
       set_L(Fnum[i-1], bn_ext);
     else if (n[i-1] == -2)
       set_bn_s1(Fnum[i-1], bn_ext);
-    printf(" %12.5e", bn_ext);
+    printf(" %9.5f", bn_ext);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_prm % n_prt != 0) printf("\n");
@@ -382,6 +382,7 @@ void get_twiss(void)
 
 void get_der(const char *prm_name)
 {
+  // Numerical check of der for displacement.
   int          loc, loc0, loc1, Fnum;
   double       beta_x[3], s;
   ss_vect<tps> Ascr, AA_tp;
@@ -658,6 +659,9 @@ void get_f_grad(const int n_bn, double *b2, double *f, double **A,
     A[++m][i] = get_a(scl_alpha, -AA_tp[2][y_],   0, 0, 0, 1, 0);
     A[++m][i] = get_a(scl_beta,   AA_tp[2][x_],   1, 0, 0, 0, 0);
 
+    for (j = 1; j <= n_strength; j++)
+      A[++m][i] = (i == j)? scl_bn*get_L(bn_prms.Fnum[j-1], 1) : 0e0;
+
     for (j = 1; j <= m; j++)
       A[j][i] *= bn_prms.bn_scl[i-1];
 
@@ -673,6 +677,9 @@ void get_f_grad(const int n_bn, double *b2, double *f, double **A,
   f[++m] = get_b(scl_alpha, -AA_tp[2][x_],   0, 1, 0, 0, 0);
   f[++m] = get_b(scl_alpha, -AA_tp[2][y_],   0, 0, 0, 1, 0);
   f[++m] = get_b(scl_beta,   AA_tp[2][x_],   1, 0, 0, 0, 0) - scl_beta*8.0;
+
+  for (j = 1; j <= n_strength; j++)
+    f[++m] = scl_bn*b2[j]*get_L(bn_prms.Fnum[j-1], 1);
 
   chi2 = 0e0;
   for (j = 1; j <= m; j++)
@@ -708,7 +715,7 @@ void min_lev_marq(void)
 
   const int n_bn = bn_prms.n_prm, n_iter = 50;
 
-  n_data = 8;
+  n_data = 8 + n_strength;
 
   b2 = dvector(1, n_bn);
   ia = ivector(1, n_bn);
@@ -826,31 +833,33 @@ int main(int argc, char *argv[])
     // exit(0);
   }
 
-  bn_prms.add_prm("qf031",  2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("qd041",  2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("qf031",  2, -4.2, 4.2, 1.0);
+  bn_prms.add_prm("qd041",  2, -4.2, 4.2, 1.0);
 
-  bn_prms.add_prm("q01",    2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("q02",    2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("q03",    2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("q01",    2, -4.2, 4.2, 1.0);
+  // bn_prms.add_prm("q02",    2, -4.2, 4.2, 1.0);
+  bn_prms.add_prm("q03",    2, -4.2, 4.2, 1.0);
 
-  bn_prms.add_prm("eq01",   2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("eq02",   2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq01",   2, -4.2, 4.2, 1.0);
+  bn_prms.add_prm("eq02",   2, -4.2, 4.2, 1.0);
 
-  bn_prms.add_prm("eq03",   2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("eq04",   2, -5.0, 5.0, 1.0);
-  bn_prms.add_prm("eq05",   2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq03",   2, -4.2, 4.2, 1.0);
+  bn_prms.add_prm("eq04",   2, -4.2, 4.2, 1.0);
+  bn_prms.add_prm("eq05",   2, -4.2, 4.2, 1.0);
 
-  if (true) {
-    bn_prms.add_prm("q01",  -2,  0.0,  0.10, 1e0);
-    bn_prms.add_prm("q02",  -2,  0.0,  0.10, 1e0);
-    bn_prms.add_prm("q03",  -2,  0.0,  0.10, 1e0);
+  n_strength = 9;
 
-    bn_prms.add_prm("eq01", -2,  0.0,  0.10, 1e0);
-    bn_prms.add_prm("eq02", -2,  0.0,  0.10, 1e0);
+  if (false) {
+    bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e0);
+    // bn_prms.add_prm("q02",  -2,  0.0,  0.05, 1e0);
+    bn_prms.add_prm("q03",  -2,  0.0,  0.05, 1e0);
 
-    bn_prms.add_prm("eq03", -2, -0.10, 0.10, 1e0);
-    bn_prms.add_prm("eq04", -2,  0.0,  0.10, 1e0);
-    bn_prms.add_prm("eq05", -2,  0.0,  0.10, 1e0);
+    bn_prms.add_prm("eq01", -2,  0.0,  0.05, 1e0);
+    bn_prms.add_prm("eq02", -2,  0.0,  0.05, 1e0);
+
+    bn_prms.add_prm("eq03", -2, -0.05, 0.05, 1e0);
+    bn_prms.add_prm("eq04", -2,  0.0,  0.05, 1e0);
+    bn_prms.add_prm("eq05", -2,  0.0,  0.05, 1e0);
 
     // bn_prms.add_prm("b10",  -2, -0.02, 0.02, 1e0);
   }
