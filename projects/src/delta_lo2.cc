@@ -479,9 +479,13 @@ void prt_b2(const param_type &b2_prms, double *b2)
 	  ", Method = Meth;\n",
 	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
   k++;
-  fprintf(outf, "Q03:   quadrupole, l = 0.434, k = %8.5f, N = Nquad"
+  fprintf(outf, "Q02:   quadrupole, l = 0.434, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
 	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+  // k++;
+  // fprintf(outf, "Q03:   quadrupole, l = 0.234, k = %8.5f, N = Nquad"
+  // 	  ", Method = Meth;\n",
+  // 	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
   k++;
   fprintf(outf, "\nEQ01:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
@@ -492,11 +496,11 @@ void prt_b2(const param_type &b2_prms, double *b2)
 	  ", Method = Meth;\n",
 	  bn_bounded(b2[k],
 		     b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
-  // k++;
-  // fprintf(outf, "Q02:   quadrupole, l = 0.234, k = %8.5f, N = Nquad"
-  // 	  ", Method = Meth;\n",
-  // 	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
+  k++;
+  fprintf(outf, "EQ03:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n",
+	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
   k++;
   fprintf(outf, "EQ04:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
@@ -505,18 +509,17 @@ void prt_b2(const param_type &b2_prms, double *b2)
   fprintf(outf, "EQ05:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
 	  ", Method = Meth;\n",
 	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
-  k++;
-  fprintf(outf, "EQ06:  quadrupole, l = 0.234, k = %8.5f, N = Nquad"
-	  ", Method = Meth;\n",
-	  bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
-  if (false) {
+  if (true) {
     k++;
     fprintf(outf, "\nD_Q01_L  = %8.5f;\n",
 	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
     k++;
-    fprintf(outf, "D_Q03_L  = %8.5f;\n",
+    fprintf(outf, "D_Q02_L  = %8.5f;\n",
 	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+    // k++;
+    // fprintf(outf, "D_Q03_L  = %8.5f;\n",
+    // 	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
     k++;
     fprintf(outf, "\nD_EQ01_L = %8.5f;\n",
@@ -524,18 +527,15 @@ void prt_b2(const param_type &b2_prms, double *b2)
     k++;
     fprintf(outf, "D_EQ02_L = %8.5f;\n",
 	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
-    // k++;
-    // fprintf(outf, "D_Q02_L  = %8.5f;\n",
-    // 	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
     k++;
-    fprintf(outf, "\nD_EQ04_L = %8.5f;\n",
+    fprintf(outf, "\nD_EQ03_L = %8.5f;\n",
+	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
+    k++;
+    fprintf(outf, "D_EQ04_L = %8.5f;\n",
 	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
     k++;
     fprintf(outf, "D_EQ05_L = %8.5f;\n",
-	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
-    k++;
-    fprintf(outf, "D_EQ06_L = %8.5f;\n",
 	    bn_bounded(b2[k], b2_prms.bn_min[k-1], b2_prms.bn_max[k-1]));
 
     // k++;
@@ -823,31 +823,31 @@ int main(int argc, char *argv[])
     // exit(0);
   }
 
-  bn_prms.add_prm("qf031",  2, -6.0, 6.0, 1.0);
-  // bn_prms.add_prm("qd041",  2, -6.0, 6.0, 1.0);
+  bn_prms.add_prm("qf031",  2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("qd041",  2, -5.0, 5.0, 1.0);
 
-  bn_prms.add_prm("q01",    2, -6.0, 6.0, 1.0);
-  // bn_prms.add_prm("q02",    2, -6.0, 6.0, 1.0);
-  bn_prms.add_prm("q03",    2, -6.0, 6.0, 1.0);
+  bn_prms.add_prm("q01",    2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("q02",    2, -5.0, 5.0, 1.0);
+  // bn_prms.add_prm("q03",    2, -5.0, 5.0, 1.0);
 
-  bn_prms.add_prm("eq01",   2, -6.0, 6.0, 1.0);
-  bn_prms.add_prm("eq02",   2, -6.0, 6.0, 1.0);
+  bn_prms.add_prm("eq01",   2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq02",   2, -5.0, 5.0, 1.0);
 
-  bn_prms.add_prm("eq03",   2, -6.0, 6.0, 1.0);
-  bn_prms.add_prm("eq04",   2, -6.0, 6.0, 1.0);
-  bn_prms.add_prm("eq05",   2, -6.0, 6.0, 1.0);
+  bn_prms.add_prm("eq03",   2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq04",   2, -5.0, 5.0, 1.0);
+  bn_prms.add_prm("eq05",   2, -5.0, 5.0, 1.0);
 
-  if (false) {
-    bn_prms.add_prm("q01",  -2,  0.0,  0.05, 1e0);
-    bn_prms.add_prm("q03",  -2,  0.0,  0.05, 1e0);
+  if (true) {
+    bn_prms.add_prm("q01",  -2,  0.0,  0.10, 1e0);
+    bn_prms.add_prm("q02",  -2,  0.0,  0.10, 1e0);
+    // bn_prms.add_prm("q03",  -2,  0.0,  0.10, 1e0);
 
-    bn_prms.add_prm("eq01", -2,  0.0,  0.05, 1e0);
-    bn_prms.add_prm("eq02", -2,  0.0,  0.05, 1e0);
-    // bn_prms.add_prm("q02",  -2,  0.0,  0.05, 1e0);
+    bn_prms.add_prm("eq01", -2,  0.0,  0.10, 1e0);
+    bn_prms.add_prm("eq02", -2,  0.0,  0.10, 1e0);
 
-    bn_prms.add_prm("eq03", -2, -0.05, 0.05, 1e0);
-    bn_prms.add_prm("eq04", -2,  0.0,  0.05, 1e0);
-    bn_prms.add_prm("eq05", -2,  0.0,  0.05, 1e0);
+    bn_prms.add_prm("eq03", -2, -0.10, 0.10, 1e0);
+    bn_prms.add_prm("eq04", -2,  0.0,  0.10, 1e0);
+    bn_prms.add_prm("eq05", -2,  0.0,  0.10, 1e0);
 
     // bn_prms.add_prm("b10",  -2, -0.01, 0.01, 1e0);
   }
