@@ -15,19 +15,23 @@ int no_tps = NO,
 
 
 // Initial conditions: alpha, beta, eta, etap.
-// Provided, roughly periodic:
+
+// Upstream of B20.
+// From k_symm.lat.
 // const double ic[][2] =
 //   {{1.05266, -0.25384}, {0.62733, 5.60502}, {0.06552, 0.0}, {-0.10478, 0.0}};
+// Roughly, what's obtained for jb_2.lat:
 // const double ic[][2] =
-//   {{1.15199, -0.22236}, {0.65878, 5.53043 }, {0.03741, 0.0}, {-0.04304, 0.0}};
-// Upstream of QD04.
-// Periodic.
-// const double ic[][2] =
-//   {{4.10172, -2.96036}, {2.69522, 4.71532}, {0.12263, 0.0}, {-0.16484, 0.0}};
+//   {{1.15199, -0.22236}, {0.65878, 5.53043}, {0.03741, 0.0}, {-0.04304, 0.0}};
+
 // Upstream of QF03.
-// Periodic.
+// From k_symm.lat.
+// const double ic[][2] =
+//   {{-6.00257, 2.31594}, {7.43795, 2.74922}, {0.18750, 0.0}, {0.16825, 0.0}};
+// From jb_2.lat.
 const double ic[][2] =
-  {{-5.66627, 2.37465}, {7.07181, 2.86889}, {0.19967, 0.0}, {0.17750, 0.0}};
+  {{-6.57117, 2.40476}, {8.00696, 2.78072}, {0.08540, 0.0}, {0.08387, 0.0}};
+
 
 int    loc[10], n, n_strength;
 double chi2 = 0e0, *f_lm, **A_lm;
