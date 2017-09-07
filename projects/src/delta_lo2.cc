@@ -157,16 +157,14 @@ void param_type::set_prm(double *bn) const
 double bn_internal(const double bn_bounded,
 		   const double bn_min, const double bn_max)
 {
-  // return asin((2e0*(bn_bounded-bn_min))/(bn_max-bn_min)-1e0);
-  return bn_bounded;
+  return asin((2e0*(bn_bounded-bn_min))/(bn_max-bn_min)-1e0);
 }
 
 
 double bn_bounded(const double bn_internal,
 		  const double bn_min, const double bn_max)
 {
-  // return bn_min + (sin(bn_internal)+1e0)*(bn_max-bn_min)/2e0;
-  return bn_internal;
+  return bn_min + (sin(bn_internal)+1e0)*(bn_max-bn_min)/2e0;
 }
 
 void get_s_loc(const int Fnum, const int Knum, int loc[])
@@ -633,8 +631,6 @@ void prt_lev_marq(const int m, const int n, double *b2)
 void get_f_grad(const int n_bn, double *b2, double *f, double **A,
 		double &chi2, int &m)
 {
-  // To evaluate the parameter dependance the parameters can not be
-  // transformed; to impose bounds.
   int          i, j, loc1;
   tps          beta[2];
   ss_vect<tps> Ascr, AA_tp[3], A_disp[3], AA_tp1;
@@ -683,7 +679,9 @@ void get_f_grad(const int n_bn, double *b2, double *f, double **A,
       }
 
     for (j = 1; j <= m; j++)
-      A[j][i] *= bn_prms.bn_scl[i-1];
+      A[j][i] *=
+	bn_prms.bn_scl[i-1]
+	*cos(b2[i])*(bn_prms.bn_max[i-1]-bn_prms.bn_min[i-1])/2e0;
 
     bn_prms.clr_prm_dep(i-1);
   }
