@@ -34,7 +34,7 @@ double chi2 = 0e0, *f_lm, **A_lm;
 
 const int n_prt = 8;
 
-const double scl_eta = 1e4, scl_beta = 1e0, scl_alpha = 1e3, scl_bn = 1e2;
+const double scl_eta = 1e3, scl_beta = 1e0, scl_alpha = 1e2, scl_bn = 1e-2;
 
 double bn_internal(const double bn_bounded,
 		   const double bn_min, const double bn_max);
@@ -157,14 +157,16 @@ void param_type::set_prm(double *bn) const
 double bn_internal(const double bn_bounded,
 		   const double bn_min, const double bn_max)
 {
-  return asin((2e0*(bn_bounded-bn_min))/(bn_max-bn_min)-1e0);
+  // return asin((2e0*(bn_bounded-bn_min))/(bn_max-bn_min)-1e0);
+  return bn_bounded;
 }
 
 
 double bn_bounded(const double bn_internal,
 		  const double bn_min, const double bn_max)
 {
-  return bn_min + (sin(bn_internal)+1e0)*(bn_max-bn_min)/2e0;
+  // return bn_min + (sin(bn_internal)+1e0)*(bn_max-bn_min)/2e0;
+  return bn_internal;
 }
 
 void get_s_loc(const int Fnum, const int Knum, int loc[])
@@ -631,13 +633,14 @@ void prt_lev_marq(const int m, const int n, double *b2)
 void get_f_grad(const int n_bn, double *b2, double *f, double **A,
 		double &chi2, int &m)
 {
-  int          i, j;
-  tps          h_re, h_im, K_re, K_im, K_re_scl;
-  ss_vect<tps> Ascr, AA_tp[3], A_disp[3];
+  // To evaluate the parameter dependance the parameters can not be
+  // transformed; to impose bounds.
+  int          i, j, loc1;
+  tps          beta[2];
+  ss_vect<tps> Ascr, AA_tp[3], A_disp[3], AA_tp1;
 
   bn_prms.set_prm(b2);
 
-  // printf("\n");
   for (i = 1; i <= n_bn; i++) {
     bn_prms.set_prm_dep(i-1);
 
@@ -653,14 +656,31 @@ void get_f_grad(const int n_bn, double *b2, double *f, double **A,
     A[++m][i] = get_a(scl_eta,    A_disp[0][x_],  0, 0, 0, 0, 1);
     A[++m][i] = get_a(scl_eta,    A_disp[0][px_], 0, 0, 0, 0, 1);
     A[++m][i] = get_a(scl_alpha, -AA_tp[1][x_],   0, 1, 0, 0, 0);
-    A[++m][i] = get_a(scl_alpha, -AA_tp[1][y_],   0, 0, 0, 1, 0);
     A[++m][i] = get_a(scl_beta,   AA_tp[1][x_],   1, 0, 0, 0, 0);
     A[++m][i] = get_a(scl_alpha, -AA_tp[2][x_],   0, 1, 0, 0, 0);
     A[++m][i] = get_a(scl_alpha, -AA_tp[2][y_],   0, 0, 0, 1, 0);
     A[++m][i] = get_a(scl_beta,   AA_tp[2][x_],   1, 0, 0, 0, 0);
 
     for (j = 1; j <= n_strength; j++)
-      A[++m][i] = (i == j)? scl_bn*get_L(bn_prms.Fnum[j-1], 1) : 0e0;
+      if (i == j) {
+    	loc1 = get_loc(bn_prms.Fnum[j-1], 1) - 1;
+    	AA_tp1 = elem_tps[loc1].A1*tp_S(2, elem_tps[loc1].A1);
+    	beta[X_] =
+    	  AA_tp1[x_][x_]
+    	  + h_ijklm_p(AA_tp1[x_], 1, 0, 0, 0, 0, 7)*tps(0e0, 7);
+    	beta[Y_] =
+    	  AA_tp1[y_][y_]
+    	  + h_ijklm_p(AA_tp1[y_], 0, 0, 1, 0, 0, 7)*tps(0e0, 7);
+    	A[++m][i] =
+    	  get_a(scl_bn, tps(b2[j], 7)*get_L(bn_prms.Fnum[j-1], 1)*beta[X_],
+    		0, 0, 0, 0, 0);
+    	A[++m][i] =
+    	  get_a(scl_bn, tps(b2[j], 7)*get_L(bn_prms.Fnum[j-1], 1)*beta[Y_],
+    		0, 0, 0, 0, 0);
+      } else {
+    	A[++m][i] = 0e0;
+    	A[++m][i] = 0e0;
+      }
 
     for (j = 1; j <= m; j++)
       A[j][i] *= bn_prms.bn_scl[i-1];
@@ -672,14 +692,19 @@ void get_f_grad(const int n_bn, double *b2, double *f, double **A,
   f[++m] = get_b(scl_eta,    A_disp[0][x_],  0, 0, 0, 0, 1);
   f[++m] = get_b(scl_eta,    A_disp[0][px_], 0, 0, 0, 0, 1);
   f[++m] = get_b(scl_alpha, -AA_tp[1][x_],   0, 1, 0, 0, 0);
-  f[++m] = get_b(scl_alpha, -AA_tp[1][y_],   0, 0, 0, 1, 0);
   f[++m] = get_b(scl_beta,   AA_tp[1][x_],   1, 0, 0, 0, 0) - scl_beta*9.58;
   f[++m] = get_b(scl_alpha, -AA_tp[2][x_],   0, 1, 0, 0, 0);
   f[++m] = get_b(scl_alpha, -AA_tp[2][y_],   0, 0, 0, 1, 0);
   f[++m] = get_b(scl_beta,   AA_tp[2][x_],   1, 0, 0, 0, 0) - scl_beta*8.0;
 
-  for (j = 1; j <= n_strength; j++)
-    f[++m] = scl_bn*b2[j]*get_L(bn_prms.Fnum[j-1], 1);
+  for (j = 1; j <= n_strength; j++) {
+    loc1 = get_loc(bn_prms.Fnum[j-1], 1) - 1;
+    AA_tp1 = elem_tps[loc1].A1*tp_S(2, elem_tps[loc1].A1);
+    beta[X_] = AA_tp1[x_][x_];
+    beta[Y_] = AA_tp1[y_][y_];
+    f[++m] = scl_bn*b2[j]*get_L(bn_prms.Fnum[j-1], 1)*AA_tp1[x_][x_];
+    f[++m] = scl_bn*b2[j]*get_L(bn_prms.Fnum[j-1], 1)*AA_tp1[y_][y_];
+  }
 
   chi2 = 0e0;
   for (j = 1; j <= m; j++)
@@ -693,11 +718,25 @@ void get_f_der(double x, double *b2, double *yfit, double *dyda, int n)
   static int m;
   double     chi2;
 
+  const bool prt = false;
+
   m1 = (int)(x+0.5);
+  if (prt) printf(" %d", m1);
 
   if (m1 == 1) {
     n_powell++;
     get_f_grad(n, b2, f_lm, A_lm, chi2, m);
+  }
+
+  if (prt && (m1 == m)) {
+    printf("\n");
+    for (i = 1; i <= n; i++) {
+      printf(" %9.5f",
+	     bn_bounded(bn_prms.bn_scl[i-1]*b2[i],
+			bn_prms.bn_min[i-1], bn_prms.bn_max[i-1]));
+      if (i % n_prt == 0) printf("\n");
+    }
+    if (n % n_prt != 0) printf("\n");
   }
 
   *yfit = f_lm[m1];
@@ -713,9 +752,9 @@ void min_lev_marq(void)
   double       *b2, *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
   ss_vect<tps> Ascr;
 
-  const int n_bn = bn_prms.n_prm, n_iter = 50;
+  const int n_bn = bn_prms.n_prm, n_iter = 25;
 
-  n_data = 8 + n_strength;
+  n_data = 7 + 2*n_strength;
 
   b2 = dvector(1, n_bn);
   ia = ivector(1, n_bn);
