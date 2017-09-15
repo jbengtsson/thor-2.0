@@ -40,7 +40,7 @@ const double
 
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
-const double scl_h[]   = {1e0, 1e-1, 1e0},
+const double scl_h[]   = {1e0, 1e0, 1e0},
              scl_dnu[] = {1e0, 1e-14},
              scl_ksi[] = {1e5, 1e0};
 
@@ -311,7 +311,7 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else if (i == 9)
       printf("2nd order geometric\n");
     else if (i == 9+14)
-      printf("3rdd order geometric\n");
+      printf("3rd order geometric\n");
     else if (i == 17+14)
       printf("linear chromaticity\n");
     else if (i == 19+14)
@@ -535,6 +535,48 @@ void prt_bn_6(const param_type &bn_prms)
 }
 
 
+void prt_bn_7(const param_type &bn_prms)
+{
+  int  k;
+  FILE *outf;
+
+  const std::string file_name = "dnu.out";
+
+  outf = file_write(file_name.c_str());
+
+  k = 0;
+  fprintf(outf, "\nsf:  sextupole, l = 0.14, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sd:  sextupole, l = 0.14, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
+  k++;
+  fprintf(outf, "\ns1:  sextupole, l = 0.0, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "s2a: sextupole, l = 0.0, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "s2b: sextupole, l = 0.0, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "s3:  sextupole, l = 0.0, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "s4:  sextupole, l = 0.0, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "s5:  sextupole, l = 0.0, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "s6:  sextupole, l = 0.0, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
+  fclose(outf);
+}
+
+
 void prt_bn(const param_type &bn_prms)
 {
 
@@ -544,6 +586,9 @@ void prt_bn(const param_type &bn_prms)
     break;
   case 6:
     prt_bn_6(bn_prms);
+    break;
+  case 7:
+    prt_bn_7(bn_prms);
     break;
   }
 }
@@ -1679,16 +1724,18 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("sh1e", 3, 5e5, 1.0);
       break;
     case 7:
-      // DIAMOND-II, 6-BA_jb:
-      bn_prms.add_prm("sd1",  3, 5e5, 1.0);
-      bn_prms.add_prm("sd2",  3, 5e5, 1.0);
-      bn_prms.add_prm("sd3",  3, 5e5, 1.0);
-      bn_prms.add_prm("sf21", 3, 5e5, 1.0);
-      bn_prms.add_prm("sd31", 3, 5e5, 1.0);
-      bn_prms.add_prm("sf1",  3, 5e5, 1.0);
-      bn_prms.add_prm("sh1a", 3, 5e5, 1.0);
-      bn_prms.add_prm("sh1e", 3, 5e5, 1.0);
-      break;
+      // DIAMOND-II, 6-BA_Beni:
+      bn_prms.add_prm("sf", 3, 5e5, 1.0);
+      bn_prms.add_prm("sd", 3, 5e5, 1.0);
+
+      bn_prms.add_prm("s1",  3, 5e5, 1.0);
+      bn_prms.add_prm("s2a", 3, 5e5, 1.0);
+      bn_prms.add_prm("s2b", 3, 5e5, 1.0);
+      bn_prms.add_prm("s3",  3, 5e5, 1.0);
+      bn_prms.add_prm("s4",  3, 5e5, 1.0);
+      bn_prms.add_prm("s5",  3, 5e5, 1.0);
+      bn_prms.add_prm("s6",  3, 5e5, 1.0);
+     break;
     }
 
     // Step is 1.0 for conjugated gradient method.
@@ -1700,7 +1747,7 @@ int main(int argc, char *argv[])
 
     prt_bn(bn_prms);
 
-    fit_ksi1(0e0, 0e0);
+    // fit_ksi1(0e0, 0e0);
 
     // min_conj_grad(true);
 
