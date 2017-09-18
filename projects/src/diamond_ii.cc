@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -32,7 +32,7 @@ const int lat_case = 7, n_prt = 8;
 // Center of straight.
 const double
   beta_inj[][2] = {{3.0, 3.0}, {3.4, 1.9}, {9.9, 5.4}, {9.9, 5.4}, {10.6, 8.6},
-		   {5.3, 2.0}},
+		   {10.9, 2.9}, {5.3, 2.0}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
      {6e-3, 4e-3}, {7e-3, 4e-3}},
@@ -40,7 +40,7 @@ const double
 
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
-const double scl_h[]   = {1e0, 1e0, 1e0},
+const double scl_h[]   = {1e0, 1e-1, 1e0},
              scl_dnu[] = {1e0, 1e-14},
              scl_ksi[] = {1e5, 1e0};
 
@@ -901,20 +901,22 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 3, 1, 0);
     A[++m][i] = get_a(scl_h[1], h_re, 1, 1, 2, 0, 0);
 
-    A[++m][i] = get_a(scl_h[2], h_re, 5, 0, 0, 0, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 4, 1, 0, 0, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 3, 2, 0, 0, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 3, 0, 2, 0, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 2, 1, 2, 0, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 2, 1, 0, 2, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 3, 0, 0, 2, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 1, 0, 4, 0, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 1, 0, 0, 4, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 3, 0, 1, 1, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 2, 1, 1, 1, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 1, 0, 3, 1, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 1, 0, 1, 3, 0);
-    A[++m][i] = get_a(scl_h[2], h_re, 1, 0, 2, 2, 0);
+    if (NO >= 6) {
+      A[++m][i] = get_a(scl_h[2], h_re, 5, 0, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 4, 1, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 3, 2, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 3, 0, 2, 0, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 2, 1, 2, 0, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 2, 1, 0, 2, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 3, 0, 0, 2, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 1, 0, 4, 0, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 1, 0, 0, 4, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 3, 0, 1, 1, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 2, 1, 1, 1, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 1, 0, 3, 1, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 1, 0, 1, 3, 0);
+      A[++m][i] = get_a(scl_h[2], h_re, 1, 0, 2, 2, 0);
+    }
 
     if (!symm) {
       A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 0, 0, 2);
@@ -936,20 +938,22 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       A[++m][i] = get_a(scl_h[1], h_im, 0, 0, 3, 1, 0);
       A[++m][i] = get_a(scl_h[1], h_im, 1, 1, 2, 0, 0);
 
-      A[++m][i] = get_a(scl_h[2], h_im, 5, 0, 0, 0, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 4, 1, 0, 0, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 3, 2, 0, 0, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 3, 0, 2, 0, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 2, 1, 2, 0, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 2, 1, 0, 2, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 3, 0, 0, 2, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 1, 0, 4, 0, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 1, 0, 0, 4, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 3, 0, 1, 1, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 2, 1, 1, 1, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 1, 0, 3, 1, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 1, 0, 1, 3, 0);
-      A[++m][i] = get_a(scl_h[2], h_im, 1, 0, 2, 2, 0);
+      if (NO >= 6) {
+	A[++m][i] = get_a(scl_h[2], h_im, 5, 0, 0, 0, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 4, 1, 0, 0, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 3, 2, 0, 0, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 3, 0, 2, 0, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 2, 1, 2, 0, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 2, 1, 0, 2, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 3, 0, 0, 2, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 1, 0, 4, 0, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 1, 0, 0, 4, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 3, 0, 1, 1, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 2, 1, 1, 1, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 1, 0, 3, 1, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 1, 0, 1, 3, 0);
+	A[++m][i] = get_a(scl_h[2], h_im, 1, 0, 2, 2, 0);
+      }
     }
 
     A[++m][i] = get_a(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
@@ -1025,20 +1029,22 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   f[++m] = get_b(scl_h[1], h_re, 0, 0, 3, 1, 0);
   f[++m] = get_b(scl_h[1], h_re, 1, 1, 2, 0, 0);
 
-  f[++m] = get_b(scl_h[2], h_re, 5, 0, 0, 0, 0);
-  f[++m] = get_b(scl_h[2], h_re, 4, 1, 0, 0, 0);
-  f[++m] = get_b(scl_h[2], h_re, 3, 2, 0, 0, 0);
-  f[++m] = get_b(scl_h[2], h_re, 3, 0, 2, 0, 0);
-  f[++m] = get_b(scl_h[2], h_re, 2, 1, 2, 0, 0);
-  f[++m] = get_b(scl_h[2], h_re, 2, 1, 0, 2, 0);
-  f[++m] = get_b(scl_h[2], h_re, 3, 0, 0, 2, 0);
-  f[++m] = get_b(scl_h[2], h_re, 1, 0, 4, 0, 0);
-  f[++m] = get_b(scl_h[2], h_re, 1, 0, 0, 4, 0);
-  f[++m] = get_b(scl_h[2], h_re, 3, 0, 1, 1, 0);
-  f[++m] = get_b(scl_h[2], h_re, 2, 1, 1, 1, 0);
-  f[++m] = get_b(scl_h[2], h_re, 1, 0, 3, 1, 0);
-  f[++m] = get_b(scl_h[2], h_re, 1, 0, 1, 3, 0);
-  f[++m] = get_b(scl_h[2], h_re, 1, 0, 2, 2, 0);
+  if (NO >= 6) {
+    f[++m] = get_b(scl_h[2], h_re, 5, 0, 0, 0, 0);
+    f[++m] = get_b(scl_h[2], h_re, 4, 1, 0, 0, 0);
+    f[++m] = get_b(scl_h[2], h_re, 3, 2, 0, 0, 0);
+    f[++m] = get_b(scl_h[2], h_re, 3, 0, 2, 0, 0);
+    f[++m] = get_b(scl_h[2], h_re, 2, 1, 2, 0, 0);
+    f[++m] = get_b(scl_h[2], h_re, 2, 1, 0, 2, 0);
+    f[++m] = get_b(scl_h[2], h_re, 3, 0, 0, 2, 0);
+    f[++m] = get_b(scl_h[2], h_re, 1, 0, 4, 0, 0);
+    f[++m] = get_b(scl_h[2], h_re, 1, 0, 0, 4, 0);
+    f[++m] = get_b(scl_h[2], h_re, 3, 0, 1, 1, 0);
+    f[++m] = get_b(scl_h[2], h_re, 2, 1, 1, 1, 0);
+    f[++m] = get_b(scl_h[2], h_re, 1, 0, 3, 1, 0);
+    f[++m] = get_b(scl_h[2], h_re, 1, 0, 1, 3, 0);
+    f[++m] = get_b(scl_h[2], h_re, 1, 0, 2, 2, 0);
+  }
 
   if (!symm) {
     f[++m] = get_b(scl_h[0], h_im, 1, 0, 0, 0, 2);
@@ -1060,20 +1066,22 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_h[1], h_im, 0, 0, 3, 1, 0);
     f[++m] = get_b(scl_h[1], h_im, 1, 1, 2, 0, 0);
 
-    f[++m] = get_b(scl_h[2], h_im, 5, 0, 0, 0, 0);
-    f[++m] = get_b(scl_h[2], h_im, 4, 1, 0, 0, 0);
-    f[++m] = get_b(scl_h[2], h_im, 3, 2, 0, 0, 0);
-    f[++m] = get_b(scl_h[2], h_im, 3, 0, 2, 0, 0);
-    f[++m] = get_b(scl_h[2], h_im, 2, 1, 2, 0, 0);
-    f[++m] = get_b(scl_h[2], h_im, 2, 1, 0, 2, 0);
-    f[++m] = get_b(scl_h[2], h_im, 3, 0, 0, 2, 0);
-    f[++m] = get_b(scl_h[2], h_im, 1, 0, 4, 0, 0);
-    f[++m] = get_b(scl_h[2], h_im, 1, 0, 0, 4, 0);
-    f[++m] = get_b(scl_h[2], h_im, 3, 0, 1, 1, 0);
-    f[++m] = get_b(scl_h[2], h_im, 2, 1, 1, 1, 0);
-    f[++m] = get_b(scl_h[2], h_im, 1, 0, 3, 1, 0);
-    f[++m] = get_b(scl_h[2], h_im, 1, 0, 1, 3, 0);
-    f[++m] = get_b(scl_h[2], h_im, 1, 0, 2, 2, 0);
+    if (NO >= 6) {
+      f[++m] = get_b(scl_h[2], h_im, 5, 0, 0, 0, 0);
+      f[++m] = get_b(scl_h[2], h_im, 4, 1, 0, 0, 0);
+      f[++m] = get_b(scl_h[2], h_im, 3, 2, 0, 0, 0);
+      f[++m] = get_b(scl_h[2], h_im, 3, 0, 2, 0, 0);
+      f[++m] = get_b(scl_h[2], h_im, 2, 1, 2, 0, 0);
+      f[++m] = get_b(scl_h[2], h_im, 2, 1, 0, 2, 0);
+      f[++m] = get_b(scl_h[2], h_im, 3, 0, 0, 2, 0);
+      f[++m] = get_b(scl_h[2], h_im, 1, 0, 4, 0, 0);
+      f[++m] = get_b(scl_h[2], h_im, 1, 0, 0, 4, 0);
+      f[++m] = get_b(scl_h[2], h_im, 3, 0, 1, 1, 0);
+      f[++m] = get_b(scl_h[2], h_im, 2, 1, 1, 1, 0);
+      f[++m] = get_b(scl_h[2], h_im, 1, 0, 3, 1, 0);
+      f[++m] = get_b(scl_h[2], h_im, 1, 0, 1, 3, 0);
+      f[++m] = get_b(scl_h[2], h_im, 1, 0, 2, 2, 0);
+    }
   }
 
   f[++m] = get_b(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
@@ -1725,8 +1733,10 @@ int main(int argc, char *argv[])
       break;
     case 7:
       // DIAMOND-II, 6-BA_Beni:
-      bn_prms.add_prm("sf", 3, 5e5, 1.0);
-      bn_prms.add_prm("sd", 3, 5e5, 1.0);
+      bn_prms.add_prm("sfa", 3, 5e5, 1.0);
+      bn_prms.add_prm("sfb", 3, 5e5, 1.0);
+      bn_prms.add_prm("sda", 3, 5e5, 1.0);
+      bn_prms.add_prm("sdb", 3, 5e5, 1.0);
 
       bn_prms.add_prm("s1",  3, 5e5, 1.0);
       bn_prms.add_prm("s2a", 3, 5e5, 1.0);
