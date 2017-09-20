@@ -1,4 +1,4 @@
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -40,7 +40,7 @@ const double
 
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
-const double scl_h[]   = {1e0, 1e-1, 1e0},
+const double scl_h[]   = {1e0, 1e0, 1e0},
              scl_dnu[] = {1e0, 1e-14},
              scl_ksi[] = {1e5, 1e0};
 
@@ -545,10 +545,16 @@ void prt_bn_7(const param_type &bn_prms)
   outf = file_write(file_name.c_str());
 
   k = 0;
-  fprintf(outf, "\nsf:  sextupole, l = 0.14, k = %12.5e, n = nsext"
+  fprintf(outf, "\nsfa:  sextupole, l = 0.14, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "sd:  sextupole, l = 0.14, k = %12.5e, n = nsext"
+  fprintf(outf, "sfb:  sextupole, l = 0.14, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sda:  sextupole, l = 0.14, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sdb:  sextupole, l = 0.14, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
   k++;
