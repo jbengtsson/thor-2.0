@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -1739,18 +1739,26 @@ int main(int argc, char *argv[])
       break;
     case 7:
       // DIAMOND-II, 6-BA_Beni:
-      bn_prms.add_prm("sfa", 3, 5e5, 1.0);
-      bn_prms.add_prm("sfb", 3, 5e5, 1.0);
-      bn_prms.add_prm("sda", 3, 5e5, 1.0);
-      bn_prms.add_prm("sdb", 3, 5e5, 1.0);
+      // bn_prms.add_prm("sfa", 3, 5e5, 1.0);
+      // bn_prms.add_prm("sfb", 3, 5e5, 1.0);
+      // bn_prms.add_prm("sda", 3, 5e5, 1.0);
+      // bn_prms.add_prm("sdb", 3, 5e5, 1.0);
+      // bn_prms.add_prm("s1",  3, 5e5, 1.0);
+      // bn_prms.add_prm("s2a", 3, 5e5, 1.0);
+      // bn_prms.add_prm("s2b", 3, 5e5, 1.0);
+      // bn_prms.add_prm("s3",  3, 5e5, 1.0);
+      // bn_prms.add_prm("s4",  3, 5e5, 1.0);
+      // bn_prms.add_prm("s5",  3, 5e5, 1.0);
+      // bn_prms.add_prm("s6",  3, 5e5, 1.0);
 
-      bn_prms.add_prm("s1",  3, 5e5, 1.0);
-      bn_prms.add_prm("s2a", 3, 5e5, 1.0);
-      bn_prms.add_prm("s2b", 3, 5e5, 1.0);
-      bn_prms.add_prm("s3",  3, 5e5, 1.0);
-      bn_prms.add_prm("s4",  3, 5e5, 1.0);
-      bn_prms.add_prm("s5",  3, 5e5, 1.0);
-      bn_prms.add_prm("s6",  3, 5e5, 1.0);
+      bn_prms.add_prm("sf", 3, 5e5, 1.0);
+      bn_prms.add_prm("sd", 3, 5e5, 1.0);
+      bn_prms.add_prm("s1", 3, 5e5, 1.0);
+      bn_prms.add_prm("s2", 3, 5e5, 1.0);
+      bn_prms.add_prm("s3", 3, 5e5, 1.0);
+      bn_prms.add_prm("s4", 3, 5e5, 1.0);
+      bn_prms.add_prm("s5", 3, 5e5, 1.0);
+      bn_prms.add_prm("s6", 3, 5e5, 1.0);
      break;
     }
 
