@@ -1,4 +1,4 @@
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -27,16 +27,17 @@ const bool symm = true, tune_conf = false;
 // DIAMOND-II 4-BA     5,
 // DIAMOND-II 6-BA     6.
 // DIAMOND-II 6-BA_jb  7.
-const int lat_case = 7, n_prt = 8;
+// DIAMOND-II 8-BA     8.
+const int lat_case = 8, n_prt = 8;
 
 // Center of straight.
 const double
   beta_inj[][2] = {{3.0, 3.0}, {3.4, 1.9}, {9.9, 5.4}, {9.9, 5.4}, {10.6, 8.6},
-		   {10.9, 2.9}, {5.3, 2.0}},
+		   {10.9, 2.9}, {5.3, 2.0}, {3.4, 1.9}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {6e-3, 4e-3}, {7e-3, 4e-3}},
-  delta_max[] = {3e-2, 5e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
+     {6e-3, 4e-3}, {7e-3, 4e-3}, {2e-3, 1e-3}},
+  delta_max[] = {3e-2, 5e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
 
 // const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
@@ -545,26 +546,17 @@ void prt_bn_7(const param_type &bn_prms)
   outf = file_write(file_name.c_str());
 
   k = 0;
-  fprintf(outf, "\nsfa:  sextupole, l = 0.14, k = %12.5e, n = nsext"
+  fprintf(outf, "\nsf:  sextupole, l = 0.14, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "sfb:  sextupole, l = 0.14, k = %12.5e, n = nsext"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "sda:  sextupole, l = 0.14, k = %12.5e, n = nsext"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "sdb:  sextupole, l = 0.14, k = %12.5e, n = nsext"
+  fprintf(outf, "sd:  sextupole, l = 0.14, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
 
   k++;
   fprintf(outf, "\ns1:  sextupole, l = 0.0, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
-  fprintf(outf, "s2a: sextupole, l = 0.0, k = %12.5e, n = nsext"
-	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-  k++;
-  fprintf(outf, "s2b: sextupole, l = 0.0, k = %12.5e, n = nsext"
+  fprintf(outf, "s2: sextupole, l = 0.0, k = %12.5e, n = nsext"
 	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   k++;
   fprintf(outf, "s3:  sextupole, l = 0.0, k = %12.5e, n = nsext"
@@ -583,6 +575,42 @@ void prt_bn_7(const param_type &bn_prms)
 }
 
 
+void prt_bn_8(const param_type &bn_prms)
+{
+  int  k;
+  FILE *outf;
+
+  const std::string file_name = "dnu.out";
+
+  outf = file_write(file_name.c_str());
+
+  k = 0;
+  fprintf(outf, "\nsfh:  sextupole, l = 0.05, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sdh:  sextupole, l = 0.05, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sfmh: sextupole, l = 0.05, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sdmh: sextupole, l = 0.05, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
+  k++;
+  fprintf(outf, "\nsxxh: sextupole, l = 0.05, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "sxyh: sextupole, l = 0.05, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  k++;
+  fprintf(outf, "syyh: sextupole, l = 0.05, k = %12.5e, n = nsext"
+	  ", Method = Meth;\n", bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+
+  fclose(outf);
+}
+
+
 void prt_bn(const param_type &bn_prms)
 {
 
@@ -595,6 +623,9 @@ void prt_bn(const param_type &bn_prms)
     break;
   case 7:
     prt_bn_7(bn_prms);
+    break;
+  case 8:
+    prt_bn_8(bn_prms);
     break;
   }
 }
@@ -1760,6 +1791,18 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("s5", 3, 5e5, 1.0);
       bn_prms.add_prm("s6", 3, 5e5, 1.0);
      break;
+    case 8:
+      // DIAMOND-II, 8-BA:
+      bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+      bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+      bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+      bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+      if (true) {
+	bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
+	bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
+	bn_prms.add_prm("syyh", 3, 5e5, 1.0);
+      }
+      break;
     }
 
     // Step is 1.0 for conjugated gradient method.
@@ -1771,7 +1814,10 @@ int main(int argc, char *argv[])
 
     prt_bn(bn_prms);
 
-    // fit_ksi1(0e0, 0e0);
+    if (false) {
+      fit_ksi1(0e0, 0e0);
+      exit(0);
+    }
 
     // min_conj_grad(true);
 
