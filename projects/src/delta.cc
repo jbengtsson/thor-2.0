@@ -19,7 +19,7 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 double chi2 = 0e0, *f, **A;
 
-const bool tune_conf = false;
+const bool symm = false, tune_conf = false;
 
 const int n_prt = 8;
 
@@ -276,7 +276,7 @@ void prt_h_K(void)
 
 void prt_system(const int m, const int n_b2, double **A, double *b)
 {
-  int i, j;
+  int i, j, d;
 
   printf("\n Ax = b:\n");
   for (j = 1; j <= n_b2; j++)
@@ -285,6 +285,7 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else
       printf("%11d", j);
   printf("\n");
+  d = (symm)? 0 : 16;
   for (i = 1; i <= m; i++) {
     if (i == 1)
       printf("1st order chromatic\n");
@@ -292,19 +293,19 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
       printf("1st order geometric\n");
     else if (i == 9)
       printf("2nd order geometric\n");
-    else if (i == 17)
+    else if (i == 17+d)
       printf("linear chromaticity\n");
-    else if (i == 19)
+    else if (i == 19+d)
       printf("ampl. dependant tune shift\n");
-    else if (i == 22)
+    else if (i == 22+d)
       printf("2nd order chromaticity\n");
-    else if (i == 24)
+    else if (i == 24+d)
       printf("cross terms\n");
-    else if (i == 27)
+    else if (i == 27+d)
       printf("3rd order chromaticity\n");
-    else if (i == 29)
+    else if (i == 29+d)
       printf("ampl. dependant tune shift\n");
-    else if (i == 34) {
+    else if (i == 34+d) {
       if (!tune_conf)
 	printf("ampl. dependant tune shift\n");
       else
@@ -601,7 +602,7 @@ double get_f(double *bns)
   danot_(NO);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
-  K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl;
+  K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl; h_im = h_im*Id_scl;
 
   b.push_back(get_b(scl_h[0], h_re, 1, 0, 0, 0, 2));
   b.push_back(get_b(scl_h[0], h_re, 2, 0, 0, 0, 1));
@@ -621,6 +622,27 @@ double get_f(double *bns)
   b.push_back(get_b(scl_h[1], h_re, 0, 0, 4, 0, 0));
   b.push_back(get_b(scl_h[1], h_re, 0, 0, 3, 1, 0));
   b.push_back(get_b(scl_h[1], h_re, 1, 1, 2, 0, 0));
+
+  if (!symm) {
+    b.push_back(get_b(scl_h[0], h_im, 1, 0, 0, 0, 2));
+    b.push_back(get_b(scl_h[0], h_im, 2, 0, 0, 0, 1));
+    b.push_back(get_b(scl_h[0], h_im, 0, 0, 2, 0, 1));
+
+    b.push_back(get_b(scl_h[0], h_im, 1, 0, 1, 1, 0));
+    b.push_back(get_b(scl_h[0], h_im, 2, 1, 0, 0, 0));
+    b.push_back(get_b(scl_h[0], h_im, 3, 0, 0, 0, 0));
+    b.push_back(get_b(scl_h[0], h_im, 1, 0, 0, 2, 0));
+    b.push_back(get_b(scl_h[0], h_im, 1, 0, 2, 0, 0));
+
+    b.push_back(get_b(scl_h[1], h_im, 2, 0, 1, 1, 0));
+    b.push_back(get_b(scl_h[1], h_im, 3, 1, 0, 0, 0));
+    b.push_back(get_b(scl_h[1], h_im, 4, 0, 0, 0, 0));
+    b.push_back(get_b(scl_h[1], h_im, 2, 0, 0, 2, 0));
+    b.push_back(get_b(scl_h[1], h_im, 2, 0, 2, 0, 0));
+    b.push_back(get_b(scl_h[1], h_im, 0, 0, 4, 0, 0));
+    b.push_back(get_b(scl_h[1], h_im, 0, 0, 3, 1, 0));
+    b.push_back(get_b(scl_h[1], h_im, 1, 1, 2, 0, 0));
+  }
 
   b.push_back(get_b(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1));
   b.push_back(get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1));
@@ -709,7 +731,7 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     danot_(NO);
     K = MapNorm(Map, g, A1, A0, Map_res, 1);
     CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
-    K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl;
+    K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl; h_im = h_im*Id_scl;
 
     m = 0;
     A[++m][i] = get_a(scl_h[0], h_re, 1, 0, 0, 0, 2);
@@ -730,6 +752,27 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 4, 0, 0);
     A[++m][i] = get_a(scl_h[1], h_re, 0, 0, 3, 1, 0);
     A[++m][i] = get_a(scl_h[1], h_re, 1, 1, 2, 0, 0);
+
+    if (!symm) {
+      A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 0, 0, 2);
+      A[++m][i] = get_a(scl_h[0], h_im, 2, 0, 0, 0, 1);
+      A[++m][i] = get_a(scl_h[0], h_im, 0, 0, 2, 0, 1);
+
+      A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 1, 1, 0);
+      A[++m][i] = get_a(scl_h[0], h_im, 2, 1, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[0], h_im, 3, 0, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 0, 2, 0);
+      A[++m][i] = get_a(scl_h[0], h_im, 1, 0, 2, 0, 0);
+
+      A[++m][i] = get_a(scl_h[1], h_im, 2, 0, 1, 1, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 3, 1, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 4, 0, 0, 0, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 2, 0, 0, 2, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 2, 0, 2, 0, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 0, 0, 4, 0, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 0, 0, 3, 1, 0);
+      A[++m][i] = get_a(scl_h[1], h_im, 1, 1, 2, 0, 0);
+    }
 
     A[++m][i] = get_a(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
     A[++m][i] = get_a(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
@@ -810,6 +853,27 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   f[++m] = get_b(scl_h[1], h_re, 0, 0, 4, 0, 0);
   f[++m] = get_b(scl_h[1], h_re, 0, 0, 3, 1, 0);
   f[++m] = get_b(scl_h[1], h_re, 1, 1, 2, 0, 0);
+
+  if (!symm) {
+    f[++m] = get_b(scl_h[0], h_im, 1, 0, 0, 0, 2);
+    f[++m] = get_b(scl_h[0], h_im, 2, 0, 0, 0, 1);
+    f[++m] = get_b(scl_h[0], h_im, 0, 0, 2, 0, 1);
+
+    f[++m] = get_b(scl_h[0], h_im, 1, 0, 1, 1, 0);
+    f[++m] = get_b(scl_h[0], h_im, 2, 1, 0, 0, 0);
+    f[++m] = get_b(scl_h[0], h_im, 3, 0, 0, 0, 0);
+    f[++m] = get_b(scl_h[0], h_im, 1, 0, 0, 2, 0);
+    f[++m] = get_b(scl_h[0], h_im, 1, 0, 2, 0, 0);
+
+    f[++m] = get_b(scl_h[1], h_im, 2, 0, 1, 1, 0);
+    f[++m] = get_b(scl_h[1], h_im, 3, 1, 0, 0, 0);
+    f[++m] = get_b(scl_h[1], h_im, 4, 0, 0, 0, 0);
+    f[++m] = get_b(scl_h[1], h_im, 2, 0, 0, 2, 0);
+    f[++m] = get_b(scl_h[1], h_im, 2, 0, 2, 0, 0);
+    f[++m] = get_b(scl_h[1], h_im, 0, 0, 4, 0, 0);
+    f[++m] = get_b(scl_h[1], h_im, 0, 0, 3, 1, 0);
+    f[++m] = get_b(scl_h[1], h_im, 1, 1, 2, 0, 0);
+  }
 
   f[++m] = get_b(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
   f[++m] = get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
@@ -1035,6 +1099,7 @@ void min_lev_marq(void)
     printf("min_lev_marq: undef. parameter NO = %d\n", NO);
     exit(0);
   }
+  if (!symm) n_data += 16;
 
   n_bn = bn_prms.n_prm;
 
@@ -1133,6 +1198,14 @@ int main(int argc, char *argv[])
   daeps_(1e-30);
 
   danot_(1);
+
+  printf("\nscl_h:     %7.1e, %7.1e, %7.1e\n", scl_h[0], scl_h[1], scl_h[2]);
+  printf("scl_dnu:   %7.1e, %7.1e\n", scl_dnu[0], scl_dnu[1]);
+  printf("scl_ksi:   %7.1e, %7.1e\n", scl_ksi[0], scl_ksi[1]);
+  printf("symmetric: %d\n", symm);
+  printf("\nA_max:     %7.1e, %7.1e\n", A_max[X_], A_max[Y_]);
+  printf("delta_max: %7.1e\n", delta);
+  printf("beta_inj:  %7.1e, %7.1e\n", beta[X_], beta[Y_]);
 
   get_nu_ksi();
 
