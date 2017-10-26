@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -28,7 +28,7 @@ const bool symm = true, tune_conf = false;
 // DIAMOND-II 6-BA     6.
 // DIAMOND-II 6-BA_jb  7.
 // DIAMOND-II 8-BA     8.
-const int lat_case = 8, n_prt = 8;
+const int lat_case = 7, n_prt = 8;
 
 // Center of straight.
 const double
@@ -311,21 +311,21 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
       printf("1st order geometric\n");
     else if (i == 9)
       printf("2nd order geometric\n");
-    else if (i == 9+14)
-      printf("3rd order geometric\n");
-    else if (i == 17+14)
+    // else if (i == 9)
+    //   printf("3rd order geometric\n");
+    else if (i == 17)
       printf("linear chromaticity\n");
-    else if (i == 19+14)
+    else if (i == 19)
       printf("ampl. dependant tune shift\n");
-    else if (i == 22+14)
+    else if (i == 22)
       printf("2nd order chromaticity\n");
-    else if (i == 24+14)
+    else if (i == 24)
       printf("cross terms\n");
-    else if (i == 27+14)
+    else if (i == 27)
       printf("3rd order chromaticity\n");
-    else if (i == 29+14)
+    else if (i == 29)
       printf("ampl. dependant tune shift\n");
-    else if (i == 33+14) {
+    else if (i == 33) {
       if (!tune_conf)
 	printf("ampl. dependant tune shift\n");
       else
@@ -1769,27 +1769,29 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("sh1e", 3, 5e5, 1.0);
       break;
     case 7:
-      // DIAMOND-II, 6-BA_Beni:
-      // bn_prms.add_prm("sfa", 3, 5e5, 1.0);
-      // bn_prms.add_prm("sfb", 3, 5e5, 1.0);
-      // bn_prms.add_prm("sda", 3, 5e5, 1.0);
-      // bn_prms.add_prm("sdb", 3, 5e5, 1.0);
-      // bn_prms.add_prm("s1",  3, 5e5, 1.0);
-      // bn_prms.add_prm("s2a", 3, 5e5, 1.0);
-      // bn_prms.add_prm("s2b", 3, 5e5, 1.0);
-      // bn_prms.add_prm("s3",  3, 5e5, 1.0);
-      // bn_prms.add_prm("s4",  3, 5e5, 1.0);
-      // bn_prms.add_prm("s5",  3, 5e5, 1.0);
-      // bn_prms.add_prm("s6",  3, 5e5, 1.0);
-
-      bn_prms.add_prm("sf", 3, 5e5, 1.0);
-      bn_prms.add_prm("sd", 3, 5e5, 1.0);
-      bn_prms.add_prm("s1", 3, 5e5, 1.0);
-      bn_prms.add_prm("s2", 3, 5e5, 1.0);
-      bn_prms.add_prm("s3", 3, 5e5, 1.0);
-      bn_prms.add_prm("s4", 3, 5e5, 1.0);
-      bn_prms.add_prm("s5", 3, 5e5, 1.0);
-      bn_prms.add_prm("s6", 3, 5e5, 1.0);
+      if (true) {
+	// DIAMOND-II, 6-BA_Beni:
+	bn_prms.add_prm("sfa", 3, 5e5, 1.0);
+	bn_prms.add_prm("sfb", 3, 5e5, 1.0);
+	bn_prms.add_prm("sda", 3, 5e5, 1.0);
+	bn_prms.add_prm("sdb", 3, 5e5, 1.0);
+	bn_prms.add_prm("s1",  3, 5e5, 1.0);
+	bn_prms.add_prm("s2a", 3, 5e5, 1.0);
+	bn_prms.add_prm("s2b", 3, 5e5, 1.0);
+	bn_prms.add_prm("s3",  3, 5e5, 1.0);
+	bn_prms.add_prm("s4",  3, 5e5, 1.0);
+	bn_prms.add_prm("s5",  3, 5e5, 1.0);
+	bn_prms.add_prm("s6",  3, 5e5, 1.0);
+      } else {
+	bn_prms.add_prm("sf", 3, 5e5, 1.0);
+	bn_prms.add_prm("sd", 3, 5e5, 1.0);
+	bn_prms.add_prm("s1", 3, 5e5, 1.0);
+	bn_prms.add_prm("s2", 3, 5e5, 1.0);
+	bn_prms.add_prm("s3", 3, 5e5, 1.0);
+	bn_prms.add_prm("s4", 3, 5e5, 1.0);
+	bn_prms.add_prm("s5", 3, 5e5, 1.0);
+	bn_prms.add_prm("s6", 3, 5e5, 1.0);
+      }
      break;
     case 8:
       // DIAMOND-II, 8-BA:
@@ -1814,9 +1816,9 @@ int main(int argc, char *argv[])
 
     prt_bn(bn_prms);
 
-    if (false) {
+    if (true) {
       fit_ksi1(0e0, 0e0);
-      exit(0);
+      // exit(0);
     }
 
     // min_conj_grad(true);
