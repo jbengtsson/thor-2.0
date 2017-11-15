@@ -323,13 +323,13 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
   printf("\n");
   d = (symm)? 0 : 16;
   for (i = 1; i <= m; i++) {
-    if (i == 1)
+    if (i-1 == 0)
       printf("1st order chromatic\n");
-    else if (i == 4)
+    else if (i-1 == 3)
       printf("1st order geometric\n");
-    else if ((NO >= 5) && (i == 9))
+    else if ((NO >= 5) && (i-1 == 3+5))
       printf("2nd order geometric\n");
-    else if ((NO >= 6) && (i == 17))
+    else if ((NO >= 6) && (i-1 == 3+5+8))
       printf("3rd order geometric\n");
 
     n_h = 0;
@@ -338,17 +338,17 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     if (NO >= 5+1) n_h += 14;      // 30.
     if (!symm)     n_h += 16 + 14;
 
-    if (i == n_h)
+    if (i-1 == n_h)
       printf("linear chromaticity\n");
-    else if (i == n_h+2)
+    else if (i-1 == n_h+2)
       printf("ampl. dependant tune shift\n");
-    else if (i == n_h+5)
+    else if (i-1 == n_h+2+3)
       printf("2nd order chromaticity\n");
-    else if (i == n_h+7)
+    else if (i-1 == n_h+2+3+2)
       printf("cross terms\n");
-    else if (i == n_h+10)
+    else if (i-1 == n_h+2+3+2+3)
       printf("3rd order chromaticity\n");
-    else if (i == n_h+2) {
+    else if (i-1 == n_h+2+3+2+3+2) {
       if (!tune_conf)
 	printf("ampl. dependant tune shift\n");
       else
@@ -1697,7 +1697,7 @@ int main(int argc, char *argv[])
 
     printf("\nscl_h:     %7.1e, %7.1e, %7.1e\n", scl_h[0], scl_h[1], scl_h[2]);
     printf("scl_dnu:   %7.1e, %7.1e\n", scl_dnu[0], scl_dnu[1]);
-    printf("scl_ksi:   %7.1e, %7.1, %7.1ee\n",
+    printf("scl_ksi:   %7.1e, %7.1e, %7.1e\n",
 	   scl_ksi[0], scl_ksi[1], scl_ksi[2]);
     printf("symmetric: %d\n", symm);
     printf("\nA_max:     %7.1e, %7.1e\n",
