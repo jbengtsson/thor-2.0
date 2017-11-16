@@ -46,10 +46,17 @@ const double
   delta_max[] = {3e-2, 5e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
 
+#if false
+// Sextupoles.
+const double scl_h[]   = {1e0, 1e0, 1e0},
+             scl_dnu[] = {1e0, 1e0, 1e0, 1e0},
+             scl_ksi[] = {1e5, 1e-1, 1e-1};
+#else
+// Octupoles.
 const double scl_h[]   = {1e0, 1e0, 1e0},
              scl_dnu[] = {1e-1, 1e-1, 1e-1, 1e-1},
              scl_ksi[] = {1e5, 1e-1, 1e-1};
-
+#endif
 
 struct param_type {
 private:
@@ -677,6 +684,38 @@ void prt_bn_9(const param_type &bn_prms)
 }
 
 
+void prt_bn_10(const param_type &bn_prms)
+{
+  long int loc;
+  int      k;
+  FILE     *outf;
+
+  const bool sxt = false;
+  const std::string file_name = "dnu.out";
+
+  outf = file_write(file_name.c_str());
+
+  fprintf(outf, "\n");
+  for (k = 0; k < bn_prms.n_prm; k++) {
+    loc = get_loc(bn_prms.Fnum[k], 1) - 1;
+    if (sxt)
+      fprintf(outf,
+	      "%8s: sextupole, l = %7.5f"
+	      ", k = %12.5e, n = nsext, Method = Meth;\n",
+	      elem[loc].Name, elem[loc].L, bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+      else
+	fprintf(outf,
+		"%-8s: multipole, l = %7.5f,"
+		"\n          hom = (3, %12.5e, 0e0, 4, %12.5e, 0e0),"
+		"\n          n = nsext, Method = Meth;\n",
+		elem[loc].Name, elem[loc].L, elem[loc].mpole->bn[Sext-1],
+		bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+  }
+
+  fclose(outf);
+}
+
+
 void prt_bn(const param_type &bn_prms)
 {
 
@@ -694,7 +733,8 @@ void prt_bn(const param_type &bn_prms)
     prt_bn_8(bn_prms);
     break;
   case 9:
-    prt_bn_9(bn_prms);
+    // prt_bn_9(bn_prms);
+    prt_bn_10(bn_prms);
     break;
   }
 }
@@ -1893,16 +1933,29 @@ int main(int argc, char *argv[])
       break;
     case 9:
       // DIAMOND-II, 8-BA by Hossein:
-      bn_prms.add_prm("s1",  3, 5e5, 1.0);
-      bn_prms.add_prm("s2",  3, 5e5, 1.0);
-      bn_prms.add_prm("s3",  3, 5e5, 1.0);
-      bn_prms.add_prm("s4",  3, 5e5, 1.0);
-      bn_prms.add_prm("s5",  3, 5e5, 1.0);
-      bn_prms.add_prm("s6",  3, 5e5, 1.0);
-      bn_prms.add_prm("s7",  3, 5e5, 1.0);
-      bn_prms.add_prm("s8",  3, 5e5, 1.0);
-      bn_prms.add_prm("s9",  3, 5e5, 1.0);
-      bn_prms.add_prm("s10", 3, 5e5, 1.0);
+      if (false) {
+	bn_prms.add_prm("s1",  3, 5e5, 1.0);
+	bn_prms.add_prm("s2",  3, 5e5, 1.0);
+	bn_prms.add_prm("s3",  3, 5e5, 1.0);
+	bn_prms.add_prm("s4",  3, 5e5, 1.0);
+	bn_prms.add_prm("s5",  3, 5e5, 1.0);
+	bn_prms.add_prm("s6",  3, 5e5, 1.0);
+	bn_prms.add_prm("s7",  3, 5e5, 1.0);
+	bn_prms.add_prm("s8",  3, 5e5, 1.0);
+	bn_prms.add_prm("s9",  3, 5e5, 1.0);
+	bn_prms.add_prm("s10", 3, 5e5, 1.0);
+      } else {
+	bn_prms.add_prm("s1",  4, 5e5, 1.0);
+	bn_prms.add_prm("s2",  4, 5e5, 1.0);
+	bn_prms.add_prm("s3",  4, 5e5, 1.0);
+	bn_prms.add_prm("s4",  4, 5e5, 1.0);
+	bn_prms.add_prm("s5",  4, 5e5, 1.0);
+	bn_prms.add_prm("s6",  4, 5e5, 1.0);
+	bn_prms.add_prm("s7",  4, 5e5, 1.0);
+	bn_prms.add_prm("s8",  4, 5e5, 1.0);
+	bn_prms.add_prm("s9",  4, 5e5, 1.0);
+	bn_prms.add_prm("s10", 4, 5e5, 1.0);
+      }
       break;
     }
 
@@ -1915,12 +1968,12 @@ int main(int argc, char *argv[])
 
     prt_bn(bn_prms);
 
-    if (true) {
+    if (false) {
       fit_ksi1(0e0, 0e0);
       // exit(0);
     }
 
-    if (true)
+    if (false)
       min_conj_grad(true);
     else
       min_lev_marq();
