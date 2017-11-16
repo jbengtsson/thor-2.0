@@ -1151,7 +1151,9 @@
         call   dacmu(b1,sca,v(2*i-1))
       enddo
       call dadal(h,1)
+      write(*, *) 'difd 1'
       call dadal(b1,1)
+      write(*, *) 'difd 2'
       return
       end subroutine
 

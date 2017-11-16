@@ -46,9 +46,8 @@ const double
   delta_max[] = {3e-2, 5e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
 
-// const double scl_h[] = {1e0, 1e0}, scl_dnu[] = {1e5, 1e0, 1e-1, 1e-9};
 const double scl_h[]   = {1e0, 1e0, 1e0},
-             scl_dnu[] = {1e-1, 1e-1},
+             scl_dnu[] = {1e-1, 1e-1, 1e-1, 1e-1},
              scl_ksi[] = {1e5, 1e-1, 1e-1};
 
 
@@ -831,8 +830,8 @@ double get_f(double *bns)
   get_map_n(n_cell);
   danot_(NO);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
-  CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
-  K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl; h_im = h_im*Id_scl;
+  CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
+  CtoR(get_h(), h_re, h_im); h_re = h_re*Id_scl; h_im = h_im*Id_scl;
 
   b.push_back(get_b(scl_h[0], h_re, 1, 0, 0, 0, 2));
   b.push_back(get_b(scl_h[0], h_re, 2, 0, 0, 0, 1));
@@ -923,9 +922,9 @@ double get_f(double *bns)
   }
 
   if (NO >= 6) {
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 1));
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 1));
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 1));
+    b.push_back(get_b(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 1));
+    b.push_back(get_b(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 1));
+    b.push_back(get_b(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 1));
 
     b.push_back(get_b(scl_ksi[2], K_re_scl, 1, 1, 0, 0, 3));
     b.push_back(get_b(scl_ksi[2], K_re_scl, 0, 0, 1, 1, 3));
@@ -933,28 +932,28 @@ double get_f(double *bns)
 
   if (NO >= 7) {
     if (!tune_conf) {
-      b.push_back(get_b(scl_dnu[0], K_re_scl, 3, 3, 0, 0, 0));
-      b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0));
-      b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 3, 3, 0));
+      b.push_back(get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0));
+      b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
+      b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
+      b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0));
     } else {
-      b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0));
-      b.push_back(scl_dnu[1]
+      b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
+      b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
+      b.push_back(scl_dnu[2]
 		  *(get_b(1e0, K_re, 3, 3, 0, 0, 0)
 		    +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0)));
-      b.push_back(scl_dnu[1]
+      b.push_back(scl_dnu[2]
 		  *(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 		    +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0)));
     }
   }
 
   if (NO >= 9) {
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0));
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0));
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0));
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0));
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0));
+    b.push_back(get_b(scl_dnu[3], K_re_scl, 4, 4, 0, 0, 0));
+    b.push_back(get_b(scl_dnu[3], K_re_scl, 3, 3, 1, 1, 0));
+    b.push_back(get_b(scl_dnu[3], K_re_scl, 2, 2, 2, 2, 0));
+    b.push_back(get_b(scl_dnu[3], K_re_scl, 1, 1, 3, 3, 0));
+    b.push_back(get_b(scl_dnu[3], K_re_scl, 0, 0, 4, 4, 0));
   }
 
   chi2 = 0e0;
@@ -993,8 +992,8 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     get_map_n(n_cell);
     danot_(NO);
     K = MapNorm(Map, g, A1, A0, Map_res, 1);
-    CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
-    K_re_scl = K_re*Id_scl; h_re = h_re*Id_scl; h_im = h_im*Id_scl;
+    CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
+    CtoR(get_h(), h_re, h_im); h_re = h_re*Id_scl; h_im = h_im*Id_scl;
 
     m = 0;
     A[++m][i] = get_a(scl_h[0], h_re, 1, 0, 0, 0, 2);
@@ -1086,9 +1085,9 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     }
 
     if (NO >= 6) {
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 1);
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 1);
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 1);
+      A[++m][i] = get_a(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 1);
+      A[++m][i] = get_a(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 1);
+      A[++m][i] = get_a(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 1);
 
       A[++m][i] = get_a(scl_ksi[2], K_re_scl, 1, 1, 0, 0, 3);
       A[++m][i] = get_a(scl_ksi[2], K_re_scl, 0, 0, 1, 1, 3);
@@ -1096,30 +1095,30 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 
     if (NO >= 7) {
       if (!tune_conf) {
-	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 3, 3, 0, 0, 0);
-	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0);
-	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
-	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 3, 3, 0);
+	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
+	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
+	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
+	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
       } else {
-	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0);
-	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
+	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
+	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
 	A[++m][i] =
-	  scl_dnu[1]
+	  scl_dnu[2]
 	  *(get_a(1e0, K_re, 3, 3, 0, 0, 0)
 	    +get_a(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
 	A[++m][i] =
-	  scl_dnu[1]
+	  scl_dnu[2]
 	  *(get_a(1e0, K_re, 0, 0, 3, 3, 0)
 	    +get_a(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
       }
     }
 
     if (NO >= 9) {
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0);
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0);
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0);
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0);
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0);
+      A[++m][i] = get_a(scl_dnu[3], K_re_scl, 4, 4, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu[3], K_re_scl, 3, 3, 1, 1, 0);
+      A[++m][i] = get_a(scl_dnu[3], K_re_scl, 2, 2, 2, 2, 0);
+      A[++m][i] = get_a(scl_dnu[3], K_re_scl, 1, 1, 3, 3, 0);
+      A[++m][i] = get_a(scl_dnu[3], K_re_scl, 0, 0, 4, 4, 0);
     }
 
     for (j = 1; j <= m; j++)
@@ -1218,9 +1217,9 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   }
 
   if (NO >= 6) {
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 1);
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 1);
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 1);
+    f[++m] = get_b(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 1);
+    f[++m] = get_b(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 1);
+    f[++m] = get_b(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 1);
 
     f[++m] = get_b(scl_ksi[2], K_re_scl, 1, 1, 0, 0, 3);
     f[++m] = get_b(scl_ksi[2], K_re_scl, 0, 0, 1, 1, 3);
@@ -1228,30 +1227,30 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 
   if (NO >= 7) {
     if (!tune_conf) {
-      f[++m] = get_b(scl_dnu[0], K_re_scl, 3, 3, 0, 0, 0);
-      f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
-      f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 3, 3, 0);
+      f[++m] = get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
+      f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
+      f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
+      f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
     } else {
-      f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 2, 2, 0);
+      f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
+      f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
       f[++m] =
-	scl_dnu[1]
+	scl_dnu[2]
 	*(get_b(1e0, K_re, 3, 3, 0, 0, 0)
 	  +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
       f[++m] =
-	scl_dnu[1]
+	scl_dnu[2]
 	*(get_b(1e0, K_re, 0, 0, 3, 3, 0)
 	  +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
     }
   }
 
   if (NO >= 9) {
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 4, 4, 0, 0, 0);
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 3, 3, 1, 1, 0);
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 2, 2, 0);
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 3, 3, 0);
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 4, 4, 0);
+    f[++m] = get_b(scl_dnu[3], K_re_scl, 4, 4, 0, 0, 0);
+    f[++m] = get_b(scl_dnu[3], K_re_scl, 3, 3, 1, 1, 0);
+    f[++m] = get_b(scl_dnu[3], K_re_scl, 2, 2, 2, 2, 0);
+    f[++m] = get_b(scl_dnu[3], K_re_scl, 1, 1, 3, 3, 0);
+    f[++m] = get_b(scl_dnu[3], K_re_scl, 0, 0, 4, 4, 0);
   }
 
   chi2 = 0e0;
@@ -1696,7 +1695,8 @@ int main(int argc, char *argv[])
     danot_(1);
 
     printf("\nscl_h:     %7.1e, %7.1e, %7.1e\n", scl_h[0], scl_h[1], scl_h[2]);
-    printf("scl_dnu:   %7.1e, %7.1e\n", scl_dnu[0], scl_dnu[1]);
+    printf("scl_dnu:   %7.1e, %7.1e, %7.1e, %7.1e\n",
+	   scl_dnu[0], scl_dnu[1], scl_dnu[2], scl_dnu[3]);
     printf("scl_ksi:   %7.1e, %7.1e, %7.1e\n",
 	   scl_ksi[0], scl_ksi[1], scl_ksi[2]);
     printf("symmetric: %d\n", symm);
@@ -1920,7 +1920,7 @@ int main(int argc, char *argv[])
       // exit(0);
     }
 
-    if (false)
+    if (true)
       min_conj_grad(true);
     else
       min_lev_marq();
