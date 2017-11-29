@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -1690,7 +1690,7 @@ int main(int argc, char *argv[])
       // exit(0);
     }
 
-    if (true)
+    if (false)
       min_conj_grad(true);
     else
       min_lev_marq();
