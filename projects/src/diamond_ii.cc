@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 3
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -31,22 +31,22 @@ const int  n_cell = 2;
 // DIAMOND with VMX            4,
 // DIAMOND-II 4-BA             5,
 // DIAMOND-II 6-BA             6,
-// DIAMOND-II 6-BA_jb          7,
+// DIAMOND-II 6-RB-BA          7,
 // DIAMOND-II 8-BA             8,
 // DIAMOND-II 8-BA by Hossein  9.
-const int lat_case = 9, n_prt = 8;
+const int lat_case = 7, n_prt = 8;
 
 // Center of straight.
 const double
   beta_inj[][2] = {{3.0, 3.0}, {3.4, 1.9}, {9.9, 5.4}, {9.9, 5.4}, {10.6, 8.6},
-		   {10.9, 2.9}, {5.3, 2.0}, {3.4, 1.9}, {10.5, 5.2}},
+		   {10.9, 2.9}, {5.3, 2.0}, {14.0, 4.5}, {10.5, 5.2}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
      {6e-3, 4e-3}, {7e-3, 4e-3}, {2e-3, 1e-3}, {2e-3, 1e-3}},
   delta_max[] = {3e-2, 5e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
 
-#if false
+#if true
 // Sextupoles.
 const bool   oct = false;
 const double scl_h[]   = {1e0, 1e0, 1e0},
@@ -1472,7 +1472,7 @@ int main(int argc, char *argv[])
 
     get_nu_ksi();
 
-    if (true) {
+    if (false) {
       // fit_tune(57.15/6.0, 22.25/6.0);
       fit_tune(0.530831725+1e-4, 0.685735574-0*1e-4);
       get_nu_ksi();
@@ -1609,40 +1609,37 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("s3",  3, 5e5, 1.0);
       break;
     case 6:
-      // DIAMOND-II, 6-BA:
-      bn_prms.add_prm("sd1",  3, 5e5, 1.0);
-      bn_prms.add_prm("sd2",  3, 5e5, 1.0);
-      bn_prms.add_prm("sd3",  3, 5e5, 1.0);
-      bn_prms.add_prm("sf21", 3, 5e5, 1.0);
-      bn_prms.add_prm("sd31", 3, 5e5, 1.0);
-      bn_prms.add_prm("sf1",  3, 5e5, 1.0);
-      bn_prms.add_prm("sh1a", 3, 5e5, 1.0);
-      bn_prms.add_prm("sh1e", 3, 5e5, 1.0);
-      break;
-    case 7:
-      if (true) {
-	// DIAMOND-II, 6-BA_Beni:
-	bn_prms.add_prm("sfa", 3, 5e5, 1.0);
-	bn_prms.add_prm("sfb", 3, 5e5, 1.0);
-	bn_prms.add_prm("sda", 3, 5e5, 1.0);
-	bn_prms.add_prm("sdb", 3, 5e5, 1.0);
-	bn_prms.add_prm("s1",  3, 5e5, 1.0);
-	bn_prms.add_prm("s2a", 3, 5e5, 1.0);
-	bn_prms.add_prm("s2b", 3, 5e5, 1.0);
-	bn_prms.add_prm("s3",  3, 5e5, 1.0);
-	bn_prms.add_prm("s4",  3, 5e5, 1.0);
-	bn_prms.add_prm("s5",  3, 5e5, 1.0);
-	bn_prms.add_prm("s6",  3, 5e5, 1.0);
-      } else {
-	bn_prms.add_prm("sf", 3, 5e5, 1.0);
-	bn_prms.add_prm("sd", 3, 5e5, 1.0);
-	bn_prms.add_prm("s1", 3, 5e5, 1.0);
-	bn_prms.add_prm("s2", 3, 5e5, 1.0);
-	bn_prms.add_prm("s3", 3, 5e5, 1.0);
-	bn_prms.add_prm("s4", 3, 5e5, 1.0);
-	bn_prms.add_prm("s5", 3, 5e5, 1.0);
-	bn_prms.add_prm("s6", 3, 5e5, 1.0);
-      }
+      // DIAMOND-II, 6-BA by Beni:
+      // bn_prms.add_prm("sd1",  3, 5e5, 1.0);
+      // bn_prms.add_prm("sd2",  3, 5e5, 1.0);
+      // bn_prms.add_prm("sd3",  3, 5e5, 1.0);
+      // bn_prms.add_prm("sf21", 3, 5e5, 1.0);
+      // bn_prms.add_prm("sd31", 3, 5e5, 1.0);
+      // bn_prms.add_prm("sf1",  3, 5e5, 1.0);
+      // bn_prms.add_prm("sh1a", 3, 5e5, 1.0);
+      // bn_prms.add_prm("sh1e", 3, 5e5, 1.0);
+      // break;
+      bn_prms.add_prm("sfa", 3, 5e5, 1.0);
+      bn_prms.add_prm("sfb", 3, 5e5, 1.0);
+      bn_prms.add_prm("sda", 3, 5e5, 1.0);
+      bn_prms.add_prm("sdb", 3, 5e5, 1.0);
+
+      bn_prms.add_prm("s1",  3, 5e5, 1.0);
+      bn_prms.add_prm("s2a", 3, 5e5, 1.0);
+      bn_prms.add_prm("s2b", 3, 5e5, 1.0);
+      bn_prms.add_prm("s3",  3, 5e5, 1.0);
+      bn_prms.add_prm("s4",  3, 5e5, 1.0);
+      bn_prms.add_prm("s5",  3, 5e5, 1.0);
+      bn_prms.add_prm("s6",  3, 5e5, 1.0);
+     case 7:
+      // DIAMOND-II, 6-RB-BA:
+      bn_prms.add_prm("sd",   3, 5e5, 1.0);
+      bn_prms.add_prm("sfm",  3, 5e5, 1.0);
+      bn_prms.add_prm("sdm",  3, 5e5, 1.0);
+      bn_prms.add_prm("sxx",  3, 5e5, 1.0);
+      bn_prms.add_prm("sxya", 3, 5e5, 1.0);
+      bn_prms.add_prm("sxyb", 3, 5e5, 1.0);
+      bn_prms.add_prm("syy",  3, 5e5, 1.0);
      break;
     case 8:
       // DIAMOND-II, 8-BA:

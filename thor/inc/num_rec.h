@@ -479,6 +479,7 @@ extern "C" {
   void pzextr(int iest, float xest, float yest[], float yz[], float dy[],
 	      int nv);
   float qgaus(float (*func)(float), float a, float b);
+  double dqgaus(double (*func)(double), double a, double b);
   void qrdcmp(float **a, int n, float *c, float *d, int *sing);
   float qromb(float (*func)(float), float a, float b);
   double dqromb(double (*func)(double), double a, double b);
