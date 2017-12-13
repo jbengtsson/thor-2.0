@@ -85,7 +85,7 @@ void mat_tp(const int m, const int n, double **A, double **B);
 void prt_mat(const int m, const int n, double **A);
 
 void SVD_lim(const int m, const int n, double **A, double *b,
-	     const double *corr_max, const double s_cut, double *corr0,
+	     const double *corr_max, const int n_cut, double *corr0,
 	     double *dcorr);
 
 void SVD(const int m, const int n, double **A, double *b, double *dcorr);

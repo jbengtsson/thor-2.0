@@ -557,7 +557,7 @@ void prt_mat(const int m, const int n, double **A)
 
 
 void SVD_lim(const int m, const int n, double **A, double *b,
-	     const double corr_max[], const double s_cut, double *corr0,
+	     const double corr_max[], const int n_cut, double *corr0,
 	     double *dcorr)
 {
   int    i, j, k, n_sing, max_ind = 0, sgn, max_sgn = 0, n1, mpn;
@@ -568,7 +568,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   double **A_ext;
 
   const bool   prt = false;
-  const double eps = 1e-10;
+  const double eps = 1e-10, s_cut = 1e-15;
 
   mpn = m + n;
 
@@ -636,9 +636,10 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   for (i = 1; i <= n; i++) {
     std::cout << std::scientific << std::setprecision(3)
 	      << std::setw(10) << w[i];
-//    if (w[i]/s_max < s_cut) {
-    if (w[i] < s_cut) {
-      w[i] = 0.0;
+    // if (w[i]/s_max < s_cut) {
+    // if (w[i] < s_cut) {
+    if (n-i < n_cut) {
+      w[i] = 0e0;
       std::cout << " (zeroed)";
       // if A is singular, extend with null space
       n_sing++; n1++;
@@ -693,7 +694,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
     for (i = 1; i <= n; i++) {
       std::cout << std::scientific << std::setprecision(3)
 		<< std::setw(10) << w[i];
-//      if (fabs(w[i])/s_max < s_cut) {
+      // if (fabs(w[i])/s_max < s_cut) {
       if (fabs(w[i]) < s_cut) {
 	w[i] = 0.0;
 	std::cout << " (zeroed, SVD_lim)" << std::endl;
