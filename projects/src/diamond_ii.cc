@@ -1632,20 +1632,20 @@ int main(int argc, char *argv[])
       // bn_prms.add_prm("sh1a", 3, 5e5, 1.0);
       // bn_prms.add_prm("sh1e", 3, 5e5, 1.0);
       // break;
-      bn_prms.add_prm("sfa", 3, 5e5, 1.0);
-      bn_prms.add_prm("sfb", 3, 5e5, 1.0);
-      bn_prms.add_prm("sda", 3, 5e5, 1.0);
-      bn_prms.add_prm("sdb", 3, 5e5, 1.0);
-      bn_prms.add_prm("sdc", 3, 5e5, 1.0);
-      bn_prms.add_prm("sdd", 3, 5e5, 1.0);
+      bn_prms.add_prm("sfa",  3, 5e5, 1.0);
+      // bn_prms.add_prm("sfb",  3, 5e5, 1.0);
+      bn_prms.add_prm("sda",  3, 5e5, 1.0);
+      // bn_prms.add_prm("sdb",  3, 5e5, 1.0);
+      bn_prms.add_prm("sd2a", 3, 5e5, 1.0);
+      // bn_prms.add_prm("sd2b", 3, 5e5, 1.0);
 
-      bn_prms.add_prm("s1",  3, 5e5, 1.0);
+      bn_prms.add_prm("s1a", 3, 5e5, 1.0);
+      bn_prms.add_prm("s1b", 3, 5e5, 1.0);
       bn_prms.add_prm("s2a", 3, 5e5, 1.0);
       bn_prms.add_prm("s2b", 3, 5e5, 1.0);
       bn_prms.add_prm("s3",  3, 5e5, 1.0);
       bn_prms.add_prm("s4",  3, 5e5, 1.0);
       bn_prms.add_prm("s5",  3, 5e5, 1.0);
-      bn_prms.add_prm("s6",  3, 5e5, 1.0);
       break;
     case 7:
       // DIAMOND-II, 6-RB-BA:
@@ -1714,7 +1714,7 @@ int main(int argc, char *argv[])
     }
 
     if (true) {
-      bn_prms.svd_n_cut = 4;
+      bn_prms.svd_n_cut = 2;
       min_conj_grad(true);
     } else
       min_lev_marq();
