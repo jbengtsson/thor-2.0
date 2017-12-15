@@ -88,6 +88,10 @@ void SVD_lim(const int m, const int n, double **A, double *b,
 	     const double *corr_max, const int n_cut, double *corr0,
 	     double *dcorr);
 
+void SVD_lim(const int m, const int n, double **A, double *b,
+	     const double *corr_max, const double s_cut, double *corr0,
+	     double *dcorr);
+
 void SVD(const int m, const int n, double **A, double *b, double *dcorr);
 
 void get_A_inv(const int m, const int n, float **U, float *w, float **V,

@@ -904,6 +904,353 @@ void SVD_lim(const int m, const int n, double **A, double *b,
 }
 
 
+void SVD_lim(const int m, const int n, double **A, double *b,
+	     const double corr_max[], const double s_cut, double *corr0,
+	     double *dcorr)
+{
+  int    i, j, k, n_sing, max_ind = 0, sgn, max_sgn = 0, n1, mpn;
+  double **U, **U_tp, **V, **AtU_inv, **n0_tp, n_norm;
+  double **U_m, **V_m, **U_m_tp, **N_m;
+  double *w, *w_m, *dUb, *Ub0, *b_m, *p_m, *b_ext;
+  double **n_m_tp, Delta_m, **d0, max_dist, u, **C, **C_tp, s_max, v;
+  double **A_ext;
+
+  const bool   prt = false;
+  const double eps = 1e-10;
+
+  mpn = m + n;
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "m = " << m << ", n = " << n << ", mpn = " << mpn << std::endl;
+  }
+
+  dUb = dvector(1, n); Ub0 = dvector(1, n);
+  b_m = dvector(1, mpn);
+  U = dmatrix(1, mpn, 1, n); w = dvector(1, n); V = dmatrix(1, n, 1, n);
+  U_tp = dmatrix(1, n, 1, mpn);
+  A_ext = dmatrix(1, mpn, 1, n); b_ext = dvector(1, mpn);
+  AtU_inv = dmatrix(1, n, 1, n);
+  n0_tp = dmatrix(1, n, 1, n); d0 = dmatrix(1, n, 1, 2);
+
+  N_m = dmatrix(1, n, 1, n); U_m = dmatrix(1, n, 1, n);
+  w_m = dvector(1, n); V_m = dmatrix(1, n, 1, n);
+  U_m_tp = dmatrix(1, n, 1, n); n_m_tp = dmatrix(1, n, 1, n);
+  p_m = dvector(1, n); 
+
+  C = dmatrix(1, n, 1, n); C_tp = dmatrix(1, n, 1, n);
+
+  n1 = m;
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "A:" << std::endl;
+    prt_mat(m, n, A);
+  }
+
+  for (i = 1; i <= m; i++) {
+    b_ext[i] = b[i];
+    for (j = 1; j <= n; j++) {
+      U[i][j] = A[i][j]; A_ext[i][j] = A[i][j];
+    }
+  }
+
+  // SVD of A
+  dsvdcmp(U, m, n, w, V);
+  
+  mat_tp(m, n, U, U_tp);
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "V:" << std::endl;
+    prt_mat(n, n, V);
+  }
+
+  // transform b into U-basis
+  lin_trans(n, m, U_tp, b, dUb);
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "dUb:" << std::endl;
+    prt_vec(n, dUb);
+  }
+
+  s_max = -1e30;
+  for (i = 1; i <= n; i++)
+    s_max = max(w[i], s_max);
+  
+  std::cout << std::endl << "singular values:" << std::endl;
+  n_sing = 0;
+  for (i = 1; i <= n; i++) {
+    std::cout << std::scientific << std::setprecision(3)
+	      << std::setw(10) << w[i];
+    // if (w[i]/s_max < s_cut) {
+    if (w[i] < s_cut) {
+      w[i] = 0e0;
+      std::cout << " (zeroed)";
+      // if A is singular, extend with null space
+      n_sing++; n1++;
+      for (j = 1; j <= n; j++)
+	A_ext[n1][j] = V[j][i];
+      b_ext[n1] = 0.0;
+   }
+    if (i % 8 == 0) std::cout << std::endl;
+  }
+  if (n % 8 != 0) std::cout << std::endl;
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "n_sing = " << n_sing << std::endl;
+    std::cout << std::endl;
+    std::cout << "A_ext:" << std::endl;
+    prt_mat(n1, n, A_ext);
+  }
+
+  if (n_sing > 0) {
+    for (i = 1; i <= n1; i++)
+      for (j = 1; j <= n; j++) {
+	U[i][j] = A_ext[i][j];
+      }
+
+    // SVD of A
+    dsvdcmp(U, n1, n, w, V);
+  
+    mat_tp(n1, n, U, U_tp);
+
+    if (prt) {
+      std::cout << std::endl;
+      std::cout << "V:" << std::endl;
+      prt_mat(n, n, V);
+    }
+
+    // transform b into U-basis
+    lin_trans(n, n1, U_tp, b_ext, dUb);
+
+    if (prt) {
+      std::cout << std::endl;
+      std::cout << "dUb:" << std::endl;
+      prt_vec(n, dUb);
+    }
+
+    s_max = -1e30;
+    for (i = 1; i <= n; i++)
+      s_max = max(w[i], s_max);
+  
+    std::cout << std::endl;
+    std::cout << "singular values:" << std::endl;
+    for (i = 1; i <= n; i++) {
+      std::cout << std::scientific << std::setprecision(3)
+		<< std::setw(10) << w[i];
+      // if (fabs(w[i])/s_max < s_cut) {
+      if (fabs(w[i]) < s_cut) {
+	w[i] = 0.0;
+	std::cout << " (zeroed, SVD_lim)" << std::endl;
+	exit(0);
+      }
+      if (i % 8 == 0) std::cout << std::endl;
+    }
+    if (n % 8 != 0) std::cout << std::endl;
+    
+    n_sing = 0;
+  }
+
+  // compute corrector configurations
+  for (i = 1; i <= n; i++)
+    for (j = 1; j <= n; j++)
+      C_tp[j][i] = w[i]*V[j][i];
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "C^T:" << std::endl;
+    prt_mat(n, n, C_tp);
+  }
+
+  mat_tp(n, n, C_tp, C); lin_trans(n, n, C, corr0, Ub0);
+
+  // compute the normal vectors for the limiting planes j
+  for (i = 1; i <= n; i++)
+    for (j = 1; j <= n; j++)
+      if (w[i] != 0.0)
+	AtU_inv[i][j] = V[j][i]/w[i];
+      else
+	AtU_inv[i][j] = 0.0;
+  
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "AtU^-1:" << std::endl;
+    prt_mat(n, n, AtU_inv);
+  }
+
+  mat_tp(n, n, AtU_inv, n0_tp);
+  // normalize
+  for (j = 1; j <= n; j++) {
+    n_norm = vec_abs(n, n0_tp[j]);
+    for (k = 1; k <= n; k++)
+      n0_tp[j][k] /= n_norm;
+  }
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "n0^T:" << std::endl;
+    prt_mat(n, n, n0_tp);
+  }
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "d0:" << std::endl;
+    std::cout << std::endl;
+  }
+  for (j = 1; j <= n; j++) {
+    u = corr_max[j]*scl_prod(n, C_tp[j], n0_tp[j]);
+    d0[j][1] = -u; d0[j][2] = u;
+    if (prt)
+      std::cout << std::scientific << std::setprecision(3)
+	   << std::setw(10) << d0[j][1] << " - "
+		<< std::setw(10) << d0[j][2] << std::endl;
+  }
+
+  max_dist = 1.0;
+//  while ((n_sing < m) && (max_dist > eps)) {
+  while ((n_sing < n) && (max_dist > eps)) {
+    if (n_sing > 0) {
+      if (prt) {
+	std::cout << std::endl;
+	std::cout << "N_m:" << std::endl;
+	prt_mat(n, n_sing, N_m);
+      }
+
+      // remove null space from orthogonal basis
+      for (i = 1; i <= n; i++)
+	for (j = 1; j <= n_sing; j++)
+	  U_m[i][j] = N_m[i][j];
+      
+      dsvdcmp(U_m, n, n_sing, w_m, V_m); mat_tp(n, n_sing, U_m, U_m_tp);
+
+      if (prt) {
+	std::cout << std::endl;
+	std::cout << "singular values:" << std::endl;
+	if (i % 8 == 0) std::cout << std::endl;
+	for (i = 1; i <= n; i++) {
+	  std::cout << std::scientific << std::setprecision(3)
+		    << std::setw(10) << w[i];
+	  if (n % 8 != 0) std::cout << std::endl;
+	}
+	std::cout << std::endl;
+
+	std::cout << std::endl;
+	std::cout << "U_m:" << std::endl;
+	prt_mat(n, n_sing, U_m);
+
+	std::cout << std::endl;
+	std::cout << "V_m:" << std::endl;
+	prt_mat(n_sing, n_sing, V_m);
+      }
+
+      for (j = 1; j <= n; j++) {
+	lin_trans(n_sing, n, U_m_tp, n0_tp[j], p_m);
+	lin_trans(n, n_sing, U_m, p_m, n_m_tp[j]);
+	vec_sub(n, n0_tp[j], n_m_tp[j], n_m_tp[j]);
+	// normalize
+	n_norm = vec_abs(n, n_m_tp[j]);
+	for (k = 1; k <= n; k++)
+	  n_m_tp[j][k] /= n_norm;
+      }
+    } else
+      mat_cp(n, n, n0_tp, n_m_tp);
+
+    if (prt) {
+      std::cout << std::endl;
+      std::cout << "n_m^T:" << std::endl;
+      prt_mat(n, n, n_m_tp);
+    }
+
+    if (prt) {
+      std::cout << std::endl;
+      std::cout << "Delta" << std::endl;
+      std::cout << std::endl;
+    }
+
+    max_dist = 0.0;
+    for (j = 1; j <= n; j++) {
+      u = scl_prod(n, dUb, n0_tp[j]) + scl_prod(n, Ub0, n0_tp[j]);
+      v = scl_prod(n, n_m_tp[j], n0_tp[j]);
+      if (u >= 0.0) {
+	sgn = 1; Delta_m = (u-d0[j][2])/v;
+      } else {
+	sgn = -1; Delta_m = -(u-d0[j][1])/v;
+      }
+      if (Delta_m > max_dist) {
+	max_ind = j; max_dist = Delta_m; max_sgn = sgn;
+      }
+      if (prt) {
+	std::cout << std::scientific << std::setprecision(3)
+	     << "n0 = " << std::setw(11) << d0[j][2]
+	     << ", sign = " << std::setw(2) << sgn
+	     << ", b.n0 = " << std::setw(11) << u
+	     << ", Delta_m = " << std::setw(11) << Delta_m
+	     << ", n0.n_m = " << std::setw(11) << v
+	     << ", max_dist = " << max_dist << std::endl;
+      }
+    }
+
+    if (max_dist > eps) {
+      n_sing++;
+      for (k = 1; k <= n; k++) {
+	dUb[k] -= max_sgn*max_dist*n_m_tp[max_ind][k];
+	N_m[k][n_sing] = n0_tp[max_ind][k];
+      }
+    }
+
+    if (prt) {
+      std::cout << std::endl;
+      std::cout << "dUb:" << std::endl;
+      prt_vec(n, dUb);
+    }
+  }
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "n_sing = " << n_sing << std::endl;
+  }
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "b:" << std::endl;
+    prt_vec(m, b);
+  }
+
+  // transform dUb back to original basis
+  lin_trans(n1, n, U, dUb, b_m);
+
+  if (prt) {
+    std::cout << std::endl;
+    std::cout << "b_m:" << std::endl;
+    prt_vec(n1, b_m);
+  }
+
+  dsvbksb(U, w, V, n1, n, b_m, dcorr);
+
+  std::cout << "dcorr.:" << std::endl;
+  prt_vec(n, dcorr);
+
+  free_dvector(dUb, 1, n); free_dvector(Ub0, 1, n);
+  free_dvector(b_m, 1, mpn);
+  free_dmatrix(U, 1, mpn, 1, n); free_dvector(w, 1, n);
+  free_dmatrix(V, 1, n, 1, n);
+  free_dmatrix(U_tp, 1, n, 1, mpn);
+  free_dmatrix(A_ext, 1, mpn, 1, n); free_dvector(b_ext, 1, mpn);
+  free_dmatrix(AtU_inv, 1, n, 1, n);
+  free_dmatrix(n0_tp, 1, n, 1, n); free_dmatrix(d0, 1, n, 1, 2);
+
+  free_dmatrix(N_m, 1, n, 1, n); free_dmatrix(U_m, 1, n, 1, n);
+  free_dvector(w_m, 1, n); free_dmatrix(V_m, 1, n, 1, n);
+  free_dmatrix(U_m_tp, 1, n, 1, n); free_dmatrix(n_m_tp, 1, n, 1, n);
+  free_dvector(p_m, 1, n); 
+
+  free_dmatrix(C, 1, n, 1, n); free_dmatrix(C_tp, 1, n, 1, n);
+}
+
+
 void SVD(const int m, const int n, double **A, double *b, double *dcorr)
 {
   int    i, j;

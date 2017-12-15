@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 6
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -24,25 +24,26 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   symm = true, tune_conf = false;
-const int    n_cell = 2;
+const bool   fit_ksi  = !true, symm  = true, tune_conf = false;
+const int    n_cell   = 2,     n_cut = 0;
 const double tpsa_eps = 1e-30;
 
-// MAX-IV                      1,
-// SLS-2                       2,
-// DIAMOND                     3,
-// DIAMOND with VMX            4,
-// DIAMOND-II 4-BA             5,
-// DIAMOND-II 6-HMBA           6,
-// DIAMOND-II 6-RB-BA          7,
-// DIAMOND-II 8-BA             8,
-// DIAMOND-II 8-BA by Hossein  9.
+// MAX-IV             1,
+// SLS-2              2,
+// DIAMOND            3,
+// DIAMOND with VMX   4,
+// DIAMOND-II 4-BA    5,
+// DIAMOND-II 6-HMBA  6,
+// DIAMOND-II 6-RB-BA 7,
+// DIAMOND-II 8-BA    8,
+// DIAMOND-II 8-HMBA  9.
 const int lat_case = 6, n_prt = 8;
 
 // Center of straight.
 const double
-  beta_inj[][2] = {{3.0, 3.0}, {3.4, 1.9}, {9.9, 5.4}, {9.9, 5.4}, {10.6, 8.6},
-		   {16.2, 4.6}, {5.3, 2.0}, {14.0, 4.5}, {10.5, 5.2}},
+  beta_inj[][2] = {{3.0, 3.0}, {3.4, 1.9}, {9.9, 5.4}, {9.9, 5.4},
+  		   {10.6, 8.6}, {16.2, 4.6}, {5.3, 2.0}, {14.0, 4.5},
+  		   {10.5, 5.2}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
      {6e-3, 4e-3}, {7e-3, 4e-3}, {2e-3, 1e-3}, {2e-3, 1e-3}},
@@ -54,8 +55,8 @@ const double
 // Sextupoles.
 const bool   oct = false;
 const double scl_h[]   = {1e0, 1e0, 1e0},
-             scl_dnu[] = {1e-1, 1e-1, 1e-1, 1e-1},
-             scl_ksi[] = {1e5, 1e-1, 1e-1};
+             scl_dnu[] = {1e-1, 1e-1, 0e0, 0e0},
+             scl_ksi[] = {1e5, 1e-1, 0e0};
 #else
 // Octupoles.
 const bool   oct = true;
@@ -325,6 +326,61 @@ void prt_h_K_sym(void)
 }
 
 
+void prt_dnu(tps &K)
+{
+  tps          K_re, K_im, nu_scl[2];
+  ss_vect<tps> nus;
+
+  CtoR(K, K_re, K_im); nus = dHdJ(K);
+  nu_scl[0] = nus[3]*Id_scl; nu_scl[1] = nus[4]*Id_scl;
+
+  printf("\ndnu:\n");
+  printf(" %8.5f",   h_ijklm(nu_scl[X_], 1, 1, 0, 0, 0));
+  printf(" %8.5f,",  h_ijklm(nu_scl[X_], 0, 0, 1, 1, 0));
+
+  printf(" %8.5f",   h_ijklm(nu_scl[X_], 2, 2, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[X_], 1, 1, 1, 1, 0));
+  printf(" %8.5f,",  h_ijklm(nu_scl[X_], 0, 0, 2, 2, 0));
+
+  printf(" %8.5f",   h_ijklm(nu_scl[X_], 3, 3, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[X_], 2, 2, 1, 1, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[X_], 1, 1, 2, 2, 0));
+  printf(" %8.5f\n", h_ijklm(nu_scl[X_], 0, 0, 3, 3, 0));
+
+  printf(" %8.5f",   h_ijklm(nu_scl[Y_], 1, 1, 0, 0, 0));
+  printf(" %8.5f,",  h_ijklm(nu_scl[Y_], 0, 0, 1, 1, 0));
+
+  printf(" %8.5f",   h_ijklm(nu_scl[Y_], 2, 2, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[Y_], 1, 1, 1, 1, 0));
+  printf(" %8.5f,",  h_ijklm(nu_scl[Y_], 0, 0, 2, 2, 0));
+
+  printf(" %8.5f",   h_ijklm(nu_scl[Y_], 3, 3, 0, 0, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[Y_], 2, 2, 1, 1, 0));
+  printf(" %8.5f",   h_ijklm(nu_scl[Y_], 1, 1, 2, 2, 0));
+  printf(" %8.5f\n", h_ijklm(nu_scl[Y_], 0, 0, 3, 3, 0));
+
+  printf("\n %8.5f", h_ijklm(nu_scl[X_], 0, 0, 0, 0, 2));
+  printf(" %8.5f",   h_ijklm(nu_scl[X_], 1, 1, 0, 0, 2));
+  printf(" %8.5f\n", h_ijklm(nu_scl[X_], 0, 0, 1, 1, 2));
+
+  printf(" %8.5f",   h_ijklm(nu_scl[Y_], 0, 0, 0, 0, 2));
+  printf(" %8.5f",   h_ijklm(nu_scl[Y_], 1, 1, 0, 0, 2));
+  printf(" %8.5f\n", h_ijklm(nu_scl[Y_], 0, 0, 1, 1, 2));
+
+  printf("\nTune confinement:\n");
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(K_re, 3, 3, 0, 0, 0),
+	 h_ijklm(K_re/(3e0*twoJ[X_]), 2, 2, 0, 0, 0));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(K_re, 0, 0, 3, 3, 0),
+	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0));
+  printf(" %11.3e %11.3e %11.3e\n",
+	 h_ijklm(K_re*Id_scl, 1, 1, 1, 1, 0),
+	 h_ijklm(K_re*Id_scl, 2, 2, 1, 1, 0),
+	 h_ijklm(K_re*Id_scl, 1, 1, 2, 2, 0));
+}
+
+
 void prt_system(const int m, const int n_b2, double **A, double *b)
 {
   int i, j, d, n_h;
@@ -375,61 +431,8 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
       printf("%11.3e", A[i][j]);
     printf("%11.3e\n", b[i]);
   }
-}
 
-
-void prt_dnu(tps &K)
-{
-  tps          K_re, K_im, nu_scl[2];
-  ss_vect<tps> nus;
-
-  CtoR(K, K_re, K_im); nus = dHdJ(K);
-  nu_scl[0] = nus[3]*Id_scl; nu_scl[1] = nus[4]*Id_scl;
-
-  printf("\ndnu:\n");
-  printf(" %8.5f",   h_ijklm(nu_scl[0], 1, 1, 0, 0, 0));
-  printf(" %8.5f,",  h_ijklm(nu_scl[0], 0, 0, 1, 1, 0));
-
-  printf(" %8.5f",   h_ijklm(nu_scl[0], 2, 2, 0, 0, 0));
-  printf(" %8.5f",   h_ijklm(nu_scl[0], 1, 1, 1, 1, 0));
-  printf(" %8.5f,",  h_ijklm(nu_scl[0], 0, 0, 2, 2, 0));
-
-  printf(" %8.5f",   h_ijklm(nu_scl[0], 3, 3, 0, 0, 0));
-  printf(" %8.5f",   h_ijklm(nu_scl[0], 2, 2, 1, 1, 0));
-  printf(" %8.5f",   h_ijklm(nu_scl[0], 1, 1, 2, 2, 0));
-  printf(" %8.5f\n", h_ijklm(nu_scl[0], 0, 0, 3, 3, 0));
-
-  printf(" %8.5f",   h_ijklm(nu_scl[1], 1, 1, 0, 0, 0));
-  printf(" %8.5f,",  h_ijklm(nu_scl[1], 0, 0, 1, 1, 0));
-
-  printf(" %8.5f",   h_ijklm(nu_scl[1], 2, 2, 0, 0, 0));
-  printf(" %8.5f",   h_ijklm(nu_scl[1], 1, 1, 1, 1, 0));
-  printf(" %8.5f,",  h_ijklm(nu_scl[1], 0, 0, 2, 2, 0));
-
-  printf(" %8.5f",   h_ijklm(nu_scl[1], 3, 3, 0, 0, 0));
-  printf(" %8.5f",   h_ijklm(nu_scl[1], 2, 2, 1, 1, 0));
-  printf(" %8.5f",   h_ijklm(nu_scl[1], 1, 1, 2, 2, 0));
-  printf(" %8.5f\n", h_ijklm(nu_scl[1], 0, 0, 3, 3, 0));
-
-  printf("\n %8.5f", h_ijklm(nu_scl[0], 0, 0, 0, 0, 2));
-  printf(" %8.5f",   h_ijklm(nu_scl[0], 1, 1, 0, 0, 2));
-  printf(" %8.5f\n", h_ijklm(nu_scl[0], 0, 0, 1, 1, 2));
-
-  printf(" %8.5f",   h_ijklm(nu_scl[1], 0, 0, 0, 0, 2));
-  printf(" %8.5f",   h_ijklm(nu_scl[1], 1, 1, 0, 0, 2));
-  printf(" %8.5f\n", h_ijklm(nu_scl[1], 0, 0, 1, 1, 2));
-
-  printf("\nTune confinement:\n");
-  printf(" %11.3e %11.3e\n",
-	 h_ijklm(K_re, 3, 3, 0, 0, 0),
-	 h_ijklm(K_re/(3e0*twoJ[X_]), 2, 2, 0, 0, 0));
-  printf(" %11.3e %11.3e\n",
-	 h_ijklm(K_re, 0, 0, 3, 3, 0),
-	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0));
-  printf(" %11.3e %11.3e %11.3e\n",
-	 h_ijklm(K_re*Id_scl, 1, 1, 1, 1, 0),
-	 h_ijklm(K_re*Id_scl, 2, 2, 1, 1, 0),
-	 h_ijklm(K_re*Id_scl, 1, 1, 2, 2, 0));
+  prt_dnu(K);
 }
 
 
@@ -541,7 +544,8 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
   double       **A, *b;
   ss_vect<tps> nus;
 
-  const int m_max = 2;
+  const int    m_max = 2;
+  const double s_cut = 1e-10;
 
   n_bn = bn_prms.n_prm;
 
@@ -571,8 +575,7 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 
   prt_system(m, n_bn, A, b);
 
-  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
-	  bn_prms.dbn);
+  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, s_cut, bn_prms.bn, bn_prms.dbn);
 
   bn_prms.set_dprm();
 
@@ -589,6 +592,9 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
   prt_mfile("flat_file.fit");
   prt_bn(bn_prms);
 
+  danot_(3);
+  get_map_n(n_cell);
+  danot_(4);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   CtoR(get_h(), h_re, h_im); nus = dHdJ(K);
   prt_h_K();
@@ -1154,7 +1160,6 @@ void prt_lev_marq(const int m, const int n)
   int i;
 
   prt_system(m, n, A_lm, f_lm);
-  prt_dnu(K);
 
   prt_bn(bn_prms);
 
@@ -1476,6 +1481,7 @@ int main(int argc, char *argv[])
 	   scl_dnu[0], scl_dnu[1], scl_dnu[2], scl_dnu[3]);
     printf("scl_ksi:   %7.1e, %7.1e, %7.1e\n",
 	   scl_ksi[0], scl_ksi[1], scl_ksi[2]);
+    printf("n_cut:     %d\n", n_cut);
     printf("symmetric: %d\n", symm);
     printf("\nA_max:     %7.1e, %7.1e\n",
 	   A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
@@ -1633,19 +1639,19 @@ int main(int argc, char *argv[])
       // bn_prms.add_prm("sh1e", 3, 5e5, 1.0);
       // break;
       bn_prms.add_prm("sfa",  3, 5e5, 1.0);
-      // bn_prms.add_prm("sfb",  3, 5e5, 1.0);
+      bn_prms.add_prm("sfb",  3, 5e5, 1.0);
       bn_prms.add_prm("sda",  3, 5e5, 1.0);
-      // bn_prms.add_prm("sdb",  3, 5e5, 1.0);
-      bn_prms.add_prm("sd2a", 3, 5e5, 1.0);
-      // bn_prms.add_prm("sd2b", 3, 5e5, 1.0);
+      bn_prms.add_prm("sdb",  3, 5e5, 1.0);
 
-      bn_prms.add_prm("s1a", 3, 5e5, 1.0);
-      bn_prms.add_prm("s1b", 3, 5e5, 1.0);
-      bn_prms.add_prm("s2a", 3, 5e5, 1.0);
-      bn_prms.add_prm("s2b", 3, 5e5, 1.0);
-      bn_prms.add_prm("s3",  3, 5e5, 1.0);
-      bn_prms.add_prm("s4",  3, 5e5, 1.0);
-      bn_prms.add_prm("s5",  3, 5e5, 1.0);
+      if (!fit_ksi) {
+	bn_prms.add_prm("s1a", 3, 5e5, 1.0);
+	bn_prms.add_prm("s1b", 3, 5e5, 1.0);
+	bn_prms.add_prm("s2a", 3, 5e5, 1.0);
+	bn_prms.add_prm("s2b", 3, 5e5, 1.0);
+	bn_prms.add_prm("s3",  3, 5e5, 1.0);
+	bn_prms.add_prm("s4",  3, 5e5, 1.0);
+	bn_prms.add_prm("s5",  3, 5e5, 1.0);
+      }
       break;
     case 7:
       // DIAMOND-II, 6-RB-BA:
@@ -1700,7 +1706,7 @@ int main(int argc, char *argv[])
     // Step is 1.0 for conjugated gradient method.
     bn_prms.bn_tol = 1e-1; bn_prms.svd_n_cut = 0; bn_prms.step = 1.0;
 
-    if (!oct) {
+    if (fit_ksi) {
       no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
     }
 
@@ -1708,13 +1714,14 @@ int main(int argc, char *argv[])
 
     prt_bn(bn_prms);
 
-    if (true) {
-      if (!oct) fit_ksi1(0e0, 0e0);
-      // exit(0);
+    if (fit_ksi) {
+      bn_prms.svd_n_cut = 0;
+      fit_ksi1(0e0, 0e0);
+      exit(0);
     }
 
     if (true) {
-      bn_prms.svd_n_cut = 2;
+      bn_prms.svd_n_cut = n_cut;
       min_conj_grad(true);
     } else
       min_lev_marq();
