@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 7
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -590,7 +590,7 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 
   printf("\nfit ksi:\n");
   for (i = 1; i <= n_bn; i++) {
-    printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
+    printf(" %12.5e", bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_bn % n_prt != 0) printf("\n");
@@ -1710,10 +1710,10 @@ int main(int argc, char *argv[])
     case 10:
       // SLS-2:
       if (!oct) {
-	bn_prms.add_prm("sdmh", 3, 5e5, pow(1.0/4.0,  1.0/3.0));
-	bn_prms.add_prm("sfmh", 3, 5e5, pow(1.0/4.0,  1.0/3.0));
-	bn_prms.add_prm("sdh",  3, 5e5, pow(1.0/20.0, 1.0/3.0));
-	bn_prms.add_prm("sfh",  3, 5e5, pow(1.0/8.0,  1.0/3.0));
+	bn_prms.add_prm("sdmh", 3, 5e5, pow(1.0/4.0,  1.0/2.0));
+	bn_prms.add_prm("sfmh", 3, 5e5, pow(1.0/4.0,  1.0/2.0));
+	bn_prms.add_prm("sdh",  3, 5e5, pow(1.0/20.0, 1.0/2.0));
+	bn_prms.add_prm("sfh",  3, 5e5, pow(1.0/8.0,  1.0/2.0));
 	if (!fit_ksi) {
 	  bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
 	  bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
