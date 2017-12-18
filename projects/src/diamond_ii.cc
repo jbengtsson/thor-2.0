@@ -24,31 +24,34 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = !true, symm  = true, tune_conf = false;
+const bool   fit_ksi  = true, symm  = true, tune_conf = false;
 const int    n_cell   = 2,     n_cut = 0;
 const double tpsa_eps = 1e-30;
 
-// MAX-IV             1,
-// SLS-2              2,
-// DIAMOND            3,
-// DIAMOND with VMX   4,
-// DIAMOND-II 4-BA    5,
-// DIAMOND-II 6-HMBA  6,
-// DIAMOND-II 6-RB-BA 7,
-// DIAMOND-II 8-BA    8,
-// DIAMOND-II 8-HMBA  9.
-const int lat_case = 6, n_prt = 8;
+// MAX-IV              1,
+// SLS-2               2,
+// DIAMOND             3,
+// DIAMOND with VMX    4,
+// DIAMOND-II 4-BA     5,
+// DIAMOND-II 6-HMBA   6,
+// DIAMOND-II 6-RB-BA  7,
+// DIAMOND-II 8-BA     8,
+// DIAMOND-II 8-HMBA   9,
+// SLS-2              10.
+const int lat_case = 10, n_prt = 8;
 
 // Center of straight.
 const double
-  beta_inj[][2] = {{3.0, 3.0}, {3.4, 1.9}, {9.9, 5.4}, {9.9, 5.4},
-  		   {10.6, 8.6}, {16.2, 4.6}, {5.3, 2.0}, {14.0, 4.5},
-  		   {10.5, 5.2}},
+  beta_inj[][2] =
+    {{ 3.0, 3.0}, {3.4, 1.9}, { 9.9, 5.4}, { 9.9, 5.4}, {10.6, 8.6},
+     {16.2, 4.6}, {5.3, 2.0}, {14.0, 4.5}, {10.5, 5.2}, { 3.4, 1.9}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {6e-3, 4e-3}, {7e-3, 4e-3}, {2e-3, 1e-3}, {2e-3, 1e-3}},
-  delta_max[] = {3e-2, 5e-2, 3e-2, 3e-2, 3e-2,
-		 3e-2, 3e-2, 3e-2, 3e-2};
+     {6e-3, 4e-3},     {7e-3, 4e-3}, { 2e-3, 1e-3},  {2e-3, 1e-3}, {8e-3, 5e-3}
+    },
+  delta_max[] =
+    {3e-2, 5e-2, 3e-2, 3e-2, 3e-2,
+     3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
 
 #if true
@@ -122,7 +125,7 @@ void param_type::ini_prm(void)
     else if (n[i-1] == -2)
       // Location.
       bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
-    printf(" %12.5e", bn[i]);
+    printf(" %12.5e", bn_scl[i-1]*bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_prm % n_prt != 0) printf("\n");
@@ -540,7 +543,7 @@ double get_b(const double scale, const tps &t,
 
 void fit_ksi1(const double ksi_x, const double ksi_y)
 {
-  int          n_bn, i, m;
+  int          n_bn, i, j, m;
   double       **A, *b;
   ss_vect<tps> nus;
 
@@ -566,6 +569,9 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
     A[++m][i] = get_a(1e0, nus[3], 0, 0, 0, 0, 1);
     A[++m][i] = get_a(1e0, nus[4], 0, 0, 0, 0, 1);
 
+    for (j = 1; j <= m; j++)
+      A[j][i] *= bn_prms.bn_scl[i-1];
+
     bn_prms.clr_prm_dep(i-1);
   }
 
@@ -584,7 +590,7 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 
   printf("\nfit ksi:\n");
   for (i = 1; i <= n_bn; i++) {
-    printf(" %12.5e", bn_prms.bn[i]);
+    printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_bn % n_prt != 0) printf("\n");
@@ -1701,6 +1707,27 @@ int main(int argc, char *argv[])
 	bn_prms.add_prm("s10", 4, 5e5, 1.0);
       }
       break;
+    case 10:
+      // SLS-2:
+      if (!oct) {
+	bn_prms.add_prm("sdmh", 3, 5e5, pow(1.0/4.0,  1.0/3.0));
+	bn_prms.add_prm("sfmh", 3, 5e5, pow(1.0/4.0,  1.0/3.0));
+	bn_prms.add_prm("sdh",  3, 5e5, pow(1.0/20.0, 1.0/3.0));
+	bn_prms.add_prm("sfh",  3, 5e5, pow(1.0/8.0,  1.0/3.0));
+	if (!fit_ksi) {
+	  bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
+	  bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
+	  bn_prms.add_prm("syyh", 3, 5e5, 1.0);
+	}
+      } else {
+	bn_prms.add_prm("oxx",  4, 5e5, 1.0);
+	bn_prms.add_prm("oxy",  4, 5e5, 1.0);
+	bn_prms.add_prm("oyy",  4, 5e5, 1.0);
+	bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
+	bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
+	bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
+       }
+      break;
     }
 
     // Step is 1.0 for conjugated gradient method.
@@ -1712,7 +1739,8 @@ int main(int argc, char *argv[])
 
     bn_prms.ini_prm();
 
-    prt_bn(bn_prms);
+    prt_bn
+(bn_prms);
 
     if (fit_ksi) {
       bn_prms.svd_n_cut = 0;
