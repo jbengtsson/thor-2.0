@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 4
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -24,7 +24,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = true, symm  = true, tune_conf = false;
+const bool   fit_ksi  = !true, symm  = true, tune_conf = false;
 const int    n_cell   = 2,     n_cut = 0;
 const double tpsa_eps = 1e-30;
 
@@ -73,7 +73,7 @@ private:
 
 public:
   int                 m_constr, n_prm, svd_n_cut;
-  double              bn_tol, step;
+  double              bn_tol;
   double              *bn_lim, *bn, *dbn;
   std::vector<double> bn_max, bn_scl;
   std::vector<int>    Fnum, n;
@@ -113,18 +113,19 @@ void param_type::ini_prm(void)
   bn_prms.bn_lim = dvector(1, n_prm); bn_prms.bn = dvector(1, n_prm);
   bn_prms.dbn = dvector(1, n_prm);
 
-  printf("\nInitial bn; (incl. scaling) (%d):\n", n_prm);
+  printf("\nInitial bn (%d):\n", n_prm);
   for (i = 1; i <= n_prm; i++) {
     bn_lim[i] = bn_max[i-1];
     if (n[i-1] > 0)
       // Multipole.
-      bn[i] = get_bn(Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
+      bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
     else if (n[i-1] == -1)
       // Drift.
-      bn[i] = get_L(Fnum[i-1], 1)/bn_scl[i-1];
+      bn[i] = get_L(Fnum[i-1], 1);
     else if (n[i-1] == -2)
       // Location.
-      bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
+      bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
+    bn[i] /= bn_scl[i-1];
     printf(" %12.5e", bn_scl[i-1]*bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
@@ -168,7 +169,7 @@ double param_type::set_dprm(void) const
   printf("set_dprm:\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_prm; i++) {
-    dbn[i] *= bn_scl[i-1]*step;
+    dbn[i] *= bn_scl[i-1];
     if (n[i-1] > 0) {
       set_dbn(Fnum[i-1], n[i-1], dbn[i]);
       bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
@@ -479,7 +480,7 @@ void prt_bn(const param_type &bn_prms)
       fprintf(outf,
 	      "%-8s: sextupole, l = %7.5f"
 	      ", k = %12.5e, n = nsext, Method = Meth;\n",
-	      elem[loc].Name, elem[loc].L, bn_prms.bn[k+1]);
+	      elem[loc].Name, elem[loc].L, bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
       else
 	fprintf(outf,
 		"%-8s: multipole, l = %7.5f,"
@@ -585,12 +586,9 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 
   bn_prms.set_dprm();
 
-  for (i = 1; i <= n_bn; i++)
-    bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
-
   printf("\nfit ksi:\n");
   for (i = 1; i <= n_bn; i++) {
-    printf(" %12.5e", bn_prms.bn[i]);
+    printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_bn % n_prt != 0) printf("\n");
@@ -622,7 +620,7 @@ double get_f(double *bns)
   n_powell++;
 
   // Do not change parameters.
-  if (prt) printf("get_f (incl. scaling):\n");
+  if (prt) printf("get_f:\n");
   for (i = 1; i <= bn_prms.n_prm; i++) {
     set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*bns[i]);
     if (prt) printf(" %12.5e", bn_prms.bn_scl[i-1]*bns[i]);
@@ -1091,18 +1089,15 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
 	  bn_prms.dbn);
 
   dvcopy(bn_prms.bn, n_bn, bn_ref);
+
   if (cg_meth)
     conj_grad(n_iter, bn_prms.bn, bn_prms.dbn, g_, h_, get_f);
   else
     bn_prms.set_dprm();
 
+  printf("\nbn & dbn:\n");
   for (i = 1; i <= n_bn; i++)
-    bn_prms.bn[i] =
-      get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1])/bn_prms.bn_scl[i-1];
-
-  printf("\nbn & dbn (incl. scaling):\n");
-  for (i = 1; i <= n_bn; i++)
-    printf(" %12.5e", bn_prms.bn[i]);
+    printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
   printf("\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_bn; i++) {
@@ -1137,7 +1132,7 @@ void min_conj_grad(const bool cg_meth)
 
     prt_mfile("flat_file.fit");
     prt_bn(bn_prms);
-  } while ((dbn_max >  bn_prms.bn_tol) && (n_iter < n_iter_max));
+  } while ((dbn_max > bn_prms.bn_tol) && (n_iter < n_iter_max));
 }
 
 
@@ -1172,7 +1167,7 @@ void prt_lev_marq(const int m, const int n)
   printf("\n%d bn:\n", n_powell);
   for (i = 1; i <= bn_prms.n_prm; i++) {
     bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
-    printf("%11.3e", bn_prms.bn[i]);
+    printf("%11.3e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (bn_prms.n_prm % n_prt != 0) printf("\n");
@@ -1710,10 +1705,14 @@ int main(int argc, char *argv[])
     case 10:
       // SLS-2:
       if (!oct) {
-	bn_prms.add_prm("sdmh", 3, 5e5, pow(1.0/4.0,  1.0/2.0));
-	bn_prms.add_prm("sfmh", 3, 5e5, pow(1.0/4.0,  1.0/2.0));
-	bn_prms.add_prm("sdh",  3, 5e5, pow(1.0/20.0, 1.0/2.0));
-	bn_prms.add_prm("sfh",  3, 5e5, pow(1.0/8.0,  1.0/2.0));
+	bn_prms.add_prm("sdmh", 3, 5e5, sqrt(1.0/4.0));
+	bn_prms.add_prm("sfmh", 3, 5e5, sqrt(1.0/4.0));
+	bn_prms.add_prm("sdh",  3, 5e5, sqrt(1.0/20.0));
+	bn_prms.add_prm("sfh",  3, 5e5, sqrt(1.0/8.0));
+	// bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+	// bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+	// bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+	// bn_prms.add_prm("sfh",  3, 5e5, 1.0);
 	if (!fit_ksi) {
 	  bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
 	  bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
@@ -1730,8 +1729,7 @@ int main(int argc, char *argv[])
       break;
     }
 
-    // Step is 1.0 for conjugated gradient method.
-    bn_prms.bn_tol = 1e-1; bn_prms.svd_n_cut = 0; bn_prms.step = 1.0;
+    bn_prms.bn_tol = 1e-1; bn_prms.svd_n_cut = 0;
 
     if (fit_ksi) {
       no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
@@ -1739,8 +1737,7 @@ int main(int argc, char *argv[])
 
     bn_prms.ini_prm();
 
-    prt_bn
-(bn_prms);
+    prt_bn(bn_prms);
 
     if (fit_ksi) {
       bn_prms.svd_n_cut = 0;
