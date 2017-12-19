@@ -479,7 +479,7 @@ void prt_bn(const param_type &bn_prms)
       fprintf(outf,
 	      "%-8s: sextupole, l = %7.5f"
 	      ", k = %12.5e, n = nsext, Method = Meth;\n",
-	      elem[loc].Name, elem[loc].L, bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+	      elem[loc].Name, elem[loc].L, bn_prms.bn[k+1]);
       else
 	fprintf(outf,
 		"%-8s: multipole, l = %7.5f,"
