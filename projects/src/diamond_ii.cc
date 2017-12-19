@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -58,8 +58,8 @@ const double
 // Sextupoles.
 const bool   oct = false;
 const double scl_h[]   = {1e0, 1e0, 1e0},
-             scl_dnu[] = {5e-1, 5e-1, 0e0, 0e0},
-             scl_ksi[] = {1e5, 1e-1, 0e0};
+             scl_dnu[] = {1e-1, 1e-1, 1e-1, 0e0},
+             scl_ksi[] = {1e5, 1e-1, 1e-1};
 #else
 // Octupoles.
 const bool   oct = true;
@@ -108,12 +108,16 @@ void param_type::ini_prm(void)
 {
   int i;
 
+  const bool scale = true;
+  const int  n_prt = 4;
+
   n_prm = Fnum.size();
 
   bn_prms.bn_lim = dvector(1, n_prm); bn_prms.bn = dvector(1, n_prm);
   bn_prms.dbn = dvector(1, n_prm);
 
-  printf("\nInitial bn (%d):\n", n_prm);
+  printf("\nInitial bn (scale factor in parenthesis):\n");
+  printf("  Number of Families: %2d\n", n_prm);
   for (i = 1; i <= n_prm; i++) {
     bn_lim[i] = bn_max[i-1];
     if (n[i-1] > 0)
@@ -125,8 +129,14 @@ void param_type::ini_prm(void)
     else if (n[i-1] == -2)
       // Location.
       bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
+
+    if (scale)
+      bn_scl[i-1] = 1e0/sqrt(get_n_Kids(Fnum[i-1])*get_L(Fnum[i-1], 1));
+    else
+      bn_scl[i-1] = 1e0;
+
     bn[i] /= bn_scl[i-1];
-    printf(" %12.5e", bn_scl[i-1]*bn[i]);
+    printf(" %12.5e (%9.3e)", bn_scl[i-1]*bn[i], bn_scl[i-1]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_prm % n_prt != 0) printf("\n");
@@ -1706,14 +1716,10 @@ int main(int argc, char *argv[])
     case 10:
       // SLS-2:
       if (!oct) {
-	bn_prms.add_prm("sdmh", 3, 5e5, sqrt(1.0/4.0));
-	bn_prms.add_prm("sfmh", 3, 5e5, sqrt(1.0/4.0));
-	bn_prms.add_prm("sdh",  3, 5e5, sqrt(1.0/20.0));
-	bn_prms.add_prm("sfh",  3, 5e5, sqrt(1.0/8.0));
-	// bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
-	// bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
-	// bn_prms.add_prm("sdh",  3, 5e5, 1.0);
-	// bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+	bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+	bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+	bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+	bn_prms.add_prm("sfh",  3, 5e5, 1.0);
 	if (!fit_ksi) {
 	  bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
 	  bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
@@ -1746,7 +1752,7 @@ int main(int argc, char *argv[])
       exit(0);
     }
 
-    if (!true) {
+    if (true) {
       bn_prms.svd_n_cut = n_cut;
       min_conj_grad(true);
     } else
