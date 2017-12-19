@@ -53,12 +53,15 @@ const double
     {3e-2, 5e-2, 3e-2, 3e-2, 3e-2,
      3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
+// Order of terms:
+// scl_h:   3rd, 4th, 5th.
+// scl_dnu: 4th, 5th, 6th, 8th.
 
 #if true
 // Sextupoles.
 const bool   oct          = false;
 const double scl_h[]      = {1e0, 1e0, 1e0},
-             scl_dnu[]    = {1e-1, 1e-2, 1e-2, 0e-1},
+             scl_dnu[]    = {1e-1, 1e-1, 1e-1, 0e-1},
              scl_ksi[]    = {1e5, 1e-2, 1e-2},
              scl_dnu_conf = 1e-2;
 #else
@@ -438,12 +441,10 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
       printf("cross terms\n");
     else if (i-1 == n_h+2+3+2+3)
       printf("3rd order chromaticity\n");
-    else if (i-1 == n_h+2+3+2+3+2) {
-      if (!tune_conf)
-	printf("ampl. dependant tune shift\n");
-      else
-	printf("tune confinement\n");
-    }
+    else if (i-1 == n_h+2+3+2+3+2)
+      printf("ampl. dependant tune shift\n");
+    else if (i-1 == n_h+2+3+2+3+2+4)
+      printf("tune confinement\n");
 
     printf("%4d", i);
     for (j = 1; j <= n_b2; j++)
@@ -1720,14 +1721,14 @@ int main(int argc, char *argv[])
 	  bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
 	  bn_prms.add_prm("syyh", 3, 5e5, 1.0);
 	}
-      }// else {
+      } else {
 	bn_prms.add_prm("oxx",  4, 5e5, 1.0);
 	bn_prms.add_prm("oxy",  4, 5e5, 1.0);
 	bn_prms.add_prm("oyy",  4, 5e5, 1.0);
 	bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
 	bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
 	bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
-       // }
+      }
       break;
     }
 
