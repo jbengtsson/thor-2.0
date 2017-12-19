@@ -58,7 +58,7 @@ const double
 // Sextupoles.
 const bool   oct = false;
 const double scl_h[]   = {1e0, 1e0, 1e0},
-             scl_dnu[] = {1e-1, 1e-1, 0e0, 0e0},
+             scl_dnu[] = {5e-1, 5e-1, 0e0, 0e0},
              scl_ksi[] = {1e5, 1e-1, 0e0};
 #else
 // Octupoles.
@@ -1166,7 +1166,8 @@ void prt_lev_marq(const int m, const int n)
 
   printf("\n%d bn:\n", n_powell);
   for (i = 1; i <= bn_prms.n_prm; i++) {
-    bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
+    bn_prms.bn[i] =
+      get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1])/bn_prms.bn_scl[i-1];
     printf("%11.3e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
@@ -1745,7 +1746,7 @@ int main(int argc, char *argv[])
       exit(0);
     }
 
-    if (true) {
+    if (!true) {
       bn_prms.svd_n_cut = n_cut;
       min_conj_grad(true);
     } else
