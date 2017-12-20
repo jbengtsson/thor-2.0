@@ -61,9 +61,9 @@ const double
 // Sextupoles.
 const bool   oct          = false;
 const double scl_h[]      = {1e0, 1e0, 1e0},
-             scl_dnu[]    = {1e-1, 1e-1, 1e-1, 0e-1},
+             scl_dnu[]    = {1e0, 1e-1, 1e-1, 0e-1},
              scl_ksi[]    = {1e5, 1e-2, 1e-2},
-             scl_dnu_conf = 1e-2;
+             scl_dnu_conf = 1e-4;
 #else
 // Octupoles.
 const bool   oct          = true;
@@ -1748,7 +1748,7 @@ int main(int argc, char *argv[])
       exit(0);
     }
 
-    if (!true) {
+    if (true) {
       bn_prms.svd_n_cut = n_cut;
       min_conj_grad(true);
     } else
