@@ -24,7 +24,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = !true, symm  = true;
+const bool   fit_ksi  = true, symm  = true;
 const int    n_cell   = 2,     n_cut = 0;
 const double tpsa_eps = 1e-30;
 
@@ -38,7 +38,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-BA     8,
 // DIAMOND-II 8-HMBA   9,
 // SLS-2              10.
-const int lat_case = 1, n_prt = 8;
+const int lat_case = 10, n_prt = 8;
 
 // Center of straight.
 const double
@@ -57,17 +57,17 @@ const double
 #if true
 // Sextupoles.
 const bool   oct = false;
-const double scl_h[]      = {1e0, 1e0, 1e0},
-             scl_dnu[]    = {1e-1, 1e-1, 0e0, 0e0},
-             scl_ksi[]    = {1e5, 1e-1, 0e0},
+const double scl_h[]      = {1e0,  1e0,  1e0},
+             scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
+             scl_ksi[]    = {1e5,  1e-1, 1e-5},
              scl_dnu_conf = 1e-2;
 #else
 // Octupoles.
 const bool   oct = true;
-const double scl_h[]      = {1e0, 1e0, 1e0},
-             scl_dnu[]    = {1e-1, 1e-1, 1e-1, 1e-1},
-             scl_ksi[]    = {1e5, 0e-2, 0e-1},
-             scl_dnu_conf = 1e-2;
+const double scl_h[]      = {1e0,  1e0,  1e0},
+             scl_dnu[]    = {1e-1, 1e-5, 1e-5, 1e-5},
+             scl_ksi[]    = {1e5,  1e-5, 1e-5},
+             scl_dnu_conf = 1e-1;
 #endif
 
 struct param_type {
@@ -109,25 +109,39 @@ void param_type::add_prm(const std::string Fname, const int n,
 void param_type::ini_prm(void)
 {
   int i;
+  double L;
+
+  const bool scale = true;
+  const int  n_prt = 4;
 
   n_prm = Fnum.size();
 
   bn_prms.bn_lim = dvector(1, n_prm); bn_prms.bn = dvector(1, n_prm);
   bn_prms.dbn = dvector(1, n_prm);
 
-  printf("\nInitial bn; (incl. scaling) (%d):\n", n_prm);
+  printf("\nInitial bn (scale factor in parenthesis):\n");
+  printf("  No of Families: %1d\n", n_prm);
   for (i = 1; i <= n_prm; i++) {
     bn_lim[i] = bn_max[i-1];
     if (n[i-1] > 0)
       // Multipole.
-      bn[i] = get_bn(Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
+      bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
     else if (n[i-1] == -1)
       // Drift.
-      bn[i] = get_L(Fnum[i-1], 1)/bn_scl[i-1];
+      bn[i] = get_L(Fnum[i-1], 1);
     else if (n[i-1] == -2)
       // Location.
-      bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
-    printf(" %12.5e", bn_scl[i-1]*bn[i]);
+      bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
+
+    if (scale) {
+      L = get_L(Fnum[i-1], 1);
+      if (L == 0e0) L = 1e0;
+      bn_scl[i-1] = 1e0/sqrt(get_n_Kids(Fnum[i-1])*L);
+    } else
+      bn_scl[i-1] = 1e0;
+
+    bn[i] /= bn_scl[i-1];
+    printf(" %12.5e (%9.3e)", bn_scl[i-1]*bn[i], bn_scl[i-1]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_prm % n_prt != 0) printf("\n");
@@ -279,7 +293,7 @@ tps f_gauss_quad_2d(double x, double y)
       if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
     }
 
-    return dnu[X_]*dnu[Y_];
+    return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]);
 }
 
 // <--- Tune confinement.
@@ -466,10 +480,7 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 
   printf("\n Ax = b:\n");
   for (j = 1; j <= n_b2; j++)
-    if (j == 1)
-      printf("%11d", j);
-    else
-      printf("%11d", j);
+    printf("%11d", j);
   printf("\n");
   d = (symm)? 0 : 16;
   for (i = 1; i <= m; i++) {
@@ -484,7 +495,7 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 
     n_h = 0;
     if (NO >= 3+1) n_h += 3 + 5;   // 8.
-    if (NO >= 4+1) n_h += 8 + 1;   // 16 + 1.
+    if (NO >= 4+1) n_h += 8;       // 16.
     if (NO >= 5+1) n_h += 14;      // 30.
     if (!symm)     n_h += 16 + 14;
 
@@ -495,10 +506,12 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else if (i-1 == n_h+2+3)
       printf("2nd order chromaticity\n");
     else if (i-1 == n_h+2+3+2)
+      printf("|dnu|\n");
+    else if (i-1 == n_h+2+3+2+1)
       printf("cross terms\n");
-    else if (i-1 == n_h+2+3+2+3)
+    else if (i-1 == n_h+2+3+2+1+3)
       printf("3rd order chromaticity\n");
-    else if (i-1 == n_h+2+3+2+3+2) {
+    else if (i-1 == n_h+2+3+2+1+3+2) {
       printf("ampl. dependant tune shift\n");
     }
 
@@ -658,12 +671,9 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 
   bn_prms.set_dprm();
 
-  for (i = 1; i <= n_bn; i++)
-    bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
-
   printf("\nfit ksi:\n");
   for (i = 1; i <= n_bn; i++) {
-    printf(" %12.5e", bn_prms.bn[i]);
+    printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_bn % n_prt != 0) printf("\n");
@@ -695,7 +705,7 @@ double get_f(double *bns)
   n_powell++;
 
   // Do not change parameters.
-  if (prt) printf("get_f (incl. scaling):\n");
+  if (prt) printf("get_f:\n");
   for (i = 1; i <= bn_prms.n_prm; i++) {
     set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*bns[i]);
     if (prt) printf(" %12.5e", bn_prms.bn_scl[i-1]*bns[i]);
@@ -710,7 +720,7 @@ double get_f(double *bns)
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
   dnu = (gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_])).cst();
-  printf("\n dnu = %10.3e\n", dnu);
+  printf("\n|dnu| = %9.3e\n", dnu);
 
   b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2));
   b.push_back(get_b(scl_h[0], h_re_scl, 2, 0, 0, 0, 1));
@@ -867,7 +877,7 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 
     dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
     // std::cout << std::scientific << std::setprecision(3)
-    // 	      << "\n dnu = " << dnu << "\n";
+    // 	      << "\n |dnu| = " << dnu << "\n";
 
     m = 0;
     A[++m][i] = get_a(scl_h[0], h_re_scl, 1, 0, 0, 0, 2);
@@ -1147,13 +1157,9 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
   else
     bn_prms.set_dprm();
 
+  printf("\nbn & dbn:\n");
   for (i = 1; i <= n_bn; i++)
-    bn_prms.bn[i] =
-      get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1])/bn_prms.bn_scl[i-1];
-
-  printf("\nbn & dbn (incl. scaling):\n");
-  for (i = 1; i <= n_bn; i++)
-    printf(" %12.5e", bn_prms.bn[i]);
+    printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
   printf("\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_bn; i++) {
@@ -1222,8 +1228,9 @@ void prt_lev_marq(const int m, const int n)
 
   printf("\n%d bn:\n", n_powell);
   for (i = 1; i <= bn_prms.n_prm; i++) {
-    bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
-    printf("%11.3e", bn_prms.bn[i]);
+    bn_prms.bn[i] =
+      get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]/bn_prms.bn_scl[i-1]);
+    printf("%11.3e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (bn_prms.n_prm % n_prt != 0) printf("\n");
@@ -1761,10 +1768,10 @@ int main(int argc, char *argv[])
     case 10:
       // SLS-2:
       if (!oct) {
-	bn_prms.add_prm("sdmh", 3, 5e5, pow(1.0/4.0,  1.0/2.0));
-	bn_prms.add_prm("sfmh", 3, 5e5, pow(1.0/4.0,  1.0/2.0));
-	bn_prms.add_prm("sdh",  3, 5e5, pow(1.0/20.0, 1.0/2.0));
-	bn_prms.add_prm("sfh",  3, 5e5, pow(1.0/8.0,  1.0/2.0));
+	bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+	bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+	bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+	bn_prms.add_prm("sfh",  3, 5e5, 1.0);
 	if (!fit_ksi) {
 	  bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
 	  bn_prms.add_prm("sxyh", 3, 5e5, 1.0);

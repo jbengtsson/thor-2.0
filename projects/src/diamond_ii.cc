@@ -24,7 +24,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = !true, symm  = true, tune_conf = !false;
+const bool   fit_ksi  = true, symm  = true, tune_conf = !false;
 const int    n_cell   = 2,     n_cut = 0;
 const double tpsa_eps = 1e-30;
 
