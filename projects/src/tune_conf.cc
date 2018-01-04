@@ -696,8 +696,8 @@ double get_f(double *bns)
 {
   int                 i;
   static double       chi2_ref = 1e30;
-  double              chi2, dnu;
-  tps                 K_re_scl, h_re_scl, h_im_scl;
+  double              chi2;
+  tps                 K_re_scl, h_re_scl, h_im_scl, dnu;
   std::vector<double> b;
 
   const bool prt = false;
@@ -719,8 +719,8 @@ double get_f(double *bns)
   CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
-  dnu = (gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_])).cst();
-  printf("\n|dnu| = %9.3e\n", dnu);
+  dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
+  printf("\n|dnu| = %9.3e\n", dnu.cst());
 
   b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2));
   b.push_back(get_b(scl_h[0], h_re_scl, 2, 0, 0, 0, 1));
