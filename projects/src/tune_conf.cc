@@ -60,7 +60,7 @@ const bool   oct = false;
 const double scl_h[]      = {1e0,  1e0,  1e0},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-1, 1e-5},
-             scl_dnu_conf = 1e1;
+             scl_dnu_conf = 1e-3;
 #else
 // Octupoles.
 const bool   oct = true;
@@ -1540,17 +1540,19 @@ int main(int argc, char *argv[])
 
     danot_(1);
 
-    printf("\nscl_h:     %7.1e, %7.1e, %7.1e\n", scl_h[0], scl_h[1], scl_h[2]);
-    printf("scl_dnu:   %7.1e, %7.1e, %7.1e, %7.1e\n",
+    printf("\nscl_h:          %7.1e, %7.1e, %7.1e\n",
+	   scl_h[0], scl_h[1], scl_h[2]);
+    printf("scl_dnu:        %7.1e, %7.1e, %7.1e, %7.1e\n",
 	   scl_dnu[0], scl_dnu[1], scl_dnu[2], scl_dnu[3]);
-    printf("scl_ksi:   %7.1e, %7.1e, %7.1e\n",
+    printf("scl_ksi:        %7.1e, %7.1e, %7.1e\n",
 	   scl_ksi[0], scl_ksi[1], scl_ksi[2]);
-    printf("n_cut:     %d\n", n_cut);
-    printf("symmetric: %d\n", symm);
-    printf("\nA_max:     %7.1e, %7.1e\n",
+    printf("scl_dnu_conf:   %7.1e\n", scl_dnu_conf);
+    printf("n_cut:          %d\n", n_cut);
+    printf("symmetric:      %d\n", symm);
+    printf("\nA_max:          %7.1e, %7.1e\n",
 	   A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
-    printf("delta_max: %7.1e\n", delta_max[lat_case-1]);
-    printf("beta_inj:  %7.1e, %7.1e\n",
+    printf("delta_max:      %7.1e\n", delta_max[lat_case-1]);
+    printf("beta_inj:       %7.1e, %7.1e\n",
 	   beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
 
     get_nu_ksi();
