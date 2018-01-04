@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 4
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -24,7 +24,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = true, symm  = true, tune_conf = false;
+const bool   fit_ksi  = !true, symm  = true, tune_conf = !false;
 const int    n_cell   = 2,     n_cut = 0;
 const double tpsa_eps = 1e-30;
 
@@ -53,19 +53,24 @@ const double
     {3e-2, 5e-2, 3e-2, 3e-2, 3e-2,
      3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
+// Order of terms:
+// scl_h:   3rd, 4th, 5th.
+// scl_dnu: 4th, 5th, 6th, 8th.
 
 #if true
 // Sextupoles.
-const bool   oct = false;
-const double scl_h[]   = {1e0, 1e0, 1e0},
-             scl_dnu[] = {1e-1, 1e-1, 0e0, 0e0},
-             scl_ksi[] = {1e5, 1e-1, 0e0};
+const bool   oct          = false;
+const double scl_h[]      = {1e0, 1e0, 1e0},
+             scl_dnu[]    = {1e0, 1e-1, 1e-1, 0e-1},
+             scl_ksi[]    = {1e5, 1e-2, 1e-2},
+             scl_dnu_conf = 1e-4;
 #else
 // Octupoles.
-const bool   oct = true;
-const double scl_h[]   = {1e0, 1e0, 1e0},
-             scl_dnu[] = {1e-1, 1e-1, 1e-1, 1e-1},
-             scl_ksi[] = {1e5, 0e-2, 0e-1};
+const bool   oct          = true;
+const double scl_h[]      = {1e0, 1e0, 1e0},
+             scl_dnu[]    = {1e-1, 1e-1, 1e-1, 1e-1},
+             scl_ksi[]    = {1e5, 0e-2, 0e-1},
+             scl_dnu_conf = 1e-13;
 #endif
 
 struct param_type {
@@ -73,7 +78,7 @@ private:
 
 public:
   int                 m_constr, n_prm, svd_n_cut;
-  double              bn_tol, step;
+  double              bn_tol;
   double              *bn_lim, *bn, *dbn;
   std::vector<double> bn_max, bn_scl;
   std::vector<int>    Fnum, n;
@@ -91,7 +96,7 @@ public:
 param_type   bn_prms;
 int          n_iter, n_powell;
 double       twoJ[2];
-ss_vect<tps> Id_scl;
+ss_vect<tps> Id_scl, Id_conf;
 
 void param_type::add_prm(const std::string Fname, const int n,
 			 const double bn_max, const double bn_scl)
@@ -106,26 +111,40 @@ void param_type::add_prm(const std::string Fname, const int n,
 
 void param_type::ini_prm(void)
 {
-  int i;
+  int    i;
+  double L;
+
+  const bool scale = true;
+  const int  n_prt = 4;
 
   n_prm = Fnum.size();
 
   bn_prms.bn_lim = dvector(1, n_prm); bn_prms.bn = dvector(1, n_prm);
   bn_prms.dbn = dvector(1, n_prm);
 
-  printf("\nInitial bn; (incl. scaling) (%d):\n", n_prm);
+  printf("\nInitial bn (scale factor in parenthesis):\n");
+  printf("  No of Families: %1d\n", n_prm);
   for (i = 1; i <= n_prm; i++) {
     bn_lim[i] = bn_max[i-1];
     if (n[i-1] > 0)
       // Multipole.
-      bn[i] = get_bn(Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
+      bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
     else if (n[i-1] == -1)
       // Drift.
-      bn[i] = get_L(Fnum[i-1], 1)/bn_scl[i-1];
+      bn[i] = get_L(Fnum[i-1], 1);
     else if (n[i-1] == -2)
       // Location.
-      bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1])/bn_scl[i-1];
-    printf(" %12.5e", bn_scl[i-1]*bn[i]);
+      bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
+
+    if (scale) {
+      L = get_L(Fnum[i-1], 1);
+      if (L == 0e0) L = 1e0;
+      bn_scl[i-1] = 1e0/sqrt(get_n_Kids(Fnum[i-1])*L);
+    } else
+      bn_scl[i-1] = 1e0;
+
+    bn[i] /= bn_scl[i-1];
+    printf(" %12.5e (%9.3e)", bn_scl[i-1]*bn[i], bn_scl[i-1]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_prm % n_prt != 0) printf("\n");
@@ -168,7 +187,7 @@ double param_type::set_dprm(void) const
   printf("set_dprm:\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_prm; i++) {
-    dbn[i] *= bn_scl[i-1]*step;
+    dbn[i] *= bn_scl[i-1];
     if (n[i-1] > 0) {
       set_dbn(Fnum[i-1], n[i-1], dbn[i]);
       bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
@@ -422,12 +441,10 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
       printf("cross terms\n");
     else if (i-1 == n_h+2+3+2+3)
       printf("3rd order chromaticity\n");
-    else if (i-1 == n_h+2+3+2+3+2) {
-      if (!tune_conf)
-	printf("ampl. dependant tune shift\n");
-      else
-	printf("tune confinement\n");
-    }
+    else if (i-1 == n_h+2+3+2+3+2)
+      printf("ampl. dependant tune shift\n");
+    else if (i-1 == n_h+2+3+2+3+2+4)
+      printf("tune confinement\n");
 
     printf("%4d", i);
     for (j = 1; j <= n_b2; j++)
@@ -585,12 +602,9 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 
   bn_prms.set_dprm();
 
-  for (i = 1; i <= n_bn; i++)
-    bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
-
   printf("\nfit ksi:\n");
   for (i = 1; i <= n_bn; i++) {
-    printf(" %12.5e", bn_prms.bn[i]);
+    printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_bn % n_prt != 0) printf("\n");
@@ -615,6 +629,7 @@ double get_f(double *bns)
   static double       chi2_ref = 1e30;
   double              chi2;
   tps                 K_re_scl, h_re_scl, h_im_scl;
+  ss_vect<tps>        dnus;
   std::vector<double> b;
 
   const bool prt = false;
@@ -622,7 +637,7 @@ double get_f(double *bns)
   n_powell++;
 
   // Do not change parameters.
-  if (prt) printf("get_f (incl. scaling):\n");
+  if (prt) printf("get_f:\n");
   for (i = 1; i <= bn_prms.n_prm; i++) {
     set_bn(bn_prms.Fnum[i-1], bn_prms.n[i-1], bn_prms.bn_scl[i-1]*bns[i]);
     if (prt) printf(" %12.5e", bn_prms.bn_scl[i-1]*bns[i]);
@@ -635,6 +650,10 @@ double get_f(double *bns)
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
+
+  dnus = dHdJ(K);
+  dnus[3] -= dnus[3].cst(); dnus[4] -= dnus[4].cst();
+  dnus[3] = dnus[3]*Id_conf; dnus[4] = dnus[4]*Id_conf;
 
   b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2));
   b.push_back(get_b(scl_h[0], h_re_scl, 2, 0, 0, 0, 1));
@@ -734,20 +753,13 @@ double get_f(double *bns)
   }
 
   if (NO >= 7) {
-    if (!tune_conf) {
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0));
-    } else {
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
-      b.push_back(scl_dnu[2]
-		  *(get_b(1e0, K_re, 3, 3, 0, 0, 0)
-		    +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0)));
-      b.push_back(scl_dnu[2]
-		  *(get_b(1e0, K_re, 0, 0, 3, 3, 0)
-		    +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0)));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0));
+    if (tune_conf) {
+      b.push_back(get_b(scl_dnu_conf, dnus[3], 0, 0, 0, 0, 0));
+      b.push_back(get_b(scl_dnu_conf, dnus[4], 0, 0, 0, 0, 0));
     }
   }
 
@@ -784,8 +796,9 @@ double get_f(double *bns)
 
 void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 {
-  int i, j;
-  tps K_re_scl, h_re_scl, h_im_scl;
+  int          i, j;
+  tps          K_re_scl, h_re_scl, h_im_scl;
+  ss_vect<tps> dnus;
 
   // printf("\n");
   for (i = 1; i <= n_bn; i++) {
@@ -797,6 +810,10 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     K = MapNorm(Map, g, A1, A0, Map_res, 1);
     CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
     CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
+
+    dnus = dHdJ(K);
+    dnus[3] -= dnus[3].cst(); dnus[4] -= dnus[4].cst();
+    dnus[3] = dnus[3]*Id_conf; dnus[4] = dnus[4]*Id_conf;
 
     m = 0;
     A[++m][i] = get_a(scl_h[0], h_re_scl, 1, 0, 0, 0, 2);
@@ -897,22 +914,13 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     }
 
     if (NO >= 7) {
-      if (!tune_conf) {
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
-      } else {
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
-	A[++m][i] =
-	  scl_dnu[2]
-	  *(get_a(1e0, K_re, 3, 3, 0, 0, 0)
-	    +get_a(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
-	A[++m][i] =
-	  scl_dnu[2]
-	  *(get_a(1e0, K_re, 0, 0, 3, 3, 0)
-	    +get_a(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
+      if (tune_conf) {
+	A[++m][i] = get_a(scl_dnu_conf, dnus[3], 0, 0, 0, 0, 0);
+	A[++m][i] = get_a(scl_dnu_conf, dnus[4], 0, 0, 0, 0, 0);
       }
     }
 
@@ -1029,22 +1037,13 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   }
 
   if (NO >= 7) {
-    if (!tune_conf) {
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
-    } else {
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
-      f[++m] =
-	scl_dnu[2]
-	*(get_b(1e0, K_re, 3, 3, 0, 0, 0)
-	  +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
-      f[++m] =
-	scl_dnu[2]
-	*(get_b(1e0, K_re, 0, 0, 3, 3, 0)
-	  +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
+    if (tune_conf) {
+      f[++m] = get_b(scl_dnu_conf, dnus[3], 0, 0, 0, 0, 0);
+      f[++m] = get_b(scl_dnu_conf, dnus[4], 0, 0, 0, 0, 0);
     }
   }
 
@@ -1091,18 +1090,15 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
 	  bn_prms.dbn);
 
   dvcopy(bn_prms.bn, n_bn, bn_ref);
+
   if (cg_meth)
     conj_grad(n_iter, bn_prms.bn, bn_prms.dbn, g_, h_, get_f);
   else
     bn_prms.set_dprm();
 
+  printf("\nbn & dbn:\n");
   for (i = 1; i <= n_bn; i++)
-    bn_prms.bn[i] =
-      get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1])/bn_prms.bn_scl[i-1];
-
-  printf("\nbn & dbn (incl. scaling):\n");
-  for (i = 1; i <= n_bn; i++)
-    printf(" %12.5e", bn_prms.bn[i]);
+    printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
   printf("\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_bn; i++) {
@@ -1137,7 +1133,7 @@ void min_conj_grad(const bool cg_meth)
 
     prt_mfile("flat_file.fit");
     prt_bn(bn_prms);
-  } while ((dbn_max >  bn_prms.bn_tol) && (n_iter < n_iter_max));
+  } while ((dbn_max > bn_prms.bn_tol) && (n_iter < n_iter_max));
 }
 
 
@@ -1171,8 +1167,9 @@ void prt_lev_marq(const int m, const int n)
 
   printf("\n%d bn:\n", n_powell);
   for (i = 1; i <= bn_prms.n_prm; i++) {
-    bn_prms.bn[i] = get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]);
-    printf("%11.3e", bn_prms.bn[i]);
+    bn_prms.bn[i] =
+      get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1])/bn_prms.bn_scl[i-1];
+    printf("%11.3e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (bn_prms.n_prm % n_prt != 0) printf("\n");
@@ -1225,6 +1222,7 @@ void min_lev_marq(void)
   if (NO >= 5+1) n_data += 14 + 3 + 2; // 42.
   if (NO >= 6+1) n_data += 4;          // 46.
   if (NO >= 8+1) n_data += 5;          // 51.
+  if (tune_conf) n_data += 2;
   if (!symm)     n_data += 16 + 14;
 
   n_bn = bn_prms.n_prm;
@@ -1512,6 +1510,10 @@ int main(int argc, char *argv[])
     Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
     Id_scl[delta_] *= delta_max[lat_case-1];
 
+    Id_conf.identity();
+    Id_conf[x_] = sqrt(twoJ[X_]); Id_conf[px_] = sqrt(twoJ[X_]);
+    Id_conf[y_] = sqrt(twoJ[Y_]); Id_conf[py_] = sqrt(twoJ[Y_]);
+
     if (false) {
       danot_(NO-1);
       cavity_on = true; rad_on = true;
@@ -1710,10 +1712,10 @@ int main(int argc, char *argv[])
     case 10:
       // SLS-2:
       if (!oct) {
-	bn_prms.add_prm("sdmh", 3, 5e5, pow(1.0/4.0,  1.0/2.0));
-	bn_prms.add_prm("sfmh", 3, 5e5, pow(1.0/4.0,  1.0/2.0));
-	bn_prms.add_prm("sdh",  3, 5e5, pow(1.0/20.0, 1.0/2.0));
-	bn_prms.add_prm("sfh",  3, 5e5, pow(1.0/8.0,  1.0/2.0));
+	bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+	bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+	bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+	bn_prms.add_prm("sfh",  3, 5e5, 1.0);
 	if (!fit_ksi) {
 	  bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
 	  bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
@@ -1726,12 +1728,11 @@ int main(int argc, char *argv[])
 	bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
 	bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
 	bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
-       }
+      }
       break;
     }
 
-    // Step is 1.0 for conjugated gradient method.
-    bn_prms.bn_tol = 1e-1; bn_prms.svd_n_cut = 0; bn_prms.step = 1.0;
+    bn_prms.bn_tol = 1e-1; bn_prms.svd_n_cut = 0;
 
     if (fit_ksi) {
       no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
@@ -1739,8 +1740,7 @@ int main(int argc, char *argv[])
 
     bn_prms.ini_prm();
 
-    prt_bn
-(bn_prms);
+    prt_bn(bn_prms);
 
     if (fit_ksi) {
       bn_prms.svd_n_cut = 0;
