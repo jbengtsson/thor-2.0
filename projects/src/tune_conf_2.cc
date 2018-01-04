@@ -47,7 +47,7 @@ const double
      {16.2, 4.6}, {5.3, 2.0}, {14.0, 4.5}, {10.5, 5.2}, { 3.4, 1.9}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {6e-3, 4e-3},     {7e-3, 4e-3}, { 2e-3, 1e-3},  {2e-3, 1e-3}, {8e-3, 5e-3}
+     {6e-3, 4e-3},     {7e-3, 4e-3}, { 2e-3, 1e-3},  {2e-3, 1e-3}, {10e-3, 5e-3}
     },
   delta_max[] =
     {3e-2, 5e-2, 3e-2, 3e-2, 3e-2,
@@ -60,7 +60,7 @@ const bool   oct = false;
 const double scl_h[]      = {1e0,  1e0,  1e-1},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-1, 1e-5},
-             scl_dnu_conf = 1e-2;
+             scl_dnu_conf = 5e-1;
 #else
 // Octupoles.
 const bool   oct = true;
@@ -310,11 +310,9 @@ tps f_gauss_quad_2d(double x, double y)
     ps[delta_] = 0*delta_max[lat_case-1];
 
     dK = K_re;
-
     for (k = 0; k < ss_dim; k++)
       jj[k] = 0;
     jj[x_] = 1; jj[px_] = 1;
-
     dK.pook(jj, 0e0);
     jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
     dK.pook(jj, 0e0);
