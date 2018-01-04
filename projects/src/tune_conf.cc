@@ -271,11 +271,13 @@ tps f_gauss_quad_2d(double x, double y)
     ps[x_] = sqrt(x); ps[px_] = sqrt(x);
     ps[y_] = sqrt(y); ps[py_] = sqrt(y);
     ps[delta_] = delta_max[lat_case-1];
-    for (k = 0; k < 2; k++)
+    for (k = 0; k < 2; k++) {
       dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
-    // printf("\ndnu: %10.3e %10.3e\n", dnu[X_].cst(), dnu[Y_].cst());
+      // Compute absolute value.
+      if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
+    }
 
-    return abs(dnu[X_])*abs(dnu[Y_]);
+    return dnu[X_]*dnu[Y_];
 }
 
 // <--- Tune confinement.
@@ -709,7 +711,8 @@ double get_f(double *bns)
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
   dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
-  printf("\ndnu: %10.3e\n", dnu.cst());
+  std::cout << std::scientific << std::setprecision(3)
+	    << "\n dnu = " << dnu << "\n";
 
   b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2));
   b.push_back(get_b(scl_h[0], h_re_scl, 2, 0, 0, 0, 1));
@@ -873,6 +876,10 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
     CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
+    dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
+    std::cout << std::scientific << std::setprecision(3)
+	      << "\n dnu = " << dnu << "\n";
+
     m = 0;
     A[++m][i] = get_a(scl_h[0], h_re_scl, 1, 0, 0, 0, 2);
     A[++m][i] = get_a(scl_h[0], h_re_scl, 2, 0, 0, 0, 1);
@@ -1004,9 +1011,6 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 
     bn_prms.clr_prm_dep(i-1);
   }
-
-  dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
-  printf("\ndnu: %10.3e\n", dnu.cst());
 
   m = 0;
   f[++m] = get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2);
