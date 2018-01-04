@@ -60,7 +60,7 @@ const bool   oct = false;
 const double scl_h[]      = {1e0,  1e0,  1e-1},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-1, 1e-5},
-             scl_dnu_conf = 5e-4;
+             scl_dnu_conf = 1e-3;
 #else
 // Octupoles.
 const bool   oct = true;
@@ -277,7 +277,7 @@ tps gauss_quad_2d(tps (*func)(const double, const double),
 }
 
 
-tps f_gauss_quad_2d(double x, double y)
+tps f_gauss_quad_2d_dnu(double x, double y)
 {
   int          k;
   tps          dnu[2];
@@ -294,6 +294,24 @@ tps f_gauss_quad_2d(double x, double y)
     }
 
     return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]);
+}
+
+
+
+tps f_gauss_quad_2d(double x, double y)
+{
+  tps          dK;
+  ss_vect<tps> ps;
+
+    ps.identity();
+    ps[x_] = sqrt(x); ps[px_] = sqrt(x);
+    ps[y_] = sqrt(y); ps[py_] = sqrt(y);
+    ps[delta_] = 0*delta_max[lat_case-1];
+    dK = K_re*ps;
+    // Compute absolute value.
+    if (dK.cst() < 0e0) dK = -dK;
+
+    return dK;
 }
 
 // <--- Tune confinement.
