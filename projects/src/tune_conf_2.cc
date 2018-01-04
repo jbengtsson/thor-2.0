@@ -60,7 +60,7 @@ const bool   oct = false;
 const double scl_h[]      = {1e0,  1e0,  1e-1},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-1, 1e-5},
-             scl_dnu_conf = 1e-1;
+             scl_dnu_conf = 1e-2;
 #else
 // Octupoles.
 const bool   oct = true;
@@ -300,6 +300,7 @@ tps f_gauss_quad_2d_dnu(double x, double y)
 
 tps f_gauss_quad_2d(double x, double y)
 {
+  int          k, jj[ss_dim];
   tps          dK;
   ss_vect<tps> ps;
 
@@ -307,9 +308,21 @@ tps f_gauss_quad_2d(double x, double y)
     ps[x_] = sqrt(x); ps[px_] = sqrt(x);
     ps[y_] = sqrt(y); ps[py_] = sqrt(y);
     ps[delta_] = 0*delta_max[lat_case-1];
-    dK = K_re*ps;
+
+    dK = K_re;
+
+    for (k = 0; k < ss_dim; k++)
+      jj[k] = 0;
+    jj[x_] = 1; jj[px_] = 1;
+
+    dK.pook(jj, 0e0);
+    jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
+    dK.pook(jj, 0e0);
+    dK = dK*ps;
     // Compute absolute value.
     if (dK.cst() < 0e0) dK = -dK;
+    // std::cout << std::scientific << std::setprecision(3)
+    // 	      << "\n |dK| = " << dK << "\n";
 
     return dK/(twoJ[X_]*twoJ[Y_]);
 }
