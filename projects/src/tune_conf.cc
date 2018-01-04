@@ -24,7 +24,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = !true, symm  = true, tune_conf = false;
+const bool   fit_ksi  = !true, symm  = true;
 const int    n_cell   = 2,     n_cut = 0;
 const double tpsa_eps = 1e-30;
 
@@ -57,15 +57,17 @@ const double
 #if true
 // Sextupoles.
 const bool   oct = false;
-const double scl_h[]   = {1e0, 1e0, 1e0},
-             scl_dnu[] = {1e-1, 1e-1, 0e0, 0e0},
-             scl_ksi[] = {1e5, 1e-1, 0e0};
+const double scl_h[]      = {1e0, 1e0, 1e0},
+             scl_dnu[]    = {1e-1, 1e-1, 0e0, 0e0},
+             scl_ksi[]    = {1e5, 1e-1, 0e0},
+             scl_dnu_conf = 1e-2;
 #else
 // Octupoles.
 const bool   oct = true;
-const double scl_h[]   = {1e0, 1e0, 1e0},
-             scl_dnu[] = {1e-1, 1e-1, 1e-1, 1e-1},
-             scl_ksi[] = {1e5, 0e-2, 0e-1};
+const double scl_h[]      = {1e0, 1e0, 1e0},
+             scl_dnu[]    = {1e-1, 1e-1, 1e-1, 1e-1},
+             scl_ksi[]    = {1e5, 0e-2, 0e-1},
+             scl_dnu_conf = 1e-2;
 #endif
 
 struct param_type {
@@ -482,7 +484,7 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 
     n_h = 0;
     if (NO >= 3+1) n_h += 3 + 5;   // 8.
-    if (NO >= 4+1) n_h += 8;       // 16.
+    if (NO >= 4+1) n_h += 8 + 1;   // 16 + 1.
     if (NO >= 5+1) n_h += 14;      // 30.
     if (!symm)     n_h += 16 + 14;
 
@@ -497,10 +499,7 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else if (i-1 == n_h+2+3+2+3)
       printf("3rd order chromaticity\n");
     else if (i-1 == n_h+2+3+2+3+2) {
-      if (!tune_conf)
-	printf("ampl. dependant tune shift\n");
-      else
-	printf("tune confinement\n");
+      printf("ampl. dependant tune shift\n");
     }
 
     printf("%4d", i);
@@ -687,8 +686,8 @@ double get_f(double *bns)
 {
   int                 i;
   static double       chi2_ref = 1e30;
-  double              chi2;
-  tps                 K_re_scl, h_re_scl, h_im_scl, dnu;
+  double              chi2, dnu;
+  tps                 K_re_scl, h_re_scl, h_im_scl;
   std::vector<double> b;
 
   const bool prt = false;
@@ -710,9 +709,8 @@ double get_f(double *bns)
   CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
-  dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
-  std::cout << std::scientific << std::setprecision(3)
-	    << "\n dnu = " << dnu << "\n";
+  dnu = (gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_])).cst();
+  printf("\n dnu = %10.3e\n", dnu);
 
   b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2));
   b.push_back(get_b(scl_h[0], h_re_scl, 2, 0, 0, 0, 1));
@@ -794,12 +792,14 @@ double get_f(double *bns)
   b.push_back(get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1));
 
   if (NO >= 5) {
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 0));
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 0));
-    b.push_back(get_b(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 0));
+    b.push_back(get_b(scl_dnu[0],   K_re_scl, 2, 2, 0, 0, 0));
+    b.push_back(get_b(scl_dnu[0],   K_re_scl, 0, 0, 2, 2, 0));
+    b.push_back(get_b(scl_dnu[0],   K_re_scl, 1, 1, 1, 1, 0));
 
-    b.push_back(get_b(scl_ksi[1], K_re_scl, 1, 1, 0, 0, 2));
-    b.push_back(get_b(scl_ksi[1], K_re_scl, 0, 0, 1, 1, 2));
+    b.push_back(get_b(scl_ksi[1],   K_re_scl, 1, 1, 0, 0, 2));
+    b.push_back(get_b(scl_ksi[1],   K_re_scl, 0, 0, 1, 1, 2));
+
+    b.push_back(get_b(scl_dnu_conf, dnu,      0, 0, 0, 0, 0));
   }
 
   if (NO >= 6) {
@@ -812,21 +812,10 @@ double get_f(double *bns)
   }
 
   if (NO >= 7) {
-    if (!tune_conf) {
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0));
-    } else {
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
-      b.push_back(scl_dnu[2]
-		  *(get_b(1e0, K_re, 3, 3, 0, 0, 0)
-		    +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0)));
-      b.push_back(scl_dnu[2]
-		  *(get_b(1e0, K_re, 0, 0, 3, 3, 0)
-		    +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0)));
-    }
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0));
   }
 
   if (NO >= 9) {
@@ -877,8 +866,8 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
     dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
-    std::cout << std::scientific << std::setprecision(3)
-	      << "\n dnu = " << dnu << "\n";
+    // std::cout << std::scientific << std::setprecision(3)
+    // 	      << "\n dnu = " << dnu << "\n";
 
     m = 0;
     A[++m][i] = get_a(scl_h[0], h_re_scl, 1, 0, 0, 0, 2);
@@ -961,12 +950,14 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     A[++m][i] = get_a(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
 
     if (NO >= 5) {
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 0);
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 0);
-      A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 0);
+      A[++m][i] = get_a(scl_dnu[0],   K_re_scl, 2, 2, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu[0],   K_re_scl, 0, 0, 2, 2, 0);
+      A[++m][i] = get_a(scl_dnu[0],   K_re_scl, 1, 1, 1, 1, 0);
 
-      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 1, 1, 0, 0, 2);
-      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 0, 0, 1, 1, 2);
+      A[++m][i] = get_a(scl_ksi[1],   K_re_scl, 1, 1, 0, 0, 2);
+      A[++m][i] = get_a(scl_ksi[1],   K_re_scl, 0, 0, 1, 1, 2);
+
+      A[++m][i] = get_a(scl_dnu_conf, dnu,      0, 0, 0, 0, 0);
     }
 
     if (NO >= 6) {
@@ -979,23 +970,10 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     }
 
     if (NO >= 7) {
-      if (!tune_conf) {
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
-      } else {
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
-	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
-	A[++m][i] =
-	  scl_dnu[2]
-	  *(get_a(1e0, K_re, 3, 3, 0, 0, 0)
-	    +get_a(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
-	A[++m][i] =
-	  scl_dnu[2]
-	  *(get_a(1e0, K_re, 0, 0, 3, 3, 0)
-	    +get_a(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
-      }
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
     }
 
     if (NO >= 9) {
@@ -1011,6 +989,8 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 
     bn_prms.clr_prm_dep(i-1);
   }
+
+  printf("\n dnu = %10.3e\n", dnu.cst());
 
   m = 0;
   f[++m] = get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2);
@@ -1093,12 +1073,14 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   f[++m] = get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
 
   if (NO >= 5) {
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 0);
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 0);
-    f[++m] = get_b(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 0);
+    f[++m] = get_b(scl_dnu[0],   K_re_scl, 2, 2, 0, 0, 0);
+    f[++m] = get_b(scl_dnu[0],   K_re_scl, 0, 0, 2, 2, 0);
+    f[++m] = get_b(scl_dnu[0],   K_re_scl, 1, 1, 1, 1, 0);
 
-    f[++m] = get_b(scl_ksi[1], K_re_scl, 1, 1, 0, 0, 2);
-    f[++m] = get_b(scl_ksi[1], K_re_scl, 0, 0, 1, 1, 2);
+    f[++m] = get_b(scl_ksi[1],   K_re_scl, 1, 1, 0, 0, 2);
+    f[++m] = get_b(scl_ksi[1],   K_re_scl, 0, 0, 1, 1, 2);
+
+    f[++m] = get_a(scl_dnu_conf, dnu,      0, 0, 0, 0, 0);
   }
 
   if (NO >= 6) {
@@ -1111,23 +1093,10 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   }
 
   if (NO >= 7) {
-    if (!tune_conf) {
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
-    } else {
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
-      f[++m] =
-	scl_dnu[2]
-	*(get_b(1e0, K_re, 3, 3, 0, 0, 0)
-	  +get_b(1e0/(3e0*twoJ[X_]), K_re, 2, 2, 0, 0, 0));
-      f[++m] =
-	scl_dnu[2]
-	*(get_b(1e0, K_re, 0, 0, 3, 3, 0)
-	  +get_b(1e0/(3e0*twoJ[Y_]), K_re, 0, 0, 2, 2, 0));
-    }
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
   }
 
   if (NO >= 9) {
@@ -1302,11 +1271,11 @@ void min_lev_marq(void)
   double *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
 
   n_data = 0;
-  if (NO >= 3+1) n_data += 3 + 5 + 2;  // 10.
-  if (NO >= 4+1) n_data += 8 + 3 + 2;  // 23.
-  if (NO >= 5+1) n_data += 14 + 3 + 2; // 42.
-  if (NO >= 6+1) n_data += 4;          // 46.
-  if (NO >= 8+1) n_data += 5;          // 51.
+  if (NO >= 3+1) n_data += 3 + 5 + 2;     // 10.
+  if (NO >= 4+1) n_data += 8 + 3 + 2 + 1; // 23 + 1.
+  if (NO >= 5+1) n_data += 14 + 3 + 2;    // 42.
+  if (NO >= 6+1) n_data += 4;             // 46.
+  if (NO >= 8+1) n_data += 5;             // 51.
   if (!symm)     n_data += 16 + 14;
 
   n_bn = bn_prms.n_prm;
