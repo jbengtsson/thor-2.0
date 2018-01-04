@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -24,7 +24,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = true, symm  = true;
+const bool   fit_ksi  = !true, symm  = true;
 const int    n_cell   = 2,     n_cut = 0;
 const double tpsa_eps = 1e-30;
 
@@ -60,7 +60,7 @@ const bool   oct = false;
 const double scl_h[]      = {1e0,  1e0,  1e0},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-1, 1e-5},
-             scl_dnu_conf = 1e-2;
+             scl_dnu_conf = 1e1;
 #else
 // Octupoles.
 const bool   oct = true;
@@ -1090,7 +1090,7 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_ksi[1],   K_re_scl, 1, 1, 0, 0, 2);
     f[++m] = get_b(scl_ksi[1],   K_re_scl, 0, 0, 1, 1, 2);
 
-    f[++m] = get_a(scl_dnu_conf, dnu,      0, 0, 0, 0, 0);
+    f[++m] = get_b(scl_dnu_conf, dnu,      0, 0, 0, 0, 0);
   }
 
   if (NO >= 6) {
