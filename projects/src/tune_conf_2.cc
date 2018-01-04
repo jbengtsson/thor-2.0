@@ -60,7 +60,7 @@ const bool   oct = false;
 const double scl_h[]      = {1e0,  1e0,  1e-1},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-1, 1e-5},
-             scl_dnu_conf = 1e-3;
+             scl_dnu_conf = 1e-1;
 #else
 // Octupoles.
 const bool   oct = true;
@@ -311,7 +311,7 @@ tps f_gauss_quad_2d(double x, double y)
     // Compute absolute value.
     if (dK.cst() < 0e0) dK = -dK;
 
-    return dK;
+    return dK/(twoJ[X_]*twoJ[Y_]);
 }
 
 // <--- Tune confinement.
