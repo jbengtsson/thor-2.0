@@ -59,7 +59,7 @@ const double
 const bool   oct = false;
 const double scl_h[]      = {1e0,  1e0,  1e-1},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
-             scl_ksi[]    = {1e5,  1e-1, 1e-5},
+             scl_ksi[]    = {1e5,  1e-5, 1e-5},
              scl_dnu_conf = 1e0;
 #else
 // Octupoles.
@@ -1805,13 +1805,13 @@ int main(int argc, char *argv[])
 	  bn_prms.add_prm("syyh", 3, 5e5, 1.0);
 	}
 
-	bn_prms.add_prm("sdmh", 4, 5e5, 1.0);
-	bn_prms.add_prm("sfmh", 4, 5e5, 1.0);
-	bn_prms.add_prm("sdh",  4, 5e5, 1.0);
-	bn_prms.add_prm("sfh",  4, 5e5, 1.0);
-	bn_prms.add_prm("sxxh", 4, 5e5, 1.0);
-	bn_prms.add_prm("sxyh", 4, 5e5, 1.0);
-	bn_prms.add_prm("syyh", 4, 5e5, 1.0);
+	// bn_prms.add_prm("sdmh", 4, 5e5, 1.0);
+	// bn_prms.add_prm("sfmh", 4, 5e5, 1.0);
+	// bn_prms.add_prm("sdh",  4, 5e5, 1.0);
+	// bn_prms.add_prm("sfh",  4, 5e5, 1.0);
+	// bn_prms.add_prm("sxxh", 4, 5e5, 1.0);
+	// bn_prms.add_prm("sxyh", 4, 5e5, 1.0);
+	// bn_prms.add_prm("syyh", 4, 5e5, 1.0);
       } else {
 	bn_prms.add_prm("oxx",  4, 5e5, 1.0);
 	bn_prms.add_prm("oxy",  4, 5e5, 1.0);
