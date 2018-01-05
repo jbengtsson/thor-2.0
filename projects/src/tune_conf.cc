@@ -844,10 +844,6 @@ double get_f(double *bns)
     prt_bn(bn_prms);
 
     printf("\n%3d %12.5e -> %12.5e\n", n_powell, chi2_ref, chi2);
-    printf("b & bn:\n");
-    for (i = 0; i < (int)b.size(); i++)
-      printf("%11.3e", b[i]);
-    printf("\n");
     for (i = 1; i <= bn_prms.n_prm; i++) 
       printf("%11.3e", bns[i]);
     printf("\n");
