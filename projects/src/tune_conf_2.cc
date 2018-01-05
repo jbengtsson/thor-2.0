@@ -7,16 +7,15 @@
 
 int no_tps = NO,
 
-#define DOF_3 1
+#define DOF_3 0
 
 #if !DOF_3
   ndpt_tps = 5;
 #else
-// Requires that cavity is turned on.
-ndpt_tps = 0;
+  // Requires that cavity is turned on.
+  ndpt_tps = 0;
 #endif
 
-//#define three_dim 0
 #define three_dim 1
 
 
@@ -316,7 +315,7 @@ tps f_gauss_quad_2d(double x, double y)
     // std::cout << std::scientific << std::setprecision(3)
     // 	      << "\n |dK| = " << dK << "\n";
 
-    return dK/(twoJ[X_]*twoJ[Y_]*);
+    return dK/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
 }
 
 #else
