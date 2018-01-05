@@ -1665,6 +1665,7 @@ int main(int argc, char *argv[])
 	   scl_ksi[0], scl_ksi[1], scl_ksi[2]);
     printf("scl_dnu_conf:   %7.1e\n", scl_dnu_conf);
     printf("n_cut:          %d\n", n_cut);
+    printf("three_dim:      %d\n", three_dim);
     printf("symmetric:      %d\n", symm);
     printf("\nA_max:          %7.1e, %7.1e\n",
 	   A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
