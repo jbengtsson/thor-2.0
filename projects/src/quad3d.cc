@@ -5,15 +5,12 @@
 
 #define sqr(x) ((x)*(x))
 
-static double xsav,ysav;
+static double xsav, ysav;
 static double (*func_save)(double,double,double);
 
 
 const double R = sqrt(1e0);
 
-
-double z1(double x,double y);
-double z2(double x,double y);
 
 double dqgaus(double (*func)(double), double a, double b)
 {
@@ -38,9 +35,9 @@ double y0(double x) { return -sqrt(sqr(R)-sqr(x)); }
 
 double y1(double x) { return sqrt(sqr(R)-sqr(x)); }
 
-double z0(double x, double y) { return -sqrt(sqr(R)-sqr(x)); }
+double z0(double x, double y) { return -sqrt(sqr(R)-sqr(x)-sqr(y)); }
 
-double z1(double x, double y) { return -sqrt(sqr(R)-sqr(x)); }
+double z1(double x, double y) { return sqrt(sqr(R)-sqr(x)-sqr(y)); }
 
 double fz(double z) { return (*func_save)(xsav, ysav, z); }
 
@@ -72,5 +69,5 @@ int main(int argc, char *argv[])
   double intgrl;
   
   intgrl = quad3d(f, -R, R);
-  printf("integral = %13.5e\n", intgrl);
+  printf("integral = %13.5e\n", intgrl*3e0/4e0);
 }

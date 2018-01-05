@@ -7,7 +7,7 @@
 
 int no_tps = NO,
 
-#define DOF_3 0
+#define DOF_3 1
 
 #if !DOF_3
   ndpt_tps = 5;
@@ -15,6 +15,9 @@ int no_tps = NO,
 // Requires that cavity is turned on.
 ndpt_tps = 0;
 #endif
+
+//#define three_dim 0
+#define three_dim 1
 
 
 extern tps          K, g;
@@ -60,7 +63,7 @@ const bool   oct = false;
 const double scl_h[]      = {1e0,  1e0,  1e-1},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-5, 1e-5},
-             scl_dnu_conf = 1e0;
+             scl_dnu_conf = 5e-1;
 #else
 // Octupoles.
 const bool   oct = true;
@@ -227,6 +230,8 @@ void param_type::set_prm(void) const
 
 // ---> Tune confinement.
 
+#if !three_dim
+
 static double xsav;
 static tps (*func_save)(const double, const double);
 
@@ -251,31 +256,24 @@ tps gauss_quad(tps (*func)(const double), const double a, const double b)
   return s *= xr;
 }
 
-
 double gauss_quad_y0(const double x) { return 0e0; }
-
 
 double gauss_quad_y1(const double x) { return twoJ[Y_]; }
 
-
 tps gauss_quad_fy(const double y)  { return (*func_save)(xsav, y); }
-
 
 tps gauss_quad_fx(const double x)
 {
   xsav = x;
-  return gauss_quad(gauss_quad_fy, gauss_quad_y0(x),
-		    gauss_quad_y1(x));
+  return gauss_quad(gauss_quad_fy, gauss_quad_y0(x), gauss_quad_y1(x));
 }
-
 
 tps gauss_quad_2d(tps (*func)(const double, const double),
-		     const double x1, const double x2)
+		     const double x0, const double x1)
 {
   func_save = func;
-  return gauss_quad(gauss_quad_fx, x1, x2);
+  return gauss_quad(gauss_quad_fx, x0, x1);
 }
-
 
 tps f_gauss_quad_2d_dnu(double x, double y)
 {
@@ -284,8 +282,7 @@ tps f_gauss_quad_2d_dnu(double x, double y)
   ss_vect<tps> ps;
 
     ps.identity();
-    ps[x_] = sqrt(x); ps[px_] = sqrt(x);
-    ps[y_] = sqrt(y); ps[py_] = sqrt(y);
+    ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
     ps[delta_] = 0*delta_max[lat_case-1];
     for (k = 0; k < 2; k++) {
       dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
@@ -296,8 +293,6 @@ tps f_gauss_quad_2d_dnu(double x, double y)
     return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]);
 }
 
-
-
 tps f_gauss_quad_2d(double x, double y)
 {
   int          k, jj[ss_dim];
@@ -305,8 +300,7 @@ tps f_gauss_quad_2d(double x, double y)
   ss_vect<tps> ps;
 
     ps.identity();
-    ps[x_] = sqrt(x); ps[px_] = sqrt(x);
-    ps[y_] = sqrt(y); ps[py_] = sqrt(y);
+    ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
     ps[delta_] = 0*delta_max[lat_case-1];
 
     dK = K_re;
@@ -322,9 +316,95 @@ tps f_gauss_quad_2d(double x, double y)
     // std::cout << std::scientific << std::setprecision(3)
     // 	      << "\n |dK| = " << dK << "\n";
 
-    return dK/(twoJ[X_]*twoJ[Y_]);
+    return dK/(twoJ[X_]*twoJ[Y_]*);
 }
 
+#else
+
+static double xsav, ysav;
+static tps (*func_save)(const double, const double, const double);
+
+tps gauss_quad(tps (*func)(const double), const double a, const double b)
+{
+  int    j;
+  double xr, xm, dx;
+  tps    s;
+
+  static double x[] =
+    {0.0, 0.1488743389, 0.4333953941, 0.6794095682, 0.8650633666, 0.9739065285};
+  static double w[] =
+    {0.0, 0.2955242247, 0.2692667193, 0.2190863625, 0.1494513491, 0.0666713443};
+
+  xm = 0.5*(b+a);
+  xr = 0.5*(b-a);
+  s = 0;
+  for (j = 1; j <= 5; j++) {
+    dx = xr*x[j];
+    s += w[j]*((*func)(xm+dx)+(*func)(xm-dx));
+  }
+  return s *= xr;
+}
+
+double gauss_quad_y0(const double x) { return 0e0; }
+
+double gauss_quad_y1(const double x) { return twoJ[Y_]; }
+
+double gauss_quad_z0(const double x, const double y) { return 0e0; }
+
+double gauss_quad_z1(const double x, const double y)
+{
+  return delta_max[lat_case-1];
+}
+
+tps gauss_quad_fz(const double z) { return (*func_save)(xsav, ysav, z); }
+
+tps gauss_quad_fy(const double y)
+{
+  ysav = y;
+  return gauss_quad(gauss_quad_fz,
+		    gauss_quad_z0(xsav, y), gauss_quad_z1(xsav, y));
+}
+
+tps gauss_quad_fx(const double x)
+{
+  xsav = x;
+  return gauss_quad(gauss_quad_fy, gauss_quad_y0(x), gauss_quad_y1(x));
+}
+
+tps gauss_quad_3d(tps (*func)(const double, const double, const double),
+		     const double x0, const double x1)
+{
+  func_save = func;
+  return gauss_quad(gauss_quad_fx, x0, x1);
+}
+
+tps f_gauss_quad_3d(double x, double y, double z)
+{
+  int          k, jj[ss_dim];
+  tps          dK;
+  ss_vect<tps> ps;
+
+    ps.identity();
+    ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
+    ps[delta_] = z;
+
+    dK = K_re;
+    for (k = 0; k < ss_dim; k++)
+      jj[k] = 0;
+    jj[x_] = 1; jj[px_] = 1;
+    dK.pook(jj, 0e0);
+    jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
+    dK.pook(jj, 0e0);
+    dK = dK*ps;
+    // Compute absolute value.
+    if (dK.cst() < 0e0) dK = -dK;
+    // std::cout << std::scientific << std::setprecision(3)
+    // 	      << "\n |dK| = " << dK << "\n";
+
+    return dK/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
+}
+
+#endif 
 // <--- Tune confinement.
 
 
@@ -748,7 +828,11 @@ double get_f(double *bns)
   CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
+#if !three_dim
   dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
+#else
+  dnu = gauss_quad_3d(f_gauss_quad_3d, 0e0, twoJ[X_]);
+#endif
   printf("\n|dnu| = %9.3e\n", dnu.cst());
 
   b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2));
@@ -873,9 +957,11 @@ double get_f(double *bns)
     prt_bn(bn_prms);
 
     printf("\n%3d %12.5e -> %12.5e\n", n_powell, chi2_ref, chi2);
-    for (i = 1; i <= bn_prms.n_prm; i++) 
+    for (i = 1; i <= bn_prms.n_prm; i++) {
       printf("%11.3e", bns[i]);
-    printf("\n");
+      if (i % n_prt == 0) printf("\n");
+    }
+    if (bn_prms.n_prm % n_prt != 0) printf("\n");
   }
 
   chi2_ref = min(chi2, chi2_ref);
@@ -900,7 +986,11 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
     CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
+#if !three_dim
     dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
+#else
+    dnu = gauss_quad_3d(f_gauss_quad_3d, 0e0, twoJ[X_]);
+#endif
     // std::cout << std::scientific << std::setprecision(3)
     // 	      << "\n |dnu| = " << dnu << "\n";
 
@@ -1183,15 +1273,18 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
     bn_prms.set_dprm();
 
   printf("\nbn & dbn:\n");
-  for (i = 1; i <= n_bn; i++)
+  for (i = 1; i <= n_bn; i++) {
     printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
-  printf("\n");
+    if (i % n_prt == 0) printf("\n");
+  }
+  if (n_bn % n_prt != 0) printf("\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_bn; i++) {
     dbn_max = max(fabs((bn_prms.bn[i]-bn_ref[i])), dbn_max);
     printf(" %12.5e", bn_prms.bn[i]-bn_ref[i]);
+    if (i % n_prt == 0) printf("\n");
   }
-  printf("\n");
+  if (n_bn % n_prt != 0) printf("\n");
 
   free_dvector(bn_ref, 1, n_bn); free_dvector(f, 1, m_max);
   free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_bn);
@@ -1805,13 +1898,15 @@ int main(int argc, char *argv[])
 	  bn_prms.add_prm("syyh", 3, 5e5, 1.0);
 	}
 
-	// bn_prms.add_prm("sdmh", 4, 5e5, 1.0);
-	// bn_prms.add_prm("sfmh", 4, 5e5, 1.0);
-	// bn_prms.add_prm("sdh",  4, 5e5, 1.0);
-	// bn_prms.add_prm("sfh",  4, 5e5, 1.0);
-	// bn_prms.add_prm("sxxh", 4, 5e5, 1.0);
-	// bn_prms.add_prm("sxyh", 4, 5e5, 1.0);
-	// bn_prms.add_prm("syyh", 4, 5e5, 1.0);
+	if (!false) {
+	  bn_prms.add_prm("sdmh", 4, 5e5, 1.0);
+	  bn_prms.add_prm("sfmh", 4, 5e5, 1.0);
+	  bn_prms.add_prm("sdh",  4, 5e5, 1.0);
+	  bn_prms.add_prm("sfh",  4, 5e5, 1.0);
+	  bn_prms.add_prm("sxxh", 4, 5e5, 1.0);
+	  bn_prms.add_prm("sxyh", 4, 5e5, 1.0);
+	  bn_prms.add_prm("syyh", 4, 5e5, 1.0);
+	}
       } else {
 	bn_prms.add_prm("oxx",  4, 5e5, 1.0);
 	bn_prms.add_prm("oxy",  4, 5e5, 1.0);

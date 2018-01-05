@@ -844,9 +844,11 @@ double get_f(double *bns)
     prt_bn(bn_prms);
 
     printf("\n%3d %12.5e -> %12.5e\n", n_powell, chi2_ref, chi2);
-    for (i = 1; i <= bn_prms.n_prm; i++) 
+    for (i = 1; i <= bn_prms.n_prm; i++) {
       printf("%11.3e", bns[i]);
-    printf("\n");
+      if (i % n_prt == 0) printf("\n");
+    }
+    if (bn_prms.n_prm % n_prt != 0) printf("\n");
   }
 
   chi2_ref = min(chi2, chi2_ref);
@@ -1154,15 +1156,18 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
     bn_prms.set_dprm();
 
   printf("\nbn & dbn:\n");
-  for (i = 1; i <= n_bn; i++)
+  for (i = 1; i <= n_bn; i++) {
     printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
-  printf("\n");
+    if (i % n_prt == 0) printf("\n");
+  }
+  if (n_bn % n_prt != 0) printf("\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_bn; i++) {
     dbn_max = max(fabs((bn_prms.bn[i]-bn_ref[i])), dbn_max);
     printf(" %12.5e", bn_prms.bn[i]-bn_ref[i]);
+     if (i % n_prt == 0) printf("\n");
   }
-  printf("\n");
+  if (n_bn % n_prt != 0) printf("\n");
 
   free_dvector(bn_ref, 1, n_bn); free_dvector(f, 1, m_max);
   free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_bn);
