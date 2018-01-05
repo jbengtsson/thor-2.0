@@ -25,7 +25,7 @@ tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
 const bool   fit_ksi  = !true, symm  = true;
-const int    n_cell   = 2,     n_cut = 0;
+const int    n_cell   = 1,     n_cut = 0;
 const double tpsa_eps = 1e-30;
 
 // MAX-IV              1,
@@ -47,7 +47,7 @@ const double
      {16.2, 4.6}, {5.3, 2.0}, {14.0, 4.5}, {10.5, 5.2}, { 3.4, 1.9}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {6e-3, 4e-3},     {7e-3, 4e-3}, { 2e-3, 1e-3},  {2e-3, 1e-3}, {10e-3, 5e-3}
+     {6e-3, 4e-3},     {7e-3, 4e-3}, { 2e-3, 1e-3},  {2e-3, 1e-3}, {9e-3, 5e-3}
     },
   delta_max[] =
     {3e-2, 5e-2, 3e-2, 3e-2, 3e-2,
@@ -60,7 +60,7 @@ const bool   oct = false;
 const double scl_h[]      = {1e0,  1e0,  1e-1},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-1, 1e-5},
-             scl_dnu_conf = 5e-1;
+             scl_dnu_conf = 1e0;
 #else
 // Octupoles.
 const bool   oct = true;
@@ -491,11 +491,11 @@ void prt_dnu(tps &K)
 
   printf("\nTune confinement:\n");
   printf(" %11.3e %11.3e\n",
-	 h_ijklm(K_re, 3, 3, 0, 0, 0),
-	 h_ijklm(K_re/(3e0*twoJ[X_]), 2, 2, 0, 0, 0));
+	 h_ijklm(K_re/(3e0*twoJ[X_]), 2, 2, 0, 0, 0),
+	 h_ijklm(K_re, 3, 3, 0, 0, 0));
   printf(" %11.3e %11.3e\n",
-	 h_ijklm(K_re, 0, 0, 3, 3, 0),
-	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0));
+	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0),
+	 h_ijklm(K_re, 0, 0, 3, 3, 0));
   printf(" %11.3e %11.3e %11.3e\n",
 	 h_ijklm(K_re*Id_scl, 1, 1, 1, 1, 0),
 	 h_ijklm(K_re*Id_scl, 2, 2, 1, 1, 0),
