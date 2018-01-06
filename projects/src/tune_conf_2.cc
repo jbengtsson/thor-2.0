@@ -1906,6 +1906,14 @@ int main(int argc, char *argv[])
 	  bn_prms.add_prm("sxxh", 4, 5e5, 1.0);
 	  bn_prms.add_prm("sxyh", 4, 5e5, 1.0);
 	  bn_prms.add_prm("syyh", 4, 5e5, 1.0);
+
+	  bn_prms.add_prm("sdmh", 5, 5e5, 1.0);
+	  bn_prms.add_prm("sfmh", 5, 5e5, 1.0);
+	  bn_prms.add_prm("sdh",  5, 5e5, 1.0);
+	  bn_prms.add_prm("sfh",  5, 5e5, 1.0);
+	  bn_prms.add_prm("sxxh", 5, 5e5, 1.0);
+	  bn_prms.add_prm("sxyh", 5, 5e5, 1.0);
+	  bn_prms.add_prm("syyh", 5, 5e5, 1.0);
 	}
       } else {
 	bn_prms.add_prm("oxx",  4, 5e5, 1.0);
