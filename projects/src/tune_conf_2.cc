@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -16,7 +16,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define three_dim 1
+#define THREE_DIM 0
 
 
 extern tps          K, g;
@@ -39,21 +39,19 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 6-RB-BA  7,
 // DIAMOND-II 8-BA     8,
 // DIAMOND-II 8-HMBA   9,
-// SLS-2              10.
-const int lat_case = 10, n_prt = 8;
+const int lat_case = 2, n_prt = 8;
 
 // Center of straight.
 const double
   beta_inj[][2] =
     {{ 3.0, 3.0}, {3.4, 1.9}, { 9.9, 5.4}, { 9.9, 5.4}, {10.6, 8.6},
-     {16.2, 4.6}, {5.3, 2.0}, {14.0, 4.5}, {10.5, 5.2}, { 3.4, 1.9}},
+     {16.2, 4.6}, {5.3, 2.0}, {14.0, 4.5}, {10.5, 5.2}},
   A_max[][2] =
-    {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {6e-3, 4e-3},     {7e-3, 4e-3}, { 2e-3, 1e-3},  {2e-3, 1e-3}, {9e-3, 5e-3}
-    },
+    {{1.2e-3, 1.2e-3}, {9e-3, 5e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
+     {6e-3, 4e-3},     {7e-3, 4e-3}, { 2e-3, 1e-3},  {2e-3, 1e-3}},
   delta_max[] =
-    {3e-2, 5e-2, 3e-2, 3e-2, 3e-2,
-     3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
+    {3e-2, 4e-2, 3e-2, 3e-2, 3e-2,
+     3e-2, 3e-2, 3e-2, 3e-2};
 
 
 #if true
@@ -229,7 +227,7 @@ void param_type::set_prm(void) const
 
 // ---> Tune confinement.
 
-#if !three_dim
+#if !THREE_DIM
 
 static double xsav;
 static tps (*func_save)(const double, const double);
@@ -282,7 +280,28 @@ tps f_gauss_quad_2d_dnu(double x, double y)
 
     ps.identity();
     ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
-    ps[delta_] = 0*delta_max[lat_case-1];
+    ps[delta_] = 0e0;
+    for (k = 0; k < 2; k++) {
+      dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
+      // Compute absolute value.
+      if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
+    }
+
+}
+
+tps f_gauss_quad_2d(double x, double y)
+{
+#define DNU 0
+
+  int          k, jj[ss_dim];
+  tps          dK, dnu[2];
+  ss_vect<tps> ps;
+
+    ps.identity();
+    ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
+    ps[delta_] = 0e0;
+
+#if DNU
     for (k = 0; k < 2; k++) {
       dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
       // Compute absolute value.
@@ -290,18 +309,7 @@ tps f_gauss_quad_2d_dnu(double x, double y)
     }
 
     return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]);
-}
-
-tps f_gauss_quad_2d(double x, double y)
-{
-  int          k, jj[ss_dim];
-  tps          dK;
-  ss_vect<tps> ps;
-
-    ps.identity();
-    ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
-    ps[delta_] = 0*delta_max[lat_case-1];
-
+#else
     dK = K_re;
     for (k = 0; k < ss_dim; k++)
       jj[k] = 0;
@@ -315,7 +323,8 @@ tps f_gauss_quad_2d(double x, double y)
     // std::cout << std::scientific << std::setprecision(3)
     // 	      << "\n |dK| = " << dK << "\n";
 
-    return dK/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
+    return dK/(twoJ[X_]*twoJ[Y_]);
+#endif
 }
 
 #else
@@ -827,7 +836,7 @@ double get_f(double *bns)
   CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
-#if !three_dim
+#if !THREE_DIM
   dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
 #else
   dnu = gauss_quad_3d(f_gauss_quad_3d, 0e0, twoJ[X_]);
@@ -985,7 +994,7 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
     CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
-#if !three_dim
+#if !THREE_DIM
     dnu = gauss_quad_2d(f_gauss_quad_2d, 0e0, twoJ[X_]);
 #else
     dnu = gauss_quad_3d(f_gauss_quad_3d, 0e0, twoJ[X_]);
@@ -1665,7 +1674,7 @@ int main(int argc, char *argv[])
 	   scl_ksi[0], scl_ksi[1], scl_ksi[2]);
     printf("scl_dnu_conf:   %7.1e\n", scl_dnu_conf);
     printf("n_cut:          %d\n", n_cut);
-    printf("three_dim:      %d\n", three_dim);
+    printf("three_dim:      %d\n", THREE_DIM);
     printf("symmetric:      %d\n", symm);
     printf("\nA_max:          %7.1e, %7.1e\n",
 	   A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
@@ -1740,26 +1749,44 @@ int main(int argc, char *argv[])
       // bn_prms.add_prm("o4", 6, 5e10, 1.0);
       break;
     case 2:
+    case 10:
       // SLS-2:
-      if (true) {
-	bn_prms.add_prm("sfh",  3, 5e5, 1.0);
-	bn_prms.add_prm("sdh",  3, 5e5, 1.0);
-	bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+      if (!oct) {
 	bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+	bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+	bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+	bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+	if (!fit_ksi) {
+	  bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
+	  bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
+	  bn_prms.add_prm("syyh", 3, 5e5, 1.0);
+	}
 
-	bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
-	bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
-	bn_prms.add_prm("syyh", 3, 5e5, 1.0);
+	if (!false) {
+	  bn_prms.add_prm("sdmh", 4, 5e5, 1.0);
+	  bn_prms.add_prm("sfmh", 4, 5e5, 1.0);
+	  bn_prms.add_prm("sdh",  4, 5e5, 1.0);
+	  bn_prms.add_prm("sfh",  4, 5e5, 1.0);
+	  bn_prms.add_prm("sxxh", 4, 5e5, 1.0);
+	  bn_prms.add_prm("sxyh", 4, 5e5, 1.0);
+	  bn_prms.add_prm("syyh", 4, 5e5, 1.0);
+
+	  bn_prms.add_prm("sdmh", 5, 5e5, 1.0);
+	  bn_prms.add_prm("sfmh", 5, 5e5, 1.0);
+	  bn_prms.add_prm("sdh",  5, 5e5, 1.0);
+	  bn_prms.add_prm("sfh",  5, 5e5, 1.0);
+	  bn_prms.add_prm("sxxh", 5, 5e5, 1.0);
+	  bn_prms.add_prm("sxyh", 5, 5e5, 1.0);
+	  bn_prms.add_prm("syyh", 5, 5e5, 1.0);
+	}
       } else {
-	bn_prms.add_prm("ocx",  4, 5e10, 1.0);
-	bn_prms.add_prm("ocxm", 4, 5e10, 1.0);
-	bn_prms.add_prm("ocy",  4, 5e10, 1.0);
-	bn_prms.add_prm("ocym", 4, 5e10, 1.0);
-
-	bn_prms.add_prm("oxx",  4, 5e10, 1.0);
-	bn_prms.add_prm("oxy",  4, 5e10, 1.0);
-	bn_prms.add_prm("oyy",  4, 5e10, 1.0);
-      }
+	bn_prms.add_prm("oxx",  4, 5e5, 1.0);
+	bn_prms.add_prm("oxy",  4, 5e5, 1.0);
+	bn_prms.add_prm("oyy",  4, 5e5, 1.0);
+	bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
+	bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
+	bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
+       }
       break;
     case 3 ... 4:
       // DIAMOND:
@@ -1884,45 +1911,6 @@ int main(int argc, char *argv[])
 	bn_prms.add_prm("s9",  4, 5e5, 1.0);
 	bn_prms.add_prm("s10", 4, 5e5, 1.0);
       }
-      break;
-    case 10:
-      // SLS-2:
-      if (!oct) {
-	bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
-	bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
-	bn_prms.add_prm("sdh",  3, 5e5, 1.0);
-	bn_prms.add_prm("sfh",  3, 5e5, 1.0);
-	if (!fit_ksi) {
-	  bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
-	  bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
-	  bn_prms.add_prm("syyh", 3, 5e5, 1.0);
-	}
-
-	if (!false) {
-	  bn_prms.add_prm("sdmh", 4, 5e5, 1.0);
-	  bn_prms.add_prm("sfmh", 4, 5e5, 1.0);
-	  bn_prms.add_prm("sdh",  4, 5e5, 1.0);
-	  bn_prms.add_prm("sfh",  4, 5e5, 1.0);
-	  bn_prms.add_prm("sxxh", 4, 5e5, 1.0);
-	  bn_prms.add_prm("sxyh", 4, 5e5, 1.0);
-	  bn_prms.add_prm("syyh", 4, 5e5, 1.0);
-
-	  bn_prms.add_prm("sdmh", 5, 5e5, 1.0);
-	  bn_prms.add_prm("sfmh", 5, 5e5, 1.0);
-	  bn_prms.add_prm("sdh",  5, 5e5, 1.0);
-	  bn_prms.add_prm("sfh",  5, 5e5, 1.0);
-	  bn_prms.add_prm("sxxh", 5, 5e5, 1.0);
-	  bn_prms.add_prm("sxyh", 5, 5e5, 1.0);
-	  bn_prms.add_prm("syyh", 5, 5e5, 1.0);
-	}
-      } else {
-	bn_prms.add_prm("oxx",  4, 5e5, 1.0);
-	bn_prms.add_prm("oxy",  4, 5e5, 1.0);
-	bn_prms.add_prm("oyy",  4, 5e5, 1.0);
-	bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
-	bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
-	bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
-       }
       break;
     }
 
