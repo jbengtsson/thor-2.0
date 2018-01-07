@@ -16,6 +16,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
+#define DNU       1
 #define THREE_DIM 0
 
 
@@ -291,8 +292,6 @@ tps f_gauss_quad_2d_dnu(double x, double y)
 
 tps f_gauss_quad_2d(double x, double y)
 {
-#define DNU 0
-
   int          k, jj[ss_dim];
   tps          dK, dnu[2];
   ss_vect<tps> ps;
@@ -389,13 +388,22 @@ tps gauss_quad_3d(tps (*func)(const double, const double, const double),
 tps f_gauss_quad_3d(double x, double y, double z)
 {
   int          k, jj[ss_dim];
-  tps          dK;
+  tps          dK, dnu[2];
   ss_vect<tps> ps;
 
     ps.identity();
     ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
     ps[delta_] = z;
 
+#if DNU
+    for (k = 0; k < 2; k++) {
+      dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
+      // Compute absolute value.
+      if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
+    }
+
+    return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
+#else
     dK = K_re;
     for (k = 0; k < ss_dim; k++)
       jj[k] = 0;
@@ -410,6 +418,7 @@ tps f_gauss_quad_3d(double x, double y, double z)
     // 	      << "\n |dK| = " << dK << "\n";
 
     return dK/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
+#endif
 }
 
 #endif 
