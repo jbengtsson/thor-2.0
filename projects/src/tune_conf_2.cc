@@ -16,8 +16,8 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU       1
-#define THREE_DIM 0
+#define DNU       0
+#define THREE_DIM 1
 
 
 extern tps          K, g;
@@ -1924,7 +1924,9 @@ int main(int argc, char *argv[])
     }
 
     // Step is 1.0 for conjugated gradient method.
-    bn_prms.bn_tol = 1e-1; bn_prms.svd_n_cut = 0; bn_prms.step = 1.0;
+    bn_prms.bn_tol    = 1e-1;
+    bn_prms.svd_n_cut = 0;
+    bn_prms.step      = 1.0;
 
     if (fit_ksi) {
       no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
