@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -16,8 +16,8 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU       0
-#define THREE_DIM 1
+#define DNU       1
+#define THREE_DIM 0
 
 
 extern tps          K, g;
@@ -27,32 +27,34 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = !true, symm  = true;
-const int    n_cell   = 1,     n_cut = 0;
+const bool   fit_ksi  = !true, symm  = true, c_g = !true;
+const int    n_cell   = 1;
 const double tpsa_eps = 1e-30;
 
-// MAX-IV              1,
-// SLS-2               2,
-// DIAMOND             3,
-// DIAMOND with VMX    4,
-// DIAMOND-II 4-BA     5,
-// DIAMOND-II 6-HMBA   6,
-// DIAMOND-II 6-RB-BA  7,
-// DIAMOND-II 8-BA     8,
-// DIAMOND-II 8-HMBA   9,
-const int lat_case = 2, n_prt = 8;
+// MAX-IV               1,
+// SLS-2                2,
+// DIAMOND              3,
+// DIAMOND with VMX     4,
+// DIAMOND-II 4-BA Ref  5,
+// DIAMOND-II 6-HMBA    6,
+// DIAMOND-II 6-RB-BA   7,
+// DIAMOND-II 8-RB-BA   8,
+// DIAMOND-II 8-HMBA 1  9,
+// DIAMOND-II 8-HMBA 2 10,
+const int lat_case = 10, n_prt = 8;
 
 // Center of straight.
 const double
   beta_inj[][2] =
     {{ 3.0, 3.0}, {3.4, 1.9}, { 9.9, 5.4}, { 9.9, 5.4}, {10.6, 8.6},
-     {16.2, 4.6}, {5.3, 2.0}, {14.0, 4.5}, {10.5, 5.2}},
+     {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6}, {11.5, 7.9}, {5.3, 5.3}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {9e-3, 5e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {6e-3, 4e-3},     {7e-3, 4e-3}, { 2e-3, 1e-3},  {2e-3, 1e-3}},
+     {6e-3, 4e-3},     {3e-3, 2e-3}, { 2e-3, 1e-3},  {5e-3, 3e-3}, {5e-3, 3e-3}
+    },
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2, 3e-2,
-     3e-2, 3e-2, 3e-2, 3e-2};
+     3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
 
 #if true
@@ -1682,7 +1684,6 @@ int main(int argc, char *argv[])
     printf("scl_ksi:        %7.1e, %7.1e, %7.1e\n",
 	   scl_ksi[0], scl_ksi[1], scl_ksi[2]);
     printf("scl_dnu_conf:   %7.1e\n", scl_dnu_conf);
-    printf("n_cut:          %d\n", n_cut);
     printf("three_dim:      %d\n", THREE_DIM);
     printf("symmetric:      %d\n", symm);
     printf("\nA_max:          %7.1e, %7.1e\n",
@@ -1758,7 +1759,6 @@ int main(int argc, char *argv[])
       // bn_prms.add_prm("o4", 6, 5e10, 1.0);
       break;
     case 2:
-    case 10:
       // SLS-2:
       if (!oct) {
 	bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
@@ -1848,16 +1848,6 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("s3",  3, 5e5, 1.0);
       break;
     case 6:
-      // DIAMOND-II, 6-HMBA:
-      // bn_prms.add_prm("sd1",  3, 5e5, 1.0);
-      // bn_prms.add_prm("sd2",  3, 5e5, 1.0);
-      // bn_prms.add_prm("sd3",  3, 5e5, 1.0);
-      // bn_prms.add_prm("sf21", 3, 5e5, 1.0);
-      // bn_prms.add_prm("sd31", 3, 5e5, 1.0);
-      // bn_prms.add_prm("sf1",  3, 5e5, 1.0);
-      // bn_prms.add_prm("sh1a", 3, 5e5, 1.0);
-      // bn_prms.add_prm("sh1e", 3, 5e5, 1.0);
-      // break;
       bn_prms.add_prm("sfa",  3, 5e5, 1.0);
       bn_prms.add_prm("sfb",  3, 5e5, 1.0);
       bn_prms.add_prm("sda",  3, 5e5, 1.0);
@@ -1884,18 +1874,16 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("syy",  3, 5e5, 1.0);
       break;
     case 8:
-      // DIAMOND-II, 8-BA:
+      // DIAMOND-II, 8-RB-BA:
       bn_prms.add_prm("sfh",  3, 5e5, 1.0);
       bn_prms.add_prm("sdh",  3, 5e5, 1.0);
       bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
       bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
-      if (true) {
-	bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
-	bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
-	bn_prms.add_prm("syyh", 3, 5e5, 1.0);
-      }
+      bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
+      bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
+      bn_prms.add_prm("syyh", 3, 5e5, 1.0);
       break;
-    case 9:
+    case 9 ... 10:
       // DIAMOND-II, 8-BA by Hossein:
       if (!oct) {
 	bn_prms.add_prm("s1",  3, 5e5, 1.0);
@@ -1942,13 +1930,16 @@ int main(int argc, char *argv[])
       exit(0);
     }
 
-    no_mpoles(Oct); no_mpoles(Dodec);
+    no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
 
-    if (true) {
-      bn_prms.svd_n_cut = n_cut;
+    if (c_g) {
+      bn_prms.svd_n_cut = 0;
+      printf("Conj. Grad.:    %d\n", bn_prms.svd_n_cut);
       min_conj_grad(true);
-    } else
+    } else {
+      printf("Lev. Marq.\n");
       min_lev_marq();
+    }
 
     prt_h_K();
 }
