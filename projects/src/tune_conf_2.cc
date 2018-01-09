@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 7
+#define NO 8
 
 #include "thor_lib.h"
 
@@ -17,7 +17,7 @@ int no_tps = NO,
 #endif
 
 #define DNU       1
-#define THREE_DIM 0
+#define THREE_DIM 1
 
 
 extern tps          K, g;
@@ -41,7 +41,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-RB-BA   8,
 // DIAMOND-II 8-HMBA 1  9,
 // DIAMOND-II 8-HMBA 2 10,
-const int lat_case = 10, n_prt = 8;
+const int lat_case = 6, n_prt = 8;
 
 // Center of straight.
 const double
@@ -50,11 +50,11 @@ const double
      {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6}, {11.5, 7.9}, {5.3, 5.3}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {9e-3, 5e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {6e-3, 4e-3},     {3e-3, 2e-3}, { 2e-3, 1e-3},  {5e-3, 3e-3}, {5e-3, 3e-3}
+     {8e-3, 4e-3},     {3e-3, 2e-3}, { 2e-3, 1e-3},  {5e-3, 3e-3}, {5e-3, 3e-3}
     },
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2, 3e-2,
-     3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
+     2.5e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
 
 #if true
@@ -1691,6 +1691,10 @@ int main(int argc, char *argv[])
     printf("delta_max:      %7.1e\n", delta_max[lat_case-1]);
     printf("beta_inj:       %7.1e, %7.1e\n",
 	   beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
+    if (c_g)
+      printf("Conj. Grad.:    %d\n", bn_prms.svd_n_cut);
+    else
+      printf("Lev. Marq.\n");
 
     get_nu_ksi();
 
@@ -1924,22 +1928,19 @@ int main(int argc, char *argv[])
 
     prt_bn(bn_prms);
 
-    if (fit_ksi) {
+    // if (fit_ksi) {
       bn_prms.svd_n_cut = 0;
       fit_ksi1(0e0, 0e0);
-      exit(0);
-    }
+    //   exit(0);
+    // }
 
     no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
 
     if (c_g) {
       bn_prms.svd_n_cut = 0;
-      printf("Conj. Grad.:    %d\n", bn_prms.svd_n_cut);
       min_conj_grad(true);
-    } else {
-      printf("Lev. Marq.\n");
+    } else
       min_lev_marq();
-    }
 
     prt_h_K();
 }
