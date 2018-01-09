@@ -27,8 +27,8 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = !true, symm  = true, c_g = !true;
-const int    n_cell   = 1;
+const bool   fit_ksi  = !true, symm  = true, c_g = true;
+const int    n_cell   = 2;
 const double tpsa_eps = 1e-30;
 
 // MAX-IV               1,
@@ -1677,7 +1677,8 @@ int main(int argc, char *argv[])
 
     danot_(1);
 
-    printf("\nscl_h:          %7.1e, %7.1e, %7.1e\n",
+    printf("\nn_cell:         %1d\n", n_cell);
+    printf("scl_h:          %7.1e, %7.1e, %7.1e\n",
 	   scl_h[0], scl_h[1], scl_h[2]);
     printf("scl_dnu:        %7.1e, %7.1e, %7.1e, %7.1e\n",
 	   scl_dnu[0], scl_dnu[1], scl_dnu[2], scl_dnu[3]);
@@ -1934,7 +1935,7 @@ int main(int argc, char *argv[])
     //   exit(0);
     // }
 
-    no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
+    no_mpoles(Oct); no_mpoles(Dodec);
 
     if (c_g) {
       bn_prms.svd_n_cut = 0;
