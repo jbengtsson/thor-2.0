@@ -60,10 +60,16 @@ const double
 #if true
 // Sextupoles.
 const bool   oct = false;
+// SLS-2.
+// const double scl_h[]      = {1e0,  1e0,  1e-1},
+//              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
+//              scl_ksi[]    = {1e5,  1e-5, 1e-5},
+//              scl_dnu_conf = 5e-1;
+// DIAMOND-II.
 const double scl_h[]      = {1e0,  1e0,  1e-1},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-5, 1e-5},
-             scl_dnu_conf = 5e-1;
+             scl_dnu_conf = 1e-4;
 #else
 // Octupoles.
 const bool   oct = true;
