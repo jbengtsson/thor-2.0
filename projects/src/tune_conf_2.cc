@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 8
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -16,8 +16,8 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU       1
-#define THREE_DIM 1
+#define DNU       0
+#define THREE_DIM 0
 
 
 extern tps          K, g;
@@ -41,7 +41,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-RB-BA   8,
 // DIAMOND-II 8-HMBA 1  9,
 // DIAMOND-II 8-HMBA 2 10,
-const int lat_case = 6, n_prt = 8;
+const int lat_case = 6, n_prt = 8, n_cut = 0;
 
 // Center of straight.
 const double
@@ -50,14 +50,14 @@ const double
      {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6}, {11.5, 7.9}, {5.3, 5.3}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {9e-3, 5e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {8e-3, 4e-3},     {3e-3, 2e-3}, { 2e-3, 1e-3},  {5e-3, 3e-3}, {5e-3, 3e-3}
+     {7e-3, 4e-3},     {3e-3, 2e-3}, { 2e-3, 1e-3},  {5e-3, 3e-3}, {5e-3, 3e-3}
     },
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2, 3e-2,
-     2.5e-2, 3e-2, 3e-2, 3e-2, 3e-2};
+     1.5e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
 
-#if true
+#if 1
 // Sextupoles.
 const bool   oct = false;
 // SLS-2.
@@ -69,7 +69,10 @@ const bool   oct = false;
 const double scl_h[]      = {1e0,  1e0,  1e-1},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-5, 1e-5},
-             scl_dnu_conf = 1e-4;
+// 6BA_1-2-jn-match.
+             scl_dnu_conf = 5e1;
+// diamond_hmba_reduced_chro_revised_ver_01_tracy.
+             // scl_dnu_conf = 1e-3;
 #else
 // Octupoles.
 const bool   oct = true;
@@ -120,7 +123,7 @@ void param_type::ini_prm(void)
   int i;
   double L;
 
-  const bool scale = true;
+  const bool scale = !true;
   const int  n_prt = 4;
 
   n_prm = Fnum.size();
@@ -279,23 +282,6 @@ tps gauss_quad_2d(tps (*func)(const double, const double),
 {
   func_save = func;
   return gauss_quad(gauss_quad_fx, x0, x1);
-}
-
-tps f_gauss_quad_2d_dnu(double x, double y)
-{
-  int          k;
-  tps          dnu[2];
-  ss_vect<tps> ps;
-
-    ps.identity();
-    ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
-    ps[delta_] = 0e0;
-    for (k = 0; k < 2; k++) {
-      dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
-      // Compute absolute value.
-      if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
-    }
-
 }
 
 tps f_gauss_quad_2d(double x, double y)
@@ -1699,7 +1685,7 @@ int main(int argc, char *argv[])
     printf("beta_inj:       %7.1e, %7.1e\n",
 	   beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
     if (c_g)
-      printf("Conj. Grad.:    %d\n", bn_prms.svd_n_cut);
+      printf("Conj. Grad.:    %d\n", n_cut);
     else
       printf("Lev. Marq.\n");
 
@@ -1859,6 +1845,7 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("s3",  3, 5e5, 1.0);
       break;
     case 6:
+      // DIAMOND-II 6-HMBA    6,
       bn_prms.add_prm("sfa",  3, 5e5, 1.0);
       bn_prms.add_prm("sfb",  3, 5e5, 1.0);
       bn_prms.add_prm("sda",  3, 5e5, 1.0);
@@ -1935,16 +1922,16 @@ int main(int argc, char *argv[])
 
     prt_bn(bn_prms);
 
-    // if (fit_ksi) {
+    if (fit_ksi) {
       bn_prms.svd_n_cut = 0;
       fit_ksi1(0e0, 0e0);
-    //   exit(0);
-    // }
+      exit(0);
+    }
 
     no_mpoles(Oct); no_mpoles(Dodec);
 
     if (c_g) {
-      bn_prms.svd_n_cut = 0;
+      bn_prms.svd_n_cut = n_cut;
       min_conj_grad(true);
     } else
       min_lev_marq();
