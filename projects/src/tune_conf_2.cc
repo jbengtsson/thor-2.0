@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 7
+#define NO 3
 
 #include "thor_lib.h"
 
@@ -28,7 +28,7 @@ tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
 const bool   fit_ksi  = !true, symm  = true, c_g = true;
-const int    n_cell   = 2;
+const int    n_cell   = 1;
 const double tpsa_eps = 1e-30;
 
 // MAX-IV               1,
@@ -751,7 +751,6 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 {
   int          n_bn, i, j, m;
   double       **A, *b;
-  ss_vect<tps> nus;
 
   const int    m_max = 2;
   const double s_cut = 1e-10;
@@ -767,7 +766,7 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
     bn_prms.set_prm_dep(i-1);
 
     danot_(3);
-    get_map_n(n_cell);
+    get_Map();
     danot_(4);
     K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
 
@@ -802,7 +801,7 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
   prt_bn(bn_prms);
 
   danot_(3);
-  get_map_n(n_cell);
+  get_Map();
   danot_(4);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   CtoR(get_h(), h_re, h_im); nus = dHdJ(K);
@@ -1490,23 +1489,23 @@ void fit_tune(const double nu_x, const double nu_y,
 {
   // Periodic solution: [nu_x, nu_y, beta_x, beta_y]
 
-  int           i, j, n_b2;
+  int           i, j, m, n_b2;
   double        **A, *b, *b2_lim, *b2, *db2, step;
   double        nu_fract[2], dnu[2];
-  ss_vect<tps>  nus, dnus;
+  ss_vect<tps>  dnus;
   std::ofstream quad_out;
 
   const bool    debug = true;
-  const int     m     = 2, n_cut = 0;
-  const double  step0 = 0.1;
+  const int     m_max = 2;
+  const double  step0 = 0.5, s_cut = 1e-10;
 
   b2_max = 10e0;
 
   n_b2 = b2_Fam.size();
 
-  b = dvector(1, m); b2_lim = dvector(1, n_b2);
+  b = dvector(1, m_max); b2_lim = dvector(1, n_b2);
   b2 = dvector(1, n_b2); db2 = dvector(1, n_b2);
-  A = dmatrix(1, m, 1, n_b2);
+  A = dmatrix(1, m_max, 1, n_b2);
 
   nu_fract[X_] = fract(nu_x); nu_fract[Y_] = fract(nu_y);
   printf("\nfit_tune nu = [%7.5f, %7.5f]\n", nu_fract[X_], nu_fract[Y_]);
@@ -1533,16 +1532,19 @@ void fit_tune(const double nu_x, const double nu_y,
 
       get_Map(); K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
 
-      A[1][i] = h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
-      A[2][i] = h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
+      m = 0;
+      A[++m][i] = h_ijklm_p(nus[3], 0, 0, 0, 0, 0, 7);
+      A[++m][i] = h_ijklm_p(nus[4], 0, 0, 0, 0, 0, 7);
 
       for (j = 1; j <= get_n_Kids(b2_Fam[i-1]); j++)
 	clr_bn_par(b2_Fam[i-1], j, Quad);
     }
 
-    b[1] = -dnu[X_]; b[2] = -dnu[Y_];
+    m = 0;
+    b[++m] = -dnu[X_];
+    b[++m] = -dnu[Y_];
 
-    SVD_lim(m, n_b2, A, b, b2_lim, n_cut, b2, db2);
+    SVD_lim(m, n_b2, A, b, b2_lim, s_cut, b2, db2);
 
     for (i = 1; i <= n_b2; i++) {
       set_dbn(b2_Fam[i-1], Quad, step*db2[i]);
@@ -1600,10 +1602,10 @@ void fit_tune(const double nu_x, const double nu_y,
     quad_out.close();
   }
 
-  free_dvector(b, 1, m);
+  free_dvector(b, 1, m_max);
   free_dvector(b2_lim, 1, n_b2); free_dvector(b2, 1, n_b2);
   free_dvector(db2, 1, n_b2);
-  free_dmatrix(A, 1, m, 1, n_b2);
+  free_dmatrix(A, 1, m_max, 1, n_b2);
 }
 
 
@@ -1613,29 +1615,23 @@ void fit_tune(const double nu_x, const double nu_y)
 
   const double eps = 1e-5;
 
-  // DIAMOND-II 8-BA by Hossein.
-  // Zero dispersion.
-  b2_Fnum.push_back(get_Fnum("q1"));
-  b2_Fnum.push_back(get_Fnum("q2"));
-  b2_Fnum.push_back(get_Fnum("q3"));
+  switch (lat_case) {
+  case 6:
+    // DIAMOND-II, 6-RB-BA:
+    // Low dispersion quadrupoles.
+    b2_Fnum.push_back(get_Fnum("qd22"));
+    b2_Fnum.push_back(get_Fnum("qf11"));
+    b2_Fnum.push_back(get_Fnum("qd11"));
+    b2_Fnum.push_back(get_Fnum("qd21"));
 
-  // b2_Fnum.push_back(get_Fnum("q4"));
-  // b2_Fnum.push_back(get_Fnum("q5"));
-  // b2_Fnum.push_back(get_Fnum("q6"));
-  // b2_Fnum.push_back(get_Fnum("q7"));
-  // b2_Fnum.push_back(get_Fnum("q8"));
-  // b2_Fnum.push_back(get_Fnum("q9"));
-  // b2_Fnum.push_back(get_Fnum("q10"));
-  // b2_Fnum.push_back(get_Fnum("qu1"));
-  // b2_Fnum.push_back(get_Fnum("qu2"));
-  // b2_Fnum.push_back(get_Fnum("qu3"));
-  // b2_Fnum.push_back(get_Fnum("qu4"));
-  // b2_Fnum.push_back(get_Fnum("qu5"));
-  // b2_Fnum.push_back(get_Fnum("qu6"));
-  // b2_Fnum.push_back(get_Fnum("qu7"));
-  // b2_Fnum.push_back(get_Fnum("qu8"));
-  // b2_Fnum.push_back(get_Fnum("qu9"));
- 
+    b2_Fnum.push_back(get_Fnum("qf6"));
+    b2_Fnum.push_back(get_Fnum("qf8"));
+
+    b2_Fnum.push_back(get_Fnum("qd2"));
+    b2_Fnum.push_back(get_Fnum("qf1"));
+    break;
+  }
+
   fit_tune(nu_x, nu_y, b2_Fnum, eps, true);
 
   prt_b2(b2_Fnum);
@@ -1691,9 +1687,10 @@ int main(int argc, char *argv[])
 
     get_nu_ksi();
 
-    if (false) {
+    if (!false) {
       // fit_tune(57.15/6.0, 22.25/6.0);
-      fit_tune(0.530831725+1e-4, 0.685735574-0*1e-4);
+      // fit_tune(0.530831725+1e-4, 0.685735574-0*1e-4);
+      fit_tune(9.69262+1e-2, 0.54850);
       get_nu_ksi();
       exit(0);
     }
