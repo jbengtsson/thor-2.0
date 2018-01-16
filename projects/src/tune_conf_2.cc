@@ -1589,18 +1589,19 @@ void fit_tune(const double nu_x, const double nu_y,
     printf("nu  = [%8.5f, %8.5f]\n", nus[3].cst(), nus[4].cst());
   }
 
-  if (prt) {
-    quad_out.open("fit_tune.dat", std::ios::out);
-    quad_out << "\nn = 1:" << "\n";
-    for (i = 1; i <= n_b2; i++)
-      for (j = 1; j <= get_n_Kids(b2_Fam[i-1]); j++)
-	if (b2_Fam[i-1] > 0)
-	  quad_out << std::fixed << std::setprecision(7) 
-		   << std::setw(6) << get_Name(b2_Fam[i-1]) << "(" << j
-		   << ") = " << std::setw(11) << get_bn(b2_Fam[i-1], j, Quad)
-		   << std::setw(2) << Quad << "\n";
-    quad_out.close();
-  }
+  quad_out.open("fit_tune.dat", std::ios::out);
+  quad_out << "\nn = 1:" << "\n";
+  for (i = 1; i <= n_b2; i++)
+    for (j = 1; j <= get_n_Kids(b2_Fam[i-1]); j++)
+      if (b2_Fam[i-1] > 0)
+	quad_out << std::fixed << std::setprecision(7) 
+		 << std::setw(6) << get_Name(b2_Fam[i-1]) << "(" << j
+		 << ") = " << std::setw(11) << get_bn(b2_Fam[i-1], j, Quad)
+		 << std::setw(2) << Quad << "\n";
+  quad_out.close();
+
+  prt_mfile("flat_file.fit");
+  prt_bn(bn_prms);
 
   free_dvector(b, 1, m_max);
   free_dvector(b2_lim, 1, n_b2); free_dvector(b2, 1, n_b2);
@@ -1690,7 +1691,7 @@ int main(int argc, char *argv[])
     if (!false) {
       // fit_tune(57.15/6.0, 22.25/6.0);
       // fit_tune(0.530831725+1e-4, 0.685735574-0*1e-4);
-      fit_tune(9.69262+1e-2, 0.54850);
+      fit_tune(58.18/6, 0.54850);
       get_nu_ksi();
       exit(0);
     }
