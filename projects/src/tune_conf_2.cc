@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 3
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -27,8 +27,8 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = !true, symm  = true, c_g = true;
-const int    n_cell   = 1;
+const bool   fit_ksi  = !true, symm  = true, scale = true, c_g = true;
+const int    n_cell   = 2;
 const double tpsa_eps = 1e-30;
 
 // MAX-IV               1,
@@ -41,7 +41,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-RB-BA   8,
 // DIAMOND-II 8-HMBA 1  9,
 // DIAMOND-II 8-HMBA 2 10,
-const int lat_case = 6, n_prt = 8, n_cut = 0;
+const int lat_case = 6, n_prt = 8, n_cut = 1;
 
 // Center of straight.
 const double
@@ -123,7 +123,6 @@ void param_type::ini_prm(void)
   int i;
   double L;
 
-  const bool scale = !true;
   const int  n_prt = 4;
 
   n_prm = Fnum.size();
@@ -1688,14 +1687,6 @@ int main(int argc, char *argv[])
 
     get_nu_ksi();
 
-    if (!false) {
-      // fit_tune(57.15/6.0, 22.25/6.0);
-      // fit_tune(0.530831725+1e-4, 0.685735574-0*1e-4);
-      fit_tune(58.18/6, 0.54850);
-      get_nu_ksi();
-      exit(0);
-    }
-
     for (j = 0; j < 2; j++)
       twoJ[j] =	sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
 
@@ -1905,6 +1896,14 @@ int main(int argc, char *argv[])
 	bn_prms.add_prm("s10", 4, 5e5, 1.0);
       }
       break;
+    }
+
+    if (false) {
+      // fit_tune(57.15/6.0, 22.25/6.0);
+      // fit_tune(0.530831725+1e-4, 0.685735574-0*1e-4);
+      fit_tune(58.18/6, 0.54850);
+      get_nu_ksi();
+      exit(0);
     }
 
     // Step is 1.0 for conjugated gradient method.
