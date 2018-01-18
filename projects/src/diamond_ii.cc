@@ -24,30 +24,33 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = true, symm  = true, tune_conf = !false;
-const int    n_cell   = 2,     n_cut = 0;
+const bool   fit_ksi  = true, symm  = true, tune_conf = !false, c_g = !true;
+const int    n_cell   = 2,    n_cut = 1;
 const double tpsa_eps = 1e-30;
 
-// MAX-IV              1,
-// SLS-2               2,
-// DIAMOND             3,
-// DIAMOND with VMX    4,
-// DIAMOND-II 4-BA     5,
-// DIAMOND-II 6-HMBA   6,
-// DIAMOND-II 6-RB-BA  7,
-// DIAMOND-II 8-BA     8,
-// DIAMOND-II 8-HMBA   9,
-// SLS-2              10.
-const int lat_case = 10, n_prt = 8;
+// MAX-IV               1,
+// SLS-2                2,
+// DIAMOND              3,
+// DIAMOND with VMX     4,
+// DIAMOND-II 4-BA Ref  5,
+// DIAMOND-II 6-HMBA    6,
+// DIAMOND-II 6-RB-BA   7,
+// DIAMOND-II 8-RB-BA   8,
+// DIAMOND-II 8-HMBA 1  9,
+// DIAMOND-II 8-HMBA 2 10,
+const int lat_case = 6, n_prt = 8;
 
 // Center of straight.
 const double
+  // beta_inj[][2] =
+  //   {{ 3.0, 3.0}, {3.4, 1.9}, { 9.9, 5.4}, { 9.9, 5.4}, {10.6, 8.6},
+  //    {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6}, {11.5, 7.9}, {5.3, 5.3}},
   beta_inj[][2] =
     {{ 3.0, 3.0}, {3.4, 1.9}, { 9.9, 5.4}, { 9.9, 5.4}, {10.6, 8.6},
-     {16.2, 4.6}, {5.3, 2.0}, {14.0, 4.5}, {10.5, 5.2}, { 3.4, 1.9}},
+     {7.3, 4.3}, {14.0, 4.5}, {4.6, 7.6}, {11.5, 7.9}, {5.3, 5.3}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {6e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {6e-3, 4e-3},     {7e-3, 4e-3}, { 2e-3, 1e-3},  {2e-3, 1e-3}, {8e-3, 5e-3}
+     {7e-3, 3e-3},     {7e-3, 4e-3}, { 2e-3, 1e-3},  {2e-3, 1e-3}, {8e-3, 5e-3}
     },
   delta_max[] =
     {3e-2, 5e-2, 3e-2, 3e-2, 3e-2,
@@ -1732,7 +1735,8 @@ int main(int argc, char *argv[])
       break;
     }
 
-    bn_prms.bn_tol = 1e-1; bn_prms.svd_n_cut = 0;
+    bn_prms.bn_tol    = 1e-1;
+    bn_prms.svd_n_cut = 0;
 
     if (fit_ksi) {
       no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
@@ -1748,7 +1752,7 @@ int main(int argc, char *argv[])
       exit(0);
     }
 
-    if (true) {
+    if (c_g) {
       bn_prms.svd_n_cut = n_cut;
       min_conj_grad(true);
     } else

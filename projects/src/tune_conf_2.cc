@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = !true, symm  = true, scale = true, c_g = true;
+const bool   fit_ksi  = !true, symm  = true, scale = true, c_g = !true;
 const int    n_cell   = 2;
 const double tpsa_eps = 1e-30;
 
@@ -41,16 +41,19 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-RB-BA   8,
 // DIAMOND-II 8-HMBA 1  9,
 // DIAMOND-II 8-HMBA 2 10,
-const int lat_case = 6, n_prt = 8, n_cut = 1;
+const int lat_case = 6, n_prt = 8, n_cut = 0;
 
 // Center of straight.
 const double
+  // beta_inj[][2] =
+  //   {{ 3.0, 3.0}, {3.4, 1.9}, { 9.9, 5.4}, { 9.9, 5.4}, {10.6, 8.6},
+  //    {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6}, {11.5, 7.9}, {5.3, 5.3}},
   beta_inj[][2] =
     {{ 3.0, 3.0}, {3.4, 1.9}, { 9.9, 5.4}, { 9.9, 5.4}, {10.6, 8.6},
-     {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6}, {11.5, 7.9}, {5.3, 5.3}},
+     {7.3, 4.3}, {14.0, 4.5}, {4.6, 7.6}, {11.5, 7.9}, {5.3, 5.3}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {9e-3, 5e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {7e-3, 4e-3},     {3e-3, 2e-3}, { 2e-3, 1e-3},  {5e-3, 3e-3}, {5e-3, 3e-3}
+     {7e-3, 3e-3},     {3e-3, 2e-3}, { 2e-3, 1e-3},  {5e-3, 3e-3}, {5e-3, 3e-3}
     },
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2, 3e-2,
