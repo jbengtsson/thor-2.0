@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 5
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = !true, symm  = true, scale = true, c_g = !true;
+const bool   fit_ksi  = true, symm = true, scale = !true, c_g = true;
 const int    n_cell   = 2;
 const double tpsa_eps = 1e-30;
 
@@ -41,7 +41,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-RB-BA   8,
 // DIAMOND-II 8-HMBA 1  9,
 // DIAMOND-II 8-HMBA 2 10,
-const int lat_case = 6, n_prt = 8, n_cut = 0;
+const int lat_case = 6, n_prt = 8, n_cut = 1;
 
 // Center of straight.
 const double
@@ -751,8 +751,8 @@ double get_b(const double scale, const tps &t,
 
 void fit_ksi1(const double ksi_x, const double ksi_y)
 {
-  int          n_bn, i, j, m;
-  double       **A, *b;
+  int    n_bn, i, j, m;
+  double **A, *b, L;
 
   const int    m_max = 2;
   const double s_cut = 1e-10;
@@ -792,9 +792,17 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 
   bn_prms.set_dprm();
 
-  printf("\nfit ksi:\n");
+  printf("\nfit ksi (integrates strength in parenthesis):\n");
   for (i = 1; i <= n_bn; i++) {
+    L = get_L(bn_prms.Fnum[i-1], 1);
     printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
+    if (i % n_prt == 0) printf("\n");
+  }
+  if (n_bn % n_prt != 0) printf("\n");
+  printf("\Integrated strenghts:\n");
+  for (i = 1; i <= n_bn; i++) {
+    L = get_L(bn_prms.Fnum[i-1], 1);
+    printf(" %9.5f", bn_prms.bn_scl[i-1]*bn_prms.bn[i]*L);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_bn % n_prt != 0) printf("\n");
