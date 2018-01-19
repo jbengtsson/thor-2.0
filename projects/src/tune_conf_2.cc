@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = true, symm = true, scale = !true, c_g = true;
+const bool   fit_ksi  = !true, symm = true, scale = !true, c_g = true;
 const int    n_cell   = 2;
 const double tpsa_eps = 1e-30;
 
@@ -41,7 +41,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-RB-BA   8,
 // DIAMOND-II 8-HMBA 1  9,
 // DIAMOND-II 8-HMBA 2 10,
-const int lat_case = 6, n_prt = 8, n_cut = 1;
+const int lat_case = 6, n_prt = 8, n_cut = 0;
 
 // Center of straight.
 const double
