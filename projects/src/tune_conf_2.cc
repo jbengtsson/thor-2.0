@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 7
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -459,7 +459,6 @@ void get_S(void)
 
 void get_nu_ksi(void)
 {
-  ss_vect<tps> nus;
 
   danot_(2);
   get_Map();
@@ -683,18 +682,18 @@ void prt_bn(const param_type &bn_prms)
   fprintf(outf, "\n");
   for (k = 0; k < bn_prms.n_prm; k++) {
     loc = get_loc(bn_prms.Fnum[k], 1) - 1;
-    if (!oct)
+    if (bn_prms.n[k] == Sext)
       fprintf(outf,
 	      "%-8s: sextupole, l = %7.5f"
 	      ", k = %12.5e, n = nsext, Method = Meth;\n",
 	      elem[loc].Name, elem[loc].L, bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-      else
-	fprintf(outf,
-		"%-8s: multipole, l = %7.5f,"
-		"\n          hom = (3, %12.5e, 0e0, 4, %12.5e, 0e0),"
-		"\n          n = nsext, Method = Meth;\n",
-		elem[loc].Name, elem[loc].L, elem[loc].mpole->bn[Sext-1],
-		bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+    else
+      fprintf(outf,
+	      "%-8s: multipole, l = %7.5f,"
+	      "\n          hom = (3, %12.5e, 0e0, 4, %12.5e, 0e0),"
+	      "\n          n = nsext, Method = Meth;\n",
+	      elem[loc].Name, elem[loc].L, elem[loc].mpole->bn[Sext-1],
+	      bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
   }
 
   fclose(outf);
@@ -799,7 +798,7 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
     if (i % n_prt == 0) printf("\n");
   }
   if (n_bn % n_prt != 0) printf("\n");
-  printf("\Integrated strenghts:\n");
+  printf("\nItegrated strenghts:\n");
   for (i = 1; i <= n_bn; i++) {
     L = get_L(bn_prms.Fnum[i-1], 1);
     printf(" %9.5f", bn_prms.bn_scl[i-1]*bn_prms.bn[i]*L);
@@ -1611,7 +1610,7 @@ void fit_tune(const double nu_x, const double nu_y,
   quad_out.close();
 
   prt_mfile("flat_file.fit");
-  prt_bn(bn_prms);
+  prt_b2(b2_Fam);
 
   free_dvector(b, 1, m_max);
   free_dvector(b2_lim, 1, n_b2); free_dvector(b2, 1, n_b2);
@@ -1644,8 +1643,6 @@ void fit_tune(const double nu_x, const double nu_y)
   }
 
   fit_tune(nu_x, nu_y, b2_Fnum, eps, true);
-
-  prt_b2(b2_Fnum);
 }
 
 
@@ -1912,7 +1909,7 @@ int main(int argc, char *argv[])
     if (false) {
       // fit_tune(57.15/6.0, 22.25/6.0);
       // fit_tune(0.530831725+1e-4, 0.685735574-0*1e-4);
-      fit_tune(58.18/6, 0.54850);
+      fit_tune(58.12/6.0, 21.29/6.0);
       get_nu_ksi();
       exit(0);
     }
