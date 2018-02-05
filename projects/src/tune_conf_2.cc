@@ -31,29 +31,30 @@ const bool   fit_ksi  = true, symm = true, scale = !true, c_g = true;
 const int    n_cell   = 2;
 const double tpsa_eps = 1e-30;
 
-// MAX-IV               1,
-// SLS-2                2,
-// DIAMOND              3,
-// DIAMOND with VMX     4,
-// DIAMOND-II 4-BA Ref  5,
-// DIAMOND-II 6-HMBA    6,
-// DIAMOND-II 6-RB-BA   7,
-// DIAMOND-II 8-RB-BA   8,
-// DIAMOND-II 8-HMBA    9,
-const int lat_case = 9, n_prt = 8, n_cut = 5;
+// MAX-IV                1,
+// SLS-2                 2,
+// DIAMOND               3,
+// DIAMOND with VMX      4,
+// DIAMOND-II 4-BA Ref   5,
+// DIAMOND-II 6-HMBA     6,
+// DIAMOND-II 6-RB-BA    7,
+// DIAMOND-II 8-RB-BA    8,
+// DIAMOND-II 8-HMBA     9.
+// DIAMOND-II 8-HMBA II 10.
+const int lat_case = 10, n_prt = 8, n_cut = 4;
 
 // Center of straight.
 const double
   beta_inj[][2] =
     {{ 3.0, 3.0}, {3.4, 1.9}, { 9.9, 5.4}, {9.9, 5.4}, {10.6, 8.6},
-     {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6}, {6.6, 6.1}},
+     {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6}, {6.6, 6.1}, {6.0, 2.8}},
   A_max[][2] =
     {{1.2e-3, 1.2e-3}, {9e-3, 5e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {7e-3, 4e-3},     {3e-3, 2e-3}, { 2e-3, 1e-3},  {5e-3, 3e-3}
+     {7e-3, 4e-3},     {3e-3, 2e-3}, { 2e-3, 1e-3},  {5e-3, 3e-3},  {5e-3, 3e-3}
     },
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2, 3e-2,
-     1.5e-2, 3e-2, 3e-2, 3e-2, 3e-2};
+     1.5e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
 
 
 #if 1
@@ -1827,7 +1828,7 @@ int main(int argc, char *argv[])
       }
       break;
     case 5:
-      // DIAMOND-II, 4-BA:
+      // DIAMOND-II 4-BA:
       bn_prms.add_prm("s1b", 3, 5e5, 1.0);
       bn_prms.add_prm("s1d", 3, 5e5, 1.0);
       bn_prms.add_prm("s2b", 3, 5e5, 1.0);
@@ -1838,7 +1839,7 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("s3",  3, 5e5, 1.0);
       break;
     case 6:
-      // DIAMOND-II 6-HMBA    6,
+      // DIAMOND-II 6-HMBA:
       bn_prms.add_prm("sfa",  3, 5e5, 1.0);
       bn_prms.add_prm("sfb",  3, 5e5, 1.0);
       bn_prms.add_prm("sda",  3, 5e5, 1.0);
@@ -1855,7 +1856,7 @@ int main(int argc, char *argv[])
       }
       break;
     case 7:
-      // DIAMOND-II, 6-RB-BA:
+      // DIAMOND-II 6-RB-BA:
       bn_prms.add_prm("sd",   3, 5e5, 1.0);
       bn_prms.add_prm("sfm",  3, 5e5, 1.0);
       bn_prms.add_prm("sdm",  3, 5e5, 1.0);
@@ -1865,7 +1866,7 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("syy",  3, 5e5, 1.0);
       break;
     case 8:
-      // DIAMOND-II, 8-RB-BA:
+      // DIAMOND-II 8-RB-BA:
       bn_prms.add_prm("sfh",  3, 5e5, 1.0);
       bn_prms.add_prm("sdh",  3, 5e5, 1.0);
       bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
@@ -1875,7 +1876,7 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("syyh", 3, 5e5, 1.0);
       break;
     case 9:
-      // DIAMOND-II, 8-BA by Hossein:
+      // DIAMOND-II 8-BA:
       if (!oct) {
 	bn_prms.add_prm("s1",  3, 5e5, 1.0);
 	bn_prms.add_prm("s2",  3, 5e5, 1.0);
@@ -1899,6 +1900,17 @@ int main(int argc, char *argv[])
 	bn_prms.add_prm("s9",  4, 5e5, 1.0);
 	bn_prms.add_prm("s10", 4, 5e5, 1.0);
       }
+      break;
+    case 10:
+      // DIAMOND-II 8-BA II:
+      bn_prms.add_prm("s1",  3, 5e5, 1.0);
+      bn_prms.add_prm("s2",  3, 5e5, 1.0);
+      bn_prms.add_prm("s3",  3, 5e5, 1.0);
+      bn_prms.add_prm("s4",  3, 5e5, 1.0);
+      bn_prms.add_prm("s5",  3, 5e5, 1.0);
+      bn_prms.add_prm("s6",  3, 5e5, 1.0);
+      bn_prms.add_prm("s7",  3, 5e5, 1.0);
+      bn_prms.add_prm("s8",  3, 5e5, 1.0);
       break;
     }
 
