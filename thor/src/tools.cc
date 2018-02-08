@@ -571,7 +571,7 @@ void SVD_zero_smallest(const int n, double *w, double **A_ext,
   }
 
   w[i] = 0e0;
-  std::cout << "  zeroed\n";
+  std::cout << " zeroed";
   // if A is singular, extend with null space
   n_sing++; n1++;
   for (j = 1; j <= n; j++)
@@ -666,6 +666,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
 
   for (i = 0; i < n_cut; i++)
     SVD_zero_smallest(n, w, A_ext, b_ext, V, n_sing, n1);
+  std::cout << "\n";
 
   for (i = 1; i <= n; i++) {
     std::cout << std::scientific << std::setprecision(3)
