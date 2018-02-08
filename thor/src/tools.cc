@@ -563,15 +563,15 @@ void SVD_zero_smallest(const int n, double *w, double **A_ext,
   double w_min;
 
   // Find smallest singular value.
-  w_min = 0e0;
+  w_min = 1e30;
   for (j = 1; j <= n; j++) {
     if (w[j] < w_min) {
-      i = j; w[j] = w_min;
+      i = j; w_min = w[j];
     }
   }
 
   w[i] = 0e0;
-  std::cout << " (zeroed)";
+  std::cout << "  zeroed\n";
   // if A is singular, extend with null space
   n_sing++; n1++;
   for (j = 1; j <= n; j++)
