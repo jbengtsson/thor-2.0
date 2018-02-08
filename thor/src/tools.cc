@@ -565,7 +565,7 @@ void SVD_zero_smallest(const int n, double *w, double **A_ext,
   // Find smallest singular value.
   w_min = 1e30;
   for (j = 1; j <= n; j++) {
-    if (w[j] < w_min) {
+    if ((w[j] != 0e0) && (w[j] < w_min)) {
       i = j; w_min = w[j];
     }
   }
