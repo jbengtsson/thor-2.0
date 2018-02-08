@@ -556,6 +556,30 @@ void prt_mat(const int m, const int n, double **A)
 }
 
 
+void SVD_zero_smallest(const int n, double *w, double **A_ext,
+		       double *b_ext, double **V, int &n_sing, int &n1)
+{
+  int    i = 0, j;
+  double w_min;
+
+  // Find smallest singular value.
+  w_min = 0e0;
+  for (j = 1; j <= n; j++) {
+    if (w[j] < w_min) {
+      i = j; w[j] = w_min;
+    }
+  }
+
+  w[i] = 0e0;
+  std::cout << " (zeroed)";
+  // if A is singular, extend with null space
+  n_sing++; n1++;
+  for (j = 1; j <= n; j++)
+    A_ext[n1][j] = V[j][i];
+  b_ext[n1] = 0e0;
+}
+
+
 void SVD_lim(const int m, const int n, double **A, double *b,
 	     const double corr_max[], const int n_cut, double *corr0,
 	     double *dcorr)
@@ -636,17 +660,16 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   for (i = 1; i <= n; i++) {
     std::cout << std::scientific << std::setprecision(3)
 	      << std::setw(10) << w[i];
-    // if (w[i]/s_max < s_cut) {
-    // if (w[i] < s_cut) {
-    if (n-i < n_cut) {
-      w[i] = 0e0;
-      std::cout << " (zeroed)";
-      // if A is singular, extend with null space
-      n_sing++; n1++;
-      for (j = 1; j <= n; j++)
-	A_ext[n1][j] = V[j][i];
-      b_ext[n1] = 0.0;
-   }
+    if (i % 8 == 0) std::cout << std::endl;
+  }
+  if (n % 8 != 0) std::cout << std::endl;
+
+  for (i = 0; i < n_cut; i++)
+    SVD_zero_smallest(n, w, A_ext, b_ext, V, n_sing, n1);
+
+  for (i = 1; i <= n; i++) {
+    std::cout << std::scientific << std::setprecision(3)
+	      << std::setw(10) << w[i];
     if (i % 8 == 0) std::cout << std::endl;
   }
   if (n % 8 != 0) std::cout << std::endl;

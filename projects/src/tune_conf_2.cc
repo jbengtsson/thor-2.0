@@ -16,13 +16,14 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU       0
+#define DNU       1
 #define THREE_DIM 0
 
 
 extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
+int          n_cut;
 double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
@@ -41,24 +42,25 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-RB-BA    8,
 // DIAMOND-II 8-HMBA     9.
 // DIAMOND-II 8-HMBA II 10.
-const int lat_case = 10, n_prt = 8, n_cut = 4;
+const int lat_case = 10, n_prt = 8;
 
 // Center of straight.
 const double
   beta_inj[][2] =
-    {{ 3.0, 3.0}, {3.4, 1.9}, { 9.9, 5.4}, {9.9, 5.4}, {10.6, 8.6},
-     {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6}, {6.6, 6.1}, {6.0, 2.8}},
+    {{ 3.0, 3.0},  {3.4, 1.9}, { 9.9, 5.4}, {9.9, 5.4},
+     {10.6, 8.6}, {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6},
+      {6.6, 6.1},  {6.0, 2.8}},
   A_max[][2] =
-    {{1.2e-3, 1.2e-3}, {9e-3, 5e-3}, {15e-3, 8e-3}, {15e-3, 8e-3}, {5e-3, 3e-3},
-     {7e-3, 4e-3},     {3e-3, 2e-3}, { 2e-3, 1e-3},  {5e-3, 3e-3},  {5e-3, 3e-3}
+    {{1.2e-3, 1.2e-3}, {9e-3, 5e-3}, {15e-3, 8e-3}, {15e-3, 8e-3},
+     {5e-3, 3e-3},     {7e-3, 4e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {5e-3, 3e-3},     {3.5e-3, 2e-3}
     },
   delta_max[] =
-    {3e-2, 4e-2, 3e-2, 3e-2, 3e-2,
-     1.5e-2, 3e-2, 3e-2, 3e-2, 3e-2, 3e-2};
+    {3e-2,   4e-2, 3e-2, 3e-2,
+     3e-2, 1.5e-2, 3e-2, 3e-2,
+     3e-2, 3e-2};
 
 
-#if 1
-// Sextupoles.
 const bool   oct = false;
 // SLS-2.
 // const double scl_h[]      = {1e0,  1e0,  1e-1},
@@ -70,16 +72,14 @@ const double scl_h[]      = {1e0,  1e0,  1e-1},
              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 // 6BA_1-2-jn-match.
-             scl_dnu_conf = 5e1;
+             // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
              // scl_dnu_conf = 1e-3;
+// 8-H-MBA_II:
+#if DNU
+             scl_dnu_conf = 1e-3;
 #else
-// Octupoles.
-const bool   oct = true;
-const double scl_h[]      = {1e0,  1e0,  1e0},
-             scl_dnu[]    = {1e-1, 1e-5, 1e-5, 1e-5},
-             scl_ksi[]    = {1e5,  1e-5, 1e-5},
-             scl_dnu_conf = 1e-1;
+             scl_dnu_conf = 1e1;
 #endif
 
 struct param_type {
@@ -1670,6 +1670,8 @@ int main(int argc, char *argv[])
 
     danot_(1);
 
+    n_cut = atoi(argv[2]);
+
     printf("\nn_cell:         %1d\n", n_cell);
     printf("scl_h:          %7.1e, %7.1e, %7.1e\n",
 	   scl_h[0], scl_h[1], scl_h[2]);
@@ -1911,6 +1913,17 @@ int main(int argc, char *argv[])
       bn_prms.add_prm("s6",  3, 5e5, 1.0);
       bn_prms.add_prm("s7",  3, 5e5, 1.0);
       bn_prms.add_prm("s8",  3, 5e5, 1.0);
+
+      if (false) {
+	bn_prms.add_prm("s1",  4, 5e5, 1.0);
+	bn_prms.add_prm("s2",  4, 5e5, 1.0);
+	bn_prms.add_prm("s3",  4, 5e5, 1.0);
+	bn_prms.add_prm("s4",  4, 5e5, 1.0);
+	bn_prms.add_prm("s5",  4, 5e5, 1.0);
+	bn_prms.add_prm("s6",  4, 5e5, 1.0);
+	bn_prms.add_prm("s7",  4, 5e5, 1.0);
+	bn_prms.add_prm("s8",  4, 5e5, 1.0);
+      }
       break;
     }
 
