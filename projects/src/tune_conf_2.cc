@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -23,13 +23,12 @@ int no_tps = NO,
 extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
-int          n_cut;
+int          n_cell, n_cut;
 double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
 const bool   fit_ksi  = !true, symm = true, scale = !true, c_g = true;
-const int    n_cell   = 1;
 const double tpsa_eps = 1e-30;
 
 // MAX-VI                1,
@@ -42,7 +41,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-RB-BA    8,
 // DIAMOND-II 8-HMBA     9.
 // DIAMOND-II 8-HMBA II 10.
-const int lat_case = 1, n_prt = 8;
+const int lat_case = 10, n_prt = 8;
 
 // Center of straight.
 const double
@@ -1649,6 +1648,225 @@ void fit_tune(const double nu_x, const double nu_y)
 }
 
 
+void lat_select(const int lat_case)
+{
+  switch (lat_case) {
+  case 1:
+    // MAX-VI:
+    n_cell = 1;
+
+    bn_prms.add_prm("o1", 4, 5e5, 1.0);
+    bn_prms.add_prm("o2", 4, 5e5, 1.0);
+    bn_prms.add_prm("o3", 4, 5e5, 1.0);
+    bn_prms.add_prm("o4", 4, 5e5, 1.0);
+
+    // bn_prms.add_prm("o1", 6, 5e10, 1.0);
+    // bn_prms.add_prm("o2", 6, 5e10, 1.0);
+    // bn_prms.add_prm("o3", 6, 5e10, 1.0);
+    // bn_prms.add_prm("o4", 6, 5e10, 1.0);
+    break;
+  case 2:
+    // SLS-2:
+    n_cell = 1;
+
+    if (!oct) {
+      bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+      bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+      bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+      bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+      if (!fit_ksi) {
+	bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
+	bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
+	bn_prms.add_prm("syyh", 3, 5e5, 1.0);
+      }
+
+      if (!false) {
+	bn_prms.add_prm("sdmh", 4, 5e5, 1.0);
+	bn_prms.add_prm("sfmh", 4, 5e5, 1.0);
+	bn_prms.add_prm("sdh",  4, 5e5, 1.0);
+	bn_prms.add_prm("sfh",  4, 5e5, 1.0);
+	bn_prms.add_prm("sxxh", 4, 5e5, 1.0);
+	bn_prms.add_prm("sxyh", 4, 5e5, 1.0);
+	bn_prms.add_prm("syyh", 4, 5e5, 1.0);
+
+	bn_prms.add_prm("sdmh", 5, 5e5, 1.0);
+	bn_prms.add_prm("sfmh", 5, 5e5, 1.0);
+	bn_prms.add_prm("sdh",  5, 5e5, 1.0);
+	bn_prms.add_prm("sfh",  5, 5e5, 1.0);
+	bn_prms.add_prm("sxxh", 5, 5e5, 1.0);
+	bn_prms.add_prm("sxyh", 5, 5e5, 1.0);
+	bn_prms.add_prm("syyh", 5, 5e5, 1.0);
+      }
+    } else {
+      bn_prms.add_prm("oxx",  4, 5e5, 1.0);
+      bn_prms.add_prm("oxy",  4, 5e5, 1.0);
+      bn_prms.add_prm("oyy",  4, 5e5, 1.0);
+      bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
+      bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
+      bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
+    }
+    break;
+  case 3 ... 4:
+    // DIAMOND:
+    n_cell = 2;
+
+    if (true) {
+      bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1ab", 3, 5e5, 1.0);
+      bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2ab", 3, 5e5, 1.0);
+      bn_prms.add_prm("ts1b",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2b",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1c",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2c",  3, 5e5, 1.0);
+      // bn_prms.add_prm("ts1d",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2d",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1e",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2e",  3, 5e5, 1.0);
+
+      if (lat_case == 4) {
+	// VMX.
+	bn_prms.add_prm("s1", 3, 5e5, 1.0);
+	bn_prms.add_prm("s2", 3, 5e5, 1.0);
+	bn_prms.add_prm("s3", 3, 5e5, 1.0);
+	bn_prms.add_prm("s4", 3, 5e5, 1.0);
+	bn_prms.add_prm("s5", 3, 5e5, 1.0);
+      }
+    } else {
+      bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1b",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2b",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1c",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2c",  3, 5e5, 1.0);
+
+      // bn_prms.add_prm("s1",    3, 5e5, 1.0);
+      // bn_prms.add_prm("s2",    3, 5e5, 1.0);
+      // bn_prms.add_prm("s3",    3, 5e5, 1.0);
+      // bn_prms.add_prm("s4",    3, 5e5, 1.0);
+      // bn_prms.add_prm("s5",    3, 5e5, 1.0);
+    }
+    break;
+  case 5:
+    // DIAMOND-II 4-BA:
+    n_cell = 2;
+
+    bn_prms.add_prm("s1b", 3, 5e5, 1.0);
+    bn_prms.add_prm("s1d", 3, 5e5, 1.0);
+    bn_prms.add_prm("s2b", 3, 5e5, 1.0);
+    bn_prms.add_prm("s2d", 3, 5e5, 1.0);
+    bn_prms.add_prm("sx1", 3, 5e5, 1.0);
+    bn_prms.add_prm("sy1", 3, 5e5, 1.0);
+
+    bn_prms.add_prm("s3",  3, 5e5, 1.0);
+    break;
+  case 6:
+    // DIAMOND-II 6-HMBA:
+    n_cell = 2;
+
+    bn_prms.add_prm("sfa",  3, 5e5, 1.0);
+    bn_prms.add_prm("sfb",  3, 5e5, 1.0);
+    bn_prms.add_prm("sda",  3, 5e5, 1.0);
+    bn_prms.add_prm("sdb",  3, 5e5, 1.0);
+
+    if (!fit_ksi) {
+      bn_prms.add_prm("s1a", 3, 5e5, 1.0);
+      bn_prms.add_prm("s1b", 3, 5e5, 1.0);
+      bn_prms.add_prm("s2a", 3, 5e5, 1.0);
+      bn_prms.add_prm("s2b", 3, 5e5, 1.0);
+      bn_prms.add_prm("s3",  3, 5e5, 1.0);
+      bn_prms.add_prm("s4",  3, 5e5, 1.0);
+      bn_prms.add_prm("s5",  3, 5e5, 1.0);
+    }
+    break;
+  case 7:
+    // DIAMOND-II 6-RB-BA:
+    n_cell = 2;
+
+    bn_prms.add_prm("sd",   3, 5e5, 1.0);
+    bn_prms.add_prm("sfm",  3, 5e5, 1.0);
+    bn_prms.add_prm("sdm",  3, 5e5, 1.0);
+    bn_prms.add_prm("sxx",  3, 5e5, 1.0);
+    bn_prms.add_prm("sxya", 3, 5e5, 1.0);
+    bn_prms.add_prm("sxyb", 3, 5e5, 1.0);
+    bn_prms.add_prm("syy",  3, 5e5, 1.0);
+    break;
+  case 8:
+    // DIAMOND-II 8-RB-BA:
+    n_cell = 2;
+
+    bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+    bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+    bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
+    bn_prms.add_prm("syyh", 3, 5e5, 1.0);
+    break;
+  case 9:
+    // DIAMOND-II 8-BA:
+    n_cell = 2;
+
+    if (!oct) {
+      bn_prms.add_prm("s1",  3, 5e5, 1.0);
+      bn_prms.add_prm("s2",  3, 5e5, 1.0);
+      bn_prms.add_prm("s3",  3, 5e5, 1.0);
+      bn_prms.add_prm("s4",  3, 5e5, 1.0);
+      bn_prms.add_prm("s5",  3, 5e5, 1.0);
+      bn_prms.add_prm("s6",  3, 5e5, 1.0);
+      bn_prms.add_prm("s7",  3, 5e5, 1.0);
+      bn_prms.add_prm("s8",  3, 5e5, 1.0);
+      bn_prms.add_prm("s9",  3, 5e5, 1.0);
+      bn_prms.add_prm("s10", 3, 5e5, 1.0);
+    } else {
+      bn_prms.add_prm("s1",  4, 5e5, 1.0);
+      bn_prms.add_prm("s2",  4, 5e5, 1.0);
+      bn_prms.add_prm("s3",  4, 5e5, 1.0);
+      bn_prms.add_prm("s4",  4, 5e5, 1.0);
+      bn_prms.add_prm("s5",  4, 5e5, 1.0);
+      bn_prms.add_prm("s6",  4, 5e5, 1.0);
+      bn_prms.add_prm("s7",  4, 5e5, 1.0);
+      bn_prms.add_prm("s8",  4, 5e5, 1.0);
+      bn_prms.add_prm("s9",  4, 5e5, 1.0);
+      bn_prms.add_prm("s10", 4, 5e5, 1.0);
+    }
+    break;
+  case 10:
+    // DIAMOND-II 8-BA II:
+    n_cell = 2;
+
+    bn_prms.add_prm("s1",  3, 5e5, 1.0);
+    bn_prms.add_prm("s2",  3, 5e5, 1.0);
+    bn_prms.add_prm("s3",  3, 5e5, 1.0);
+    bn_prms.add_prm("s4",  3, 5e5, 1.0);
+    bn_prms.add_prm("s5",  3, 5e5, 1.0);
+    bn_prms.add_prm("s6",  3, 5e5, 1.0);
+    bn_prms.add_prm("s7",  3, 5e5, 1.0);
+    bn_prms.add_prm("s8",  3, 5e5, 1.0);
+
+    if (!false) {
+      bn_prms.add_prm("s1",  4, 5e5, 1.0);
+      bn_prms.add_prm("s2",  4, 5e5, 1.0);
+      bn_prms.add_prm("s3",  4, 5e5, 1.0);
+      bn_prms.add_prm("s4",  4, 5e5, 1.0);
+      bn_prms.add_prm("s5",  4, 5e5, 1.0);
+      bn_prms.add_prm("s6",  4, 5e5, 1.0);
+      bn_prms.add_prm("s7",  4, 5e5, 1.0);
+      bn_prms.add_prm("s8",  4, 5e5, 1.0);
+    }
+    break;
+  }
+
+  if (false) {
+    // fit_tune(57.15/6.0, 22.25/6.0);
+    // fit_tune(0.530831725+1e-4, 0.685735574-0*1e-4);
+    fit_tune(58.12/6.0, 21.29/6.0);
+    get_nu_ksi();
+    exit(0);
+  }
+}
+
+
 int main(int argc, char *argv[])
 {
   int j;
@@ -1677,6 +1895,8 @@ int main(int argc, char *argv[])
     danot_(1);
 
     n_cut = atoi(argv[2]);
+
+    lat_select(lat_case);
 
     printf("\nn_cell:         %1d\n", n_cell);
     printf("scl_h:          %7.1e, %7.1e, %7.1e\n",
@@ -1741,203 +1961,6 @@ int main(int argc, char *argv[])
 
     if (false) {
       prt_h_K();
-      exit(0);
-    }
-
-    switch (lat_case) {
-    case 1:
-      // MAX VI:
-      bn_prms.add_prm("o1", 4, 5e5, 1.0);
-      bn_prms.add_prm("o2", 4, 5e5, 1.0);
-      bn_prms.add_prm("o3", 4, 5e5, 1.0);
-      bn_prms.add_prm("o4", 4, 5e5, 1.0);
-
-      // bn_prms.add_prm("o1", 6, 5e10, 1.0);
-      // bn_prms.add_prm("o2", 6, 5e10, 1.0);
-      // bn_prms.add_prm("o3", 6, 5e10, 1.0);
-      // bn_prms.add_prm("o4", 6, 5e10, 1.0);
-      break;
-    case 2:
-      // SLS-2:
-      if (!oct) {
-	bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
-	bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
-	bn_prms.add_prm("sdh",  3, 5e5, 1.0);
-	bn_prms.add_prm("sfh",  3, 5e5, 1.0);
-	if (!fit_ksi) {
-	  bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
-	  bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
-	  bn_prms.add_prm("syyh", 3, 5e5, 1.0);
-	}
-
-	if (!false) {
-	  bn_prms.add_prm("sdmh", 4, 5e5, 1.0);
-	  bn_prms.add_prm("sfmh", 4, 5e5, 1.0);
-	  bn_prms.add_prm("sdh",  4, 5e5, 1.0);
-	  bn_prms.add_prm("sfh",  4, 5e5, 1.0);
-	  bn_prms.add_prm("sxxh", 4, 5e5, 1.0);
-	  bn_prms.add_prm("sxyh", 4, 5e5, 1.0);
-	  bn_prms.add_prm("syyh", 4, 5e5, 1.0);
-
-	  bn_prms.add_prm("sdmh", 5, 5e5, 1.0);
-	  bn_prms.add_prm("sfmh", 5, 5e5, 1.0);
-	  bn_prms.add_prm("sdh",  5, 5e5, 1.0);
-	  bn_prms.add_prm("sfh",  5, 5e5, 1.0);
-	  bn_prms.add_prm("sxxh", 5, 5e5, 1.0);
-	  bn_prms.add_prm("sxyh", 5, 5e5, 1.0);
-	  bn_prms.add_prm("syyh", 5, 5e5, 1.0);
-	}
-      } else {
-	bn_prms.add_prm("oxx",  4, 5e5, 1.0);
-	bn_prms.add_prm("oxy",  4, 5e5, 1.0);
-	bn_prms.add_prm("oyy",  4, 5e5, 1.0);
-	bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
-	bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
-	bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
-       }
-      break;
-    case 3 ... 4:
-      // DIAMOND:
-      if (true) {
-	bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts1ab", 3, 5e5, 1.0);
-	bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts2ab", 3, 5e5, 1.0);
-	bn_prms.add_prm("ts1b",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts2b",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts1c",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts2c",  3, 5e5, 1.0);
-	// bn_prms.add_prm("ts1d",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts2d",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts1e",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts2e",  3, 5e5, 1.0);
-
-	if (lat_case == 4) {
-	  // VMX.
-	  bn_prms.add_prm("s1", 3, 5e5, 1.0);
-	  bn_prms.add_prm("s2", 3, 5e5, 1.0);
-	  bn_prms.add_prm("s3", 3, 5e5, 1.0);
-	  bn_prms.add_prm("s4", 3, 5e5, 1.0);
-	  bn_prms.add_prm("s5", 3, 5e5, 1.0);
-	}
-      } else {
-	bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts1b",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts2b",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts1c",  3, 5e5, 1.0);
-	bn_prms.add_prm("ts2c",  3, 5e5, 1.0);
-
-	// bn_prms.add_prm("s1",    3, 5e5, 1.0);
-	// bn_prms.add_prm("s2",    3, 5e5, 1.0);
-	// bn_prms.add_prm("s3",    3, 5e5, 1.0);
-	// bn_prms.add_prm("s4",    3, 5e5, 1.0);
-	// bn_prms.add_prm("s5",    3, 5e5, 1.0);
-      }
-      break;
-    case 5:
-      // DIAMOND-II 4-BA:
-      bn_prms.add_prm("s1b", 3, 5e5, 1.0);
-      bn_prms.add_prm("s1d", 3, 5e5, 1.0);
-      bn_prms.add_prm("s2b", 3, 5e5, 1.0);
-      bn_prms.add_prm("s2d", 3, 5e5, 1.0);
-      bn_prms.add_prm("sx1", 3, 5e5, 1.0);
-      bn_prms.add_prm("sy1", 3, 5e5, 1.0);
-
-      bn_prms.add_prm("s3",  3, 5e5, 1.0);
-      break;
-    case 6:
-      // DIAMOND-II 6-HMBA:
-      bn_prms.add_prm("sfa",  3, 5e5, 1.0);
-      bn_prms.add_prm("sfb",  3, 5e5, 1.0);
-      bn_prms.add_prm("sda",  3, 5e5, 1.0);
-      bn_prms.add_prm("sdb",  3, 5e5, 1.0);
-
-      if (!fit_ksi) {
-	bn_prms.add_prm("s1a", 3, 5e5, 1.0);
-	bn_prms.add_prm("s1b", 3, 5e5, 1.0);
-	bn_prms.add_prm("s2a", 3, 5e5, 1.0);
-	bn_prms.add_prm("s2b", 3, 5e5, 1.0);
-	bn_prms.add_prm("s3",  3, 5e5, 1.0);
-	bn_prms.add_prm("s4",  3, 5e5, 1.0);
-	bn_prms.add_prm("s5",  3, 5e5, 1.0);
-      }
-      break;
-    case 7:
-      // DIAMOND-II 6-RB-BA:
-      bn_prms.add_prm("sd",   3, 5e5, 1.0);
-      bn_prms.add_prm("sfm",  3, 5e5, 1.0);
-      bn_prms.add_prm("sdm",  3, 5e5, 1.0);
-      bn_prms.add_prm("sxx",  3, 5e5, 1.0);
-      bn_prms.add_prm("sxya", 3, 5e5, 1.0);
-      bn_prms.add_prm("sxyb", 3, 5e5, 1.0);
-      bn_prms.add_prm("syy",  3, 5e5, 1.0);
-      break;
-    case 8:
-      // DIAMOND-II 8-RB-BA:
-      bn_prms.add_prm("sfh",  3, 5e5, 1.0);
-      bn_prms.add_prm("sdh",  3, 5e5, 1.0);
-      bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
-      bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
-      bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
-      bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
-      bn_prms.add_prm("syyh", 3, 5e5, 1.0);
-      break;
-    case 9:
-      // DIAMOND-II 8-BA:
-      if (!oct) {
-	bn_prms.add_prm("s1",  3, 5e5, 1.0);
-	bn_prms.add_prm("s2",  3, 5e5, 1.0);
-	bn_prms.add_prm("s3",  3, 5e5, 1.0);
-	bn_prms.add_prm("s4",  3, 5e5, 1.0);
-	bn_prms.add_prm("s5",  3, 5e5, 1.0);
-	bn_prms.add_prm("s6",  3, 5e5, 1.0);
-	bn_prms.add_prm("s7",  3, 5e5, 1.0);
-	bn_prms.add_prm("s8",  3, 5e5, 1.0);
-	bn_prms.add_prm("s9",  3, 5e5, 1.0);
-	bn_prms.add_prm("s10", 3, 5e5, 1.0);
-      } else {
-	bn_prms.add_prm("s1",  4, 5e5, 1.0);
-	bn_prms.add_prm("s2",  4, 5e5, 1.0);
-	bn_prms.add_prm("s3",  4, 5e5, 1.0);
-	bn_prms.add_prm("s4",  4, 5e5, 1.0);
-	bn_prms.add_prm("s5",  4, 5e5, 1.0);
-	bn_prms.add_prm("s6",  4, 5e5, 1.0);
-	bn_prms.add_prm("s7",  4, 5e5, 1.0);
-	bn_prms.add_prm("s8",  4, 5e5, 1.0);
-	bn_prms.add_prm("s9",  4, 5e5, 1.0);
-	bn_prms.add_prm("s10", 4, 5e5, 1.0);
-      }
-      break;
-    case 10:
-      // DIAMOND-II 8-BA II:
-      bn_prms.add_prm("s1",  3, 5e5, 1.0);
-      bn_prms.add_prm("s2",  3, 5e5, 1.0);
-      bn_prms.add_prm("s3",  3, 5e5, 1.0);
-      bn_prms.add_prm("s4",  3, 5e5, 1.0);
-      bn_prms.add_prm("s5",  3, 5e5, 1.0);
-      bn_prms.add_prm("s6",  3, 5e5, 1.0);
-      bn_prms.add_prm("s7",  3, 5e5, 1.0);
-      bn_prms.add_prm("s8",  3, 5e5, 1.0);
-
-      if (false) {
-	bn_prms.add_prm("s1",  4, 5e5, 1.0);
-	bn_prms.add_prm("s2",  4, 5e5, 1.0);
-	bn_prms.add_prm("s3",  4, 5e5, 1.0);
-	bn_prms.add_prm("s4",  4, 5e5, 1.0);
-	bn_prms.add_prm("s5",  4, 5e5, 1.0);
-	bn_prms.add_prm("s6",  4, 5e5, 1.0);
-	bn_prms.add_prm("s7",  4, 5e5, 1.0);
-	bn_prms.add_prm("s8",  4, 5e5, 1.0);
-      }
-      break;
-    }
-
-    if (false) {
-      // fit_tune(57.15/6.0, 22.25/6.0);
-      // fit_tune(0.530831725+1e-4, 0.685735574-0*1e-4);
-      fit_tune(58.12/6.0, 21.29/6.0);
-      get_nu_ksi();
       exit(0);
     }
 
