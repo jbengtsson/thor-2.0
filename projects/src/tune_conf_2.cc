@@ -1,7 +1,7 @@
 
 #include <cfloat>
 
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -16,7 +16,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU       1
+#define DNU       0
 #define THREE_DIM 0
 
 
@@ -295,33 +295,34 @@ tps f_gauss_quad_2d(double x, double y)
   tps          dK, dnu[2];
   ss_vect<tps> ps;
 
-    ps.identity();
-    ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
-    ps[delta_] = 0e0;
+  // printf("f_gauss_quad_2d\n");
+  ps.identity();
+  ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
+  ps[delta_] = 0e0;
 
 #if DNU
-    for (k = 0; k < 2; k++) {
-      dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
-      // Compute absolute value.
-      if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
-    }
-
-    return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]);
-#else
-    dK = K_re;
-    for (k = 0; k < ss_dim; k++)
-      jj[k] = 0;
-    jj[x_] = 1; jj[px_] = 1;
-    dK.pook(jj, 0e0);
-    jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
-    dK.pook(jj, 0e0);
-    dK = dK*ps;
+  for (k = 0; k < 2; k++) {
+    dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
     // Compute absolute value.
-    if (dK.cst() < 0e0) dK = -dK;
-    // std::cout << std::scientific << std::setprecision(3)
-    // 	      << "\n |dK| = " << dK << "\n";
+    if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
+  }
 
-    return dK/(twoJ[X_]*twoJ[Y_]);
+  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]);
+#else
+  dK = K_re;
+  for (k = 0; k < ss_dim; k++)
+    jj[k] = 0;
+  jj[x_] = 1; jj[px_] = 1;
+  dK.pook(jj, 0e0);
+  jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
+  dK.pook(jj, 0e0);
+  dK = dK*ps;
+  // Compute absolute value.
+  if (dK.cst() < 0e0) dK = -dK;
+  // std::cout << std::scientific << std::setprecision(3)
+  // 	      << "\n |dK| = " << dK << "\n";
+
+  return dK/(twoJ[X_]*twoJ[Y_]);
 #endif
 }
 
@@ -378,7 +379,7 @@ tps gauss_quad_fx(const double x)
 }
 
 tps gauss_quad_3d(tps (*func)(const double, const double, const double),
-		     const double x0, const double x1)
+		  const double x0, const double x1)
 {
   func_save = func;
   return gauss_quad(gauss_quad_fx, x0, x1);
@@ -390,33 +391,34 @@ tps f_gauss_quad_3d(double x, double y, double z)
   tps          dK, dnu[2];
   ss_vect<tps> ps;
 
-    ps.identity();
-    ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
-    ps[delta_] = z;
+  // printf("f_gauss_quad_3d\n");
+  ps.identity();
+  ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
+  ps[delta_] = z;
 
 #if DNU
-    for (k = 0; k < 2; k++) {
-      dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
-      // Compute absolute value.
-      if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
-    }
-
-    return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
-#else
-    dK = K_re;
-    for (k = 0; k < ss_dim; k++)
-      jj[k] = 0;
-    jj[x_] = 1; jj[px_] = 1;
-    dK.pook(jj, 0e0);
-    jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
-    dK.pook(jj, 0e0);
-    dK = dK*ps;
+  for (k = 0; k < 2; k++) {
+    dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
     // Compute absolute value.
-    if (dK.cst() < 0e0) dK = -dK;
-    // std::cout << std::scientific << std::setprecision(3)
-    // 	      << "\n |dK| = " << dK << "\n";
+    if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
+  }
 
-    return dK/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
+  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
+#else
+  dK = K_re;
+  for (k = 0; k < ss_dim; k++)
+    jj[k] = 0;
+  jj[x_] = 1; jj[px_] = 1;
+  dK.pook(jj, 0e0);
+  jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
+  dK.pook(jj, 0e0);
+  dK = dK*ps;
+  // Compute absolute value.
+  if (dK.cst() < 0e0) dK = -dK;
+  // std::cout << std::scientific << std::setprecision(3)
+  // 	      << "\n |dK| = " << dK << "\n";
+
+  return dK/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
 #endif
 }
 
