@@ -28,7 +28,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = true, symm = true, scale = !true, c_g = true;
+const bool   fit_ksi  = !true, symm = true, scale = !true, c_g = true;
 const double tpsa_eps = 1e-30;
 
 // MAX-VI                1,
@@ -50,7 +50,7 @@ const double
      {10.6, 8.6}, {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8}},
   A_max[][2] =
-    {{3e-3, 3e-3}, {9e-3, 5e-3}, {15e-3, 8e-3}, {15e-3, 8e-3},
+    {{3e-3, 3e-3}, {8e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3},
      {5e-3, 3e-3}, {7e-3, 4e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
      {5e-3, 3e-3}, {4e-3, 3e-3}
     },
@@ -77,9 +77,13 @@ const double scl_h[]      = {1e0,  1e0,  1e-3},
 // 8-H-MBA_II:
 #if DNU
 	     // NO = 7.
-             scl_dnu_conf = 1e-2;
+             // scl_dnu_conf = 1e-2;
 	     // NO = 9.
              // scl_dnu_conf = 1e-4;
+	     // SLS-2 NO = 7.
+             scl_dnu_conf = 1e-3;
+	     // SLS-2 NO = 9.
+             // scl_dnu_conf = 1e-5;
 #else
              scl_dnu_conf = 1e1;
 #endif
@@ -1669,30 +1673,31 @@ void lat_select(const int lat_case)
     // SLS-2:
     n_cell = 1;
 
-    bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sdh",  3, 5e5, 1.0);
-    bn_prms.add_prm("sfh",  3, 5e5, 1.0);
-    bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
-    bn_prms.add_prm("syyh", 3, 5e5, 1.0);
-
-    if (false) {
-      bn_prms.add_prm("sdmh", 4, 5e5, 1.0);
-      bn_prms.add_prm("sfmh", 4, 5e5, 1.0);
-      bn_prms.add_prm("sdh",  4, 5e5, 1.0);
-      bn_prms.add_prm("sfh",  4, 5e5, 1.0);
-      bn_prms.add_prm("sxxh", 4, 5e5, 1.0);
-      bn_prms.add_prm("sxyh", 4, 5e5, 1.0);
-      bn_prms.add_prm("syyh", 4, 5e5, 1.0);
+    if (fit_ksi) {
+      bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+      bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+      bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+      bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+      bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
+      bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
+      bn_prms.add_prm("syyh", 3, 5e5, 1.0);
     }
-    if (false) {
+
+    if (!false) {
       bn_prms.add_prm("oxx",  4, 5e5, 1.0);
       bn_prms.add_prm("oxy",  4, 5e5, 1.0);
       bn_prms.add_prm("oyy",  4, 5e5, 1.0);
       bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
       bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
       bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
+    }
+    if (false) {
+      bn_prms.add_prm("oxx",  6, 5e5, 1.0);
+      bn_prms.add_prm("oxy",  6, 5e5, 1.0);
+      bn_prms.add_prm("oyy",  6, 5e5, 1.0);
+      bn_prms.add_prm("ocxm", 6, 5e5, 1.0);
+      bn_prms.add_prm("ocx1", 6, 5e5, 1.0);
+      bn_prms.add_prm("ocx2", 6, 5e5, 1.0);
     }
     break;
   case 3 ... 4:
