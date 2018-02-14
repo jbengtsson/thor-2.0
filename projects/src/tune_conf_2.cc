@@ -28,7 +28,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = !true, symm = true, scale = !true, c_g = true;
+const bool   fit_ksi  = true, symm = true, scale = !true, c_g = true;
 const double tpsa_eps = 1e-30;
 
 // MAX-VI                1,
@@ -1673,17 +1673,15 @@ void lat_select(const int lat_case)
     // SLS-2:
     n_cell = 1;
 
-    if (fit_ksi) {
-      bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
-      bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
-      bn_prms.add_prm("sdh",  3, 5e5, 1.0);
-      bn_prms.add_prm("sfh",  3, 5e5, 1.0);
-      bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
-      bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
-      bn_prms.add_prm("syyh", 3, 5e5, 1.0);
-    }
+    bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sdh",  3, 5e5, 1.0);
+    bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+    bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
+    bn_prms.add_prm("syyh", 3, 5e5, 1.0);
 
-    if (!false) {
+    if (false) {
       bn_prms.add_prm("oxx",  4, 5e5, 1.0);
       bn_prms.add_prm("oxy",  4, 5e5, 1.0);
       bn_prms.add_prm("oyy",  4, 5e5, 1.0);
@@ -1691,6 +1689,7 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
       bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
     }
+
     if (false) {
       bn_prms.add_prm("oxx",  6, 5e5, 1.0);
       bn_prms.add_prm("oxy",  6, 5e5, 1.0);
