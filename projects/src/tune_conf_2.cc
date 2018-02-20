@@ -47,11 +47,11 @@ const int lat_case = 3, n_prt = 8;
 // Center of straight.
 const double
   beta_inj[][2] =
-    {{ 2.9, 3.1},  {3.4, 1.9}, { 9.9, 5.4}, {9.9, 5.4},
+    {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.9, 5.4},
      {10.6, 8.6}, {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
   A_max[][2] =
-    {{3e-3, 3e-3}, {8e-3, 4e-3}, {15e-3, 8e-3}, {15e-3, 8e-3},
+    {{3e-3, 3e-3}, {8e-3, 4e-3}, {12e-3, 6e-3}, {15e-3, 8e-3},
      {5e-3, 3e-3}, {7e-3, 4e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
      {5e-3, 3e-3}, {4e-3, 3e-3},  {5e-3, 3e-3}},
   delta_max[] =
@@ -60,7 +60,7 @@ const double
      3e-2,   3e-2, 4e-2};
 
 
-const bool   oct = false;
+const bool oct = false;
 // SLS-2.
 // const double scl_h[]      = {1e0,  1e0,  1e-1},
 //              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
@@ -68,8 +68,8 @@ const bool   oct = false;
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
 const double scl_h[]      = {1e0,  1e0,  1e-3},
-             scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
-             scl_ksi[]    = {1e5,  1e-5, 1e-5},
+             scl_dnu[]    = {1e-8, 1e-8, 1e-8, 1e-8},
+             scl_ksi[]    = {1e5,  1e-8, 1e-8},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -85,7 +85,7 @@ const double scl_h[]      = {1e0,  1e0,  1e-3},
 	     // ALS-U NO = 7.
              // scl_dnu_conf = 5e-3;
 	     // DIAMOND NO = 7.
-             scl_dnu_conf = 1e-4;
+             scl_dnu_conf = 5e-5;
 	     // SLS-2 NO = 9.
              // scl_dnu_conf = 1e-5;
 #else
@@ -628,10 +628,24 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
       printf("3rd order geometric\n");
 
     n_h = 0;
-    if (NO >= 3+1) n_h += 3 + 5;   // 8.
-    if (NO >= 4+1) n_h += 8;       // 16.
-    if (NO >= 5+1) n_h += 14;      // 30.
-    if (!symm)     n_h += 16 + 14;
+    if (NO >= 3+1) {
+      if (symm)
+	n_h += 3 + 5;   //  8.
+      else
+	n_h += 2*(3+5); // 16.
+    }
+    if (NO >= 4+1) {
+      if (symm)
+	n_h += 8;       // 16.
+      else
+	n_h += 16;      // 24.
+    }
+    if (NO >= 5+1) {
+      if (symm)
+	n_h += 14;      // 30.
+      else
+	n_h += 28;      // 44.
+    }
 
     if (i-1 == n_h)
       printf("linear chromaticity\n");
@@ -1724,6 +1738,15 @@ void lat_select(const int lat_case)
 
     if (true) {
       bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1b",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2b",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1c",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2c",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts1d",  3, 5e5, 1.0);
+      bn_prms.add_prm("ts2d",  3, 5e5, 1.0);
+    } else {
+      bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
       bn_prms.add_prm("ts1ab", 3, 5e5, 1.0);
       bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
       bn_prms.add_prm("ts2ab", 3, 5e5, 1.0);
@@ -1735,28 +1758,15 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("ts2d",  3, 5e5, 1.0);
       bn_prms.add_prm("ts1e",  3, 5e5, 1.0);
       bn_prms.add_prm("ts2e",  3, 5e5, 1.0);
+    }
 
-      if (lat_case == 4) {
-	// VMX.
-	bn_prms.add_prm("s1", 3, 5e5, 1.0);
-	bn_prms.add_prm("s2", 3, 5e5, 1.0);
-	bn_prms.add_prm("s3", 3, 5e5, 1.0);
-	bn_prms.add_prm("s4", 3, 5e5, 1.0);
-	bn_prms.add_prm("s5", 3, 5e5, 1.0);
-      }
-    } else {
-      bn_prms.add_prm("ts1a",  3, 5e5, 1.0);
-      bn_prms.add_prm("ts2a",  3, 5e5, 1.0);
-      bn_prms.add_prm("ts1b",  3, 5e5, 1.0);
-      bn_prms.add_prm("ts2b",  3, 5e5, 1.0);
-      bn_prms.add_prm("ts1c",  3, 5e5, 1.0);
-      bn_prms.add_prm("ts2c",  3, 5e5, 1.0);
-
-      // bn_prms.add_prm("s1",    3, 5e5, 1.0);
-      // bn_prms.add_prm("s2",    3, 5e5, 1.0);
-      // bn_prms.add_prm("s3",    3, 5e5, 1.0);
-      // bn_prms.add_prm("s4",    3, 5e5, 1.0);
-      // bn_prms.add_prm("s5",    3, 5e5, 1.0);
+    if (lat_case == 4) {
+      // VMX.
+      bn_prms.add_prm("s1", 3, 5e5, 1.0);
+      bn_prms.add_prm("s2", 3, 5e5, 1.0);
+      bn_prms.add_prm("s3", 3, 5e5, 1.0);
+      bn_prms.add_prm("s4", 3, 5e5, 1.0);
+      bn_prms.add_prm("s5", 3, 5e5, 1.0);
     }
     break;
   case 5:
@@ -1895,125 +1905,131 @@ int main(int argc, char *argv[])
 {
   int j;
 
-    rad_on    = false; H_exact        = false; totpath_on   = false;
-    cavity_on = false; quad_fringe_on = false; emittance_on = false;
-    IBS_on    = false;
+  rad_on    = false; H_exact        = false; totpath_on   = false;
+  cavity_on = false; quad_fringe_on = false; emittance_on = false;
+  IBS_on    = false;
 
-    rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
+  if (argc != 3) {
+    printf("bad command line, no of arguments: %d\n", argc);
+    exit(0);
+  }
 
-    // Initialize the symplectic integrator after energy has been defined.
-    ini_si();
+  rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
 
-    // Disable log messages from TPSALib and LieLib.
+  // Initialize the symplectic integrator after energy has been defined.
+  ini_si();
+
+  // Disable log messages from TPSALib and LieLib.
 #if !DOF_3
-    idprset(-1);
+  idprset(-1);
 #else
-    idprset(1);
-    cavity_on = true;
+  idprset(1);
+  cavity_on = true;
 #endif
 
-    // printf("\nDBL_EPSILON = %9.2e\n", DBL_EPSILON);
-    // daeps_(DBL_EPSILON);
-    daeps_(tpsa_eps);
+  // printf("\nDBL_EPSILON = %9.2e\n", DBL_EPSILON);
+  // daeps_(DBL_EPSILON);
+  daeps_(tpsa_eps);
 
-    danot_(1);
+  danot_(1);
 
-    n_cut = atoi(argv[2]);
+  n_cut = atoi(argv[2]);
 
-    lat_select(lat_case);
+  lat_select(lat_case);
 
-    printf("\nn_cell:         %1d\n", n_cell);
-    printf("scl_h:          %7.1e, %7.1e, %7.1e\n",
-	   scl_h[0], scl_h[1], scl_h[2]);
-    printf("scl_dnu:        %7.1e, %7.1e, %7.1e, %7.1e\n",
-	   scl_dnu[0], scl_dnu[1], scl_dnu[2], scl_dnu[3]);
-    printf("scl_ksi:        %7.1e, %7.1e, %7.1e\n",
-	   scl_ksi[0], scl_ksi[1], scl_ksi[2]);
-    printf("scl_dnu_conf:   %7.1e\n", scl_dnu_conf);
-    printf("three_dim:      %d\n", THREE_DIM);
-    printf("symmetric:      %d\n", symm);
-    printf("\nA_max:          %7.1e, %7.1e\n",
-	   A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
-    printf("delta_max:      %7.1e\n", delta_max[lat_case-1]);
-    printf("beta_inj:       %7.1e, %7.1e\n",
-	   beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
-    if (c_g)
-      printf("Conj. Grad.:    %d\n", n_cut);
-    else
-      printf("Lev. Marq.\n");
+  printf("\nn_cell:         %1d\n", n_cell);
+  printf("scl_h:          %7.1e, %7.1e, %7.1e\n",
+	 scl_h[0], scl_h[1], scl_h[2]);
+  printf("scl_dnu:        %7.1e, %7.1e, %7.1e, %7.1e\n",
+	 scl_dnu[0], scl_dnu[1], scl_dnu[2], scl_dnu[3]);
+  printf("scl_ksi:        %7.1e, %7.1e, %7.1e\n",
+	 scl_ksi[0], scl_ksi[1], scl_ksi[2]);
+  printf("scl_dnu_conf:   %7.1e\n", scl_dnu_conf);
+  printf("dnu/dJ:         %d\n", DNU);
+  printf("three_dim:      %d\n", THREE_DIM);
+  printf("symmetric:      %d\n", symm);
+  printf("\nA_max:          %7.1e, %7.1e\n",
+	 A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
+  printf("delta_max:      %7.1e\n", delta_max[lat_case-1]);
+  printf("beta_inj:       %7.1e, %7.1e\n",
+	 beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
+  if (c_g)
+    printf("Conj. Grad.:    %d\n", n_cut);
+  else
+    printf("Lev. Marq.\n");
 
-    get_nu_ksi();
+  get_nu_ksi();
 
-    for (j = 0; j < 2; j++)
-      twoJ[j] =	sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
+  for (j = 0; j < 2; j++)
+    twoJ[j] =	sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
 
-    Id_scl.identity();
-    Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
-    Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
-    Id_scl[delta_] *= delta_max[lat_case-1];
+  Id_scl.identity();
+  Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
+  Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
+  Id_scl[delta_] *= delta_max[lat_case-1];
 
+  if (false) {
+    danot_(NO-1);
+    cavity_on = true; rad_on = true;
+    get_map_n(n_cell);
+    // MAX-VI:
+    // prt_H_long(10, M_PI, 10e-2, -405.6e3, false);
+    // SLS-2:
+    prt_H_long(10, M_PI, 10e-2, -544.7e3, true);
+    prt_alphac();
+    exit(0);
+  }
+
+  if (false) {
     if (false) {
-      danot_(NO-1);
-      cavity_on = true; rad_on = true;
-      get_map_n(n_cell);
-      // MAX-VI:
-      // prt_H_long(10, M_PI, 10e-2, -405.6e3, false);
-      // SLS-2:
-      prt_H_long(10, M_PI, 10e-2, -544.7e3, true);
-      prt_alphac();
-      exit(0);
+      no_mpoles(Sext);
+      no_mpoles(Oct);
     }
 
-    if (false) {
-      if (false) {
-	no_mpoles(Sext);
-	no_mpoles(Oct);
-      }
+    danot_(NO-1);
+    get_map_n(n_cell);
+    prt_alphac();
 
-      danot_(NO-1);
-      get_map_n(n_cell);
-      prt_alphac();
+    prt_ct(100, 8e-2);
+    exit(0);
+  }
 
-      prt_ct(100, 8e-2);
-      exit(0);
-    }
+  if (false) {
+    prt_map();
+    exit(0);
+  }
 
-    if (false) {
-      prt_map();
-      exit(0);
-    }
-
-    if (false) {
-      prt_h_K();
-      exit(0);
-    }
-
-    // Step is 1.0 for conjugated gradient method.
-    bn_prms.bn_tol    = 1e-1;
-    bn_prms.svd_n_cut = 0;
-    bn_prms.step      = 1.0;
-
-    if (fit_ksi) {
-      no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
-    }
-
-    bn_prms.ini_prm();
-
-    prt_bn(bn_prms);
-
-    if (fit_ksi) {
-      bn_prms.svd_n_cut = 0;
-      fit_ksi1(0e0, 0e0);
-      // exit(0);
-    }
-
-    no_mpoles(Oct); no_mpoles(Dodec);
-
-    if (c_g) {
-      bn_prms.svd_n_cut = n_cut;
-      min_conj_grad(true);
-    } else
-      min_lev_marq();
-
+  if (false) {
     prt_h_K();
+    exit(0);
+  }
+
+  // Step is 1.0 for conjugated gradient method.
+  bn_prms.bn_tol    = 1e-1;
+  bn_prms.svd_n_cut = 0;
+  bn_prms.step      = 1.0;
+
+  if (fit_ksi) {
+    no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
+  }
+
+  bn_prms.ini_prm();
+
+  prt_bn(bn_prms);
+
+  if (fit_ksi) {
+    bn_prms.svd_n_cut = 0;
+    fit_ksi1(0e0, 0e0);
+    // exit(0);
+  }
+
+  no_mpoles(Oct); no_mpoles(Dodec);
+
+  if (c_g) {
+    bn_prms.svd_n_cut = n_cut;
+    min_conj_grad(true);
+  } else
+    min_lev_marq();
+
+  prt_h_K();
 }
