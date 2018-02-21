@@ -1,4 +1,3 @@
-
 #include <cfloat>
 
 #define NO 7
@@ -16,7 +15,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU       1
+#define DNU       0
 #define THREE_DIM 0
 
 
@@ -47,11 +46,11 @@ const int lat_case = 3, n_prt = 8;
 // Center of straight.
 const double
   beta_inj[][2] =
-    {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.9, 5.4},
+    {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.8, 5.4},
      {10.6, 8.6}, {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
   A_max[][2] =
-    {{3e-3, 3e-3}, {8e-3, 4e-3}, {12e-3, 6e-3}, {15e-3, 8e-3},
+    {{3e-3, 3e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
      {5e-3, 3e-3}, {7e-3, 4e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
      {5e-3, 3e-3}, {4e-3, 3e-3},  {5e-3, 3e-3}},
   delta_max[] =
@@ -67,9 +66,9 @@ const bool oct = false;
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {1e0,  1e0,  1e-3},
-             scl_dnu[]    = {1e-8, 1e-8, 1e-8, 1e-8},
-             scl_ksi[]    = {1e5,  1e-8, 1e-8},
+const double scl_h[]      = {1e0,  0*1e0,  1e-3},
+             scl_dnu[]    = {1e-10, 1e-10, 1e-10, 1e-10},
+             scl_ksi[]    = {1e5,  1e-10, 1e-10},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -85,10 +84,12 @@ const double scl_h[]      = {1e0,  1e0,  1e-3},
 	     // ALS-U NO = 7.
              // scl_dnu_conf = 5e-3;
 	     // DIAMOND NO = 7.
-             scl_dnu_conf = 5e-5;
+             scl_dnu_conf = 5e-6;
 	     // SLS-2 NO = 9.
              // scl_dnu_conf = 1e-5;
 #else
+             // scl_dnu_conf = 1e1;
+	     // DIAMOND NO = 7.
              scl_dnu_conf = 1e1;
 #endif
 
