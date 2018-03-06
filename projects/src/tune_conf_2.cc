@@ -15,7 +15,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU       0
+#define DNU       1
 #define THREE_DIM 0
 
 
@@ -27,10 +27,11 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus;
 
-const bool   fit_ksi  = true, symm = false, scale = !true, c_g = true;
+const bool   fit_ksi = !true, symm = false, scale = !true, c_g = true,
+             oct = !false;
 const double tpsa_eps = 1e-30;
 
-// MAX-VI                1,
+// MAX-V                 1,
 // SLS-2                 2,
 // DIAMOND               3,
 // DIAMOND with VMX      4,
@@ -41,7 +42,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-HMBA     9.
 // DIAMOND-II 8-HMBA II 10.
 // ALS-U                11.
-const int lat_case = 3, n_prt = 8;
+const int lat_case = 1, n_prt = 8;
 
 // Center of straight.
 const double
@@ -50,25 +51,24 @@ const double
      {10.6, 8.6}, {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
   A_max[][2] =
-    {{3e-3, 3e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {5e-3, 3e-3}, {7e-3, 4e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
-     {5e-3, 3e-3}, {4e-3, 3e-3},  {5e-3, 3e-3}},
+    {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
+     {  5e-3,   3e-3}, {7e-3, 4e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {4e-3, 3e-3},  {5e-3, 3e-3}},
   delta_max[] =
     {3e-2,   4e-2, 3e-2, 3e-2,
      3e-2, 1.5e-2, 3e-2, 3e-2,
      3e-2,   3e-2, 4e-2};
 
 
-const bool oct = false;
 // SLS-2.
 // const double scl_h[]      = {1e0,  1e0,  1e-1},
 //              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {1e0,  0*1e0,  1e-3},
+const double scl_h[]      = {1e0,   1e0,   1e-3},
              scl_dnu[]    = {1e-10, 1e-10, 1e-10, 1e-10},
-             scl_ksi[]    = {1e5,  1e-10, 1e-10},
+             scl_ksi[]    = {1e5,   1e-10, 1e-10},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -79,18 +79,22 @@ const double scl_h[]      = {1e0,  0*1e0,  1e-3},
              // scl_dnu_conf = 1e-2;
 	     // NO = 9.
              // scl_dnu_conf = 1e-4;
+	     // MAX-V NO = 7.
+             scl_dnu_conf = 1e-4;
 	     // SLS-2 NO = 7.
              // scl_dnu_conf = 1e-3;
 	     // ALS-U NO = 7.
              // scl_dnu_conf = 5e-3;
 	     // DIAMOND NO = 7.
-             scl_dnu_conf = 5e-6;
+             // scl_dnu_conf = 5e-6;
 	     // SLS-2 NO = 9.
              // scl_dnu_conf = 1e-5;
 #else
              // scl_dnu_conf = 1e1;
+	     // MAX-V NO = 7.
+             scl_dnu_conf = 1e2;
 	     // DIAMOND NO = 7.
-             scl_dnu_conf = 1e1;
+             // scl_dnu_conf = 1e1;
 #endif
 
 struct param_type {
@@ -700,15 +704,17 @@ void prt_b2(const std::vector<int> &b2_Fnum)
 void prt_bn(const param_type &bn_prms)
 {
   long int loc;
-  int      k;
+  int      k, n, n_prm;
   FILE     *outf;
 
   const std::string file_name = "dnu.out";
 
   outf = file_write(file_name.c_str());
 
+  n_prm = bn_prms.n_prm;
+  n = (!oct)? n_prm : n_prm/2;
   fprintf(outf, "\n");
-  for (k = 0; k < bn_prms.n_prm; k++) {
+  for (k = 0; k < n; k++) {
     loc = get_loc(bn_prms.Fnum[k], 1) - 1;
     if (bn_prms.n[k] == Sext)
       fprintf(outf,
@@ -716,12 +722,22 @@ void prt_bn(const param_type &bn_prms)
 	      ", k = %12.5e, n = nsext, Method = Meth;\n",
 	      elem[loc].Name, elem[loc].L, bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
     else
-      fprintf(outf,
-	      "%-8s: multipole, l = %7.5f,"
-	      "\n          hom = (3, %12.5e, 0e0, 4, %12.5e, 0e0),"
-	      "\n          n = nsext, Method = Meth;\n",
-	      elem[loc].Name, elem[loc].L, elem[loc].mpole->bn[Sext-1],
-	      bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+      if (!oct)
+	fprintf(outf,
+		"%-8s: multipole, l = %7.5f,"
+		"\n          hom = (3, %12.5e, 0e0, 4, %12.5e, 0e0),"
+		"\n          n = nsext, Method = Meth;\n",
+		elem[loc].Name, elem[loc].L, elem[loc].mpole->bn[Sext-1],
+		bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
+      else
+	fprintf(outf,
+		"%-8s: multipole, l = %7.5f,"
+		"\n          hom = (3, %12.5e, 0e0, 4, %12.5e, 0e0,"
+		" 6, %12.5e, 0e0),"
+		"\n          n = nsext, Method = Meth;\n",
+		elem[loc].Name, elem[loc].L, elem[loc].mpole->bn[Sext-1],
+		bn_prms.bn_scl[k]*bn_prms.bn[k+1],
+		bn_prms.bn_scl[n+k]*bn_prms.bn[n+k+1]);
   }
 
   fclose(outf);
@@ -1690,7 +1706,7 @@ void lat_select(const int lat_case)
 {
   switch (lat_case) {
   case 1:
-    // MAX-VI.
+    // MAX-V.
     n_cell = 1;
 
     bn_prms.add_prm("o1", 4, 5e5, 1.0);
@@ -1973,7 +1989,7 @@ int main(int argc, char *argv[])
     danot_(NO-1);
     cavity_on = true; rad_on = true;
     get_map_n(n_cell);
-    // MAX-VI:
+    // MAX-V:
     // prt_H_long(10, M_PI, 10e-2, -405.6e3, false);
     // SLS-2:
     prt_H_long(10, M_PI, 10e-2, -544.7e3, true);
@@ -2014,6 +2030,8 @@ int main(int argc, char *argv[])
     no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
   }
 
+  no_mpoles(Oct); no_mpoles(Dodec);
+
   bn_prms.ini_prm();
 
   prt_bn(bn_prms);
@@ -2023,8 +2041,6 @@ int main(int argc, char *argv[])
     fit_ksi1(0e0, 0e0);
     // exit(0);
   }
-
-  no_mpoles(Oct); no_mpoles(Dodec);
 
   if (c_g) {
     bn_prms.svd_n_cut = n_cut;
