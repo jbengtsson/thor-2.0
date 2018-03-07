@@ -66,9 +66,10 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {0e0,   0e0,   0e-3},
-             scl_dnu[]    = {0e-10, 0e-10, 0e-10, 0e-10},
-             scl_ksi[]    = {1e5,   0e-10, 0e-10},
+// const double scl_h[]      = {1e0,   1e0,   1e-3},
+const double scl_h[]      = {1e-10,   1e-10,   1e-10},
+             scl_dnu[]    = {1e-20, 1e-20, 1e-20, 1e-20},
+             scl_ksi[]    = {1e5,   1e-20, 1e-20},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -599,12 +600,18 @@ void prt_dnu(tps &K)
 	 h_ijklm(nu_scl[Y_], 0, 0, 1, 1, 2));
 
   printf("\nTune confinement:\n");
+  // printf(" %11.3e %11.3e\n",
+  // 	 h_ijklm(K_re/(3e0*twoJ[X_]), 2, 2, 0, 0, 0),
+  // 	 h_ijklm(K_re, 3, 3, 0, 0, 0));
+  // printf(" %11.3e %11.3e\n",
+  // 	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0),
+  // 	 h_ijklm(K_re, 0, 0, 3, 3, 0));
   printf(" %11.3e %11.3e\n",
-	 h_ijklm(K_re/(3e0*twoJ[X_]), 2, 2, 0, 0, 0),
-	 h_ijklm(K_re, 3, 3, 0, 0, 0));
+	 h_ijklm(nu_scl[X_], 1, 1, 0, 0, 0),
+	 h_ijklm(nu_scl[X_], 2, 2, 0, 0, 0));
   printf(" %11.3e %11.3e\n",
-	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0),
-	 h_ijklm(K_re, 0, 0, 3, 3, 0));
+	 h_ijklm(nu_scl[Y_], 1, 1, 0, 0, 0),
+	 h_ijklm(nu_scl[Y_], 2, 2, 0, 0, 0));
   printf(" %11.3e %11.3e %11.3e\n",
 	 h_ijklm(K_re*Id_scl, 1, 1, 1, 1, 0),
 	 h_ijklm(K_re*Id_scl, 2, 2, 1, 1, 0),
