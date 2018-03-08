@@ -94,7 +94,7 @@ const double scl_h[]      = {0e-10,   0e-10,   0e-10},
 #else
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e3,
+             scl_dnu_conf = 1e2,
              scl_dnu_conf2 = 0e0;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
@@ -1441,7 +1441,7 @@ void min_conj_grad(const bool cg_meth)
 
     prt_mfile("flat_file.fit");
     prt_bn(bn_prms);
-  } while ((dbn_max >  bn_prms.bn_tol) && (n_iter < n_iter_max));
+  } while ((dbn_max > bn_prms.bn_tol) && (n_iter < n_iter_max));
 }
 
 
