@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -11,7 +11,7 @@ int no_tps = NO,
 #if !DOF_3
   ndpt_tps = 5;
 #else
-  // Requires that cavity is turned on.
+  // The cavity must be turned on.
   ndpt_tps = 0;
 #endif
 
@@ -25,7 +25,7 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 int          n_cell, n_cut;
 double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
-ss_vect<tps> nus;
+ss_vect<tps> nus, nus_scl;
 
 const bool   fit_ksi = !true, symm = false, scale = !true, c_g = true,
              oct = !false;
@@ -67,9 +67,9 @@ const double
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
 // const double scl_h[]      = {1e0,   1e0,   1e-3},
-const double scl_h[]      = {1e-10,   1e-10,   1e-10},
-             scl_dnu[]    = {1e-20, 1e-20, 1e-20, 1e-20},
-             scl_ksi[]    = {1e5,   1e-20, 1e-20},
+const double scl_h[]      = {0e-10,   0e-10,   0e-10},
+             scl_dnu[]    = {0e-20, 0e-20, 0e-20, 0e-20},
+             scl_ksi[]    = {1e5,   0e-20, 0e-20},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -81,7 +81,8 @@ const double scl_h[]      = {1e-10,   1e-10,   1e-10},
 	     // NO = 9.
              // scl_dnu_conf = 1e-4;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e-3;
+             scl_dnu_conf = 1e-3,
+             scl_dnu_conf2 = 0e0;
 	     // SLS-2 NO = 7.
              // scl_dnu_conf = 1e-3;
 	     // ALS-U NO = 7.
@@ -557,47 +558,46 @@ void prt_h_K_sym(void)
 
 void prt_dnu(tps &K)
 {
-  tps          K_re, K_im, nu_scl[2];
+  tps          K_re, K_im;
   ss_vect<tps> nus;
 
-  CtoR(K, K_re, K_im); nus = dHdJ(K);
-  nu_scl[0] = nus[3]*Id_scl; nu_scl[1] = nus[4]*Id_scl;
+  CtoR(K, K_re, K_im); nus = dHdJ(K); nus_scl = nus*Id_scl;
 
   printf("\ndnu_x:\n %8.5f %8.5f\n",
-	 h_ijklm(nu_scl[X_], 1, 1, 0, 0, 0),
-	 h_ijklm(nu_scl[X_], 0, 0, 1, 1, 0));
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
   printf(" %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nu_scl[X_], 2, 2, 0, 0, 0),
-	 h_ijklm(nu_scl[X_], 1, 1, 1, 1, 0),
-	 h_ijklm(nu_scl[X_], 0, 0, 2, 2, 0));
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
   printf(" %8.5f %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nu_scl[X_], 3, 3, 0, 0, 0),
-	 h_ijklm(nu_scl[X_], 2, 2, 1, 1, 0),
-	 h_ijklm(nu_scl[X_], 1, 1, 2, 2, 0),
-	 h_ijklm(nu_scl[X_], 0, 0, 3, 3, 0));
+	 h_ijklm(nus_scl[3], 3, 3, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 2, 2, 1, 1, 0),
+	 h_ijklm(nus_scl[3], 1, 1, 2, 2, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 3, 3, 0));
 
   printf("dnu_y:\n %8.5f %8.5f\n",
-	 h_ijklm(nu_scl[Y_], 1, 1, 0, 0, 0),
-	 h_ijklm(nu_scl[Y_], 0, 0, 1, 1, 0));
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 0));
   printf(" %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nu_scl[Y_], 2, 2, 0, 0, 0),
-	 h_ijklm(nu_scl[Y_], 1, 1, 1, 1, 0),
-	 h_ijklm(nu_scl[Y_], 0, 0, 2, 2, 0));
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 0),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 0),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
   printf(" %8.5f %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nu_scl[Y_], 3, 3, 0, 0, 0),
-	 h_ijklm(nu_scl[Y_], 2, 2, 1, 1, 0),
-	 h_ijklm(nu_scl[Y_], 1, 1, 2, 2, 0),
-	 h_ijklm(nu_scl[Y_], 0, 0, 3, 3, 0));
+	 h_ijklm(nus_scl[4], 3, 3, 0, 0, 0),
+	 h_ijklm(nus_scl[4], 2, 2, 1, 1, 0),
+	 h_ijklm(nus_scl[4], 1, 1, 2, 2, 0),
+	 h_ijklm(nus_scl[4], 0, 0, 3, 3, 0));
 
   printf("ksi_x:\n %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nu_scl[X_], 0, 0, 0, 0, 2),
-	 h_ijklm(nu_scl[X_], 1, 1, 0, 0, 2),
-	 h_ijklm(nu_scl[X_], 0, 0, 1, 1, 2));
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 2),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2));
 
   printf("ksi_y:\n %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nu_scl[Y_], 0, 0, 0, 0, 2),
-	 h_ijklm(nu_scl[Y_], 1, 1, 0, 0, 2),
-	 h_ijklm(nu_scl[Y_], 0, 0, 1, 1, 2));
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 2),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 2),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2));
 
   printf("\nTune confinement:\n");
   // printf(" %11.3e %11.3e\n",
@@ -607,12 +607,19 @@ void prt_dnu(tps &K)
   // 	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0),
   // 	 h_ijklm(K_re, 0, 0, 3, 3, 0));
   printf(" %11.3e %11.3e\n",
-	 h_ijklm(nu_scl[X_], 1, 1, 0, 0, 0),
-	 h_ijklm(nu_scl[X_], 2, 2, 0, 0, 0));
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
   printf(" %11.3e %11.3e\n",
-	 h_ijklm(nu_scl[Y_], 1, 1, 0, 0, 0),
-	 h_ijklm(nu_scl[Y_], 2, 2, 0, 0, 0));
-  printf(" %11.3e %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 0),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
+
+  printf("\n %11.3e %11.3e %11.3e\n",
 	 h_ijklm(K_re*Id_scl, 1, 1, 1, 1, 0),
 	 h_ijklm(K_re*Id_scl, 2, 2, 1, 1, 0),
 	 h_ijklm(K_re*Id_scl, 1, 1, 2, 2, 0));
@@ -668,10 +675,12 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else if (i-1 == n_h+2+3+2)
       printf("|dnu|\n");
     else if (i-1 == n_h+2+3+2+1)
+      printf("tune confinement\n");
+    else if (i-1 == n_h+2+3+2+1+4)
       printf("cross terms\n");
-    else if (i-1 == n_h+2+3+2+1+3)
+    else if (i-1 == n_h+2+3+2+1+4+3)
       printf("3rd order chromaticity\n");
-    else if (i-1 == n_h+2+3+2+1+3+2) {
+    else if (i-1 == n_h+2+3+2+1+4+3+2) {
       printf("ampl. dependant tune shift\n");
     }
 
@@ -894,7 +903,8 @@ double get_f(double *bns)
   danot_(NO-1);
   get_map_n(n_cell);
   danot_(NO);
-  K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  nus = dHdJ(K); nus_scl = nus*Id_scl;
   CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
@@ -996,7 +1006,16 @@ double get_f(double *bns)
     b.push_back(get_b(scl_ksi[1],   K_re_scl, 1, 1, 0, 0, 2));
     b.push_back(get_b(scl_ksi[1],   K_re_scl, 0, 0, 1, 1, 2));
 
-    b.push_back(get_b(scl_dnu_conf, dnu,      0, 0, 0, 0, 0));
+    b.push_back(get_b(scl_dnu_conf,      dnu, 0, 0, 0, 0, 0));
+
+    b.push_back(get_b(scl_dnu_conf2, nus_scl[3], 1, 1, 0, 0, 0)
+		+get_b(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0));
+    b.push_back(get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 1, 1, 0)
+		+get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0));
+    b.push_back(get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 1, 1, 0)
+		+get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0));
+    b.push_back(get_b(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
+		+get_b(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0));
   }
 
   if (NO >= 6) {
@@ -1056,7 +1075,8 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     danot_(NO-1);
     get_map_n(n_cell);
     danot_(NO);
-    K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+    K = MapNorm(Map, g, A1, A0, Map_res, 1);
+    nus = dHdJ(K); nus_scl = nus*Id_scl;
     CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
     CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
@@ -1161,6 +1181,19 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       A[++m][i] = get_a(scl_ksi[1],   K_re_scl, 0, 0, 1, 1, 2);
 
       A[++m][i] = get_a(scl_dnu_conf, dnu,      0, 0, 0, 0, 0);
+
+      A[++m][i] =
+	get_a(scl_dnu_conf2, nus_scl[3], 1, 1, 0, 0, 0)
+	+ get_a(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0);
+      A[++m][i] =
+	get_a(scl_dnu_conf2, nus_scl[3], 0, 0, 1, 1, 0)
+	+ get_a(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0);
+      A[++m][i] =
+	get_a(scl_dnu_conf2, nus_scl[4], 0, 0, 1, 1, 0)
+	+ get_a(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0);
+      A[++m][i] =
+	get_a(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
+	+ get_a(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0);
     }
 
     if (NO >= 6) {
@@ -1288,6 +1321,19 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_ksi[1],   K_re_scl, 0, 0, 1, 1, 2);
 
     f[++m] = get_b(scl_dnu_conf, dnu,      0, 0, 0, 0, 0);
+
+    f[++m] =
+      get_b(scl_dnu_conf2, nus_scl[3], 1, 1, 0, 0, 0)
+      + get_b(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0);
+    f[++m] =
+      get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 1, 1, 0)
+      + get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0);
+    f[++m] =
+      get_b(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
+      + get_b(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0);
+    f[++m] =
+      get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 1, 1, 0)
+      + get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0);
   }
 
   if (NO >= 6) {
@@ -1481,8 +1527,8 @@ void min_lev_marq(void)
   if (NO >= 3+1) n_data += 3 + 5 + 2;     // 10.
   if (NO >= 4+1) n_data += 8 + 3 + 2 + 1; // 23 + 1.
   if (NO >= 5+1) n_data += 14 + 3 + 2;    // 42.
-  if (NO >= 6+1) n_data += 4;             // 46.
-  if (NO >= 8+1) n_data += 5;             // 51.
+  if (NO >= 6+1) n_data += 4 + 1 + 4;     // 46 + 5.
+  if (NO >= 8+1) n_data += 5;             // 51 + 5.
   if (!symm)     n_data += 16 + 14;
 
   n_bn = bn_prms.n_prm;
