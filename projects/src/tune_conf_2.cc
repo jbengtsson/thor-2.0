@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 9
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -15,7 +15,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU       1
+#define DNU       0
 #define THREE_DIM 0
 
 
@@ -94,7 +94,8 @@ const double scl_h[]      = {0e-10,   0e-10,   0e-10},
 #else
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e1;
+             scl_dnu_conf = 1e1,
+             scl_dnu_conf2 = 0e0;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
 #endif
@@ -1767,10 +1768,10 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("o3", 4, 5e5, 1.0);
     bn_prms.add_prm("o4", 4, 5e5, 1.0);
 
-    bn_prms.add_prm("o1", 6, 5e10, 1.0);
-    bn_prms.add_prm("o2", 6, 5e10, 1.0);
-    bn_prms.add_prm("o3", 6, 5e10, 1.0);
-    bn_prms.add_prm("o4", 6, 5e10, 1.0);
+    // bn_prms.add_prm("o1", 6, 5e10, 1.0);
+    // bn_prms.add_prm("o2", 6, 5e10, 1.0);
+    // bn_prms.add_prm("o3", 6, 5e10, 1.0);
+    // bn_prms.add_prm("o4", 6, 5e10, 1.0);
     break;
   case 2:
     // SLS-2.
