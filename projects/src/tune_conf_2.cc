@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus, nus_scl;
 
-const bool   fit_ksi = !true, symm = false, scale = !true, c_g = true,
+const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true,
              oct = !false;
 const double tpsa_eps = 1e-30;
 
@@ -94,7 +94,7 @@ const double scl_h[]      = {0e-10,   0e-10,   0e-10},
 #else
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e2,
+             scl_dnu_conf = 1e4,
              scl_dnu_conf2 = 0e0;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
@@ -2087,7 +2087,7 @@ int main(int argc, char *argv[])
     no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
   }
 
-  no_mpoles(Oct); no_mpoles(Dodec);
+  // no_mpoles(Oct); no_mpoles(Dodec);
 
   bn_prms.ini_prm();
 
