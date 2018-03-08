@@ -1008,15 +1008,6 @@ double get_f(double *bns)
     b.push_back(get_b(scl_ksi[1],   K_re_scl, 0, 0, 1, 1, 2));
 
     b.push_back(get_b(scl_dnu_conf,      dnu, 0, 0, 0, 0, 0));
-
-    b.push_back(get_b(scl_dnu_conf2, nus_scl[3], 1, 1, 0, 0, 0)
-		+get_b(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0));
-    b.push_back(get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 1, 1, 0)
-		+get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0));
-    b.push_back(get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 1, 1, 0)
-		+get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0));
-    b.push_back(get_b(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
-		+get_b(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0));
   }
 
   if (NO >= 6) {
@@ -1033,6 +1024,15 @@ double get_f(double *bns)
     b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
     b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
     b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0));
+
+    b.push_back(get_b(scl_dnu_conf2, nus_scl[3], 1, 1, 0, 0, 0)
+		+get_b(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0));
+    b.push_back(get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 1, 1, 0)
+		+get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0));
+    b.push_back(get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 1, 1, 0)
+		+get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0));
+    b.push_back(get_b(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
+		+get_b(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0));
   }
 
   if (NO >= 9) {
@@ -1182,19 +1182,6 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       A[++m][i] = get_a(scl_ksi[1],   K_re_scl, 0, 0, 1, 1, 2);
 
       A[++m][i] = get_a(scl_dnu_conf, dnu,      0, 0, 0, 0, 0);
-
-      A[++m][i] =
-	get_a(scl_dnu_conf2, nus_scl[3], 1, 1, 0, 0, 0)
-	+ get_a(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0);
-      A[++m][i] =
-	get_a(scl_dnu_conf2, nus_scl[3], 0, 0, 1, 1, 0)
-	+ get_a(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0);
-      A[++m][i] =
-	get_a(scl_dnu_conf2, nus_scl[4], 0, 0, 1, 1, 0)
-	+ get_a(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0);
-      A[++m][i] =
-	get_a(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
-	+ get_a(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0);
     }
 
     if (NO >= 6) {
@@ -1211,6 +1198,19 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
       A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
       A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
+
+      A[++m][i] =
+	get_a(scl_dnu_conf2, nus_scl[3], 1, 1, 0, 0, 0)
+	+ get_a(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0);
+      A[++m][i] =
+	get_a(scl_dnu_conf2, nus_scl[3], 0, 0, 1, 1, 0)
+	+ get_a(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0);
+      A[++m][i] =
+	get_a(scl_dnu_conf2, nus_scl[4], 0, 0, 1, 1, 0)
+	+ get_a(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0);
+      A[++m][i] =
+	get_a(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
+	+ get_a(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0);
     }
 
     if (NO >= 9) {
@@ -1322,19 +1322,6 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_ksi[1],   K_re_scl, 0, 0, 1, 1, 2);
 
     f[++m] = get_b(scl_dnu_conf, dnu,      0, 0, 0, 0, 0);
-
-    f[++m] =
-      get_b(scl_dnu_conf2, nus_scl[3], 1, 1, 0, 0, 0)
-      + get_b(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0);
-    f[++m] =
-      get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 1, 1, 0)
-      + get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0);
-    f[++m] =
-      get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 1, 1, 0)
-      + get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0);
-    f[++m] =
-      get_b(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
-      + get_b(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0);
   }
 
   if (NO >= 6) {
@@ -1351,6 +1338,19 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
     f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
     f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
+
+    f[++m] =
+      get_b(scl_dnu_conf2, nus_scl[3], 1, 1, 0, 0, 0)
+      + get_b(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0);
+    f[++m] =
+      get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 1, 1, 0)
+      + get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0);
+    f[++m] =
+      get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 1, 1, 0)
+      + get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0);
+    f[++m] =
+      get_b(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
+      + get_b(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0);
   }
 
   if (NO >= 9) {
@@ -1526,7 +1526,8 @@ void min_lev_marq(void)
 
   n_data = 0;
   if (NO >= 3+1) n_data += 3 + 5 + 2;     // 10.
-  if (NO >= 4+1) n_data += 8 + 3 + 2 + 1; // 23 + 1.
+  if (NO >= 4+1) n_data += 8 + 3 + 2 + 1; // 24.
+  // *** Checked up to here.
   if (NO >= 5+1) n_data += 14 + 3 + 2;    // 42.
   if (NO >= 6+1) n_data += 4 + 1 + 4;     // 46 + 5.
   if (NO >= 8+1) n_data += 5;             // 51 + 5.
@@ -2087,7 +2088,7 @@ int main(int argc, char *argv[])
     no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
   }
 
-  // no_mpoles(Oct); no_mpoles(Dodec);
+  no_mpoles(Oct); no_mpoles(Dodec);
 
   bn_prms.ini_prm();
 
