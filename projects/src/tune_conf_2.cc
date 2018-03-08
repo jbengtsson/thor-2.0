@@ -1330,11 +1330,11 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 1, 1, 0)
       + get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0);
     f[++m] =
-      get_b(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
-      + get_b(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0);
-    f[++m] =
       get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 1, 1, 0)
       + get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0);
+    f[++m] =
+      get_b(scl_dnu_conf2, nus_scl[4], 1, 1, 0, 0, 0)
+      + get_b(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0);
   }
 
   if (NO >= 6) {
