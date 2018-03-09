@@ -1769,11 +1769,6 @@ void lat_select(const int lat_case)
     // bn_prms.add_prm("sfh", 3, 5e5, 1.0);
     // bn_prms.add_prm("sd",  3, 5e5, 1.0);
 
-    // bn_prms.add_prm("o1",  3, 5e5, 1.0);
-    // bn_prms.add_prm("o2",  3, 5e5, 1.0);
-    // bn_prms.add_prm("o3",  3, 5e5, 1.0);
-    // bn_prms.add_prm("o4",  3, 5e5, 1.0);
-
     bn_prms.add_prm("o1",  4, 5e5, 1.0);
     bn_prms.add_prm("o2",  4, 5e5, 1.0);
     bn_prms.add_prm("o3",  4, 5e5, 1.0);
