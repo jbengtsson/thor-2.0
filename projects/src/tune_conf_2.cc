@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 5
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -69,7 +69,7 @@ const double
 // const double scl_h[]      = {1e0,   1e0,   1e-3},
 const double scl_h[]      = {0e-10,   0e-10,   0e-10},
              scl_dnu[]    = {0e-20, 0e-20, 0e-20, 0e-20},
-             scl_ksi[]    = {1e5,   0e-20, 0e-20},
+             scl_ksi[]    = {0e5,   0e-20, 0e-20},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -1774,10 +1774,10 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("o3",  4, 5e5, 1.0);
     bn_prms.add_prm("o4",  4, 5e5, 1.0);
 
-    // bn_prms.add_prm("o1",  6, 5e10, 1.0);
-    // bn_prms.add_prm("o2",  6, 5e10, 1.0);
-    // bn_prms.add_prm("o3",  6, 5e10, 1.0);
-    // bn_prms.add_prm("o4",  6, 5e10, 1.0);
+    bn_prms.add_prm("o1",  6, 5e10, 1.0);
+    bn_prms.add_prm("o2",  6, 5e10, 1.0);
+    bn_prms.add_prm("o3",  6, 5e10, 1.0);
+    bn_prms.add_prm("o4",  6, 5e10, 1.0);
     break;
   case 2:
     // SLS-2.
