@@ -1415,6 +1415,10 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
   }
   if (n_bn % n_prt != 0) printf("\n");
 
+  prt_bn(bn_prms);
+  bn_prms.set_prm();
+  prt_mfile("flat_file.fit");
+
   free_dvector(bn_ref, 1, n_bn); free_dvector(f, 1, m_max);
   free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_bn);
 }
@@ -1439,8 +1443,6 @@ void min_conj_grad(const bool cg_meth)
 
     min_conj_grad(chi2, dbn_max, g, h, cg_meth);
 
-    prt_mfile("flat_file.fit");
-    prt_bn(bn_prms);
   } while ((dbn_max > bn_prms.bn_tol) && (n_iter < n_iter_max));
 }
 
@@ -1764,13 +1766,18 @@ void lat_select(const int lat_case)
     // MAX-V.
     n_cell = 1;
 
-    // bn_prms.add_prm("sfh", 3, 5e5, 1.0);
-    // bn_prms.add_prm("sd",  3, 5e5, 1.0);
+    bn_prms.add_prm("sfh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd",  3, 5e5, 1.0);
 
-    bn_prms.add_prm("o1",  4, 5e5, 1.0);
-    bn_prms.add_prm("o2",  4, 5e5, 1.0);
-    bn_prms.add_prm("o3",  4, 5e5, 1.0);
-    bn_prms.add_prm("o4",  4, 5e5, 1.0);
+    bn_prms.add_prm("o1",  3, 5e5, 1.0);
+    bn_prms.add_prm("o2",  3, 5e5, 1.0);
+    bn_prms.add_prm("o3",  3, 5e5, 1.0);
+    bn_prms.add_prm("o4",  3, 5e5, 1.0);
+
+    // bn_prms.add_prm("o1",  4, 5e5, 1.0);
+    // bn_prms.add_prm("o2",  4, 5e5, 1.0);
+    // bn_prms.add_prm("o3",  4, 5e5, 1.0);
+    // bn_prms.add_prm("o4",  4, 5e5, 1.0);
 
     // bn_prms.add_prm("o1",  6, 5e10, 1.0);
     // bn_prms.add_prm("o2",  6, 5e10, 1.0);
@@ -2088,6 +2095,7 @@ int main(int argc, char *argv[])
     no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
   }
 
+  no_mpoles(Sext);
   no_mpoles(Oct); no_mpoles(Dodec);
 
   bn_prms.ini_prm();
