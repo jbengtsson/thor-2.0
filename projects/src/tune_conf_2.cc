@@ -94,7 +94,7 @@ const double scl_h[]      = {0e-10,   0e-10,   0e-10},
 #else
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e6,
+             scl_dnu_conf = 1e5,
              scl_dnu_conf2 = 0e0;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
@@ -1766,18 +1766,18 @@ void lat_select(const int lat_case)
     // MAX-V.
     n_cell = 1;
 
-    bn_prms.add_prm("sfh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sd",  3, 5e5, 1.0);
+    // bn_prms.add_prm("sfh", 3, 5e5, 1.0);
+    // bn_prms.add_prm("sd",  3, 5e5, 1.0);
 
-    bn_prms.add_prm("o1",  3, 5e5, 1.0);
-    bn_prms.add_prm("o2",  3, 5e5, 1.0);
-    bn_prms.add_prm("o3",  3, 5e5, 1.0);
-    bn_prms.add_prm("o4",  3, 5e5, 1.0);
+    // bn_prms.add_prm("o1",  3, 5e5, 1.0);
+    // bn_prms.add_prm("o2",  3, 5e5, 1.0);
+    // bn_prms.add_prm("o3",  3, 5e5, 1.0);
+    // bn_prms.add_prm("o4",  3, 5e5, 1.0);
 
-    // bn_prms.add_prm("o1",  4, 5e5, 1.0);
-    // bn_prms.add_prm("o2",  4, 5e5, 1.0);
-    // bn_prms.add_prm("o3",  4, 5e5, 1.0);
-    // bn_prms.add_prm("o4",  4, 5e5, 1.0);
+    bn_prms.add_prm("o1",  4, 5e5, 1.0);
+    bn_prms.add_prm("o2",  4, 5e5, 1.0);
+    bn_prms.add_prm("o3",  4, 5e5, 1.0);
+    bn_prms.add_prm("o4",  4, 5e5, 1.0);
 
     // bn_prms.add_prm("o1",  6, 5e10, 1.0);
     // bn_prms.add_prm("o2",  6, 5e10, 1.0);
@@ -2095,7 +2095,6 @@ int main(int argc, char *argv[])
     no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
   }
 
-  no_mpoles(Sext);
   no_mpoles(Oct); no_mpoles(Dodec);
 
   bn_prms.ini_prm();
