@@ -52,6 +52,7 @@ const double
       {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
+    // {{2.0e-3, 2.0e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
      {  5e-3,   3e-3}, {7e-3, 4e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3},  {5e-3, 3e-3}},
   delta_max[] =
@@ -1774,7 +1775,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("o3",  4, 5e5, 1.0);
     bn_prms.add_prm("o4",  4, 5e5, 1.0);
 
-    if (!false) {
+    if (false) {
       bn_prms.add_prm("o1", 6, 5e10, 1.0);
       bn_prms.add_prm("o2", 6, 5e10, 1.0);
       bn_prms.add_prm("o3", 6, 5e10, 1.0);
