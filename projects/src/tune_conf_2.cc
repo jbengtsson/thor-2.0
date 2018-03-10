@@ -1774,10 +1774,12 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("o3",  4, 5e5, 1.0);
     bn_prms.add_prm("o4",  4, 5e5, 1.0);
 
-    bn_prms.add_prm("o1",  6, 5e10, 1.0);
-    bn_prms.add_prm("o2",  6, 5e10, 1.0);
-    bn_prms.add_prm("o3",  6, 5e10, 1.0);
-    bn_prms.add_prm("o4",  6, 5e10, 1.0);
+    if (!false) {
+      bn_prms.add_prm("o1", 6, 5e10, 1.0);
+      bn_prms.add_prm("o2", 6, 5e10, 1.0);
+      bn_prms.add_prm("o3", 6, 5e10, 1.0);
+      bn_prms.add_prm("o4", 6, 5e10, 1.0);
+    }
     break;
   case 2:
     // SLS-2.
@@ -2090,7 +2092,7 @@ int main(int argc, char *argv[])
     no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
   }
 
-  no_mpoles(Oct); no_mpoles(Dodec);
+  // no_mpoles(Oct); no_mpoles(Dodec);
 
   bn_prms.ini_prm();
 
