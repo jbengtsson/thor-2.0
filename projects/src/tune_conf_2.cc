@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 9
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -722,7 +722,8 @@ void prt_b2(const std::vector<int> &b2_Fnum)
 void prt_bn(const param_type &bn_prms)
 {
   long int loc;
-  int      k, n, n_prm;
+  int      j, k, n, n_prm;
+  double   bn;
   FILE     *outf;
 
   const std::string file_name = "dnu.out";
@@ -730,32 +731,33 @@ void prt_bn(const param_type &bn_prms)
   outf = file_write(file_name.c_str());
 
   n_prm = bn_prms.n_prm;
-  n = (!oct)? n_prm : n_prm/2;
   fprintf(outf, "\n");
   for (k = 0; k < n; k++) {
     loc = get_loc(bn_prms.Fnum[k], 1) - 1;
+    bn = get_bn(bn_prms.Fnum[k], 1, bn_prms.n[k]);
     if (bn_prms.n[k] == Sext)
       fprintf(outf,
 	      "%-8s: sextupole, l = %7.5f"
 	      ", k = %12.5e, n = nsext, Method = Meth;\n",
-	      elem[loc].Name, elem[loc].L, bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-    else
-      if (!oct)
-	fprintf(outf,
-		"%-8s: multipole, l = %7.5f,"
-		"\n          hom = (3, %12.5e, 0e0, 4, %12.5e, 0e0),"
-		"\n          n = nsext, Method = Meth;\n",
-		elem[loc].Name, elem[loc].L, elem[loc].mpole->bn[Sext-1],
-		bn_prms.bn_scl[k]*bn_prms.bn[k+1]);
-      else
-	fprintf(outf,
-		"%-8s: multipole, l = %7.5f,"
-		"\n          hom = (3, %12.5e, 0e0, 4, %12.5e, 0e0,"
-		" 6, %12.5e, 0e0),"
-		"\n          n = nsext, Method = Meth;\n",
-		elem[loc].Name, elem[loc].L, elem[loc].mpole->bn[Sext-1],
-		bn_prms.bn_scl[k]*bn_prms.bn[k+1],
-		bn_prms.bn_scl[n+k]*bn_prms.bn[n+k+1]);
+	      elem[loc].Name, elem[loc].L, bn);
+    else {
+      n = elem[k].mpole->order;
+      for (j = Sext; j <= n; j++) {
+	bn = get_bn(bn_prms.Fnum[k], 1, j);
+	if (j == Sext)
+	  fprintf(outf,
+		  "%-8s: multipole, l = %7.5f,"
+		  "\n          hom = (%2d, %12.5e, 0e0,",
+		  elem[loc].Name, elem[loc].L, j, bn, 0e0);
+	if (j > Sext) fprintf(outf, "\n                 ");
+	fprintf(outf, "%2d, %12.5e, 0e0,\n", j, bn);
+	if (j < n) fprintf(outf, "%2d, %12.5e, 0e0,\n", j, bn);
+	if (j == n)
+	  fprintf(outf,
+		  "),"
+		  "\n          n = nsext, Method = Meth;\n");
+      }
+    }
   }
 
   fclose(outf);
@@ -1479,7 +1481,7 @@ void prt_lev_marq(const int m, const int n)
   printf("\n%d bn:\n", n_powell);
   for (i = 1; i <= bn_prms.n_prm; i++) {
     bn_prms.bn[i] =
-      get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1]/bn_prms.bn_scl[i-1]);
+      get_bn(bn_prms.Fnum[i-1], 1, bn_prms.n[i-1])/bn_prms.bn_scl[i-1];
     printf("%11.3e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
@@ -1775,7 +1777,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("o3",  4, 5e5, 1.0);
     bn_prms.add_prm("o4",  4, 5e5, 1.0);
 
-    if (false) {
+    if (!false) {
       bn_prms.add_prm("o1", 6, 5e10, 1.0);
       bn_prms.add_prm("o2", 6, 5e10, 1.0);
       bn_prms.add_prm("o3", 6, 5e10, 1.0);
