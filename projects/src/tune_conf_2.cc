@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 5
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -42,7 +42,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II 8-HMBA     9.
 // DIAMOND-II 8-HMBA II 10.
 // ALS-U                11.
-const int lat_case = 1, n_prt = 8;
+const int lat_case = 6, n_prt = 8;
 
 // Center of straight.
 const double
@@ -67,8 +67,7 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-// const double scl_h[]      = {1e0,   1e0,   1e-3},
-const double scl_h[]      = {0e-10,   0e-10,   0e-10},
+const double scl_h[]      = {0e0,   0e0,   1e-3},
              scl_dnu[]    = {0e-20, 0e-20, 0e-20, 0e-20},
              scl_ksi[]    = {0e5,   0e-20, 0e-20},
 // 6BA_1-2-jn-match.
@@ -82,14 +81,17 @@ const double scl_h[]      = {0e-10,   0e-10,   0e-10},
 	     // NO = 9.
              // scl_dnu_conf = 1e-4;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e-3,
-             scl_dnu_conf2 = 0e0;
+             // scl_dnu_conf  = 1e-3,
+             // scl_dnu_conf2 = 0e0;
 	     // SLS-2 NO = 7.
              // scl_dnu_conf = 1e-3;
 	     // ALS-U NO = 7.
              // scl_dnu_conf = 5e-3;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 5e-6;
+	     // DIAMOND NO = 9.
+             scl_dnu_conf  = 5e-6,
+             scl_dnu_conf2 = 0e0;
 	     // SLS-2 NO = 9.
              // scl_dnu_conf = 1e-5;
 #else
@@ -1777,7 +1779,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("o3",  4, 5e5, 1.0);
     bn_prms.add_prm("o4",  4, 5e5, 1.0);
 
-    if (!false) {
+    if (false) {
       bn_prms.add_prm("o1", 6, 5e10, 1.0);
       bn_prms.add_prm("o2", 6, 5e10, 1.0);
       bn_prms.add_prm("o3", 6, 5e10, 1.0);
@@ -2104,7 +2106,7 @@ int main(int argc, char *argv[])
   if (fit_ksi) {
     bn_prms.svd_n_cut = 0;
     fit_ksi1(0e0, 0e0);
-    // exit(0);
+    exit(0);
   }
 
   if (c_g) {
