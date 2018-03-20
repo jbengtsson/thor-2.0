@@ -593,7 +593,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   double **A_ext;
 
   const bool   prt = false;
-  const double eps = 1e-10, s_cut_ext = 1e-15;
+  const double eps = 1e-10, s_cut_ext = 1e-18;
 
   mpn = m + n;
 
@@ -721,7 +721,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
 		<< std::setw(10) << w[i];
       if (w[i] < s_cut_ext) {
 	w[i] = 0e0;
-	std::cout << " (zeroed)";
+	std::cout << " (*** s_cut_ext: zeroed)";
       }
       if (i % 8 == 0) std::cout << std::endl;
     }

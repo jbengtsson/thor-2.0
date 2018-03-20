@@ -67,9 +67,9 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {1e0,   1e0,   0e-3},
-             scl_dnu[]    = {0e-20, 0e-20, 0e-20, 0e-20},
-             scl_ksi[]    = {1e5,   0e-20, 0e-20},
+const double scl_h[]      = {1e0,   1e0,   1e-3},
+             scl_dnu[]    = {1e-10, 1e-10, 1e-10, 1e-10},
+             scl_ksi[]    = {1e5,   1e-10, 1e-10},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -98,7 +98,7 @@ const double scl_h[]      = {1e0,   1e0,   0e-3},
 #else
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e5,
+             scl_dnu_conf = 1e0,
              scl_dnu_conf2 = 0e0;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
@@ -1871,19 +1871,21 @@ void lat_select(const int lat_case)
     // DIAMOND-II 6-HMBA.
     n_cell = 2;
 
-    bn_prms.add_prm("sfa",  3, 5e5, 1.0);
-    bn_prms.add_prm("sfb",  3, 5e5, 1.0);
-    bn_prms.add_prm("sda",  3, 5e5, 1.0);
-    bn_prms.add_prm("sdb",  3, 5e5, 1.0);
+    bn_prms.add_prm("sfa",  3, 1e4, 1.0);
+    bn_prms.add_prm("sfb",  3, 1e4, 1.0);
+    bn_prms.add_prm("sda",  3, 1e4, 1.0);
+    bn_prms.add_prm("sda2",  3, 1e4, 1.0);
+    bn_prms.add_prm("sdb",  3, 1e4, 1.0);
+    bn_prms.add_prm("sdb2",  3, 1e4, 1.0);
 
     if (!fit_ksi) {
-      bn_prms.add_prm("s1a", 3, 5e5, 1.0);
-      bn_prms.add_prm("s1b", 3, 5e5, 1.0);
-      bn_prms.add_prm("s2a", 3, 5e5, 1.0);
-      bn_prms.add_prm("s2b", 3, 5e5, 1.0);
-      bn_prms.add_prm("s3",  3, 5e5, 1.0);
-      bn_prms.add_prm("s4",  3, 5e5, 1.0);
-      bn_prms.add_prm("s5",  3, 5e5, 1.0);
+      bn_prms.add_prm("s1a", 3, 1e4, 1.0);
+      bn_prms.add_prm("s1b", 3, 1e4, 1.0);
+      bn_prms.add_prm("s2a", 3, 1e4, 1.0);
+      bn_prms.add_prm("s2b", 3, 1e4, 1.0);
+      bn_prms.add_prm("s3",  3, 1e4, 1.0);
+      bn_prms.add_prm("s4",  3, 1e4, 1.0);
+      bn_prms.add_prm("s5",  3, 1e4, 1.0);
     }
     break;
   case 7:
