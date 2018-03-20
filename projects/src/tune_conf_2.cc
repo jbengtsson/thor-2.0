@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 9
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -48,12 +48,12 @@ const int lat_case = 6, n_prt = 8;
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.8, 5.4},
-     {10.6, 8.6}, {10.9, 2.9}, {14.0, 4.5}, {4.6, 7.6},
+     {10.6, 8.6}, {18.0, 5.0}, {14.0, 4.5}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
     // {{2.0e-3, 2.0e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {7e-3, 4e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {6e-3, 3e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3},  {5e-3, 3e-3}},
   delta_max[] =
     {3e-2,   4e-2, 3e-2, 3e-2,
@@ -67,9 +67,9 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {0e0,   0e0,   1e-3},
+const double scl_h[]      = {1e0,   1e0,   0e-3},
              scl_dnu[]    = {0e-20, 0e-20, 0e-20, 0e-20},
-             scl_ksi[]    = {0e5,   0e-20, 0e-20},
+             scl_ksi[]    = {1e5,   0e-20, 0e-20},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -88,10 +88,11 @@ const double scl_h[]      = {0e0,   0e0,   1e-3},
 	     // ALS-U NO = 7.
              // scl_dnu_conf = 5e-3;
 	     // DIAMOND NO = 7.
-             // scl_dnu_conf = 5e-6;
-	     // DIAMOND NO = 9.
-             scl_dnu_conf  = 5e-6,
+             scl_dnu_conf = 1e-7;
              scl_dnu_conf2 = 0e0;
+	     // DIAMOND NO = 9.
+             // scl_dnu_conf  = 5e-8,
+             // scl_dnu_conf2 = 0e0;
 	     // SLS-2 NO = 9.
              // scl_dnu_conf = 1e-5;
 #else
@@ -734,7 +735,7 @@ void prt_bn(const param_type &bn_prms)
 
   n_prm = bn_prms.n_prm;
   fprintf(outf, "\n");
-  for (k = 0; k < n; k++) {
+  for (k = 0; k < n_prm; k++) {
     loc = get_loc(bn_prms.Fnum[k], 1) - 1;
     bn = get_bn(bn_prms.Fnum[k], 1, bn_prms.n[k]);
     if (bn_prms.n[k] == Sext)
@@ -750,7 +751,7 @@ void prt_bn(const param_type &bn_prms)
 	  fprintf(outf,
 		  "%-8s: multipole, l = %7.5f,"
 		  "\n          hom = (%2d, %12.5e, 0e0,",
-		  elem[loc].Name, elem[loc].L, j, bn, 0e0);
+		  elem[loc].Name, elem[loc].L, j, bn);
 	if (j > Sext) fprintf(outf, "\n                 ");
 	fprintf(outf, "%2d, %12.5e, 0e0,\n", j, bn);
 	if (j < n) fprintf(outf, "%2d, %12.5e, 0e0,\n", j, bn);
