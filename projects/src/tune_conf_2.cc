@@ -36,11 +36,11 @@ const double tpsa_eps = 1e-30;
 // DIAMOND               3,
 // DIAMOND with VMX      4,
 // DIAMOND-II 4-BA Ref   5,
-// DIAMOND-II 6-HMBA     6,
-// DIAMOND-II 6-RB-BA    7,
-// DIAMOND-II 8-RB-BA    8,
-// DIAMOND-II 8-HMBA     9.
-// DIAMOND-II 8-HMBA II 10.
+// DIAMOND-II H-6-BA     6,
+// DIAMOND-II RB-6-BA    7,
+// DIAMOND-II RB-8-BA    8,
+// DIAMOND-II H-8-BA     9.
+// DIAMOND-II H-8-BA II 10.
 // ALS-U                11.
 const int lat_case = 6, n_prt = 8;
 
@@ -48,7 +48,7 @@ const int lat_case = 6, n_prt = 8;
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.8, 5.4},
-     {10.6, 8.6}, {18.0, 5.0}, {14.0, 4.5}, {4.6, 7.6},
+     {10.6, 8.6},  {8.6, 5.0}, {14.0, 4.5}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
@@ -67,14 +67,14 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {1e0,   1e0,   1e-3},
-             scl_dnu[]    = {1e-10, 1e-10, 1e-10, 1e-10},
-             scl_ksi[]    = {1e5,   1e-10, 1e-10},
+const double scl_h[]      = {0e0,   0e0,   0e-3},
+             scl_dnu[]    = {0e-10, 0e-10, 0e-10, 0e-10},
+             scl_ksi[]    = {1e5,   0e-10, 0e-10},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
              // scl_dnu_conf = 1e-3;
-// 8-H-MBA_II:
+// H-8-BA_II:
 #if DNU
 	     // NO = 7.
              // scl_dnu_conf = 1e-2;
@@ -98,7 +98,7 @@ const double scl_h[]      = {1e0,   1e0,   1e-3},
 #else
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e0,
+             scl_dnu_conf = 1e2,
              scl_dnu_conf2 = 0e0;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
@@ -1746,7 +1746,7 @@ void fit_tune(const double nu_x, const double nu_y)
 
   switch (lat_case) {
   case 6:
-    // DIAMOND-II, 6-RB-BA.
+    // DIAMOND-II, RB-6-BA.
     // Low dispersion quadrupoles.
     b2_Fnum.push_back(get_Fnum("qd22"));
     b2_Fnum.push_back(get_Fnum("qf11"));
@@ -1868,28 +1868,23 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("s3",  3, 5e5, 1.0);
     break;
   case 6:
-    // DIAMOND-II 6-HMBA.
+    // DIAMOND-II H-6-BA.
     n_cell = 2;
 
-    bn_prms.add_prm("sfa",  3, 1e4, 1.0);
-    bn_prms.add_prm("sfb",  3, 1e4, 1.0);
-    bn_prms.add_prm("sda",  3, 1e4, 1.0);
-    bn_prms.add_prm("sda2",  3, 1e4, 1.0);
-    bn_prms.add_prm("sdb",  3, 1e4, 1.0);
-    bn_prms.add_prm("sdb2",  3, 1e4, 1.0);
+    bn_prms.add_prm("sf",  3, 1e4, 1.0);
+    bn_prms.add_prm("sda", 3, 1e4, 1.0);
+    bn_prms.add_prm("sdb", 3, 1e4, 1.0);
 
     if (!fit_ksi) {
-      bn_prms.add_prm("s1a", 3, 1e4, 1.0);
-      bn_prms.add_prm("s1b", 3, 1e4, 1.0);
-      bn_prms.add_prm("s2a", 3, 1e4, 1.0);
-      bn_prms.add_prm("s2b", 3, 1e4, 1.0);
-      bn_prms.add_prm("s3",  3, 1e4, 1.0);
-      bn_prms.add_prm("s4",  3, 1e4, 1.0);
-      bn_prms.add_prm("s5",  3, 1e4, 1.0);
+      bn_prms.add_prm("s1", 3, 1e4, 1.0);
+      bn_prms.add_prm("s2", 3, 1e4, 1.0);
+      bn_prms.add_prm("s3", 3, 1e4, 1.0);
+      bn_prms.add_prm("s4", 3, 1e4, 1.0);
+      bn_prms.add_prm("s5", 3, 1e4, 1.0);
     }
     break;
   case 7:
-    // DIAMOND-II 6-RB-BA.
+    // DIAMOND-II RB-6-BA.
     n_cell = 2;
 
     bn_prms.add_prm("sd",   3, 5e5, 1.0);
@@ -1901,7 +1896,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("syy",  3, 5e5, 1.0);
     break;
   case 8:
-    // DIAMOND-II 8-RB-BA.
+    // DIAMOND-II RB-8-BA.
     n_cell = 2;
 
     bn_prms.add_prm("sfh",  3, 5e5, 1.0);
@@ -1913,7 +1908,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("syyh", 3, 5e5, 1.0);
     break;
   case 9:
-    // DIAMOND-II 8-BA.
+    // DIAMOND-II H-8-BA.
     n_cell = 2;
 
     if (!oct) {
@@ -1941,7 +1936,7 @@ void lat_select(const int lat_case)
     }
     break;
   case 10:
-    // DIAMOND-II 8-BA II.
+    // DIAMOND-II H-8-BA II.
     n_cell = 2;
 
     bn_prms.add_prm("s1",  3, 5e5, 1.0);
