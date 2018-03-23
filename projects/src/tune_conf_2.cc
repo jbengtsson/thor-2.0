@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -48,7 +48,7 @@ const int lat_case = 6, n_prt = 8;
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.8, 5.4},
-     {10.6, 8.6},  {8.6, 5.0}, {14.0, 4.5}, {4.6, 7.6},
+     {10.6, 8.6},  {8.9, 3.0}, {14.0, 4.5}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
@@ -1992,7 +1992,7 @@ int main(int argc, char *argv[])
   IBS_on    = false;
 
   if (argc != 3) {
-    printf("bad command line, no of arguments: %d\n", argc);
+    printf("\n*** bad command line, no of arguments: %d\n", argc);
     exit(0);
   }
 
@@ -2087,7 +2087,7 @@ int main(int argc, char *argv[])
   }
 
   // Step is 1.0 for conjugated gradient method.
-  bn_prms.bn_tol    = 1e-1;
+  bn_prms.bn_tol    = 1e-3;
   bn_prms.svd_n_cut = 0;
   bn_prms.step      = 1.0;
 
