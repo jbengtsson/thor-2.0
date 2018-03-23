@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 9
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -68,8 +68,8 @@ const double
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
 const double scl_h[]      = {0e0,   0e0,   0e-3},
-             scl_dnu[]    = {0e-10, 0e-10, 0e-10, 0e-10},
-             scl_ksi[]    = {1e5,   0e-10, 0e-10},
+             scl_dnu[]    = {1e-5, 1e-5, 1e-5, 0e-5},
+             scl_ksi[]    = {1e5,  0e-5, 0e-5},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -99,7 +99,7 @@ const double scl_h[]      = {0e0,   0e0,   0e-3},
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
              scl_dnu_conf = 1e2,
-             scl_dnu_conf2 = 0e0;
+             scl_dnu_conf2 = 0e-10;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
 #endif
@@ -680,13 +680,13 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else if (i-1 == n_h+2+3+2)
       printf("|dnu|\n");
     else if (i-1 == n_h+2+3+2+1)
-      printf("tune confinement\n");
-    else if (i-1 == n_h+2+3+2+1+4)
       printf("cross terms\n");
-    else if (i-1 == n_h+2+3+2+1+4+3)
+    else if (i-1 == n_h+2+3+2+1+3)
       printf("3rd order chromaticity\n");
-    else if (i-1 == n_h+2+3+2+1+4+3+2) {
+    else if (i-1 == n_h+2+3+2+1+3+2)
       printf("ampl. dependant tune shift\n");
+    else if (i-1 == n_h+2+3+2+1+3+2+4) {
+      printf("tune confinement\n");
     }
 
     printf("%4d", i);
