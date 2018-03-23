@@ -53,7 +53,7 @@ const double
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
     // {{2.0e-3, 2.0e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {6e-3, 3e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {8e-3, 3e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3},  {5e-3, 3e-3}},
   delta_max[] =
     {3e-2,   4e-2, 3e-2, 3e-2,
@@ -68,8 +68,8 @@ const double
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
 const double scl_h[]      = {0e0,   0e0,   0e-3},
-             scl_dnu[]    = {1e-5, 1e-5, 1e-5, 0e-5},
-             scl_ksi[]    = {1e5,  0e-5, 0e-5},
+             scl_dnu[]    = {1e-4, 1e-4, 1e-4, 0e-4},
+             scl_ksi[]    = {1e5,  1e-4, 1e-4},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
