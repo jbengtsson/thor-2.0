@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -68,7 +68,7 @@ const double
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
 const double scl_h[]      = {0e0,   0e0,   0e-3},
-             scl_dnu[]    = {0e-4, 0e-4, 0e-4, 0e-4},
+             scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
              scl_ksi[]    = {1e5,  0e-4, 0e-4},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
