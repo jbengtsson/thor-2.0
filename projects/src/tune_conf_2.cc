@@ -15,7 +15,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU       1
+#define DNU       0
 #define THREE_DIM 0
 
 
@@ -744,7 +744,7 @@ void prt_bn(const param_type &bn_prms)
 	      ", k = %12.5e, n = nsext, Method = Meth;\n",
 	      elem[loc].Name, elem[loc].L, bn);
     else {
-      n = elem[k].mpole->order;
+      n = elem[loc].mpole->order;
       for (j = Sext; j <= n; j++) {
 	bn = get_bn(bn_prms.Fnum[k], 1, j);
 	if (j == Sext)
@@ -1414,13 +1414,13 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
     std::cout << std::scientific << std::setprecision(3)
 	      << std::setw(11) << w[i];
     if (i % 10 == 0) std::cout << "\n";
-    if (fabs(w[i]) < 1e-10) {
+    if (fabs(w[i]) < 1e-13) {
       w[i] = 0e0; std::cout << " (zeroed)  ";
     }
   }
   if (n_bn % 10 != 0) std::cout << "\n";
 
-  dsvbksb(U, w, V, n_bn, n_bn, bn_prms.bn, bn_prms.dbn);
+  dsvbksb(U, w, V, m, n_bn, b, bn_prms.dbn);
 
   free_dvector(w, 1, n_bn);
   free_dmatrix(U, 1, m, 1, n_bn); free_dmatrix(V, 1, n_bn, 1, n_bn);

@@ -593,7 +593,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   double **A_ext;
 
   const bool   prt = false;
-  const double eps = 1e-10, s_cut_ext = 1e-18;
+  const double eps = 1e-11, s_cut_ext = 1e-18;
 
   mpn = m + n;
 
