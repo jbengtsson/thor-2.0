@@ -48,7 +48,7 @@ const int lat_case = 6, n_prt = 8;
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.8, 5.4},
-     {10.6, 8.6},  {8.9, 3.0}, {14.0, 4.5}, {4.6, 7.6},
+     {10.6, 8.6}, {11.5, 3.0}, {14.0, 4.5}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
@@ -67,7 +67,7 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {0e0,   0e0,   0e-3},
+const double scl_h[]      = {1e0,   1e0,   1e-3},
              scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
              scl_ksi[]    = {1e5,  0e-4, 0e-4},
 // 6BA_1-2-jn-match.
@@ -753,7 +753,7 @@ void prt_bn(const param_type &bn_prms)
 		  "\n          hom = (%2d, %12.5e, 0e0,",
 		  elem[loc].Name, elem[loc].L, j, bn);
 	if (j > Sext) fprintf(outf, "\n                 ");
-	fprintf(outf, "%2d, %12.5e, 0e0,\n", j, bn);
+	fprintf(outf, "                 %2d, %12.5e, 0e0,\n", j, bn);
 	if (j < n) fprintf(outf, "%2d, %12.5e, 0e0,\n", j, bn);
 	if (j == n)
 	  fprintf(outf,
@@ -1398,7 +1398,7 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
   for (i = 1; i <= m; i++)
     b[i] = -f[i];
 
-#if 0
+#if 1
   SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
 	  bn_prms.dbn);
 #else
@@ -1906,6 +1906,12 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("s3", 3, 1e4, 1.0);
       bn_prms.add_prm("s4", 3, 1e4, 1.0);
       bn_prms.add_prm("s5", 3, 1e4, 1.0);
+
+      bn_prms.add_prm("mp1",  4, 1e4, 1.0);
+      bn_prms.add_prm("mp2",  4, 1e4, 1.0);
+      bn_prms.add_prm("mp3",  4, 1e4, 1.0);
+      bn_prms.add_prm("mp4",  4, 1e4, 1.0);
+      bn_prms.add_prm("mp5",  4, 1e4, 1.0);
     }
     break;
   case 7:
