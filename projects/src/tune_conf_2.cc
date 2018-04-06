@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 9
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -750,12 +750,13 @@ void prt_bn(const param_type &bn_prms)
 	if (j == Sext)
 	  fprintf(outf,
 		  "%-8s: multipole, l = %7.5f,"
-		  "\n          hom = (%2d, %12.5e, 0e0,",
+		  "\n          hom = (%2d, %12.5e, 0e0",
 		  elem[loc].Name, elem[loc].L, j, bn);
-	if (j > Sext) fprintf(outf, "\n                 ");
-	fprintf(outf, "                 %2d, %12.5e, 0e0,\n", j, bn);
-	if (j < n) fprintf(outf, "%2d, %12.5e, 0e0,\n", j, bn);
-	if (j == n)
+	else
+	  fprintf(outf, "                 %2d, %12.5e, 0e0", j, bn);
+	if (j < n)
+	  fprintf(outf, ",\n");
+	else
 	  fprintf(outf,
 		  "),"
 		  "\n          n = nsext, Method = Meth;\n");
