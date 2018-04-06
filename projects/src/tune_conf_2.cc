@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 9
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -1902,12 +1902,12 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sdb", 3, 1e4, 1.0);
 
     if (!fit_ksi) {
-      bn_prms.add_prm("s1", 3, 1e4, 1.0);
-      bn_prms.add_prm("s2", 3, 1e4, 1.0);
-      bn_prms.add_prm("s3", 3, 1e4, 1.0);
-      bn_prms.add_prm("s4", 3, 1e4, 1.0);
-      bn_prms.add_prm("s5", 3, 1e4, 1.0);
-      bn_prms.add_prm("s6", 3, 1e4, 1.0);
+      // bn_prms.add_prm("s1", 3, 1e4, 1.0);
+      // bn_prms.add_prm("s2", 3, 1e4, 1.0);
+      // bn_prms.add_prm("s3", 3, 1e4, 1.0);
+      // bn_prms.add_prm("s4", 3, 1e4, 1.0);
+      // bn_prms.add_prm("s5", 3, 1e4, 1.0);
+      // bn_prms.add_prm("s6", 3, 1e4, 1.0);
 
       bn_prms.add_prm("mp1",  4, 1e4, 1.0);
       bn_prms.add_prm("mp2",  4, 1e4, 1.0);
@@ -2076,7 +2076,7 @@ int main(int argc, char *argv[])
   get_nu_ksi();
 
   for (j = 0; j < 2; j++)
-    twoJ[j] =	sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
+    twoJ[j] = sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
 
   Id_scl.identity();
   Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
