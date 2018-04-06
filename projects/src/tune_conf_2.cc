@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 4
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus, nus_scl;
 
-const bool   fit_ksi = true, symm = !false, scale = !true, c_g = true,
+const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true,
              oct = !false;
 const double tpsa_eps = 1e-30;
 
@@ -67,7 +67,7 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {0e0,  0e0,   1e-3},
+const double scl_h[]      = {0e0,  0e0,  0e-3},
              scl_dnu[]    = {0e-4, 0e-4, 0e-4, 0e-4},
              scl_ksi[]    = {1e5,  0e-4, 0e-4},
 // 6BA_1-2-jn-match.
@@ -2028,6 +2028,11 @@ int main(int argc, char *argv[])
     printf("\n*** bad command line, no of arguments: %d\n", argc);
     exit(0);
   }
+
+  printf("no of prms: %d\n", argc);
+  for (j = 0; j < argc; j++)
+    printf("%s\n", argv[j]);
+  exit(0);
 
   rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
 
