@@ -307,25 +307,29 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 		      elem[ind].kick_map->tabx, elem[ind].kick_map->tabz,
 		      elem[ind].kick_map->thetax, elem[ind].kick_map->thetaz);
 
-      if (elem[ind].kick_map->method == 2) {
-	elem[ind].kick_map->tx = dmatrix(1, elem[ind].kick_map->nz, 1,
-					 elem[ind].kick_map->nx);
-	elem[ind].kick_map->tz = dmatrix(1, elem[ind].kick_map->nz, 1,
-					 elem[ind].kick_map->nx);
-	elem[ind].kick_map->tab1 = (double *)malloc((elem[ind].kick_map->nx)
-						    *sizeof(double));
-	elem[ind].kick_map->tab2 = (double *)malloc((elem[ind].kick_map->nz)
-						    *sizeof(double));
-	elem[ind].kick_map->f2x = dmatrix(1, elem[ind].kick_map->nz, 1,
-					  elem[ind].kick_map->nx);
-	elem[ind].kick_map->f2z = dmatrix(1, elem[ind].kick_map->nz, 1,
-					  elem[ind].kick_map->nx);
-	Matrices4Spline(elem[ind].kick_map);
+	if (elem[ind].kick_map->method == 2) {
+	  elem[ind].kick_map->tx = dmatrix(1, elem[ind].kick_map->nz, 1,
+					   elem[ind].kick_map->nx);
+	  elem[ind].kick_map->tz = dmatrix(1, elem[ind].kick_map->nz, 1,
+					   elem[ind].kick_map->nx);
+	  elem[ind].kick_map->tab1 = (double *)malloc((elem[ind].kick_map->nx)
+						      *sizeof(double));
+	  elem[ind].kick_map->tab2 = (double *)malloc((elem[ind].kick_map->nz)
+						      *sizeof(double));
+	  elem[ind].kick_map->f2x = dmatrix(1, elem[ind].kick_map->nz, 1,
+					    elem[ind].kick_map->nx);
+	  elem[ind].kick_map->f2z = dmatrix(1, elem[ind].kick_map->nz, 1,
+					    elem[ind].kick_map->nx);
+	  Matrices4Spline(elem[ind].kick_map);
 
-/*	free(tab1); free(tab2);
-	free_matrix(tx, 1, nz, 1, nx); free_matrix(tz, 1, nz, 1, nx);
-	free_matrix(f2x, 1, nz, 1, nx); free_matrix(f2z, 1, nz, 1, nx);*/
+	  // free(tab1); free(tab2);
+	  // free_matrix(tx, 1, nz, 1, nx); free_matrix(tz, 1, nz, 1, nx);
+	  // free_matrix(f2x, 1, nz, 1, nx); free_matrix(f2z, 1, nz, 1, nx);
       }
+      break;
+      case PS_Rot:
+	// Note, L is polymorphic
+	inf.getline(line, max_str); sscanf(line, "%lf", &L);
 	break;
       default:
 	std::cout << "rd_mfile: undefined element " << elem[ind].Name

@@ -155,6 +155,9 @@ void prt_mfile(const char file_name[])
 	fprintf(outf, " %3.1lf %1d %s\n",
 		elem[i].kick_map->scl, 2, elem[i].kick_map->file_name);
       break;
+    case PS_Rot:
+      prt_name(outf, i, PS_Rot, 0, 0);
+      break;
     default:
       printf("prt_mfile: unknown type %d\n", elem[i].kind);
       exit(1);

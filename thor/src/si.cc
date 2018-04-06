@@ -987,6 +987,8 @@ bool si(const long int i0, const long int i1, ss_vect<T> &x,
     case Kick_map:
       kick_map_pass(elem[i-1], x);
       break;
+    case PS_Rot:
+      break;
     default:
       std::cout << "si_templ: undefined element no "
 	   << std::setw(3) << i << " type = " << elem[i-1].kind << std::endl;

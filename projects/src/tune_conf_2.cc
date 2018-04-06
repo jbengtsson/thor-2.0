@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus, nus_scl;
 
-const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true,
+const bool   fit_ksi = true, symm = !false, scale = !true, c_g = true,
              oct = !false;
 const double tpsa_eps = 1e-30;
 
@@ -53,7 +53,7 @@ const double
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
     // {{2.0e-3, 2.0e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {8e-3, 3e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {7e-3, 3e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3},  {5e-3, 3e-3}},
   delta_max[] =
     {3e-2,   4e-2, 3e-2, 3e-2,
@@ -67,8 +67,8 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {1e0,   1e0,   1e-3},
-             scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
+const double scl_h[]      = {0e0,  0e0,   1e-3},
+             scl_dnu[]    = {0e-4, 0e-4, 0e-4, 0e-4},
              scl_ksi[]    = {1e5,  0e-4, 0e-4},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
@@ -1907,6 +1907,7 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("s3", 3, 1e4, 1.0);
       bn_prms.add_prm("s4", 3, 1e4, 1.0);
       bn_prms.add_prm("s5", 3, 1e4, 1.0);
+      bn_prms.add_prm("s6", 3, 1e4, 1.0);
 
       bn_prms.add_prm("mp1",  4, 1e4, 1.0);
       bn_prms.add_prm("mp2",  4, 1e4, 1.0);

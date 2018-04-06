@@ -18,7 +18,8 @@ const double C_gamma = 4.0*M_PI*r_e/(3.0*cube(1e-9*m_e));
 
 // Element type codes.
 enum elemkind { Marker = -1, Drift = 0, Mpole = 1, Cavity = 2,
-		Thinkick = 3, Wiggler = 4, Undef = 5, Kick_map = 6 };
+		Thinkick = 3, Wiggler = 4, Undef = 5, Kick_map = 6,
+		PS_Rot = 7 };
 
 // Integration methods.
 enum intmeth  { Linear = 0, Second = 2, Fourth = 4 };
