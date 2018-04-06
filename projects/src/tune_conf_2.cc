@@ -2029,11 +2029,6 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  printf("no of prms: %d\n", argc);
-  for (j = 0; j < argc; j++)
-    printf("%s\n", argv[j]);
-  exit(0);
-
   rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
 
   // Initialize the symplectic integrator after energy has been defined.
