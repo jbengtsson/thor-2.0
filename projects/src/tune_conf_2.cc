@@ -53,7 +53,7 @@ const double
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
     // {{2.0e-3, 2.0e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {8e-3, 3e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {7e-3, 3e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3},  {5e-3, 3e-3}},
   delta_max[] =
     {3e-2,   4e-2, 3e-2, 3e-2,
@@ -67,7 +67,7 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {1e-1, 1e-1, 1e-3},
+const double scl_h[]      = {1e0, 1e0, 1e-3},
              scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
              scl_ksi[]    = {1e5,  0e-4, 0e-4},
 // 6BA_1-2-jn-match.
@@ -98,7 +98,7 @@ const double scl_h[]      = {1e-1, 1e-1, 1e-3},
 #else
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e2,
+             scl_dnu_conf = 1e3,
              scl_dnu_conf2 = 0e-10;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
@@ -1903,12 +1903,12 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sdb", 3, 1e4, 1.0);
 
     if (!fit_ksi) {
-      bn_prms.add_prm("s1", 4, 1e4, 1.0);
-      bn_prms.add_prm("s2", 4, 1e4, 1.0);
-      bn_prms.add_prm("s3", 4, 1e4, 1.0);
-      bn_prms.add_prm("s4", 4, 1e4, 1.0);
-      bn_prms.add_prm("s5", 4, 1e4, 1.0);
-      bn_prms.add_prm("s6", 4, 1e4, 1.0);
+      // bn_prms.add_prm("s1", 4, 1e4, 1.0);
+      // bn_prms.add_prm("s2", 4, 1e4, 1.0);
+      // bn_prms.add_prm("s3", 4, 1e4, 1.0);
+      // bn_prms.add_prm("s4", 4, 1e4, 1.0);
+      // bn_prms.add_prm("s5", 4, 1e4, 1.0);
+      // bn_prms.add_prm("s6", 4, 1e4, 1.0);
 
       bn_prms.add_prm("mp1",  4, 1e4, 1.0);
       bn_prms.add_prm("mp2",  4, 1e4, 1.0);
@@ -2064,10 +2064,10 @@ int main(int argc, char *argv[])
   printf("dnu/dJ:         %d\n", DNU);
   printf("three_dim:      %d\n", THREE_DIM);
   printf("symmetric:      %d\n", symm);
-  printf("\nA_max [mm]:     %7.2f, %7.2f\n",
+  printf("\nA_max [mm]:  %7.2f, %7.2f\n",
 	 A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
   printf("delta_max:      %7.1e\n", delta_max[lat_case-1]);
-  printf("beta_inj:       %7.2f, %7.2f\n",
+  printf("beta_inj:    %7.2f, %7.2f\n",
 	 beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
   if (c_g)
     printf("Conj. Grad.:    %d\n", n_cut);
