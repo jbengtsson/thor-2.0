@@ -67,7 +67,7 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {1e-1, 1e-1, 0e-3},
+const double scl_h[]      = {1e-1, 1e-1, 1e-3},
              scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
              scl_ksi[]    = {1e5,  0e-4, 0e-4},
 // 6BA_1-2-jn-match.
@@ -1903,12 +1903,12 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sdb", 3, 1e4, 1.0);
 
     if (!fit_ksi) {
-      // bn_prms.add_prm("s1", 3, 1e4, 1.0);
-      // bn_prms.add_prm("s2", 3, 1e4, 1.0);
-      // bn_prms.add_prm("s3", 3, 1e4, 1.0);
-      // bn_prms.add_prm("s4", 3, 1e4, 1.0);
-      // bn_prms.add_prm("s5", 3, 1e4, 1.0);
-      // bn_prms.add_prm("s6", 3, 1e4, 1.0);
+      bn_prms.add_prm("s1", 4, 1e4, 1.0);
+      bn_prms.add_prm("s2", 4, 1e4, 1.0);
+      bn_prms.add_prm("s3", 4, 1e4, 1.0);
+      bn_prms.add_prm("s4", 4, 1e4, 1.0);
+      bn_prms.add_prm("s5", 4, 1e4, 1.0);
+      bn_prms.add_prm("s6", 4, 1e4, 1.0);
 
       bn_prms.add_prm("mp1",  4, 1e4, 1.0);
       bn_prms.add_prm("mp2",  4, 1e4, 1.0);

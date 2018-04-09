@@ -11,6 +11,8 @@ queue="ap-high.q"
 
 dir=$THOR_LIB/projects/src
 
+cd $prm1/dnu
+
 \rm tune_conf_2.cmd.o*
 
 #qsub -l h_rt=$t2 -q $queue $dir/sls_2.cmd
