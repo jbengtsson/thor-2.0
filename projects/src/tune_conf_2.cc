@@ -53,7 +53,7 @@ const double
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
     // {{2.0e-3, 2.0e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {7e-3, 3e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {8e-3, 3e-3},  {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3},  {5e-3, 3e-3}},
   delta_max[] =
     {3e-2,   4e-2, 3e-2, 3e-2,
@@ -67,8 +67,8 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {0e0,  0e0,  0e-3},
-             scl_dnu[]    = {0e-4, 0e-4, 0e-4, 0e-4},
+const double scl_h[]      = {1e-1, 1e-1, 0e-3},
+             scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
              scl_ksi[]    = {1e5,  0e-4, 0e-4},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
@@ -685,9 +685,10 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
       printf("3rd order chromaticity\n");
     else if (i-1 == n_h+2+3+2+1+3+2)
       printf("ampl. dependant tune shift\n");
-    else if (i-1 == n_h+2+3+2+1+3+2+4) {
+    else if (i-1 == n_h+2+3+2+1+3+2+4)
       printf("tune confinement\n");
-    }
+    else if (i-1 == n_h+2+3+2+1+3+2+4+4)
+      printf("ampl. dependant tune shift\n");
 
     printf("%4d", i);
     for (j = 1; j <= n_b2; j++)
@@ -2063,10 +2064,10 @@ int main(int argc, char *argv[])
   printf("dnu/dJ:         %d\n", DNU);
   printf("three_dim:      %d\n", THREE_DIM);
   printf("symmetric:      %d\n", symm);
-  printf("\nA_max:          %7.1e, %7.1e\n",
+  printf("\nA_max [mm]:     %7.2f, %7.2f\n",
 	 A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
   printf("delta_max:      %7.1e\n", delta_max[lat_case-1]);
-  printf("beta_inj:       %7.1e, %7.1e\n",
+  printf("beta_inj:       %7.2f, %7.2f\n",
 	 beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
   if (c_g)
     printf("Conj. Grad.:    %d\n", n_cut);
