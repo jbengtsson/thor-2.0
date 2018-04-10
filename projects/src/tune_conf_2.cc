@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -98,7 +98,7 @@ const double scl_h[]      = {1e0, 1e0, 1e-3},
 #else
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e3,
+             scl_dnu_conf = 1e0,
              scl_dnu_conf2 = 0e-10;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
@@ -725,6 +725,7 @@ void prt_b2(const std::vector<int> &b2_Fnum)
 
 void prt_bn(const param_type &bn_prms)
 {
+  bool     first = true;
   long int loc;
   int      j, k, n, n_prm;
   double   bn;
@@ -748,19 +749,22 @@ void prt_bn(const param_type &bn_prms)
       n = elem[loc].mpole->order;
       for (j = Sext; j <= n; j++) {
 	bn = get_bn(bn_prms.Fnum[k], 1, j);
-	if (j == Sext)
+	if (first && (bn != 0e0)) {
+	  first = false;
 	  fprintf(outf,
 		  "%-8s: multipole, l = %7.5f,"
 		  "\n          hom = (%2d, %12.5e, 0e0",
 		  elem[loc].Name, elem[loc].L, j, bn);
-	else
-	  fprintf(outf, "                 %2d, %12.5e, 0e0", j, bn);
-	if (j < n)
-	  fprintf(outf, ",\n");
-	else
+	} else if (bn != 0e0)
+	  fprintf(outf,
+		  ",\n"
+		  "                 %2d, %12.5e, 0e0", j, bn);
+	if (j == n) {
 	  fprintf(outf,
 		  "),"
 		  "\n          n = nsext, Method = Meth;\n");
+	  first = true;
+	}
       }
     }
   }
