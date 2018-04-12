@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -42,7 +42,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II H-8-BA     9.
 // DIAMOND-II H-8-BA II 10.
 // ALS-U                11.
-const int lat_case = 6, n_prt = 8;
+const int lat_case = 7, n_prt = 8;
 
 // Center of straight.
 const double
@@ -69,7 +69,7 @@ const double
 // DIAMOND-II.
 const double scl_h[]      = {1e0, 1e0, 1e-3},
              scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
-             scl_ksi[]    = {1e5,  0e-4, 0e-4},
+             scl_ksi[]    = {1e5,  1e-4, 1e-4},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -98,7 +98,7 @@ const double scl_h[]      = {1e0, 1e0, 1e-3},
 #else
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e0,
+             scl_dnu_conf = 1e2,
              scl_dnu_conf2 = 0e-10;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
@@ -1907,13 +1907,6 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sdb", 3, 1e4, 1.0);
 
     if (!fit_ksi) {
-      // bn_prms.add_prm("s1", 4, 1e4, 1.0);
-      // bn_prms.add_prm("s2", 4, 1e4, 1.0);
-      // bn_prms.add_prm("s3", 4, 1e4, 1.0);
-      // bn_prms.add_prm("s4", 4, 1e4, 1.0);
-      // bn_prms.add_prm("s5", 4, 1e4, 1.0);
-      // bn_prms.add_prm("s6", 4, 1e4, 1.0);
-
       bn_prms.add_prm("mp1",  4, 1e4, 1.0);
       bn_prms.add_prm("mp2",  4, 1e4, 1.0);
       bn_prms.add_prm("mp3",  4, 1e4, 1.0);
@@ -1925,13 +1918,19 @@ void lat_select(const int lat_case)
     // DIAMOND-II RB-6-BA.
     n_cell = 2;
 
-    bn_prms.add_prm("sd",   3, 5e5, 1.0);
-    bn_prms.add_prm("sfm",  3, 5e5, 1.0);
-    bn_prms.add_prm("sdm",  3, 5e5, 1.0);
-    bn_prms.add_prm("sxx",  3, 5e5, 1.0);
-    bn_prms.add_prm("sxya", 3, 5e5, 1.0);
-    bn_prms.add_prm("sxyb", 3, 5e5, 1.0);
-    bn_prms.add_prm("syy",  3, 5e5, 1.0);
+    bn_prms.add_prm("sd",  3, 5e5, 1.0);
+    bn_prms.add_prm("sfm", 3, 5e5, 1.0);
+    bn_prms.add_prm("sdm", 3, 5e5, 1.0);
+
+    if (!fit_ksi) {
+      bn_prms.add_prm("sxx",  4, 5e5, 1.0);
+      bn_prms.add_prm("sxy1", 4, 5e5, 1.0);
+      bn_prms.add_prm("sxy2", 4, 5e5, 1.0);
+      bn_prms.add_prm("sxy3", 4, 5e5, 1.0);
+      bn_prms.add_prm("syy1", 4, 5e5, 1.0);
+      bn_prms.add_prm("syy2", 4, 5e5, 1.0);
+      bn_prms.add_prm("syy3", 4, 5e5, 1.0);
+    }
     break;
   case 8:
     // DIAMOND-II RB-8-BA.
@@ -2120,6 +2119,12 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
+    danot_(NO-1);
+    get_map_n(n_cell);
+    danot_(NO);
+    K = MapNorm(Map, g, A1, A0, Map_res, 1);
+    CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
+
     prt_h_K();
     exit(0);
   }
