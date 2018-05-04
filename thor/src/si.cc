@@ -374,7 +374,7 @@ template<typename T>
 void bend_HE_fringe(double h_bend, double phi, double gap, ss_vect<T> &x)
 {
   x[px_] += h_bend*tan(dtor(phi))*x[x_];
-  if (true) {
+  if (!true) {
     // warning: => diverging Taylor map (see SSC-141)
     // x[py_] -=
     //   h_bend*tan(dtor(phi)-get_psi(h_bend, phi, gap))*x[y_]/(1.0+x[delta_]);
