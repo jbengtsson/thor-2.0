@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus, nus_scl;
 
-const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true,
+const bool   fit_ksi = true, symm = !false, scale = !true, c_g = true,
              oct = !false;
 const double tpsa_eps = 1e-30;
 
@@ -48,7 +48,7 @@ const int lat_case = 6, n_prt = 8;
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.8, 5.4},
-     {10.6, 8.6}, {11.5, 3.0}, {9.2, 3.2}, {4.6, 7.6},
+     {10.6, 8.6}, {12.0, 2.9}, {9.2, 3.2}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
@@ -66,7 +66,8 @@ const double
 //              scl_ksi[]    = {1e5,  1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
-const double scl_h[]      = {1e0, 1e0, 1e-3},
+// const double scl_h[]      = {1e0, 1e0, 1e-3},
+const double scl_h[]      = {1e0, 1e-5, 1e-5},
              scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
              scl_ksi[]    = {1e5,  1e-4, 1e-4},
 // 6BA_1-2-jn-match.
@@ -1901,16 +1902,22 @@ void lat_select(const int lat_case)
     // DIAMOND-II H-6-BA.
     n_cell = 2;
 
-    bn_prms.add_prm("sf",  3, 1e4, 1.0);
-    bn_prms.add_prm("sda", 3, 1e4, 1.0);
-    bn_prms.add_prm("sdb", 3, 1e4, 1.0);
+    if (fit_ksi) {
+      bn_prms.add_prm("sf",  3, 1e4, 1.0);
+      bn_prms.add_prm("sda", 3, 1e4, 1.0);
+      bn_prms.add_prm("sdb", 3, 1e4, 1.0);
+    } else {
+      bn_prms.add_prm("mp1", 4, 1e5, 1.0);
+      bn_prms.add_prm("mp2", 4, 1e5, 1.0);
+      bn_prms.add_prm("mp3", 4, 1e5, 1.0);
+      bn_prms.add_prm("mp4", 4, 1e5, 1.0);
+      bn_prms.add_prm("mp5", 4, 1e5, 1.0);
 
-    if (!fit_ksi) {
-      bn_prms.add_prm("mp1",  4, 1e4, 1.0);
-      bn_prms.add_prm("mp2",  4, 1e4, 1.0);
-      bn_prms.add_prm("mp3",  4, 1e4, 1.0);
-      bn_prms.add_prm("mp4",  4, 1e4, 1.0);
-      bn_prms.add_prm("mp5",  4, 1e4, 1.0);
+      // bn_prms.add_prm("s5",  4, 1e5, 1.0);
+
+      bn_prms.add_prm("sf",  4, 1e5, 1.0);
+      bn_prms.add_prm("sda", 4, 1e5, 1.0);
+      bn_prms.add_prm("sdb", 4, 1e5, 1.0);
     }
     break;
   case 7:
@@ -2135,9 +2142,9 @@ int main(int argc, char *argv[])
 
   if (fit_ksi) {
     no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
+  } else {
+    no_mpoles(Oct); no_mpoles(Dodec);
   }
-
-  // no_mpoles(Oct); no_mpoles(Dodec);
 
   bn_prms.ini_prm();
 
