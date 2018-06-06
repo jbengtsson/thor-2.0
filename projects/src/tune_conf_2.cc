@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 4
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus, nus_scl;
 
-const bool   fit_ksi = true, symm = !false, scale = !true, c_g = true,
+const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true,
              oct = !false;
 const double tpsa_eps = 1e-30;
 
