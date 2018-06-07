@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 9
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -48,11 +48,11 @@ const int lat_case = 6, n_prt = 8;
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.8, 5.4},
-     {10.6, 8.6}, {12.0, 2.9}, {9.2, 3.2}, {4.6, 7.6},
+     {10.6, 8.6}, {12.0, 2.9},  {9.2, 3.2}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {7e-3, 3e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {6e-3, 3e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3}, {5e-3, 3e-3}},
   delta_max[] =
     {3e-2,   4e-2, 3e-2, 3e-2,
@@ -69,7 +69,8 @@ const double
 // const double scl_h[]      = {1e0, 1e0, 1e-3},
 const double scl_h[]      = {1e0, 1e-5, 1e-5},
              scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
-             scl_ksi[]    = {1e5,  1e-4, 1e-4},
+             // scl_ksi[]    = {1e5,  1e-4, 1e-4},
+             scl_ksi[]    = {1e5,  1e-6, 1e-6},
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -1915,9 +1916,9 @@ void lat_select(const int lat_case)
 
       // bn_prms.add_prm("s5",  4, 1e5, 1.0);
 
-      bn_prms.add_prm("sf",  4, 1e5, 1.0);
-      bn_prms.add_prm("sda", 4, 1e5, 1.0);
-      bn_prms.add_prm("sdb", 4, 1e5, 1.0);
+      // bn_prms.add_prm("sf",  4, 1e5, 1.0);
+      // bn_prms.add_prm("sda", 4, 1e5, 1.0);
+      // bn_prms.add_prm("sdb", 4, 1e5, 1.0);
     }
     break;
   case 7:
@@ -2074,7 +2075,7 @@ int main(int argc, char *argv[])
   printf("three_dim:      %d\n", THREE_DIM);
   printf("symmetric:      %d\n", symm);
   printf("\nA_max [mm]:  %7.2f, %7.2f\n",
-	 A_max[lat_case-1][X_], A_max[lat_case-1][Y_]);
+	 1e3*A_max[lat_case-1][X_], 1e3*A_max[lat_case-1][Y_]);
   printf("delta_max:      %7.1e\n", delta_max[lat_case-1]);
   printf("beta_inj:    %7.2f, %7.2f\n",
 	 beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
