@@ -16,7 +16,7 @@ int no_tps = NO,
 #endif
 
 #define DNU       0
-#define THREE_DIM 0
+#define THREE_DIM 1
 
 
 extern tps          K, g;
@@ -55,9 +55,9 @@ const double
      {  5e-3,   3e-3}, {7e-3, 3e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3}, {5e-3, 3e-3}},
   delta_max[] =
-    {3e-2,   4e-2, 3e-2, 3e-2,
-     3e-2, 1.5e-2, 3e-2, 3e-2,
-     3e-2,   3e-2, 4e-2};
+    {3e-2, 4e-2, 3e-2, 3e-2,
+     3e-2, 3e-2, 3e-2, 3e-2,
+     3e-2, 3e-2, 4e-2};
 
 
 // SLS-2.
@@ -373,7 +373,10 @@ double gauss_quad_y0(const double x) { return 0e0; }
 
 double gauss_quad_y1(const double x) { return twoJ[Y_]; }
 
-double gauss_quad_z0(const double x, const double y) { return 0e0; }
+double gauss_quad_z0(const double x, const double y)
+{
+  return -delta_max[lat_case-1];
+}
 
 double gauss_quad_z1(const double x, const double y)
 {
@@ -1908,17 +1911,17 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("sda", 3, 1e4, 1.0);
       bn_prms.add_prm("sdb", 3, 1e4, 1.0);
     } else {
-      bn_prms.add_prm("mp1", 4, 1e5, 1.0);
-      bn_prms.add_prm("mp2", 4, 1e5, 1.0);
-      bn_prms.add_prm("mp3", 4, 1e5, 1.0);
-      bn_prms.add_prm("mp4", 4, 1e5, 1.0);
-      bn_prms.add_prm("mp5", 4, 1e5, 1.0);
+      bn_prms.add_prm("o1a", 4, 1e5, 1.0);
+      bn_prms.add_prm("o2a", 4, 1e5, 1.0);
+      bn_prms.add_prm("o1b", 4, 1e5, 1.0);
+      bn_prms.add_prm("o2b", 4, 1e5, 1.0);
+      bn_prms.add_prm("o3",  4, 1e5, 1.0);
 
       // bn_prms.add_prm("s5",  4, 1e5, 1.0);
 
-      // bn_prms.add_prm("sf",  4, 1e5, 1.0);
-      // bn_prms.add_prm("sda", 4, 1e5, 1.0);
-      // bn_prms.add_prm("sdb", 4, 1e5, 1.0);
+      bn_prms.add_prm("o4", 4, 1e5, 1.0);
+      bn_prms.add_prm("o5", 4, 1e5, 1.0);
+      bn_prms.add_prm("o6", 4, 1e5, 1.0);
     }
     break;
   case 7:
