@@ -423,7 +423,7 @@ tps f_gauss_quad_3d(double x, double y, double z)
     if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
   }
 
-  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
+  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*2e0*delta_max[lat_case-1]);
 #else
   dK = K_re;
   for (k = 0; k < ss_dim; k++)
@@ -438,7 +438,7 @@ tps f_gauss_quad_3d(double x, double y, double z)
   // std::cout << std::scientific << std::setprecision(3)
   // 	      << "\n |dK| = " << dK << "\n";
 
-  return dK/(twoJ[X_]*twoJ[Y_]*delta_max[lat_case-1]);
+  return dK/(twoJ[X_]*twoJ[Y_]*2e0*delta_max[lat_case-1]);
 #endif
 }
 
