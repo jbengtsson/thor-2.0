@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -68,7 +68,8 @@ const double
 // DIAMOND-II.
 // const double scl_h[]      = {1e0, 1e0, 1e-3},
 const double scl_h[]      = {1e0, 1e-5, 1e-5},
-             scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
+             // scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
+             scl_dnu[]    = {1e-6, 1e-6, 1e-6, 1e-6},
              // scl_ksi[]    = {1e5,  1e-4, 1e-4},
              scl_ksi[]    = {1e5,  1e-6, 1e-6},
 // 6BA_1-2-jn-match.
@@ -1390,6 +1391,7 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
 {
   int    n_bn, i, m;
   double chi2_ref, **A, *f, *b, *bn_ref;
+  std::vector<int> list;
 
   const int m_max = 100;
 
@@ -1409,8 +1411,11 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
     b[i] = -f[i];
 
 #if 1
-  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
-	  bn_prms.dbn);
+  // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
+  // 	  bn_prms.dbn);
+  for (i = 0; i < n_bn; i++)
+    list.push_back(i);
+  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, list, bn_prms.bn, bn_prms.dbn);
 #else
   double *w, **U, **V;
 
@@ -1922,6 +1927,10 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("o4", 4, 1e5, 1.0);
       bn_prms.add_prm("o5", 4, 1e5, 1.0);
       bn_prms.add_prm("o6", 4, 1e5, 1.0);
+
+      bn_prms.add_prm("o4", 6, 1e9, 1.0);
+      bn_prms.add_prm("o5", 6, 1e9, 1.0);
+      bn_prms.add_prm("o6", 6, 1e9, 1.0);
     }
     break;
   case 7:

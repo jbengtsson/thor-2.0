@@ -89,6 +89,10 @@ void SVD_lim(const int m, const int n, double **A, double *b,
 	     double *dcorr);
 
 void SVD_lim(const int m, const int n, double **A, double *b,
+	     const double *corr_max, const std::vector<int> &list,
+	     double *corr0, double *dcorr);
+
+void SVD_lim(const int m, const int n, double **A, double *b,
 	     const double *corr_max, const double s_cut, double *corr0,
 	     double *dcorr);
 
