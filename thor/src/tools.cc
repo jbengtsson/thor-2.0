@@ -946,11 +946,11 @@ void Bubble_Sort(std::vector<double> &w, std::vector<int> &order)
 }
 
 
-void SVD_zero_n_smallest(const int n, double *w, double **A_ext,
-			 double *b_ext, double **V, int &n_sing, int &n1)
+void SVD_zero_list(const int n, double *w, double **A_ext,
+		   double *b_ext, double **V, const std::vector<int> &svd_list,
+		   int &n_sing, int &n1)
 {
   int              i = 0, j;
-  double           w_min;
   std::vector<int>    order;
   std::vector<double> w1;
 
@@ -958,24 +958,16 @@ void SVD_zero_n_smallest(const int n, double *w, double **A_ext,
     order.push_back(j); w1.push_back(w[j]);
   }
   Bubble_Sort(w1, order);
-  printf("\nsingular values:\n");
-  for (j = 0; j < n; j++) {
+  for (j = 0; j < (int)svd_list.size(); j++)
     printf("%3d", order[j]);
-  }
   printf("\n");
-  exit(0);
-
-  // Find smallest singular value.
-  w_min = 1e30;
-  for (j = 1; j <= n; j++) {
-    if ((w[j] != 0e0) && (w[j] < w_min)) {
-      i = j; w_min = w[j];
-    }
+  printf("\nzeroing singular values:\n");
+  for (j = 0; j < (int)svd_list.size(); j++) {
+    printf("%3d %3d %11.3e\n",
+	   svd_list[j], order[svd_list[j]-1], w[order[svd_list[j]-1]]);
+    w[order[svd_list[j]-1]] = 0e0;
   }
 
-  std::cout << std::scientific << std::setprecision(3)
-	    << " w[" << i << "] = " << w[i] << " zeroed";
-  w[i] = 0e0;
   // if A is singular, extend with null space
   n_sing++; n1++;
   for (j = 1; j <= n; j++)
@@ -985,7 +977,7 @@ void SVD_zero_n_smallest(const int n, double *w, double **A_ext,
 
 
 void SVD_lim(const int m, const int n, double **A, double *b,
-	     const double corr_max[], const std::vector<int> &list,
+	     const double corr_max[], const std::vector<int> &svd_list,
 	     double *corr0, double *dcorr)
 {
   int    i, j, k, n_sing, max_ind = 0, sgn, max_sgn = 0, n1, mpn;
@@ -1068,9 +1060,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   }
   if (n % 8 != 0) std::cout << std::endl;
 
-  for (i = 0; i < (int)list.size(); i++)
-    SVD_zero_n_smallest(n, w, A_ext, b_ext, V, n_sing, n1);
-  std::cout << "\n";
+  SVD_zero_list(n, w, A_ext, b_ext, V, svd_list, n_sing, n1);
 
   for (i = 1; i <= n; i++) {
     std::cout << std::scientific << std::setprecision(3)

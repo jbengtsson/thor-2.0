@@ -114,7 +114,7 @@ public:
   double              bn_tol, step;
   double              *bn_lim, *bn, *dbn;
   std::vector<double> bn_max, bn_scl;
-  std::vector<int>    Fnum, n;
+  std::vector<int>    Fnum, n, svd_list;
 
   void add_prm(const std::string Fname, const int n,
 	       const double bn_max, const double bn_scl);
@@ -1391,7 +1391,6 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
 {
   int    n_bn, i, m;
   double chi2_ref, **A, *f, *b, *bn_ref;
-  std::vector<int> list;
 
   const int m_max = 100;
 
@@ -1413,9 +1412,8 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
 #if 1
   // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
   // 	  bn_prms.dbn);
-  for (i = 0; i < n_bn; i++)
-    list.push_back(i);
-  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, list, bn_prms.bn, bn_prms.dbn);
+  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_list, bn_prms.bn,
+	  bn_prms.dbn);
 #else
   double *w, **U, **V;
 
@@ -1807,6 +1805,8 @@ void fit_tune(const double nu_x, const double nu_y)
 
 void lat_select(const int lat_case)
 {
+  int k;
+
   switch (lat_case) {
   case 1:
     // MAX-V.
@@ -1931,6 +1931,11 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("o4", 6, 1e9, 1.0);
       bn_prms.add_prm("o5", 6, 1e9, 1.0);
       bn_prms.add_prm("o6", 6, 1e9, 1.0);
+
+      bn_prms.svd_list.push_back(11);
+      bn_prms.svd_list.push_back(8);
+      bn_prms.svd_list.push_back(5);
+      bn_prms.svd_list.push_back(4);
     }
     break;
   case 7:
@@ -2150,7 +2155,7 @@ int main(int argc, char *argv[])
 
   // Step is 1.0 for conjugated gradient method.
   bn_prms.bn_tol    = 1e-3;
-  bn_prms.svd_n_cut = 0;
+  // bn_prms.svd_n_cut = 0;
   bn_prms.step      = 1.0;
 
   if (fit_ksi) {
@@ -2170,7 +2175,7 @@ int main(int argc, char *argv[])
   }
 
   if (c_g) {
-    bn_prms.svd_n_cut = n_cut;
+    // bn_prms.svd_n_cut = n_cut;
     min_conj_grad(true);
   } else
     min_lev_marq();
