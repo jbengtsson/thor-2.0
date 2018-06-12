@@ -935,14 +935,14 @@ void Bubble_Sort(std::vector<double> &w, std::vector<int> &order)
 
   do {
     swapped = false;
-    for (k = 1; k < (int)order.size(); k++) {
-      if (w[k] > w[k+1]) {
-	ind = order[k-1]; order[k-1] = order[k]; order[k] = ind;
-	val = w[k-1]; w[k-1] = w[k]; w[k] = val;
+    for (k = 0; k < (int)order.size()-1; k++) {
+      if (fabs(w[k]) < fabs(w[k+1])) {
+	ind = order[k]; order[k] = order[k+1]; order[k+1] = ind;
+	val = w[k]; w[k] = w[k+1]; w[k+1] = val;
 	swapped = true;
       }
     }
-  } while (!swapped);
+  } while (swapped);
 }
 
 
@@ -959,8 +959,9 @@ void SVD_zero_n_smallest(const int n, double *w, double **A_ext,
   }
   Bubble_Sort(w1, order);
   printf("\nsingular values:\n");
-  for (j = 0; j < n; j++)
+  for (j = 0; j < n; j++) {
     printf("%3d", order[j]);
+  }
   printf("\n");
   exit(0);
 
