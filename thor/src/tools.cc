@@ -593,7 +593,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   double **A_ext;
 
   const bool   prt = false;
-  const double eps = 1e-11, s_cut_ext = 1e-18;
+  const double eps = 1e-11, s_cut_ext = 1e-25;
 
   mpn = m + n;
 
@@ -950,7 +950,7 @@ void SVD_zero_list(const int n, double *w, double **A_ext,
 		   double *b_ext, double **V, const std::vector<int> &svd_list,
 		   int &n_sing, int &n1)
 {
-  int              i = 0, j;
+  int                 j, k, ind;
   std::vector<int>    order;
   std::vector<double> w1;
 
@@ -958,21 +958,20 @@ void SVD_zero_list(const int n, double *w, double **A_ext,
     order.push_back(j); w1.push_back(w[j]);
   }
   Bubble_Sort(w1, order);
-  for (j = 0; j < (int)svd_list.size(); j++)
-    printf("%3d", order[j]);
-  printf("\n");
+
   printf("\nzeroing singular values:\n");
   for (j = 0; j < (int)svd_list.size(); j++) {
+    ind = order[svd_list[j]-1];
     printf("%3d %3d %11.3e\n",
-	   svd_list[j], order[svd_list[j]-1], w[order[svd_list[j]-1]]);
-    w[order[svd_list[j]-1]] = 0e0;
-  }
+	   svd_list[j], ind, w[ind]);
+    w[ind] = 0e0;
 
-  // if A is singular, extend with null space
-  n_sing++; n1++;
-  for (j = 1; j <= n; j++)
-    A_ext[n1][j] = V[j][i];
-  b_ext[n1] = 0e0;
+    // if A is singular, extend with null space
+    n_sing++; n1++;
+    for (k = 1; k <= n; k++)
+      A_ext[n1][k] = V[k][ind];
+    b_ext[n1] = 0e0;
+  }
 }
 
 
@@ -988,7 +987,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   double **A_ext;
 
   const bool   prt = false;
-  const double eps = 1e-11, s_cut_ext = 1e-18;
+  const double eps = 1e-11, s_cut_ext = 1e-25;
 
   mpn = m + n;
 

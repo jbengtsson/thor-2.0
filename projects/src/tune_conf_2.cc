@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus, nus_scl;
 
-const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true,
+const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = !true,
              oct = !false;
 const double tpsa_eps = 1e-30;
 
@@ -60,6 +60,8 @@ const double
      3e-2, 3e-2, 4e-2};
 
 
+#define First_Pass 1
+
 // SLS-2.
 // const double scl_h[]      = {1e0,  1e0,  1e-1},
 //              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
@@ -67,11 +69,19 @@ const double
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
 // const double scl_h[]      = {1e0, 1e0, 1e-3},
-const double scl_h[]      = {1e0, 1e-5, 1e-5},
-             // scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
-             scl_dnu[]    = {1e-6, 1e-6, 1e-6, 1e-6},
-             // scl_ksi[]    = {1e5,  1e-4, 1e-4},
-             scl_ksi[]    = {1e5,  1e-6, 1e-6},
+
+#if First_Pass
+const double scl_h[]      = {1e0, 1e0, 1e-1},
+             scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
+             scl_ksi[]    = {1e5,  1e-5, 1e-5},
+             scl_dnu_conf = 0e2,
+#else
+const double scl_h[]      = {1e0, 1e-2, 1e-3},
+             scl_dnu[]    = {1e-7, 1e-7, 1e-7, 1e-7},
+             scl_ksi[]    = {1e5,  1e-7, 1e-7},
+             scl_dnu_conf = 1e2,
+#endif
+
 // 6BA_1-2-jn-match.
              // scl_dnu_conf = 5e1;
 // diamond_hmba_reduced_chro_revised_ver_01_tracy.
@@ -90,7 +100,7 @@ const double scl_h[]      = {1e0, 1e-5, 1e-5},
 	     // ALS-U NO = 7.
              // scl_dnu_conf = 5e-3;
 	     // DIAMOND NO = 7.
-             scl_dnu_conf = 1e-5,
+             // scl_dnu_conf = 1e-5,
              scl_dnu_conf2 = 0e0;
 	     // DIAMOND NO = 9.
              // scl_dnu_conf  = 5e-8,
@@ -100,7 +110,7 @@ const double scl_h[]      = {1e0, 1e-5, 1e-5},
 #else
              // scl_dnu_conf = 1e1;
 	     // MAX-V NO = 7.
-             scl_dnu_conf = 1e2,
+             // scl_dnu_conf = 1e2,
              scl_dnu_conf2 = 0e-10;
 	     // DIAMOND NO = 7.
              // scl_dnu_conf = 1e1;
@@ -1410,10 +1420,10 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
     b[i] = -f[i];
 
 #if 1
-  // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
+  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
+  	  bn_prms.dbn);
+  // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_list, bn_prms.bn,
   // 	  bn_prms.dbn);
-  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_list, bn_prms.bn,
-	  bn_prms.dbn);
 #else
   double *w, **U, **V;
 
@@ -1805,8 +1815,6 @@ void fit_tune(const double nu_x, const double nu_y)
 
 void lat_select(const int lat_case)
 {
-  int k;
-
   switch (lat_case) {
   case 1:
     // MAX-V.
@@ -1916,26 +1924,26 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("sda", 3, 1e4, 1.0);
       bn_prms.add_prm("sdb", 3, 1e4, 1.0);
     } else {
-      bn_prms.add_prm("o1a", 4, 1e5, 1.0);
-      bn_prms.add_prm("o2a", 4, 1e5, 1.0);
-      bn_prms.add_prm("o1b", 4, 1e5, 1.0);
-      bn_prms.add_prm("o2b", 4, 1e5, 1.0);
-      bn_prms.add_prm("o3",  4, 1e5, 1.0);
+      bn_prms.add_prm("o1a", 4, 1e3, 1.0);
+      bn_prms.add_prm("o2a", 4, 1e3, 1.0);
+      bn_prms.add_prm("o1b", 4, 1e3, 1.0);
+      bn_prms.add_prm("o2b", 4, 1e3, 1.0);
+      bn_prms.add_prm("o3",  4, 1e3, 1.0);
 
-      // bn_prms.add_prm("s5",  4, 1e5, 1.0);
+      // bn_prms.add_prm("s5",  4, 1e3, 1.0);
 
-      bn_prms.add_prm("o4", 4, 1e5, 1.0);
-      bn_prms.add_prm("o5", 4, 1e5, 1.0);
-      bn_prms.add_prm("o6", 4, 1e5, 1.0);
+      bn_prms.add_prm("o4", 4, 1e3, 1.0);
+      bn_prms.add_prm("o5", 4, 1e3, 1.0);
+      bn_prms.add_prm("o6", 4, 1e3, 1.0);
 
-      bn_prms.add_prm("o4", 6, 1e9, 1.0);
-      bn_prms.add_prm("o5", 6, 1e9, 1.0);
-      bn_prms.add_prm("o6", 6, 1e9, 1.0);
+      // bn_prms.add_prm("o4", 6, 1e7, 1.0);
+      // bn_prms.add_prm("o5", 6, 1e7, 1.0);
+      // bn_prms.add_prm("o6", 6, 1e7, 1.0);
 
-      bn_prms.svd_list.push_back(11);
-      bn_prms.svd_list.push_back(8);
-      bn_prms.svd_list.push_back(5);
-      bn_prms.svd_list.push_back(4);
+      // bn_prms.svd_list.push_back(11);
+      // bn_prms.svd_list.push_back(8);
+      // bn_prms.svd_list.push_back(5);
+      // bn_prms.svd_list.push_back(4);
     }
     break;
   case 7:
@@ -2096,9 +2104,13 @@ int main(int argc, char *argv[])
   printf("delta_max:      %7.1e\n", delta_max[lat_case-1]);
   printf("beta_inj:    %7.2f, %7.2f\n",
 	 beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
-  if (c_g)
-    printf("Conj. Grad.:    %d\n", n_cut);
-  else
+  if (c_g) {
+    printf("Conj. Grad.: %d\n", n_cut);
+    // printf("Conj. Grad. List of Singular Values:\n");
+    // for (j = 0; j < (int)bn_prms.svd_list.size(); j++)
+    //   printf(" %2d", bn_prms.svd_list[j]);
+    // printf("\n");
+  } else
     printf("Lev. Marq.\n");
 
   get_nu_ksi();
@@ -2160,9 +2172,11 @@ int main(int argc, char *argv[])
 
   if (fit_ksi) {
     no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
-  } else {
-    no_mpoles(Oct); no_mpoles(Dodec);
   }
+
+#if FIRST_PASS
+  no_mpoles(Oct); no_mpoles(Dodec);
+#endif
 
   bn_prms.ini_prm();
 
@@ -2175,7 +2189,7 @@ int main(int argc, char *argv[])
   }
 
   if (c_g) {
-    // bn_prms.svd_n_cut = n_cut;
+    bn_prms.svd_n_cut = n_cut;
     min_conj_grad(true);
   } else
     min_lev_marq();
