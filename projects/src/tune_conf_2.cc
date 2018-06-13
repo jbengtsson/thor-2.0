@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus, nus_scl;
 
-const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = !true,
+const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true,
              oct = !false;
 const double tpsa_eps = 1e-30;
 
@@ -60,7 +60,7 @@ const double
      3e-2, 3e-2, 4e-2};
 
 
-#define First_Pass 1
+#define FIRST_PASS 1
 
 // SLS-2.
 // const double scl_h[]      = {1e0,  1e0,  1e-1},
@@ -70,15 +70,15 @@ const double
 // DIAMOND-II.
 // const double scl_h[]      = {1e0, 1e0, 1e-3},
 
-#if First_Pass
-const double scl_h[]      = {1e0, 1e0, 1e-1},
-             scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
-             scl_ksi[]    = {1e5,  1e-5, 1e-5},
-             scl_dnu_conf = 0e2,
+#if FIRST_PASS
+const double scl_h[]      = {1e0, 1e-4, 1e-4},
+             scl_dnu[]    = {1e-3, 1e-3, 1e-3, 1e-3},
+             scl_ksi[]    = {1e5,  1e-3, 1e-3},
+             scl_dnu_conf = 1e2,
 #else
 const double scl_h[]      = {1e0, 1e-2, 1e-3},
-             scl_dnu[]    = {1e-7, 1e-7, 1e-7, 1e-7},
-             scl_ksi[]    = {1e5,  1e-7, 1e-7},
+             scl_dnu[]    = {1e-3, 1e-3, 1e-3, 1e-3},
+             scl_ksi[]    = {1e5,  1e-3, 1e-3},
              scl_dnu_conf = 1e2,
 #endif
 
@@ -1396,6 +1396,24 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 }
 
 
+void SVD_zero_smallest(const int n, double *w)
+{
+  int    i = 0, j;
+  double w_min;
+
+  // Find smallest singular value.
+  w_min = 1e30;
+  for (j = 1; j <= n; j++) {
+    if ((w[j] != 0e0) && (w[j] < w_min)) {
+      i = j; w_min = w[j];
+    }
+  }
+  std::cout << std::scientific << std::setprecision(3)
+	    << " w[" << i << "] = " << w[i] << " zeroed";
+  w[i] = 0e0;
+}
+
+
 void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
 		   const bool cg_meth)
 {
@@ -1437,13 +1455,17 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
     std::cout << std::scientific << std::setprecision(3)
 	      << std::setw(11) << w[i];
     if (i % 10 == 0) std::cout << "\n";
-    if (fabs(w[i]) < 1e-13) {
-      w[i] = 0e0; std::cout << " (zeroed)  ";
-    }
   }
   if (n_bn % 10 != 0) std::cout << "\n";
 
+  for (i = 0; i < bn_prms.svd_n_cut; i++)
+    SVD_zero_smallest(n_bn, w);
+  std::cout << "\n";
+
   dsvbksb(U, w, V, m, n_bn, b, bn_prms.dbn);
+
+  std::cout << "dcorr.:" << std::endl;
+  prt_vec(n_bn, bn_prms.dbn);
 
   free_dvector(w, 1, n_bn);
   free_dmatrix(U, 1, m, 1, n_bn); free_dmatrix(V, 1, n_bn, 1, n_bn);
@@ -1581,12 +1603,12 @@ void min_lev_marq(void)
   double *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
 
   n_data = 0;
-  if (NO >= 3+1) n_data += 3 + 5 + 2;     // 10.
-  if (NO >= 4+1) n_data += 8 + 3 + 2 + 1; // 24.
+  if (NO >= 3+1) n_data += 3 + 5 + 2;          // 10.
+  if (NO >= 4+1) n_data += 8 + 3 + 2 + 1;      // 24.
+  if (NO >= 5+1) n_data += 14 + 3 + 2 + 4 + 4; // 51.
   // *** Checked up to here.
-  if (NO >= 5+1) n_data += 14 + 3 + 2;    // 42.
-  if (NO >= 6+1) n_data += 4 + 1 + 4;     // 46 + 5.
-  if (NO >= 8+1) n_data += 5;             // 51 + 5.
+  if (NO >= 6+1) n_data += 4 + 1 + 4;          // 46 + 5.
+  if (NO >= 8+1) n_data += 5;                  // 51 + 5.
   if (!symm)     n_data += 16 + 14;
 
   n_bn = bn_prms.n_prm;
@@ -2099,6 +2121,7 @@ int main(int argc, char *argv[])
   printf("dnu/dJ:         %d\n", DNU);
   printf("three_dim:      %d\n", THREE_DIM);
   printf("symmetric:      %d\n", symm);
+  printf("1st pass:       %d\n", FIRST_PASS);
   printf("\nA_max [mm]:  %7.2f, %7.2f\n",
 	 1e3*A_max[lat_case-1][X_], 1e3*A_max[lat_case-1][Y_]);
   printf("delta_max:      %7.1e\n", delta_max[lat_case-1]);

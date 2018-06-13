@@ -1408,7 +1408,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
       for (j = 1; j <= n; j++)
 	A_ext[n1][j] = V[j][i];
       b_ext[n1] = 0.0;
-   }
+    }
     if (i % 8 == 0) std::cout << std::endl;
   }
   if (n % 8 != 0) std::cout << std::endl;
