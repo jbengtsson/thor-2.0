@@ -556,28 +556,52 @@ void prt_mat(const int m, const int n, double **A)
 }
 
 
-void SVD_zero_smallest(const int n, double *w, double **A_ext,
-		       double *b_ext, double **V, int &n_sing, int &n1)
+void Bubble_Sort(std::vector<double> &w, std::vector<int> &order)
 {
-  int    i = 0, j;
-  double w_min;
+  bool   swapped;
+  int    k, ind;
+  double val;
 
-  // Find smallest singular value.
-  w_min = 1e30;
-  for (j = 1; j <= n; j++) {
-    if ((w[j] != 0e0) && (w[j] < w_min)) {
-      i = j; w_min = w[j];
+  do {
+    swapped = false;
+    for (k = 0; k < (int)order.size()-1; k++) {
+      if (fabs(w[k]) < fabs(w[k+1])) {
+	ind = order[k]; order[k] = order[k+1]; order[k+1] = ind;
+	val = w[k]; w[k] = w[k+1]; w[k+1] = val;
+	swapped = true;
+      }
     }
-  }
+  } while (swapped);
+}
 
-  std::cout << std::scientific << std::setprecision(3)
-	    << " w[" << i << "] = " << w[i] << " zeroed";
-  w[i] = 0e0;
-  // if A is singular, extend with null space
-  n_sing++; n1++;
-  for (j = 1; j <= n; j++)
-    A_ext[n1][j] = V[j][i];
-  b_ext[n1] = 0e0;
+
+void SVD_zero_n(const int n, double *w, double **A_ext,
+		double *b_ext, double **V, const int svd_n,
+		int &n_sing, int &n1)
+{
+  int                 j, k, ind;
+  std::vector<int>    order;
+  std::vector<double> w1;
+
+  for (j = 1; j <= n; j++) {
+    order.push_back(j); w1.push_back(w[j]);
+  }
+  Bubble_Sort(w1, order);
+
+  printf("\nzeroing singular values:\n");
+  for (j = 0; j < svd_n; j++) {
+    ind = order[j];
+    printf("%3d %3d %11.3e\n",
+	   j+1, ind, w[ind]);
+    w[ind] = 0e0;
+
+    // if A is singular, extend with null space
+    n_sing++; n1++;
+    for (k = 1; k <= n; k++)
+      A_ext[n1][k] = V[k][ind];
+    b_ext[n1] = 0e0;
+  }
+  std::cout << "\n";
 }
 
 
@@ -665,9 +689,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   }
   if (n % 8 != 0) std::cout << std::endl;
 
-  for (i = 0; i < n_cut; i++)
-    SVD_zero_smallest(n, w, A_ext, b_ext, V, n_sing, n1);
-  std::cout << "\n";
+  SVD_zero_n(n, w, A_ext, b_ext, V, n_cut, n_sing, n1);
 
   for (i = 1; i <= n; i++) {
     std::cout << std::scientific << std::setprecision(3)
@@ -924,25 +946,6 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   free_dvector(p_m, 1, n); 
 
   free_dmatrix(C, 1, n, 1, n); free_dmatrix(C_tp, 1, n, 1, n);
-}
-
-
-void Bubble_Sort(std::vector<double> &w, std::vector<int> &order)
-{
-  bool   swapped;
-  int    k, ind;
-  double val;
-
-  do {
-    swapped = false;
-    for (k = 0; k < (int)order.size()-1; k++) {
-      if (fabs(w[k]) < fabs(w[k+1])) {
-	ind = order[k]; order[k] = order[k+1]; order[k+1] = ind;
-	val = w[k]; w[k] = w[k+1]; w[k+1] = val;
-	swapped = true;
-      }
-    }
-  } while (swapped);
 }
 
 
