@@ -71,7 +71,7 @@ const double
 // const double scl_h[]      = {1e0, 1e0, 1e-3},
 
 #if FIRST_PASS
-const double scl_h[]      = {1e0, 1e-4, 1e-4},
+const double scl_h[]      = {1e0, 0e-4, 1e-4},
              scl_dnu[]    = {1e-3, 1e-3, 1e-3, 1e-3},
              scl_ksi[]    = {1e5,  1e-3, 1e-3},
              scl_dnu_conf = 1e2,
@@ -1438,10 +1438,10 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
     b[i] = -f[i];
 
 #if 1
-  // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
-  // 	  bn_prms.dbn);
-  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_list, bn_prms.bn,
+  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
   	  bn_prms.dbn);
+  // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_list, bn_prms.bn,
+  // 	  bn_prms.dbn);
 #else
   double *w, **U, **V;
 
@@ -1946,17 +1946,17 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("sda", 3, 1e4, 1.0);
       bn_prms.add_prm("sdb", 3, 1e4, 1.0);
     } else {
-      bn_prms.add_prm("o1a", 4, 1e3, 1.0);
-      bn_prms.add_prm("o2a", 4, 1e3, 1.0);
-      bn_prms.add_prm("o1b", 4, 1e3, 1.0);
-      bn_prms.add_prm("o2b", 4, 1e3, 1.0);
-      bn_prms.add_prm("o3",  4, 1e3, 1.0);
+      bn_prms.add_prm("o1a", 4, 5e2, 1.0);
+      bn_prms.add_prm("o2a", 4, 5e2, 1.0);
+      bn_prms.add_prm("o1b", 4, 5e2, 1.0);
+      bn_prms.add_prm("o2b", 4, 5e2, 1.0);
+      bn_prms.add_prm("o3",  4, 5e2, 1.0);
 
-      // bn_prms.add_prm("s5",  4, 1e3, 1.0);
+      // bn_prms.add_prm("s5",  4, 5e2, 1.0);
 
-      bn_prms.add_prm("o4", 4, 1e3, 1.0);
-      bn_prms.add_prm("o5", 4, 1e3, 1.0);
-      bn_prms.add_prm("o6", 4, 1e3, 1.0);
+      bn_prms.add_prm("o4", 4, 5e2, 1.0);
+      bn_prms.add_prm("o5", 4, 5e2, 1.0);
+      bn_prms.add_prm("o6", 4, 5e2, 1.0);
 
       // bn_prms.add_prm("o4", 6, 1e7, 1.0);
       // bn_prms.add_prm("o5", 6, 1e7, 1.0);
