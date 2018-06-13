@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -1438,10 +1438,10 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
     b[i] = -f[i];
 
 #if 1
-  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
-  	  bn_prms.dbn);
-  // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_list, bn_prms.bn,
+  // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
   // 	  bn_prms.dbn);
+  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_list, bn_prms.bn,
+  	  bn_prms.dbn);
 #else
   double *w, **U, **V;
 
