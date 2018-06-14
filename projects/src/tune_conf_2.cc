@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -27,7 +27,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus, nus_scl;
 
-const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true,
+const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = !true,
              oct = !false;
 const double tpsa_eps = 1e-30;
 
@@ -71,10 +71,10 @@ const double
 // const double scl_h[]      = {1e0, 1e0, 1e-3},
 
 #if FIRST_PASS
-const double scl_h[]      = {1e0, 0e-4, 1e-4},
-             scl_dnu[]    = {1e-3, 1e-3, 1e-3, 1e-3},
+const double scl_h[]      = {1e0, 0e-4, 0e-4},
+             scl_dnu[]    = {0e-3, 0e-3, 0e-3, 0e-3},
              scl_ksi[]    = {1e5,  1e-3, 1e-3},
-             scl_dnu_conf = 1e2,
+             scl_dnu_conf = 1e-6,
 #else
 const double scl_h[]      = {1e0, 1e-2, 1e-3},
              scl_dnu[]    = {1e-3, 1e-3, 1e-3, 1e-3},
@@ -425,6 +425,7 @@ tps f_gauss_quad_3d(double x, double y, double z)
   // printf("f_gauss_quad_3d\n");
   ps.identity();
   ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
+  ps[x_] = 0e0; ps[px_] = 0e0; ps[y_] = 0e0; ps[py_] = 0e0;
   ps[delta_] = z;
 
 #if DNU
@@ -1437,7 +1438,7 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
   for (i = 1; i <= m; i++)
     b[i] = -f[i];
 
-#if 1
+#if 0
   SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
   	  bn_prms.dbn);
   // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_list, bn_prms.bn,
@@ -1603,12 +1604,13 @@ void min_lev_marq(void)
   double *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
 
   n_data = 0;
-  if (NO >= 3+1) n_data += 3 + 5 + 2;          // 10.
-  if (NO >= 4+1) n_data += 8 + 3 + 2 + 1;      // 24.
-  if (NO >= 5+1) n_data += 14 + 3 + 2 + 4 + 4; // 51.
+  if (NO >= 3+1) n_data += 3 + 5 + 2;     // 10.
+  if (NO >= 4+1) n_data += 8 + 3 + 2 + 1; // 24.
+  if (NO >= 5+1) n_data += 14 + 3 + 2;    // 43.
+  if (NO >= 6+1) n_data += 4 + 4;         // 51.
   // *** Checked up to here.
-  if (NO >= 6+1) n_data += 4 + 1 + 4;          // 46 + 5.
-  if (NO >= 8+1) n_data += 5;                  // 51 + 5.
+  if (NO >= 7+1) n_data += 4 + 1 + 4;     // 46 + 5.
+  if (NO >= 8+1) n_data += 5;             // 51 + 5.
   if (!symm)     n_data += 16 + 14;
 
   n_bn = bn_prms.n_prm;
@@ -1946,11 +1948,11 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("sda", 3, 1e4, 1.0);
       bn_prms.add_prm("sdb", 3, 1e4, 1.0);
     } else {
-      bn_prms.add_prm("o1a", 4, 5e2, 1.0);
-      bn_prms.add_prm("o2a", 4, 5e2, 1.0);
-      bn_prms.add_prm("o1b", 4, 5e2, 1.0);
-      bn_prms.add_prm("o2b", 4, 5e2, 1.0);
-      bn_prms.add_prm("o3",  4, 5e2, 1.0);
+      // bn_prms.add_prm("o1a", 4, 5e2, 1.0);
+      // bn_prms.add_prm("o2a", 4, 5e2, 1.0);
+      // bn_prms.add_prm("o1b", 4, 5e2, 1.0);
+      // bn_prms.add_prm("o2b", 4, 5e2, 1.0);
+      // bn_prms.add_prm("o3",  4, 5e2, 1.0);
 
       // bn_prms.add_prm("s5",  4, 5e2, 1.0);
 
@@ -1958,9 +1960,9 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("o5", 4, 5e2, 1.0);
       bn_prms.add_prm("o6", 4, 5e2, 1.0);
 
-      // bn_prms.add_prm("o4", 6, 1e7, 1.0);
-      // bn_prms.add_prm("o5", 6, 1e7, 1.0);
-      // bn_prms.add_prm("o6", 6, 1e7, 1.0);
+      bn_prms.add_prm("o4", 5, 1e7, 1.0);
+      bn_prms.add_prm("o5", 5, 1e7, 1.0);
+      bn_prms.add_prm("o6", 5, 1e7, 1.0);
 
       // bn_prms.svd_list.push_back(11);
       // bn_prms.svd_list.push_back(8);
@@ -2198,7 +2200,7 @@ int main(int argc, char *argv[])
   }
 
 #if FIRST_PASS
-  no_mpoles(Oct); no_mpoles(Dodec);
+  no_mpoles(Oct); no_mpoles(Dec);; no_mpoles(Dodec);
 #endif
 
   bn_prms.ini_prm();

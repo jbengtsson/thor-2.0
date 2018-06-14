@@ -589,10 +589,9 @@ void SVD_zero_n(const int n, double *w, double **A_ext,
   Bubble_Sort(w1, order);
 
   printf("\nzeroing singular values:\n");
-  for (j = 0; j < svd_n; j++) {
-    ind = order[j];
-    printf("%3d %3d %11.3e\n",
-	   j+1, ind, w[ind]);
+  for (j = 1; j <= svd_n; j++) {
+    ind = order[n-j];
+    printf("%3d %3d %11.3e\n", j, ind, w[ind]);
     w[ind] = 0e0;
 
     // if A is singular, extend with null space
@@ -617,7 +616,7 @@ void SVD_lim(const int m, const int n, double **A, double *b,
   double **A_ext;
 
   const bool   prt = false;
-  const double eps = 1e-11, s_cut_ext = 1e-25;
+  const double eps = 1e-11, s_cut_ext = 1e-20;
 
   mpn = m + n;
 
