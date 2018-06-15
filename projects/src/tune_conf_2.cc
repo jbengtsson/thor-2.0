@@ -71,7 +71,7 @@ const double
 // const double scl_h[]      = {1e0, 1e0, 1e-3},
 
 #if FIRST_PASS
-const double scl_h[]      = {1e0, 0e-4, 0e-4},
+const double scl_h[]      = {1e0, 1e-4, 1e-4},
              scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
              scl_ksi[]    = {1e5,  1e-4, 1e-4},
              scl_dnu_conf = 1e-4,
