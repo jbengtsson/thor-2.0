@@ -74,7 +74,7 @@ const double
 const double scl_h[]      = {1e0, 1e-4, 1e-4},
              scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
              scl_ksi[]    = {1e5,  1e-4, 1e-4},
-             scl_dnu_conf = 1e-4,
+             scl_dnu_conf = 1e-2,
 #else
 const double scl_h[]      = {1e0, 1e-2, 1e-3},
              scl_dnu[]    = {1e-3, 1e-3, 1e-3, 1e-3},
@@ -324,7 +324,8 @@ tps f_gauss_quad_2D(double x, double y)
 
   // printf("f_gauss_quad_2D\n");
   ps.identity();
-  ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
+  ps[x_] = ps[px_] = sqrt(x);
+  ps[y_] = ps[py_] = sqrt(y);
   ps[delta_] = 0e0;
 
 #if DNU
@@ -421,13 +422,14 @@ tps f_gauss_quad_3D(double x, double y, double z)
 {
   int          k, jj[ss_dim];
   tps          dK, dnu[2];
-  ss_vect<tps> ps;
+  ss_vect<tps> ps0, ps1;
 
   // printf("f_gauss_quad_3D\n");
-  ps.identity();
-  ps[x_] = sqrt(x); ps[px_] = sqrt(x); ps[y_] = sqrt(y); ps[py_] = sqrt(y);
-  ps[x_] = 0e0; ps[px_] = 0e0; ps[y_] = 0e0; ps[py_] = 0e0;
-  ps[delta_] = z;
+  ps0.identity();
+  ps0[x_] = ps0[px_] = sqrt(x);
+  ps0[y_] = ps0[py_] = sqrt(y);
+  ps0[delta_] = 0e0;
+  ps1 = ps0; ps1[delta_] = z;
 
 #if DNU
   for (k = 0; k < 2; k++) {
@@ -438,18 +440,11 @@ tps f_gauss_quad_3D(double x, double y, double z)
 
   return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*2e0*delta_max[lat_case-1]);
 #else
-  dK = K_re;
-  for (k = 0; k < ss_dim; k++)
-    jj[k] = 0;
-  jj[x_] = 1; jj[px_] = 1;
-  dK.pook(jj, 0e0);
-  jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
-  dK.pook(jj, 0e0);
-  dK = dK*ps;
+  dK = K_re*ps1 - K_re*ps0;
   // Compute absolute value.
   if (dK.cst() < 0e0) dK = -dK;
   // std::cout << std::scientific << std::setprecision(3)
-  // 	      << "\n |dK| = " << dK << "\n";
+  // 	    << "\n |dK| = " << dK << "\n";
 
   return dK/(twoJ[X_]*twoJ[Y_]*2e0*delta_max[lat_case-1]);
 #endif
@@ -941,8 +936,6 @@ double get_f(double *bns)
   dnu_delta = gauss_quad_3D(f_gauss_quad_3D, 0e0, twoJ[X_]);
   printf("\n|dnu|       = %9.3e\n", dnu.cst());
   printf("|dnu_delta| = %9.3e\n", dnu_delta.cst());
-  dnu_delta -= dnu;
-  if (dnu_delta.cst() < 0e0) dnu_delta = -dnu_delta;
 
   b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2));
   b.push_back(get_b(scl_h[0], h_re_scl, 2, 0, 0, 0, 1));
@@ -1114,8 +1107,6 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     dnu_delta = gauss_quad_3D(f_gauss_quad_3D, 0e0, twoJ[X_]);
     // std::cout << std::scientific << std::setprecision(3)
     // 	      << "\n |dnu| = " << dnu << "\n";
-    dnu_delta -= dnu;
-    if (dnu_delta.cst() < 0e0) dnu_delta = -dnu_delta;
 
     m = 0;
     A[++m][i] = get_a(scl_h[0], h_re_scl, 1, 0, 0, 0, 2);
@@ -1257,6 +1248,7 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   }
 
   printf("\n dnu = %10.3e\n", dnu.cst());
+  printf(" dnu = %10.3e\n", dnu_delta.cst());
 
   m = 0;
   f[++m] = get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2);
@@ -1440,7 +1432,7 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
   for (i = 1; i <= m; i++)
     b[i] = -f[i];
 
-#if 0
+#if 1
   SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
   	  bn_prms.dbn);
   // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_list, bn_prms.bn,
