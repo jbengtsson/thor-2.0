@@ -41,22 +41,22 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II H-8-BA     9.
 // DIAMOND-II H-8-BA II 10.
 // ALS-U                11.
-const int lat_case = 6, n_prt = 8;
+const int lat_case = 11, n_prt = 8;
 
 // Center of straight.
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.8, 5.4},
      {10.6, 8.6}, {12.0, 2.9},  {9.2, 3.2}, {4.6, 7.6},
-      {6.6, 6.1},  {6.0, 2.8},  {3.7, 2.4}},
+      {6.6, 6.1},  {6.0, 2.8},  {2.2, 2.3}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
      {  5e-3,   3e-3}, {7e-3, 3e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
-     {  5e-3,   3e-3}, {4e-3, 3e-3}, {5e-3, 3e-3}},
+     {  5e-3,   3e-3}, {4e-3, 3e-3}, {4e-3, 2e-3}},
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
      3e-2, 3e-2, 3e-2, 3e-2,
-     3e-2, 3e-2, 4e-2};
+     3e-2, 3e-2, 3e-2};
 
 
 #define FIRST_PASS 1
@@ -633,7 +633,7 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 2),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2));
 
-  printf("ksi_y:\n %8.5f %8.5f %8.5f\n",
+  printf("ksi_y:\n %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 1),
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 1));
   printf(" %8.5f %8.5f %8.5f\n",
@@ -2111,13 +2111,16 @@ void lat_select(const int lat_case)
     // ALS-U.
     n_cell = 1;
 
-    bn_prms.add_prm("sf1", 3, 5e5, 1.0);
-    bn_prms.add_prm("sf2", 3, 5e5, 1.0);
-    bn_prms.add_prm("sd1", 3, 5e5, 1.0);
-    bn_prms.add_prm("sd2", 3, 5e5, 1.0);
-    bn_prms.add_prm("sfh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sdh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sxh", 3, 5e5, 1.0);
+    bn_prms.add_prm("sf1",  3, 5e5, 1.0);
+    bn_prms.add_prm("sf2",  3, 5e5, 1.0);
+    bn_prms.add_prm("sf3",  3, 5e5, 1.0);
+    bn_prms.add_prm("sd1h", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd2h", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd3h", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd4h", 3, 5e5, 1.0);
+    bn_prms.add_prm("sh1",  3, 5e5, 1.0);
+    bn_prms.add_prm("sh2",  3, 5e5, 1.0);
+    bn_prms.add_prm("sh3",  3, 5e5, 1.0);
     break;
   }
 
