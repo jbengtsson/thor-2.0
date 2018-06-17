@@ -15,8 +15,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU       0
-#define THREE_DIM 1
+#define DNU 0
 
 
 extern tps          K, g;
@@ -71,15 +70,17 @@ const double
 // const double scl_h[]      = {1e0, 1e0, 1e-3},
 
 #if FIRST_PASS
-const double scl_h[]      = {1e0, 1e-6, 1e-6},
-             scl_dnu[]    = {1e-4, 1e-4, 1e-4, 1e-4},
-             scl_ksi[]    = {1e5,  1e-4, 1e-4},
-             scl_dnu_conf = 1e-2,
+const double scl_h[]            = {1e0, 0e-6, 0e-6},
+             scl_dnu[]          = {1e-4, 1e-4, 1e-4, 0e-4},
+             scl_ksi[]          = {1e5,  1e-4, 1e-4},
+             scl_dnu_conf       = 1e-2,
+             scl_dnu_delta_conf = 1e-2,
 #else
-const double scl_h[]      = {1e0, 1e-2, 1e-3},
-             scl_dnu[]    = {1e-3, 1e-3, 1e-3, 1e-3},
-             scl_ksi[]    = {1e5,  1e-3, 1e-3},
-             scl_dnu_conf = 1e2,
+const double scl_h[]            = {1e0, 1e-2, 1e-3},
+             scl_dnu[]          = {1e-3, 1e-3, 1e-3, 1e-3},
+             scl_ksi[]          = {1e5,  1e-3, 1e-3},
+             scl_dnu_conf       = 1e2,
+             scl_dnu_delta_conf = 1e-2,
 #endif
 
 // 6BA_1-2-jn-match.
@@ -319,8 +320,8 @@ tps gauss_quad_2D(tps (*func)(const double, const double),
 tps f_gauss_quad_2D(double x, double y)
 {
   int          k, jj[ss_dim];
-  tps          dK, dnu[2];
-  ss_vect<tps> ps;
+  tps          dK, dnu[2], K_re_no_m_one, K_re_no;
+  ss_vect<tps> ps, Id;
 
   // printf("f_gauss_quad_2D\n");
   ps.identity();
@@ -337,13 +338,22 @@ tps f_gauss_quad_2D(double x, double y)
 
   return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]);
 #else
-  dK = K_re;
+  Id.identity(); Id[6] = 0e0;
+  danot_(NO-1);
+  K_re_no_m_one = K_re*Id;
+  danot_(NO);
+  K_re_no = K_re*Id - K_re_no_m_one;
+  dK = K_re - K_re_no;
+  Id.identity(); Id[delta_] = 0e0;
+  dK = dK*Id;
   for (k = 0; k < ss_dim; k++)
     jj[k] = 0;
   jj[x_] = 1; jj[px_] = 1;
   dK.pook(jj, 0e0);
   jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
   dK.pook(jj, 0e0);
+  // std::cout << std::scientific << std::setprecision(3)
+  // 	    << std::setw(11) << dK << "\n";
   dK = dK*ps;
   // Compute absolute value.
   if (dK.cst() < 0e0) dK = -dK;
@@ -421,15 +431,15 @@ tps gauss_quad_3D(tps (*func)(const double, const double, const double),
 tps f_gauss_quad_3D(double x, double y, double z)
 {
   int          k, jj[ss_dim];
-  tps          dK, dnu[2];
-  ss_vect<tps> ps0, ps1;
+  tps          dK, dnu[2], K_re_no_m_one, K_re_no, K_re_no_J;
+  ss_vect<tps> Id, ps;
 
   // printf("f_gauss_quad_3D\n");
-  ps0.identity();
-  ps0[x_] = ps0[px_] = sqrt(x);
-  ps0[y_] = ps0[py_] = sqrt(y);
-  ps0[delta_] = 0e0;
-  ps1 = ps0; ps1[delta_] = z;
+
+  ps.identity();
+  ps[x_] = ps[px_] = sqrt(x);
+  ps[y_] = ps[py_] = sqrt(y);
+  ps[delta_] = z;
 
 #if DNU
   for (k = 0; k < 2; k++) {
@@ -440,7 +450,17 @@ tps f_gauss_quad_3D(double x, double y, double z)
 
   return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*2e0*delta_max[lat_case-1]);
 #else
-  dK = K_re*ps1 - K_re*ps0;
+  Id.identity(); Id[6] = 0e0;
+  danot_(NO-1);
+  K_re_no_m_one = K_re*Id;
+  danot_(NO);
+  K_re_no = K_re*Id - K_re_no_m_one;
+  dK = K_re - K_re_no;
+  Id.identity(); Id[delta_] = 0e0;
+  dK = dK - dK*Id;
+  Id.identity(); Id[x_] = Id[px_] = Id[y_] = Id[py_] = 0e0;
+  dK = dK - dK*Id;
+  dK = dK*ps;
   // Compute absolute value.
   if (dK.cst() < 0e0) dK = -dK;
   // std::cout << std::scientific << std::setprecision(3)
@@ -605,12 +625,18 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[4], 1, 1, 2, 2, 0),
 	 h_ijklm(nus_scl[4], 0, 0, 3, 3, 0));
 
-  printf("ksi_x:\n %8.5f %8.5f %8.5f\n",
+  printf("ksi_x:\n %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 1),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 1));
+  printf(" %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 2),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2));
 
   printf("ksi_y:\n %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 1),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 1));
+  printf(" %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 2),
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 2),
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2));
@@ -697,8 +723,10 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else if (i-1 == n_h+2+3+2+2+3+2)
       printf("ampl. dependant tune shift\n");
     else if (i-1 == n_h+2+3+2+2+3+2+4)
+      printf("cross terms\n");
+    else if (i-1 == n_h+2+3+2+2+3+2+4+3)
       printf("tune confinement\n");
-    else if (i-1 == n_h+2+3+2+2+3+2+4+4)
+    else if (i-1 == n_h+2+3+2+2+3+2+4+3+4)
       printf("ampl. dependant tune shift\n");
 
     printf("%4d", i);
@@ -1021,21 +1049,21 @@ double get_f(double *bns)
   b.push_back(get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1));
 
   if (NO >= 5) {
-    b.push_back(get_b(scl_dnu[0],   K_re_scl,  2, 2, 0, 0, 0));
-    b.push_back(get_b(scl_dnu[0],   K_re_scl,  0, 0, 2, 2, 0));
-    b.push_back(get_b(scl_dnu[0],   K_re_scl,  1, 1, 1, 1, 0));
+    b.push_back(get_b(scl_dnu[0],   K_re_scl,        2, 2, 0, 0, 0));
+    b.push_back(get_b(scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0));
+    b.push_back(get_b(scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0));
 
-    b.push_back(get_b(scl_ksi[1],   K_re_scl,  1, 1, 0, 0, 2));
-    b.push_back(get_b(scl_ksi[1],   K_re_scl,  0, 0, 1, 1, 2));
+    b.push_back(get_b(scl_ksi[1],   K_re_scl,        1, 1, 0, 0, 2));
+    b.push_back(get_b(scl_ksi[1],   K_re_scl,        0, 0, 1, 1, 2));
 
-    b.push_back(get_b(scl_dnu_conf, dnu,       0, 0, 0, 0, 0));
-    b.push_back(get_b(scl_dnu_conf, dnu_delta, 0, 0, 0, 0, 0));
+    b.push_back(get_b(scl_dnu_conf, dnu,             0, 0, 0, 0, 0));
+    b.push_back(get_b(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0));
   }
 
   if (NO >= 6) {
-    b.push_back(get_b(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 1));
-    b.push_back(get_b(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 1));
-    b.push_back(get_b(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 1));
+    b.push_back(get_b(scl_ksi[1], K_re_scl, 2, 2, 0, 0, 1));
+    b.push_back(get_b(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1));
+    b.push_back(get_b(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1));
 
     b.push_back(get_b(scl_ksi[2], K_re_scl, 1, 1, 0, 0, 3));
     b.push_back(get_b(scl_ksi[2], K_re_scl, 0, 0, 1, 1, 3));
@@ -1046,6 +1074,10 @@ double get_f(double *bns)
     b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
     b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
     b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0));
+
+    b.push_back(get_b(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2));
+    b.push_back(get_b(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2));
+    b.push_back(get_b(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2));
 
     b.push_back(get_b(scl_dnu_conf2,  nus_scl[3], 1, 1, 0, 0, 0)
 		+get_b(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0));
@@ -1193,21 +1225,21 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     A[++m][i] = get_a(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
 
     if (NO >= 5) {
-      A[++m][i] = get_a(scl_dnu[0],   K_re_scl,  2, 2, 0, 0, 0);
-      A[++m][i] = get_a(scl_dnu[0],   K_re_scl,  0, 0, 2, 2, 0);
-      A[++m][i] = get_a(scl_dnu[0],   K_re_scl,  1, 1, 1, 1, 0);
+      A[++m][i] = get_a(scl_dnu[0],   K_re_scl,        2, 2, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0);
+      A[++m][i] = get_a(scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0);
 
-      A[++m][i] = get_a(scl_ksi[1],   K_re_scl,  1, 1, 0, 0, 2);
-      A[++m][i] = get_a(scl_ksi[1],   K_re_scl,  0, 0, 1, 1, 2);
+      A[++m][i] = get_a(scl_ksi[1],   K_re_scl,        1, 1, 0, 0, 2);
+      A[++m][i] = get_a(scl_ksi[1],   K_re_scl,        0, 0, 1, 1, 2);
 
-      A[++m][i] = get_a(scl_dnu_conf, dnu,       0, 0, 0, 0, 0);
-      A[++m][i] = get_a(scl_dnu_conf, dnu_delta, 0, 0, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu_conf, dnu,             0, 0, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
     }
 
     if (NO >= 6) {
-      A[++m][i] = get_a(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 1);
-      A[++m][i] = get_a(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 1);
-      A[++m][i] = get_a(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 1);
+      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 2, 2, 0, 0, 1);
+      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1);
+      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1);
 
       A[++m][i] = get_a(scl_ksi[2], K_re_scl, 1, 1, 0, 0, 3);
       A[++m][i] = get_a(scl_ksi[2], K_re_scl, 0, 0, 1, 1, 3);
@@ -1218,6 +1250,10 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
       A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
       A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
+
+      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 2, 2, 0, 0, 2);
+      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 2);
+      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 2);
 
       A[++m][i] =
 	get_a(scl_dnu_conf2,   nus_scl[3], 1, 1, 0, 0, 0)
@@ -1335,21 +1371,21 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   f[++m] = get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
 
   if (NO >= 5) {
-    f[++m] = get_b(scl_dnu[0],   K_re_scl,  2, 2, 0, 0, 0);
-    f[++m] = get_b(scl_dnu[0],   K_re_scl,  0, 0, 2, 2, 0);
-    f[++m] = get_b(scl_dnu[0],   K_re_scl,  1, 1, 1, 1, 0);
+    f[++m] = get_b(scl_dnu[0],   K_re_scl,        2, 2, 0, 0, 0);
+    f[++m] = get_b(scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0);
+    f[++m] = get_b(scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0);
 
-    f[++m] = get_b(scl_ksi[1],   K_re_scl,  1, 1, 0, 0, 2);
-    f[++m] = get_b(scl_ksi[1],   K_re_scl,  0, 0, 1, 1, 2);
+    f[++m] = get_b(scl_ksi[1],   K_re_scl,        1, 1, 0, 0, 2);
+    f[++m] = get_b(scl_ksi[1],   K_re_scl,        0, 0, 1, 1, 2);
 
-    f[++m] = get_b(scl_dnu_conf, dnu,       0, 0, 0, 0, 0);
-    f[++m] = get_b(scl_dnu_conf, dnu_delta, 0, 0, 0, 0, 0);
+    f[++m] = get_b(scl_dnu_conf, dnu,             0, 0, 0, 0, 0);
+    f[++m] = get_b(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
   }
 
   if (NO >= 6) {
-    f[++m] = get_b(scl_dnu[1], K_re_scl, 2, 2, 0, 0, 1);
-    f[++m] = get_b(scl_dnu[1], K_re_scl, 0, 0, 2, 2, 1);
-    f[++m] = get_b(scl_dnu[1], K_re_scl, 1, 1, 1, 1, 1);
+    f[++m] = get_b(scl_ksi[1], K_re_scl, 2, 2, 0, 0, 1);
+    f[++m] = get_b(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1);
+    f[++m] = get_b(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1);
 
     f[++m] = get_b(scl_ksi[2], K_re_scl, 1, 1, 0, 0, 3);
     f[++m] = get_b(scl_ksi[2], K_re_scl, 0, 0, 1, 1, 3);
@@ -1360,6 +1396,10 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
     f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
     f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
+
+    f[++m] = get_b(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
+    f[++m] = get_b(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
+    f[++m] = get_b(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2);
 
     f[++m] =
       get_b(scl_dnu_conf2,   nus_scl[3], 1, 1, 0, 0, 0)
@@ -1391,21 +1431,43 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 }
 
 
-void SVD_zero_smallest(const int n, double *w)
+void Bubble_Sort2(std::vector<double> &w, std::vector<int> &order)
 {
-  int    i = 0, j;
-  double w_min;
+  bool   swapped;
+  int    k, ind;
+  double val;
 
-  // Find smallest singular value.
-  w_min = 1e30;
-  for (j = 1; j <= n; j++) {
-    if ((w[j] != 0e0) && (w[j] < w_min)) {
-      i = j; w_min = w[j];
+  do {
+    swapped = false;
+    for (k = 0; k < (int)order.size()-1; k++) {
+      if (fabs(w[k]) < fabs(w[k+1])) {
+	ind = order[k]; order[k] = order[k+1]; order[k+1] = ind;
+	val = w[k]; w[k] = w[k+1]; w[k+1] = val;
+	swapped = true;
+      }
     }
+  } while (swapped);
+}
+
+
+void SVD_zero_n(const int n, double *w, const int svd_n)
+{
+  int                 j, k, ind;
+  std::vector<int>    order;
+  std::vector<double> w1;
+
+  for (j = 1; j <= n; j++) {
+    order.push_back(j); w1.push_back(w[j]);
   }
-  std::cout << std::scientific << std::setprecision(3)
-	    << " w[" << i << "] = " << w[i] << " zeroed";
-  w[i] = 0e0;
+  Bubble_Sort2(w1, order);
+
+  printf("\nzeroing singular values:\n");
+  for (j = 1; j <= svd_n; j++) {
+    ind = order[n-j];
+    printf("%3d %3d %11.3e\n", j, ind, w[ind]);
+    w[ind] = 0e0;
+  }
+  std::cout << "\n";
 }
 
 
@@ -1432,7 +1494,7 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
   for (i = 1; i <= m; i++)
     b[i] = -f[i];
 
-#if 1
+#if 0
   SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_n_cut, bn_prms.bn,
   	  bn_prms.dbn);
   // SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, bn_prms.svd_list, bn_prms.bn,
@@ -1453,8 +1515,7 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
   }
   if (n_bn % 10 != 0) std::cout << "\n";
 
-  for (i = 0; i < bn_prms.svd_n_cut; i++)
-    SVD_zero_smallest(n_bn, w);
+  SVD_zero_n(n_bn, w, bn_prms.svd_n_cut);
   std::cout << "\n";
 
   dsvbksb(U, w, V, m, n_bn, b, bn_prms.dbn);
@@ -1599,9 +1660,9 @@ void min_lev_marq(void)
 
   n_data = 0;
   if (NO >= 3+1) n_data += 3 + 5 + 2;     // 10.
-  if (NO >= 4+1) n_data += 8 + 3 + 2 + 1; // 24.
-  if (NO >= 5+1) n_data += 14 + 3 + 2;    // 43.
-  if (NO >= 6+1) n_data += 4 + 4;         // 51.
+  if (NO >= 4+1) n_data += 8 + 3 + 2 + 2; // 25.
+  if (NO >= 5+1) n_data += 14 + 3 + 2;    // 44.
+  if (NO >= 6+1) n_data += 4 + 4;         // 52.
   // *** Checked up to here.
   if (NO >= 7+1) n_data += 4 + 1 + 4;     // 46 + 5.
   if (NO >= 8+1) n_data += 5;             // 51 + 5.
@@ -2106,25 +2167,25 @@ int main(int argc, char *argv[])
 
   lat_select(lat_case);
 
-  printf("\nn_cell:         %1d\n", n_cell);
-  printf("scl_h:          %7.1e, %7.1e, %7.1e\n",
+  printf("\nn_cell:             %1d\n", n_cell);
+  printf("scl_h:              %7.1e, %7.1e, %7.1e\n",
 	 scl_h[0], scl_h[1], scl_h[2]);
-  printf("scl_dnu:        %7.1e, %7.1e, %7.1e, %7.1e\n",
+  printf("scl_dnu:            %7.1e, %7.1e, %7.1e, %7.1e\n",
 	 scl_dnu[0], scl_dnu[1], scl_dnu[2], scl_dnu[3]);
-  printf("scl_ksi:        %7.1e, %7.1e, %7.1e\n",
+  printf("scl_ksi:            %7.1e, %7.1e, %7.1e\n",
 	 scl_ksi[0], scl_ksi[1], scl_ksi[2]);
-  printf("scl_dnu_conf:   %7.1e\n", scl_dnu_conf);
-  printf("dnu/dJ:         %d\n", DNU);
-  printf("three_dim:      %d\n", THREE_DIM);
-  printf("symmetric:      %d\n", symm);
-  printf("1st pass:       %d\n", FIRST_PASS);
-  printf("\nA_max [mm]:  %7.2f, %7.2f\n",
+  printf("scl_dnu_conf:       %7.1e\n", scl_dnu_conf);
+  printf("scl_dnu_delta_conf: %7.1e\n", scl_dnu_delta_conf);
+  printf("dnu/dJ:             %d\n", DNU);
+  printf("symmetric:          %d\n", symm);
+  printf("1st pass:           %d\n", FIRST_PASS);
+  printf("\nA_max [mm]:      %7.2f, %7.2f\n",
 	 1e3*A_max[lat_case-1][X_], 1e3*A_max[lat_case-1][Y_]);
-  printf("delta_max:      %7.1e\n", delta_max[lat_case-1]);
-  printf("beta_inj:    %7.2f, %7.2f\n",
+  printf("delta_max:          %7.1e\n", delta_max[lat_case-1]);
+  printf("beta_inj:        %7.2f, %7.2f\n",
 	 beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
   if (c_g) {
-    printf("Conj. Grad.: %d\n", n_cut);
+    printf("Conj. Grad.:     %d\n", n_cut);
     // printf("Conj. Grad. List of Singular Values:\n");
     // for (j = 0; j < (int)bn_prms.svd_list.size(); j++)
     //   printf(" %2d", bn_prms.svd_list[j]);
