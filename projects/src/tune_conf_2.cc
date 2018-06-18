@@ -73,8 +73,8 @@ const double
 const double scl_h[]            = {1e0, 0e-6, 0e-6},
              scl_dnu[]          = {1e-4, 1e-4, 1e-4},
              scl_ksi[]          = {1e5,  1e-4, 1e-4, 1e-4},
-             scl_dnu_conf       = 1e-2,
-             scl_dnu_delta_conf = 1e-2,
+             scl_dnu_conf       = 1e-3,
+             scl_dnu_delta_conf = 1e-3,
 #else
 const double scl_h[]            = {1e0, 1e-2, 1e-3},
              scl_dnu[]          = {1e-3, 1e-3, 1e-3},
@@ -630,15 +630,18 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[4], 0, 0, 3, 3, 0));
 
   printf("\nksi:\n");
-  printf("  k_11001  k_00111\n");
-  printf("  k_00002  k_11002  k_00112\n");
+  printf("  k_22001  k_11111  k_00221\n");
+  printf("  k_11002  k_00112  k_22002  k_11112  k_00222\n");
+  printf("  k_11003  k_00113\n");
   printf("ksi_x:\n %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 1),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 1));
-  printf(" %8.5f %8.5f %8.5f\n",
+  printf(" %8.5f %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 2),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2));
+  printf(" %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 3));
   printf("ksi_y:\n");
   printf(" %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 1),
@@ -647,6 +650,8 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 2),
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 2),
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2));
+  printf(" %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 3));
 
   printf("\nTune confinement:\n");
   // printf(" %11.3e %11.3e\n",
@@ -718,23 +723,27 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     if (i-1 == n_h)
       printf("linear chromaticity\n");
     else if (i-1 == n_h+2)
-      printf("ampl. dependant tune shift\n");
+      printf("ampl. dependant tune shift: k_22000, k_11110, k_00220\n");
     else if (i-1 == n_h+2+3)
       printf("2nd order chromaticity\n");
     else if (i-1 == n_h+2+3+2)
       printf("|dnu|\n");
-    else if (i-1 == n_h+2+3+2+2)
-      printf("cross terms\n");
-    else if (i-1 == n_h+2+3+2+2+3)
+    else if (i-1 == n_h+2+3+2+1)
+      printf("|dnu_delta|\n");
+    else if (i-1 == n_h+2+3+2+1+1)
+      printf("cross terms: k_22001, k_11111, k_00221\n");
+    else if (i-1 == n_h+2+3+2+1+1+3)
       printf("3rd order chromaticity\n");
-    else if (i-1 == n_h+2+3+2+2+3+2)
-      printf("ampl. dependant tune shift\n");
-    else if (i-1 == n_h+2+3+2+2+3+2+4)
-      printf("cross terms\n");
-    else if (i-1 == n_h+2+3+2+2+3+2+4+3)
+    else if (i-1 == n_h+2+3+2+1+1+3+2)
+      printf("ampl. dependant tune shift:"
+	     " k_33000, k_22110, k_11220, k_00330\n");
+    else if (i-1 == n_h+2+3+2+1+1+3+2+4)
+      printf("cross terms: k_22002, k_11112, k_00222\n");
+    else if (i-1 == n_h+2+3+2+1+1+3+2+4+3)
       printf("tune confinement\n");
-    else if (i-1 == n_h+2+3+2+2+3+2+4+3+4)
-      printf("ampl. dependant tune shift\n");
+    else if (i-1 == n_h+2+3+2+1+1+3+2+4+3+4)
+      printf("ampl. dependant tune shift:"
+	     " k_44000, k_33110, k_22220, k_11330, k_00440\n");
 
     printf("%4d", i);
     for (j = 1; j <= n_b2; j++)
@@ -2015,6 +2024,12 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("o1b", 4, 5e2, 1.0);
       bn_prms.add_prm("o2b", 4, 5e2, 1.0);
       bn_prms.add_prm("o3",  4, 5e2, 1.0);
+
+      // bn_prms.add_prm("o1a", 6, 5e2, 1.0);
+      // bn_prms.add_prm("o2a", 6, 5e2, 1.0);
+      // bn_prms.add_prm("o1b", 6, 5e2, 1.0);
+      // bn_prms.add_prm("o2b", 6, 5e2, 1.0);
+      // bn_prms.add_prm("o3",  5, 6e2, 1.0);
 
       // bn_prms.add_prm("s5",  4, 5e2, 1.0);
 
