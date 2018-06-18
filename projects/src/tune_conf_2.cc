@@ -41,7 +41,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II H-8-BA     9.
 // DIAMOND-II H-8-BA II 10.
 // ALS-U                11.
-const int lat_case = 11, n_prt = 8;
+const int lat_case = 6, n_prt = 8;
 
 // Center of straight.
 const double
@@ -63,22 +63,22 @@ const double
 
 // SLS-2.
 // const double scl_h[]      = {1e0,  1e0,  1e-1},
-//              scl_dnu[]    = {1e-5, 1e-5, 1e-5, 1e-5},
-//              scl_ksi[]    = {1e5,  1e-5, 1e-5},
+//              scl_dnu[]    = {1e-5, 1e-5, 1e-5},
+//              scl_ksi[]    = {1e5,  1e-5, 1e-5, 1e-5},
 //              scl_dnu_conf = 5e-1;
 // DIAMOND-II.
 // const double scl_h[]      = {1e0, 1e0, 1e-3},
 
 #if FIRST_PASS
 const double scl_h[]            = {1e0, 0e-6, 0e-6},
-             scl_dnu[]          = {1e-4, 1e-4, 1e-4, 0e-4},
-             scl_ksi[]          = {1e5,  1e-4, 1e-4},
+             scl_dnu[]          = {1e-4, 1e-4, 1e-4},
+             scl_ksi[]          = {1e5,  1e-4, 1e-4, 1e-4},
              scl_dnu_conf       = 1e-2,
              scl_dnu_delta_conf = 1e-2,
 #else
 const double scl_h[]            = {1e0, 1e-2, 1e-3},
-             scl_dnu[]          = {1e-3, 1e-3, 1e-3, 1e-3},
-             scl_ksi[]          = {1e5,  1e-3, 1e-3},
+             scl_dnu[]          = {1e-3, 1e-3, 1e-3},
+             scl_ksi[]          = {1e5,  1e-3, 1e-3, 1e-3},
              scl_dnu_conf       = 1e2,
              scl_dnu_delta_conf = 1e-2,
 #endif
@@ -599,7 +599,11 @@ void prt_dnu(tps &K)
 
   CtoR(K, K_re, K_im); nus = dHdJ(K); nus_scl = nus*Id_scl;
 
-  printf("\ndnu_x:\n %8.5f %8.5f\n",
+  printf("\ndnu:\n");
+  printf("  k_22000  k_00220\n");
+  printf("  k_33000  k_11110  k_00330\n");
+  printf("  k_44000  k_33110  k_22220  k_00440\n");
+  printf("dnu_x:\n %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 0),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
   printf(" %8.5f %8.5f %8.5f\n",
@@ -611,8 +615,8 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[3], 2, 2, 1, 1, 0),
 	 h_ijklm(nus_scl[3], 1, 1, 2, 2, 0),
 	 h_ijklm(nus_scl[3], 0, 0, 3, 3, 0));
-
-  printf("dnu_y:\n %8.5f %8.5f\n",
+  printf("dnu_y:\n");
+  printf(" %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 0));
   printf(" %8.5f %8.5f %8.5f\n",
@@ -625,6 +629,9 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[4], 1, 1, 2, 2, 0),
 	 h_ijklm(nus_scl[4], 0, 0, 3, 3, 0));
 
+  printf("\nksi:\n");
+  printf("  k_11001  k_00111\n");
+  printf("  k_00002  k_11002  k_00112\n");
   printf("ksi_x:\n %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 1),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 1));
@@ -632,8 +639,8 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 2),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2));
-
-  printf("ksi_y:\n %8.5f %8.5f\n",
+  printf("ksi_y:\n");
+  printf(" %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 1),
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 1));
   printf(" %8.5f %8.5f %8.5f\n",
@@ -1053,8 +1060,8 @@ double get_f(double *bns)
     b.push_back(get_b(scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0));
     b.push_back(get_b(scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0));
 
-    b.push_back(get_b(scl_ksi[1],   K_re_scl,        1, 1, 0, 0, 2));
-    b.push_back(get_b(scl_ksi[1],   K_re_scl,        0, 0, 1, 1, 2));
+    b.push_back(get_b(scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2));
+    b.push_back(get_b(scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2));
 
     b.push_back(get_b(scl_dnu_conf, dnu,             0, 0, 0, 0, 0));
     b.push_back(get_b(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0));
@@ -1065,15 +1072,15 @@ double get_f(double *bns)
     b.push_back(get_b(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1));
     b.push_back(get_b(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1));
 
-    b.push_back(get_b(scl_ksi[2], K_re_scl, 1, 1, 0, 0, 3));
-    b.push_back(get_b(scl_ksi[2], K_re_scl, 0, 0, 1, 1, 3));
+    b.push_back(get_b(scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3));
+    b.push_back(get_b(scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3));
   }
 
   if (NO >= 7) {
-    b.push_back(get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0));
-    b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0));
-    b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0));
-    b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0));
+    b.push_back(get_b(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0));
+    b.push_back(get_b(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0));
+    b.push_back(get_b(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0));
+    b.push_back(get_b(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0));
 
     b.push_back(get_b(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2));
     b.push_back(get_b(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2));
@@ -1090,11 +1097,11 @@ double get_f(double *bns)
   }
 
   if (NO >= 9) {
-    b.push_back(get_b(scl_dnu[3], K_re_scl, 4, 4, 0, 0, 0));
-    b.push_back(get_b(scl_dnu[3], K_re_scl, 3, 3, 1, 1, 0));
-    b.push_back(get_b(scl_dnu[3], K_re_scl, 2, 2, 2, 2, 0));
-    b.push_back(get_b(scl_dnu[3], K_re_scl, 1, 1, 3, 3, 0));
-    b.push_back(get_b(scl_dnu[3], K_re_scl, 0, 0, 4, 4, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 4, 4, 0, 0, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 3, 3, 1, 1, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 2, 2, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 3, 3, 0));
+    b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 4, 4, 0));
   }
 
   chi2 = 0e0;
@@ -1229,8 +1236,8 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       A[++m][i] = get_a(scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0);
       A[++m][i] = get_a(scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0);
 
-      A[++m][i] = get_a(scl_ksi[1],   K_re_scl,        1, 1, 0, 0, 2);
-      A[++m][i] = get_a(scl_ksi[1],   K_re_scl,        0, 0, 1, 1, 2);
+      A[++m][i] = get_a(scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2);
+      A[++m][i] = get_a(scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2);
 
       A[++m][i] = get_a(scl_dnu_conf, dnu,             0, 0, 0, 0, 0);
       A[++m][i] = get_a(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
@@ -1241,19 +1248,19 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       A[++m][i] = get_a(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1);
       A[++m][i] = get_a(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1);
 
-      A[++m][i] = get_a(scl_ksi[2], K_re_scl, 1, 1, 0, 0, 3);
-      A[++m][i] = get_a(scl_ksi[2], K_re_scl, 0, 0, 1, 1, 3);
+      A[++m][i] = get_a(scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3);
+      A[++m][i] = get_a(scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3);
     }
 
     if (NO >= 7) {
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
-      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
+      A[++m][i] = get_a(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0);
+      A[++m][i] = get_a(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0);
+      A[++m][i] = get_a(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
 
-      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 2, 2, 0, 0, 2);
-      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 2);
-      A[++m][i] = get_a(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 2);
+      A[++m][i] = get_a(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
+      A[++m][i] = get_a(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
+      A[++m][i] = get_a(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2);
 
       A[++m][i] =
 	get_a(scl_dnu_conf2,   nus_scl[3], 1, 1, 0, 0, 0)
@@ -1270,11 +1277,11 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     }
 
     if (NO >= 9) {
-      A[++m][i] = get_a(scl_dnu[3], K_re_scl, 4, 4, 0, 0, 0);
-      A[++m][i] = get_a(scl_dnu[3], K_re_scl, 3, 3, 1, 1, 0);
-      A[++m][i] = get_a(scl_dnu[3], K_re_scl, 2, 2, 2, 2, 0);
-      A[++m][i] = get_a(scl_dnu[3], K_re_scl, 1, 1, 3, 3, 0);
-      A[++m][i] = get_a(scl_dnu[3], K_re_scl, 0, 0, 4, 4, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 4, 4, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 3, 3, 1, 1, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 2, 2, 2, 2, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 1, 1, 3, 3, 0);
+      A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 4, 4, 0);
     }
 
     for (j = 1; j <= m; j++)
@@ -1375,8 +1382,8 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0);
     f[++m] = get_b(scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0);
 
-    f[++m] = get_b(scl_ksi[1],   K_re_scl,        1, 1, 0, 0, 2);
-    f[++m] = get_b(scl_ksi[1],   K_re_scl,        0, 0, 1, 1, 2);
+    f[++m] = get_b(scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2);
+    f[++m] = get_b(scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2);
 
     f[++m] = get_b(scl_dnu_conf, dnu,             0, 0, 0, 0, 0);
     f[++m] = get_b(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
@@ -1387,15 +1394,15 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1);
     f[++m] = get_b(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1);
 
-    f[++m] = get_b(scl_ksi[2], K_re_scl, 1, 1, 0, 0, 3);
-    f[++m] = get_b(scl_ksi[2], K_re_scl, 0, 0, 1, 1, 3);
+    f[++m] = get_b(scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3);
+    f[++m] = get_b(scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3);
   }
 
   if (NO >= 7) {
-    f[++m] = get_b(scl_dnu[2], K_re_scl, 3, 3, 0, 0, 0);
-    f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 1, 1, 0);
-    f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 2, 2, 0);
-    f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 3, 3, 0);
+    f[++m] = get_b(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0);
+    f[++m] = get_b(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0);
+    f[++m] = get_b(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0);
+    f[++m] = get_b(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
 
     f[++m] = get_b(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
     f[++m] = get_b(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
@@ -1416,11 +1423,11 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   }
 
   if (NO >= 9) {
-    f[++m] = get_b(scl_dnu[3], K_re_scl, 4, 4, 0, 0, 0);
-    f[++m] = get_b(scl_dnu[3], K_re_scl, 3, 3, 1, 1, 0);
-    f[++m] = get_b(scl_dnu[3], K_re_scl, 2, 2, 2, 2, 0);
-    f[++m] = get_b(scl_dnu[3], K_re_scl, 1, 1, 3, 3, 0);
-    f[++m] = get_b(scl_dnu[3], K_re_scl, 0, 0, 4, 4, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 4, 4, 0, 0, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 3, 3, 1, 1, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 2, 2, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 3, 3, 0);
+    f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 4, 4, 0);
   }
 
   prt_h_K();
@@ -2173,10 +2180,10 @@ int main(int argc, char *argv[])
   printf("\nn_cell:             %1d\n", n_cell);
   printf("scl_h:              %7.1e, %7.1e, %7.1e\n",
 	 scl_h[0], scl_h[1], scl_h[2]);
-  printf("scl_dnu:            %7.1e, %7.1e, %7.1e, %7.1e\n",
-	 scl_dnu[0], scl_dnu[1], scl_dnu[2], scl_dnu[3]);
-  printf("scl_ksi:            %7.1e, %7.1e, %7.1e\n",
-	 scl_ksi[0], scl_ksi[1], scl_ksi[2]);
+  printf("scl_dnu:            %7.1e, %7.1e, %7.1e\n",
+	 scl_dnu[0], scl_dnu[1], scl_dnu[2]);
+  printf("scl_ksi:            %7.1e, %7.1e, %7.1e, %7.1e\n",
+	 scl_ksi[0], scl_ksi[1], scl_ksi[2], scl_ksi[3]);
   printf("scl_dnu_conf:       %7.1e\n", scl_dnu_conf);
   printf("scl_dnu_delta_conf: %7.1e\n", scl_dnu_delta_conf);
   printf("dnu/dJ:             %d\n", DNU);
