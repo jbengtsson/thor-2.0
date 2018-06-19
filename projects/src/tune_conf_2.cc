@@ -51,7 +51,7 @@ const double
       {6.6, 6.1},  {6.0, 2.8},  {2.2, 2.3}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {5e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {6e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3}, {4e-3, 2e-3}},
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
@@ -64,13 +64,13 @@ const double
 #if FIRST_PASS
 const double scl_h[]            = {0e0, 0e-6, 0e-6},
              scl_dnu[]          = {1e-4, 1e-4, 1e-4},
-             scl_ksi[]          = {0e5,  1e-4, 1e-4, 1e-4},
+             scl_ksi[]          = {0e5,  1e-4, 1e-4, 1e-4, 1e-4},
              scl_dnu_conf       = 1e0,
              scl_dnu_delta_conf = 1e0;
 #else
 const double scl_h[]            = {0e0, 0e-2, 0e-3},
              scl_dnu[]          = {1e-4, 1e-4, 1e-4},
-             scl_ksi[]          = {0e5,  1e-4, 1e-4, 1e-4},
+             scl_ksi[]          = {0e5,  1e-4, 1e-4, 1e-4, 1e-4},
              scl_dnu_conf       = 1e0,
              scl_dnu_delta_conf = 1e0;
 #endif
@@ -603,6 +603,8 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2));
   printf(" %8.5f\n",
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 3));
+  printf(" %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 4));
   printf("ksi_y:\n");
   printf(" %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 1),
@@ -613,6 +615,8 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2));
   printf(" %8.5f\n",
 	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 3));
+  printf(" %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 4));
 
   printf("\nTune confinement:\n");
   // printf(" %11.3e %11.3e\n",
@@ -701,6 +705,8 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else if (i-1 == n_h+2+3+2+1+1+3+2+4)
       printf("cross terms: k_22002, k_11112, k_00222\n");
     else if (i-1 == n_h+2+3+2+1+1+3+2+4+3)
+      printf("4th order chromaticity\n");
+    else if (i-1 == n_h+2+3+2+1+1+3+2+4+3+2)
       printf("ampl. dependant tune shift:"
 	     " k_44000, k_33110, k_22220, k_11330, k_00440\n");
 
@@ -1053,6 +1059,9 @@ double get_f(double *bns)
     b.push_back(get_b(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2));
     b.push_back(get_b(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2));
     b.push_back(get_b(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2));
+
+    b.push_back(get_b(scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4));
+    b.push_back(get_b(scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4));
   }
 
   if (NO >= 9) {
@@ -1220,6 +1229,9 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       A[++m][i] = get_a(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
       A[++m][i] = get_a(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
       A[++m][i] = get_a(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2);
+
+      A[++m][i] = get_a(scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4);
+      A[++m][i] = get_a(scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4);
     }
 
     if (NO >= 9) {
@@ -1353,6 +1365,9 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
     f[++m] = get_b(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
     f[++m] = get_b(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2);
+
+    f[++m] = get_b(scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4);
+    f[++m] = get_b(scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4);
   }
 
   if (NO >= 9) {
@@ -2122,8 +2137,8 @@ int main(int argc, char *argv[])
 	 scl_h[0], scl_h[1], scl_h[2]);
   printf("scl_dnu:            %7.1e, %7.1e, %7.1e\n",
 	 scl_dnu[0], scl_dnu[1], scl_dnu[2]);
-  printf("scl_ksi:            %7.1e, %7.1e, %7.1e, %7.1e\n",
-	 scl_ksi[0], scl_ksi[1], scl_ksi[2], scl_ksi[3]);
+  printf("scl_ksi:            %7.1e, %7.1e, %7.1e, %7.1e, %7.1e\n",
+	 scl_ksi[0], scl_ksi[1], scl_ksi[2], scl_ksi[3], scl_ksi[4]);
   printf("scl_dnu_conf:       %7.1e\n", scl_dnu_conf);
   printf("scl_dnu_delta_conf: %7.1e\n", scl_dnu_delta_conf);
   printf("dnu/dJ:             %d\n", DNU);
