@@ -51,7 +51,7 @@ const double
       {6.6, 6.1},  {6.0, 2.8},  {2.2, 2.3}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {7e-3, 3e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {5e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3}, {4e-3, 2e-3}},
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
@@ -61,61 +61,20 @@ const double
 
 #define FIRST_PASS 1
 
-// SLS-2.
-// const double scl_h[]      = {1e0,  1e0,  1e-1},
-//              scl_dnu[]    = {1e-5, 1e-5, 1e-5},
-//              scl_ksi[]    = {1e5,  1e-5, 1e-5, 1e-5},
-//              scl_dnu_conf = 5e-1;
-// DIAMOND-II.
-// const double scl_h[]      = {1e0, 1e0, 1e-3},
-
 #if FIRST_PASS
-const double scl_h[]            = {1e0, 0e-6, 0e-6},
+const double scl_h[]            = {0e0, 0e-6, 0e-6},
              scl_dnu[]          = {1e-4, 1e-4, 1e-4},
-             scl_ksi[]          = {1e5,  1e-4, 1e-4, 1e-4},
-             scl_dnu_conf       = 1e-3,
-             scl_dnu_delta_conf = 1e-3,
+             scl_ksi[]          = {0e5,  1e-4, 1e-4, 1e-4},
+             scl_dnu_conf       = 1e0,
+             scl_dnu_delta_conf = 1e0;
 #else
-const double scl_h[]            = {1e0, 1e-2, 1e-3},
-             scl_dnu[]          = {1e-3, 1e-3, 1e-3},
-             scl_ksi[]          = {1e5,  1e-3, 1e-3, 1e-3},
-             scl_dnu_conf       = 1e2,
-             scl_dnu_delta_conf = 1e-2,
+const double scl_h[]            = {0e0, 0e-2, 0e-3},
+             scl_dnu[]          = {1e-4, 1e-4, 1e-4},
+             scl_ksi[]          = {0e5,  1e-4, 1e-4, 1e-4},
+             scl_dnu_conf       = 1e0,
+             scl_dnu_delta_conf = 1e0;
 #endif
 
-// 6BA_1-2-jn-match.
-             // scl_dnu_conf = 5e1;
-// diamond_hmba_reduced_chro_revised_ver_01_tracy.
-             // scl_dnu_conf = 1e-3;
-// H-8-BA_II:
-#if DNU
-	     // NO = 7.
-             // scl_dnu_conf = 1e-2;
-	     // NO = 9.
-             // scl_dnu_conf = 1e-4;
-	     // MAX-V NO = 7.
-             // scl_dnu_conf  = 1e-3,
-             // scl_dnu_conf2 = 0e0;
-	     // SLS-2 NO = 7.
-             // scl_dnu_conf = 1e-3;
-	     // ALS-U NO = 7.
-             // scl_dnu_conf = 5e-3;
-	     // DIAMOND NO = 7.
-             // scl_dnu_conf = 1e-5,
-             scl_dnu_conf2 = 0e0;
-	     // DIAMOND NO = 9.
-             // scl_dnu_conf  = 5e-8,
-             // scl_dnu_conf2 = 0e0;
-	     // SLS-2 NO = 9.
-             // scl_dnu_conf = 1e-5;
-#else
-             // scl_dnu_conf = 1e1;
-	     // MAX-V NO = 7.
-             // scl_dnu_conf = 1e2,
-             scl_dnu_conf2 = 0e-10;
-	     // DIAMOND NO = 7.
-             // scl_dnu_conf = 1e1;
-#endif
 
 struct param_type {
 private:
@@ -460,6 +419,9 @@ tps f_gauss_quad_3D(double x, double y, double z)
   dK = dK - dK*Id;
   Id.identity(); Id[x_] = Id[px_] = Id[y_] = Id[py_] = 0e0;
   dK = dK - dK*Id;
+  std::cout << std::scientific << std::setprecision(3)
+  	    << "\n |dK| = " << dK << "\n";
+  exit(0);
   dK = dK*ps;
   // Compute absolute value.
   if (dK.cst() < 0e0) dK = -dK;
@@ -740,8 +702,6 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
     else if (i-1 == n_h+2+3+2+1+1+3+2+4)
       printf("cross terms: k_22002, k_11112, k_00222\n");
     else if (i-1 == n_h+2+3+2+1+1+3+2+4+3)
-      printf("tune confinement\n");
-    else if (i-1 == n_h+2+3+2+1+1+3+2+4+3+4)
       printf("ampl. dependant tune shift:"
 	     " k_44000, k_33110, k_22220, k_11330, k_00440\n");
 
@@ -1072,7 +1032,7 @@ double get_f(double *bns)
     b.push_back(get_b(scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2));
     b.push_back(get_b(scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2));
 
-    b.push_back(get_b(scl_dnu_conf, dnu,             0, 0, 0, 0, 0));
+    b.push_back(get_b(scl_dnu_conf,       dnu,       0, 0, 0, 0, 0));
     b.push_back(get_b(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0));
   }
 
@@ -1094,15 +1054,6 @@ double get_f(double *bns)
     b.push_back(get_b(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2));
     b.push_back(get_b(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2));
     b.push_back(get_b(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2));
-
-    b.push_back(get_b(scl_dnu_conf2,  nus_scl[3], 1, 1, 0, 0, 0)
-		+get_b(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0));
-    b.push_back(get_b(scl_dnu_conf2,  nus_scl[3], 0, 0, 1, 1, 0)
-		+get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0));
-    b.push_back(get_b(scl_dnu_conf2,  nus_scl[4], 0, 0, 1, 1, 0)
-		+get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0));
-    b.push_back(get_b(scl_dnu_conf2,  nus_scl[4], 1, 1, 0, 0, 0)
-		+get_b(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0));
   }
 
   if (NO >= 9) {
@@ -1248,7 +1199,7 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       A[++m][i] = get_a(scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2);
       A[++m][i] = get_a(scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2);
 
-      A[++m][i] = get_a(scl_dnu_conf, dnu,             0, 0, 0, 0, 0);
+      A[++m][i] = get_a(scl_dnu_conf,       dnu,       0, 0, 0, 0, 0);
       A[++m][i] = get_a(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
     }
 
@@ -1270,19 +1221,6 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       A[++m][i] = get_a(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
       A[++m][i] = get_a(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
       A[++m][i] = get_a(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2);
-
-      A[++m][i] =
-	get_a(scl_dnu_conf2,   nus_scl[3], 1, 1, 0, 0, 0)
-	+ get_a(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0);
-      A[++m][i] =
-	get_a(scl_dnu_conf2,   nus_scl[3], 0, 0, 1, 1, 0)
-	+ get_a(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0);
-      A[++m][i] =
-	get_a(scl_dnu_conf2,   nus_scl[4], 0, 0, 1, 1, 0)
-	+ get_a(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0);
-      A[++m][i] =
-	get_a(scl_dnu_conf2,   nus_scl[4], 1, 1, 0, 0, 0)
-	+ get_a(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0);
     }
 
     if (NO >= 9) {
@@ -1394,7 +1332,7 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2);
     f[++m] = get_b(scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2);
 
-    f[++m] = get_b(scl_dnu_conf, dnu,             0, 0, 0, 0, 0);
+    f[++m] = get_b(scl_dnu_conf,       dnu,       0, 0, 0, 0, 0);
     f[++m] = get_b(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
   }
 
@@ -1416,19 +1354,6 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     f[++m] = get_b(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
     f[++m] = get_b(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
     f[++m] = get_b(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2);
-
-    f[++m] =
-      get_b(scl_dnu_conf2,   nus_scl[3], 1, 1, 0, 0, 0)
-      + get_b(scl_dnu_conf2, nus_scl[3], 2, 2, 0, 0, 0);
-    f[++m] =
-      get_b(scl_dnu_conf2,   nus_scl[3], 0, 0, 1, 1, 0)
-      + get_b(scl_dnu_conf2, nus_scl[3], 0, 0, 2, 2, 0);
-    f[++m] =
-      get_b(scl_dnu_conf2,   nus_scl[4], 0, 0, 1, 1, 0)
-      + get_b(scl_dnu_conf2, nus_scl[4], 0, 0, 2, 2, 0);
-    f[++m] =
-      get_b(scl_dnu_conf2,   nus_scl[4], 1, 1, 0, 0, 0)
-      + get_b(scl_dnu_conf2, nus_scl[4], 2, 2, 0, 0, 0);
   }
 
   if (NO >= 9) {
@@ -1544,7 +1469,7 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
 #endif
 
   dvcopy(bn_prms.bn, n_bn, bn_ref);
-  if (cg_meth)
+  if (true)
     conj_grad(n_iter, bn_prms.bn, bn_prms.dbn, g_, h_, get_f);
   else
     bn_prms.set_dprm();
@@ -1555,6 +1480,7 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
     if (i % n_prt == 0) printf("\n");
   }
   if (n_bn % n_prt != 0) printf("\n");
+  printf("\n");
   dbn_max = 0e0;
   for (i = 1; i <= n_bn; i++) {
     dbn_max = max(fabs((bn_prms.bn[i]-bn_ref[i])), dbn_max);
@@ -1564,7 +1490,7 @@ void min_conj_grad(double &chi2, double &dbn_max, double *g_, double *h_,
   if (n_bn % n_prt != 0) printf("\n");
 
   prt_bn(bn_prms);
-  bn_prms.set_prm();
+  // bn_prms.set_prm();
   prt_mfile("flat_file.fit");
 
   free_dvector(bn_ref, 1, n_bn); free_dvector(f, 1, m_max);
@@ -2037,9 +1963,9 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("o5", 4, 5e2, 1.0);
       bn_prms.add_prm("o6", 4, 5e2, 1.0);
 
-      // bn_prms.add_prm("o4", 5, 1e7, 1.0);
-      // bn_prms.add_prm("o5", 5, 1e7, 1.0);
-      // bn_prms.add_prm("o6", 5, 1e7, 1.0);
+      bn_prms.add_prm("o4", 5, 1e5, 1.0);
+      bn_prms.add_prm("o5", 5, 1e5, 1.0);
+      bn_prms.add_prm("o6", 5, 1e5, 1.0);
 
       // bn_prms.svd_list.push_back(11);
       // bn_prms.svd_list.push_back(8);
@@ -2210,7 +2136,7 @@ int main(int argc, char *argv[])
   printf("beta_inj:        %7.2f, %7.2f\n",
 	 beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
   if (c_g) {
-    printf("Conj. Grad.:     %d\n", n_cut);
+    printf("Conj. Grad.:       %d\n", n_cut);
     // printf("Conj. Grad. List of Singular Values:\n");
     // for (j = 0; j < (int)bn_prms.svd_list.size(); j++)
     //   printf(" %2d", bn_prms.svd_list[j]);
