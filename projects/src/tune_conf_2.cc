@@ -419,9 +419,8 @@ tps f_gauss_quad_3D(double x, double y, double z)
   dK = dK - dK*Id;
   Id.identity(); Id[x_] = Id[px_] = Id[y_] = Id[py_] = 0e0;
   dK = dK - dK*Id;
-  std::cout << std::scientific << std::setprecision(3)
-  	    << "\n |dK| = " << dK << "\n";
-  exit(0);
+  // std::cout << std::scientific << std::setprecision(3)
+  // 	    << "\n |dK| = " << dK << "\n";
   dK = dK*ps;
   // Compute absolute value.
   if (dK.cst() < 0e0) dK = -dK;
