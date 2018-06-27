@@ -128,7 +128,8 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       sscanf(line, "%s %d %d", elem[ind].Name, &Fnum, &Knum);
       k = strlen(elem[ind].Name);
       if (k >= name_length) {
-	printf("rd_mfile: name_length) exceeded %d (%d)\n", k, name_length);
+	printf("rd_mfile: name_length) exceeded %d (%d) %s\n",
+	       k, name_length, elem[ind].Name);
 	exit(1);
       }
       elem[ind].Fnum = Fnum; elem[ind].Knum = Knum;

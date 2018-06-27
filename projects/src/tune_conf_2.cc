@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 9
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -41,12 +41,12 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II H-8-BA     9.
 // DIAMOND-II H-8-BA II 10.
 // ALS-U                11.
-const int lat_case = 6, n_prt = 8;
+const int lat_case = 2, n_prt = 8;
 
 // Center of straight.
 const double
   beta_inj[][2] =
-    {{ 2.9, 3.1},  {3.4, 1.9}, { 9.8, 5.4}, {9.8, 5.4},
+    {{ 2.9, 3.1},  {5.2, 3.2}, { 9.8, 5.4}, {9.8, 5.4},
      {10.6, 8.6}, {12.0, 2.9},  {9.2, 3.2}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {2.2, 2.3}},
   A_max[][2] =
@@ -1976,7 +1976,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
     bn_prms.add_prm("syyh", 3, 5e5, 1.0);
 
-    if (false) {
+    if (!fit_ksi) {
       bn_prms.add_prm("oxx",  4, 5e5, 1.0);
       bn_prms.add_prm("oxy",  4, 5e5, 1.0);
       bn_prms.add_prm("oyy",  4, 5e5, 1.0);
