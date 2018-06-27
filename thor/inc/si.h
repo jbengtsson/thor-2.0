@@ -91,7 +91,7 @@ typedef struct {
          *tab1, *tab2;                 // tab of x/z meshes from Radia
 } kick_map_type;
 
-const int name_length = 15;
+const int name_length = 20;
 
 /* define element structure */
 template<typename T> class elem_type {
