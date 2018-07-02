@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -47,10 +47,10 @@ const int lat_case = 2, n_prt = 8;
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  {5.2, 3.2}, { 9.8, 5.4}, {9.8, 5.4},
-     {10.6, 8.6}, {12.0, 2.9},  {9.2, 3.2}, {4.6, 7.6},
+     {10.6, 8.6}, {11.8, 2.6},  {9.2, 3.2}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {2.2, 2.3}},
   A_max[][2] =
-    {{1.5e-3, 1.5e-3}, {8e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
+    {{1.5e-3, 1.5e-3}, {8e-3, 5e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
      {  5e-3,   3e-3}, {6e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3}, {4e-3, 2e-3}},
   delta_max[] =
@@ -64,7 +64,7 @@ const double
 #if FIRST_PASS
 const double scl_h[]            = {0e0,  0e-6, 0e-6},
              scl_dnu[]          = {1e-4, 1e-4, 1e-4},
-             scl_ksi[]          = {0e5,  1e-4, 1e-4, 1e-4, 1e-4},
+             scl_ksi[]          = {1e5,  1e-4, 1e-4, 1e-4, 1e-4},
              scl_dnu_conf       = 1e0,
              scl_dnu_delta_conf = 1e0;
 #else
@@ -1968,10 +1968,15 @@ void lat_select(const int lat_case)
     // SLS-2.
     n_cell = 1;
 
-    bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
-    bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+    if (false) {
+      // Degenerate with sfh & sdh.
+      bn_prms.add_prm("sdmh", 3, 5e5, 1.0);
+      bn_prms.add_prm("sfmh", 3, 5e5, 1.0);
+    }
+
     bn_prms.add_prm("sdh",  3, 5e5, 1.0);
     bn_prms.add_prm("sfh",  3, 5e5, 1.0);
+
     bn_prms.add_prm("sxxh", 3, 5e5, 1.0);
     bn_prms.add_prm("sxyh", 3, 5e5, 1.0);
     bn_prms.add_prm("syyh", 3, 5e5, 1.0);
@@ -1981,17 +1986,25 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("oxy",  4, 5e5, 1.0);
       bn_prms.add_prm("oyy",  4, 5e5, 1.0);
       bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
-      bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
-      bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
-    }
 
-    if (false) {
-      bn_prms.add_prm("oxx",  6, 5e5, 1.0);
-      bn_prms.add_prm("oxy",  6, 5e5, 1.0);
-      bn_prms.add_prm("oyy",  6, 5e5, 1.0);
-      bn_prms.add_prm("ocxm", 6, 5e5, 1.0);
-      bn_prms.add_prm("ocx1", 6, 5e5, 1.0);
-      bn_prms.add_prm("ocx2", 6, 5e5, 1.0);
+      if (false) {
+	// Degenerate with ocxm.
+	bn_prms.add_prm("ocx1", 4, 5e5, 1.0);
+	bn_prms.add_prm("ocx2", 4, 5e5, 1.0);
+      }
+
+
+      if (!false) {
+	bn_prms.add_prm("sdh",  4, 5e5, 1.0);
+	bn_prms.add_prm("sfh",  4, 5e5, 1.0);
+
+	bn_prms.add_prm("sdh",  5, 5e5, 1.0);
+	bn_prms.add_prm("sfh",  5, 5e5, 1.0);
+
+	bn_prms.add_prm("oxx",  6, 5e5, 1.0);
+	bn_prms.add_prm("oxy",  6, 5e5, 1.0);
+	bn_prms.add_prm("oyy",  6, 5e5, 1.0);
+      }
     }
     break;
   case 3 ... 4:
@@ -2049,21 +2062,26 @@ void lat_select(const int lat_case)
     n_cell = 2;
 
     if (fit_ksi) {
-      bn_prms.add_prm("sf",  3, 1e4, 1.0);
+      bn_prms.add_prm("sfa", 3, 1e4, 1.0);
       bn_prms.add_prm("sda", 3, 1e4, 1.0);
+      bn_prms.add_prm("sfb", 3, 1e4, 1.0);
       bn_prms.add_prm("sdb", 3, 1e4, 1.0);
+      bn_prms.add_prm("sdc", 3, 1e4, 1.0);
+      bn_prms.add_prm("sdd", 3, 1e4, 1.0);
     } else {
       bn_prms.add_prm("o1a", 4, 5e2, 1.0);
       bn_prms.add_prm("o2a", 4, 5e2, 1.0);
+      bn_prms.add_prm("o3a", 4, 5e2, 1.0);
       bn_prms.add_prm("o1b", 4, 5e2, 1.0);
       bn_prms.add_prm("o2b", 4, 5e2, 1.0);
-      bn_prms.add_prm("o3",  4, 5e2, 1.0);
+      bn_prms.add_prm("o3b", 4, 5e2, 1.0);
 
       bn_prms.add_prm("o1a", 6, 5e2, 1.0);
       bn_prms.add_prm("o2a", 6, 5e2, 1.0);
+      bn_prms.add_prm("o3a", 6, 6e2, 1.0);
       bn_prms.add_prm("o1b", 6, 5e2, 1.0);
       bn_prms.add_prm("o2b", 6, 5e2, 1.0);
-      bn_prms.add_prm("o3",  5, 6e2, 1.0);
+      bn_prms.add_prm("o3b", 6, 6e2, 1.0);
 
       // bn_prms.add_prm("s5",  4, 5e2, 1.0);
 
@@ -2314,7 +2332,7 @@ int main(int argc, char *argv[])
   }
 
 #if FIRST_PASS
-  no_mpoles(Oct); no_mpoles(Dec);; no_mpoles(Dodec);
+  no_mpoles(Oct); no_mpoles(Dec); no_mpoles(Dodec);
 #endif
 
   bn_prms.ini_prm();

@@ -30,16 +30,14 @@
 !      parameter (lda=30000, lst=200000000, lea=500000, lia=80000,         &
 !      parameter (lda=30000, lst=230000000, lea=500000, lia=80000,         &
 !     &           lno=16, lnv=7)
-!     For laptop, NO = 7:
-      parameter (lda=100000, lst=400000000, lea=500000, lia=80000,         &
-!     For laptop, NO = 9:
-!      parameter (lda=100000, lst=600000000, lea=500000, lia=80000,         &
-!      parameter (lda=100000, lst=650000000, lea=500000, lia=80000,         &
-     &           lno=16, lnv=7)
-!      parameter (lda=100000, lst=800000000, lea=500000, lia=80000,         &
-!     &           lno=16, lnv=7)
-!      parameter (lda=200000, lst=800000000, lea=500000, lia=80000,      &
-!     &           lno=16, lnv=7)
+!     For Laptop, NO = 7:
+!      parameter (lda=100000, lst=400000000, lea=500000, lia=80000,         &
+!     &           lno=9, lnv=7)
+!     For Laptop, NO = 9:
+      parameter (lda=100000, lst=700000000, lea=500000, lia=80000,         &
+     &           lno=9, lnv=7)
+!      parameter (lda=100000, lst=1500000000, lea=500000, lia=80000,      &
+!     &           lno=12, lnv=7)
 
 
       integer       nda, ndamaxi
