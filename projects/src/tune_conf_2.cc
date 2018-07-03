@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 11
 
 #include "thor_lib.h"
 
@@ -50,7 +50,7 @@ const double
      {10.6, 8.6}, {11.8, 2.6},  {9.2, 3.2}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {2.2, 2.3}},
   A_max[][2] =
-    {{1.5e-3, 1.5e-3}, {8e-3, 5e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
+    {{1.5e-3, 1.5e-3}, {7e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
      {  5e-3,   3e-3}, {6e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3}, {4e-3, 2e-3}},
   delta_max[] =
@@ -562,9 +562,10 @@ void prt_dnu(tps &K)
   CtoR(K, K_re, K_im); nus = dHdJ(K); nus_scl = nus*Id_scl;
 
   printf("\ndnu:\n");
-  printf("  k_22000  k_00220\n");
-  printf("  k_33000  k_11110  k_00330\n");
-  printf("  k_44000  k_33110  k_22220  k_00440\n");
+  printf("  k_22000 k_11110 k_00220\n");
+  printf("  k_33000 k_22110 k_11220 k_00330\n");
+  printf("  k_44000 k_33110 k_22220 k_11330 k_00440\n");
+  printf("  k_55000 k_44110 k_33220 k_22330 k_11440 k_00550\n");
   printf("dnu_x:\n %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 0),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
@@ -577,6 +578,12 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[3], 2, 2, 1, 1, 0),
 	 h_ijklm(nus_scl[3], 1, 1, 2, 2, 0),
 	 h_ijklm(nus_scl[3], 0, 0, 3, 3, 0));
+  printf(" %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 4, 4, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 3, 3, 1, 1, 0),
+	 h_ijklm(nus_scl[3], 2, 2, 2, 2, 0),
+	 h_ijklm(nus_scl[3], 1, 1, 3, 3, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 4, 4, 0));
   printf("dnu_y:\n");
   printf(" %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
@@ -590,6 +597,12 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[4], 2, 2, 1, 1, 0),
 	 h_ijklm(nus_scl[4], 1, 1, 2, 2, 0),
 	 h_ijklm(nus_scl[4], 0, 0, 3, 3, 0));
+  printf(" %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 4, 4, 0, 0, 0),
+	 h_ijklm(nus_scl[4], 3, 3, 1, 1, 0),
+	 h_ijklm(nus_scl[4], 2, 2, 2, 2, 0),
+	 h_ijklm(nus_scl[4], 1, 1, 3, 3, 0),
+	 h_ijklm(nus_scl[4], 0, 0, 4, 4, 0));
 
   printf("\nksi:\n");
   printf("  k_22001  k_11111  k_00221\n");
