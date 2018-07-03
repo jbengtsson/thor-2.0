@@ -578,7 +578,7 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[3], 2, 2, 1, 1, 0),
 	 h_ijklm(nus_scl[3], 1, 1, 2, 2, 0),
 	 h_ijklm(nus_scl[3], 0, 0, 3, 3, 0));
-  printf(" %8.5f %8.5f %8.5f %8.5f\n",
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 4, 4, 0, 0, 0),
 	 h_ijklm(nus_scl[3], 3, 3, 1, 1, 0),
 	 h_ijklm(nus_scl[3], 2, 2, 2, 2, 0),
@@ -597,7 +597,7 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[4], 2, 2, 1, 1, 0),
 	 h_ijklm(nus_scl[4], 1, 1, 2, 2, 0),
 	 h_ijklm(nus_scl[4], 0, 0, 3, 3, 0));
-  printf(" %8.5f %8.5f %8.5f %8.5f\n",
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 4, 4, 0, 0, 0),
 	 h_ijklm(nus_scl[4], 3, 3, 1, 1, 0),
 	 h_ijklm(nus_scl[4], 2, 2, 2, 2, 0),
