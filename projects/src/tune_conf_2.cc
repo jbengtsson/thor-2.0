@@ -62,7 +62,7 @@ const double
 #define FIRST_PASS 1
 
 #if FIRST_PASS
-const double scl_h[]            = {0e0,  0e-6, 0e-6},
+const double scl_h[]            = {1e0,  1e-6, 1e-6},
              scl_dnu[]          = {1e-4, 1e-4, 1e-4},
              scl_ksi[]          = {1e5,  1e-4, 1e-4, 1e-4, 1e-4},
              scl_dnu_conf       = 1e0,
@@ -278,7 +278,8 @@ tps gauss_quad_2D(tps (*func)(const double, const double),
 
 tps f_gauss_quad_2D(double x, double y)
 {
-  int          k, jj[ss_dim];
+  int          k;
+  long int     jj[ss_dim];
   tps          dK, dnu[2], K_re_no_m_one, K_re_no;
   ss_vect<tps> ps, Id;
 

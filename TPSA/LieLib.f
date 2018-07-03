@@ -5,7 +5,7 @@
      &           bind(C, name="lieinit_")
       use iso_c_binding
       implicit none
-      integer(C_INT) no1,nv1,nd1,ndpt1,iref1,nis
+      integer(C_LONG) no1,nv1,nd1,ndpt1,iref1,nis
 
       integer i,ndc1,ndim
       double precision ang,ra,st
@@ -330,7 +330,7 @@
       subroutine etmtree(y,x) bind(C, name="etmtree_")
       use iso_c_binding
       implicit none
-      integer(C_INT) y(*), x(*)
+      integer(C_LONG) y(*), x(*)
 
       integer i,ie,iv,ndim,ndim2,nt,ntt
 ! ROUTINES USING THE MAP IN AD-FORM
@@ -364,7 +364,7 @@
       subroutine etppush(x,xi) bind(C, name="etppush_")
       use iso_c_binding
       implicit none
-      integer(C_INT) x(*)
+      integer(C_LONG) x(*)
       real(C_DOUBLE) xi(*)
 
       integer i,ndim,ndim2,ntt
@@ -391,7 +391,7 @@
       subroutine etppush2(x,xi,xff) bind(C, name="etppush2_")
       use iso_c_binding
       implicit none
-      integer(C_INT) x(*)
+      integer(C_LONG) x(*)
       real(C_DOUBLE) xi(*), xff(*)
 
       integer i,ndim,ndim2,ntt
@@ -445,7 +445,7 @@
       subroutine etcct(x,y,z) bind(C, name="etcct_")
       use iso_c_binding
       implicit none
-      integer(C_INT) x(*),y(*),z(*)
+      integer(C_LONG) x(*),y(*),z(*)
 
       integer i,ie,iv,ndim,ndim2,nt,ntt
 !  Z=XoY
@@ -595,7 +595,7 @@
       subroutine etinv(x,y) bind(C, name="etinv_")
       use iso_c_binding
       implicit none
-      integer(C_INT) x(*), y(*)
+      integer(C_LONG) x(*), y(*)
 
       integer i,ie1,ie2,iv1,iv2,ndim,ndim2,nt,ntt
 ! Y=X^-1
@@ -638,7 +638,7 @@
       subroutine etpin(x,y,jj) bind(C, name="etpin_")
       use iso_c_binding
       implicit none
-      integer(C_INT) x(*), y(*), jj(*)
+      integer(C_LONG) x(*), y(*), jj(*)
 
       integer i,ie1,ie2,iv1,iv2,ndim,ndim2,nt,ntt
 !  Y=PARTIAL INVERSION OF X SEE BERZ'S PACKAGE
@@ -745,7 +745,7 @@
       subroutine comcfu(b,f1,f2,c) bind(C, name="comcfu_")
       use iso_c_binding
       implicit none
-      integer(C_INT) b(*), c(*)
+      integer(C_LONG) b(*), c(*)
       real(C_DOUBLE), bind(C) :: f1, f2
       external       f1, f2
 
@@ -767,7 +767,7 @@
       subroutine take(h,m,ht) bind(C, name="take_")
       use iso_c_binding
       implicit none
-      integer(C_INT) h, ht, m
+      integer(C_LONG) h, ht, m
 
       integer i,ndim,ntt
       double precision r
@@ -960,7 +960,7 @@
       subroutine prresflo(h,eps,mfile) bind(C, name="prresflo_")
       use iso_c_binding
       implicit none
-      integer(C_INT) h(*), mfile
+      integer(C_LONG) h(*), mfile
       real(C_DOUBLE) eps
  
       integer i,ndim2,ntt
@@ -996,7 +996,7 @@
       real(C_DOUBLE) function filtres(j) bind(C, name="filtres_")
       use iso_c_binding
       implicit none
-      integer(C_INT) j(*)
+      integer(C_LONG) j(*)
 
       integer i,ic,ndim
       parameter (ndim=3)
@@ -1083,7 +1083,7 @@
       subroutine intd(v,h,sca) bind(C, name="intd_")
       use iso_c_binding
       implicit none
-      integer(C_INT) v(*), h
+      integer(C_LONG) v(*), h
       real(C_DOUBLE) sca
 
       integer i,ndim,ndim2,ntt
@@ -1328,7 +1328,7 @@
      &           bind(C, name="fexpo_")
       use iso_c_binding
       implicit none
-      integer(C_INT) h, x(*), w(*), nrmin, nrmax, ifac
+      integer(C_LONG) h, x(*), w(*), nrmin, nrmax, ifac
       real(C_DOUBLE) sca
 
       integer ndim,ndim2,nrma,nrmi,ntt
@@ -1392,7 +1392,7 @@
       subroutine etpoi(x,y,h) bind(C, name="etpoi_")
       use iso_c_binding
       implicit none
-      integer(C_INT) x, y, h
+      integer(C_LONG) x, y, h
 
       integer i,ndim,ndim2,ntt
 ! ETPOI TAKES THE POISSON BRACKET OF TWO FUNCTIONS
@@ -1433,7 +1433,7 @@
       subroutine exp1d(h,x,y,eps,non) bind(C, name="exp1d_")
       use iso_c_binding
       implicit none
-      integer(C_INT) h, x, y, non
+      integer(C_LONG) h, x, y, non
       real(C_DOUBLE) eps
 
       integer ndim,ndim2,ntt
@@ -1460,7 +1460,7 @@
       subroutine expnd2(h,x,w,eps,nrmax) bind(C, name="expnd2_")
       use iso_c_binding
       implicit none
-      integer(C_INT) h, x(*), w(*), nrmax
+      integer(C_LONG) h, x(*), w(*), nrmax
       real(C_DOUBLE) eps
 
       integer j,ndim,ndim2,ntt
@@ -1491,7 +1491,7 @@
       subroutine flofacg(xy,h,epsone) bind(C, name="flofacg_")
       use iso_c_binding
       implicit none
-      integer(C_INT) xy(*), h(*), epsone
+      integer(C_LONG) xy(*), h(*), epsone
 
       integer i,k,kk,ndim,ndim2,nrmax,ntt
       double precision eps,r,xn,xnbefore,xnorm,xnorm1,xx
@@ -1619,7 +1619,7 @@
       subroutine liefact(xy,x,h) bind(C, name="liefact_")
       use iso_c_binding
       implicit none
-      integer(C_INT) xy(*), x(*), h
+      integer(C_LONG) xy(*), x(*), h
 
       integer ndim,ndim2,ntt
 ! SYMPLECTIC DRAGT-FINN FACTORIZATION WRAPPING FLOFAC
@@ -1645,7 +1645,7 @@
      &                bind(C, name="mapnorm_")
       use iso_c_binding
       implicit none
-      integer(C_INT) x(*), a1(*), a2(*), ft, xy(*), h,nord
+      integer(C_LONG) x(*), a1(*), a2(*), ft, xy(*), h,nord
 
       integer isi,ndim,ndim2,ntt
 !--NORMALIZATION ROUTINES OF LIELIB
@@ -1673,7 +1673,7 @@
       subroutine gettura(psq,radsq) bind(C, name="gettura_")
       use iso_c_binding
       implicit none
-      integer(C_INT) ndim
+      integer(C_LONG) ndim
       parameter (ndim=3)
       real(C_DOUBLE) psq(ndim),radsq(ndim)
 
@@ -1718,7 +1718,7 @@
       subroutine idprset(idprint) bind(C, name="idprset_")
       use iso_c_binding
       implicit none
-      integer(C_INT) idprint
+      integer(C_LONG) idprint
 
       integer ndim,ndim2
       parameter (ndim=3)
@@ -1740,7 +1740,7 @@
      &                         bind(C, name="mapnormf_")
       use iso_c_binding
       implicit none
-      integer(C_INT) x(*), a1(*), a2(*), ft(*), xy(*), h(*), nord, isi
+      integer(C_LONG) x(*), a1(*), a2(*), ft(*), xy(*), h(*), nord, isi
 
       integer ij,ndim,ndim2,ntt
       double precision angle,p,rad,st,x2pi,x2pii
@@ -1820,7 +1820,7 @@
       subroutine gofix(xy,a1,a1i,nord) bind(C, name="gofix_")
       use iso_c_binding
       implicit none
-      integer(C_INT) xy(*), a1(*), a1i(*), nord
+      integer(C_LONG) xy(*), a1(*), a1i(*), nord
 
       integer i,ndim,ndim2,ntt
       double precision xic
@@ -2078,7 +2078,7 @@
       real(C_DOUBLE) function xgam(j) bind(C, name="xgam_")
       use iso_c_binding
       implicit none
-      integer(C_INT) j(*)
+      integer(C_LONG) j(*)
 
       integer i,ic,ij,ik,ndim,ndim2
       double precision ad,ans,as,ex,exh
@@ -2130,7 +2130,7 @@
       real(C_DOUBLE) function xgbm(j) bind(C, name="xgbm_")
       use iso_c_binding
       implicit none
-      integer(C_INT) j(*)
+      integer(C_LONG) j(*)
 
       integer i,ic,ij,ik,ndim,ndim2
       double precision ad,ans,as,ex,exh
@@ -2181,7 +2181,7 @@
       real(C_DOUBLE) function filt(j) bind(C, name="filt_")
       use iso_c_binding
       implicit none
-      integer(C_INT) j(*)
+      integer(C_LONG) j(*)
 
       integer i,ic,ic1,ic2,ij,ik,ji,ndim,ndim2,nreso
 !  PROJECTION FUNCTIONS ON THE KERNEL ANMD RANGE OF (1-R^-1)
@@ -2239,7 +2239,7 @@
       real(C_DOUBLE) function dfilt(j) bind(C, name="dfilt_")
       use iso_c_binding
       implicit none
-      integer(C_INT) j(*)
+      integer(C_LONG) j(*)
 
       integer ndim,ndim2,nreso
       double precision fil,filt
@@ -2316,7 +2316,7 @@
       subroutine dhdj(h,t) bind(C, name="dhdj_")
       use iso_c_binding
       implicit none
-      integer(C_INT) h, t(*)
+      integer(C_LONG) h, t(*)
 
       integer i,ndim,ndim2,ntt
       double precision coe,x2pi
@@ -2560,7 +2560,7 @@
       subroutine ctor(c1,r2,i2) bind(C, name="ctor_")
       use iso_c_binding
       implicit none
-      integer(C_INT) c1, r2, i2
+      integer(C_LONG) c1, r2, i2
 
       integer ndim2,ntt
 ! CHANGES OF BASIS
@@ -2590,7 +2590,7 @@
       subroutine rtoc(r1,i1,c2) bind(C, name="rtoc_")
       use iso_c_binding
       implicit none
-      integer(C_INT) r1, i1, c2
+      integer(C_LONG) r1, i1, c2
 
       integer ndim2,ntt
 !  INVERSE OF CTOR
@@ -2804,9 +2804,9 @@
      &                bind(C, name="midbflo_")
       use iso_c_binding
       implicit none
-      integer(C_INT) ndim
+      integer(C_LONG) ndim
       parameter (ndim=3)
-      integer(C_INT) c(*), a2(*), a2i(*)
+      integer(C_LONG) c(*), a2(*), a2i(*)
       real(C_DOUBLE) q(ndim), a(ndim), st(ndim)
 
       integer i,j,ndim2,ntt
@@ -2905,7 +2905,7 @@
      &                bind(C, name="mapflol_")
       use iso_c_binding
       implicit none
-      integer(C_INT) ndim, ndim2
+      integer(C_LONG) ndim, ndim2
       parameter (ndim=3, ndim2=6)
       real(C_DOUBLE) sa(ndim2,ndim2),sai(ndim2,ndim2), cr(ndim2,ndim2), &
      &               cm(ndim2,ndim2), st(ndim)
@@ -3366,7 +3366,7 @@
       real(C_DOUBLE) function dlie(j) bind(C, name="dlie_")
       use iso_c_binding
       implicit none
-      integer(C_INT) j(*)
+      integer(C_LONG) j(*)
 
       integer i,ndim
       parameter (ndim=3)
@@ -3386,7 +3386,7 @@
       real(C_DOUBLE) function rext(j) bind(C, name="rext_")
       use iso_c_binding
       implicit none
-      integer(C_INT) j(*)
+      integer(C_LONG) j(*)
 
       integer i,lie,mo,ndim
       parameter (ndim=3)
@@ -3561,7 +3561,7 @@
      &                bind(C, name="eig6_")
       use iso_c_binding
       implicit none
-      integer(C_INT) ndim2
+      integer(C_LONG) ndim2
       parameter (ndim2=6)
       real(C_DOUBLE) fm(ndim2,ndim2), aieval(ndim2), reval(ndim2),      &
      &               revec(ndim2,ndim2), aievec(ndim2,ndim2)
@@ -4458,7 +4458,7 @@
       real(C_DOUBLE) function avepol(j) bind(C, name="avepol_")
       use iso_c_binding
       implicit none
-      integer(C_INT) j(*)
+      integer(C_LONG) j(*)
 
       integer i,ndim
       parameter (ndim=3)
@@ -4578,7 +4578,7 @@
       real(C_DOUBLE) function planar(j) bind(C, name="planar_")
       use iso_c_binding
       implicit none
-      integer(C_INT) j(*)
+      integer(C_LONG) j(*)
 
       integer i,ndim
       parameter (ndim=3)
@@ -4610,7 +4610,7 @@
       real(C_DOUBLE) function killnonl(j) bind(C, name="killnonl_")
       use iso_c_binding
       implicit none
-      integer(C_INT) j(*)
+      integer(C_LONG) j(*)
 
       integer i,ic,ndim
       parameter (ndim=3)

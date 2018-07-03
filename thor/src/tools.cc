@@ -214,7 +214,8 @@ ss_vect<tps> get_A_CS(const int n, const ss_vect<tps> &A, double dnu[])
 void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
 	      const ss_vect<tps> &A, double twoJ[])
 {
-  int             j, k, jj[ss_dim];
+  int             j, k;
+  long int        jj[ss_dim];
   ss_vect<double> z;
   ss_vect<tps>    A1;
 
@@ -237,7 +238,8 @@ void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
 void get_twoJ(const int n_DOF, const ss_vect<tps> &ps,
 	      const ss_vect<tps> &A, tps twoJ[])
 {
-  int          j, k, jj[ss_dim];
+  int          j, k;
+  long int     jj[ss_dim];
   ss_vect<tps> A1, z;
 
   for (j = 0; j < ss_dim; j++)
@@ -378,7 +380,8 @@ void prt_lat(const char *fname, const int n)
 
 void get_matrix(const ss_vect<tps> &Map, float **M)
 {
-  int i, j, jj[ss_dim];
+  int      i, j;
+  long int jj[ss_dim];
 
   for (i = 0; i < ss_dim; i++)
     jj[i] = 0;
@@ -2253,7 +2256,8 @@ bool get_COD(const int i_max, const double eps, const double delta,
 	     const bool prt)
 {
   bool            cod;
-  int             n_dim, n_iter, j, jj[ss_dim];
+  int             n_dim, n_iter, j;
+  long int        jj[ss_dim];
   double          dx_abs = 0.0;
   ss_vect<double> x1, dx;
   ss_vect<tps>    I, dx0;
@@ -2436,7 +2440,8 @@ ss_vect<tps> get_S(const int n_DOF)
 
 ss_vect<tps> tp_S(const int n_DOF, const ss_vect<tps> &A)
 {
-  int          j, jj[ss_dim];
+  int          j;
+  long int     jj[ss_dim];
   ss_vect<tps> S;
 
   for (j = 1; j <= ss_dim; j++)
@@ -2463,7 +2468,8 @@ bool is_h_ijklm(const int i1, const int j1, const int k1,
 double h_ijklm(const tps &h, const int i, const int j, const int k,
 	       const int l, const int m)
 {
-  int i1, jj[ss_dim];
+  int      i1;
+  long int jj[ss_dim];
 
   for (i1 = 0; i1 < ss_dim; i1++)
     jj[i1] = 0;
@@ -2476,8 +2482,9 @@ double h_ijklm_scl(const tps &h, const int i, const int j, const int k,
 		   const int l, const int m,
 		   const double nu_x, const double nu_y)
 {
-  int    i1, jj[ss_dim];
-  double scl;
+  int      i1;
+  long int jj[ss_dim];
+  double   scl;
 
   for (i1 = 0; i1 < ss_dim; i1++)
     jj[i1] = 0;
@@ -2503,7 +2510,8 @@ double h_ijklm_scl(const tps &h, const int i, const int j, const int k,
 double h_ijklm_p(const tps &h, const int i, const int j, const int k,
 		 const int l, const int m, const int p)
 {
-  int  i1, jj[ss_dim];
+  int      i1;
+  long int jj[ss_dim];
 
   for (i1 = 0; i1 < ss_dim; i1++)
     jj[i1] = 0;
@@ -2517,8 +2525,9 @@ double h_ijklm_p_scl(const tps &h, const int i, const int j, const int k,
 		     const int l, const int m, const int p,
 		     const double nu_x, const double nu_y)
 {
-  int    i1, jj[ss_dim];
-  double scl;
+  int      i1;
+  long int jj[ss_dim];
+  double   scl;
 
   for (i1 = 0; i1 < ss_dim; i1++)
     jj[i1] = 0;
@@ -2536,7 +2545,8 @@ double h_ijklm_p_scl(const tps &h, const int i, const int j, const int k,
 
 void get_nu_ksi(const ss_vect<tps> &nus, double nu[], double ksi[])
 {
-  int i, jj[ss_dim];
+  int      i;
+  long int jj[ss_dim];
 
   nu[X_] = nus[3].cst(); nu[Y_] = nus[4].cst(); nu[Z_] = nus[5].cst();
 
@@ -5536,8 +5546,9 @@ double get_dynap(const double r, const double delta, const int n,
 
 void get_rad(char *cav_name, double I_beam)
 {
-  int    j, h_rf, jj[ss_dim];
-  double V_rf, f_rf, U0, phi0, delta_rf, alpha_c;
+  int      j, h_rf;
+  long int jj[ss_dim];
+  double   V_rf, f_rf, U0, phi0, delta_rf, alpha_c;
 
   get_cav(get_Fnum(cav_name), 1, h_rf, V_rf, f_rf);
   U0 = 1e9*E0*dE; phi0 = fabs(asin(U0/V_rf));

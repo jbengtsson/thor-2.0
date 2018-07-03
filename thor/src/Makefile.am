@@ -9,6 +9,7 @@ AM_CPPFLAGS = -I../inc -I$(NUM_REC)/inc
 
 #FFLAGS   = -g -O2 -Wall -fbounds-check -i4 -mcmodel=medium
 #FFLAGS   = -g -O2 -Wall -fbounds-check -mcmodel=large -fstack-arrays
-FFLAGS   = -g -O2 -Wall -fbounds-check -mcmodel=large -frecursive
+#FFLAGS   = -g -O2 -Wall -fbounds-check -mcmodel=large -frecursive
+FFLAGS   = -g -O2 -Wall -fbounds-check -fdefault-integer-8 -mcmodel=large
 #AM_CXXFLAGS = -g -O0 -Wall -Wno-non-template-friend
 AM_CXXFLAGS = -g -O0 -Wall -Wno-non-template-friend -fPIC

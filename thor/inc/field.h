@@ -41,11 +41,11 @@ class tps {
 
   double cst(void) const;
   double operator[](const int) const;
-  double operator[](const int []) const;
-  void pook(const int [], const double);
+  double operator[](const long int []) const;
+  void pook(const long int [], const double);
 
-  void exprt(double [], int [], int [], char []) const;
-  void imprt(const int, double [], const int [], const int []);
+  void exprt(double [], long int [], long int [], char []) const;
+  void imprt(const int, double [], const long int [], const long int []);
 
   tps& operator=(const double);
   tps& operator+=(const double);
@@ -101,8 +101,9 @@ class tps {
   friend ss_vect<tps> Inv(const ss_vect<tps> &);
   // Q(nv, nv) = P(nv, nv)^-1
   friend ss_vect<tps> Inv_Ext(const ss_vect<tps> &);
-  friend void PInv(const int, const tps [], const int, tps [], const int []);
-  friend ss_vect<tps> PInv(const ss_vect<tps> &, const int []);
+  friend void PInv(const int, const tps [], const int, tps [],
+		   const long int []);
+  friend ss_vect<tps> PInv(const ss_vect<tps> &, const long int []);
   friend void GoFix(const ss_vect<tps> &, ss_vect<tps> &,
 		    ss_vect<tps> &, const int);
   friend tps MapNorm(const ss_vect<tps> &, tps &, ss_vect<tps> &,
@@ -117,8 +118,8 @@ class tps {
   friend ss_vect<tps> FlowFact(const ss_vect<tps> &);
   friend tps Intd(const ss_vect<tps> &, const double);
  private:
-  int     intptr; // index used by Fortran implementation
-  double  r;      // floating-point calc. if intptr = 0
+  long int intptr; // index used by Fortran implementation
+  double   r;      // floating-point calc. if intptr = 0
 };
 
 

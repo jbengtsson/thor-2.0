@@ -2,5 +2,7 @@
 #$ -cwd
 # combine PBS standard output and error files
 #$ -j y
+# inrease virtual memmory limit (~50GB for NO = 11)
+#$ -l h_vmem=200G
 
 $HOME/git_repos/thor-2.0/projects/src/tune_conf_2 flat_file.dat $ns

@@ -10,6 +10,8 @@
 !-----------------------------------------------------------------------------1
 
       integer       lda, lea, lia, lno, lnv
+!     Fortran-77 restriction: can't use integer*8 for array index.
+!     integer*4: 2^(4*8-1) - 1 = 2147483647.
       integer       lst
 
 !      parameter (lda=70000, lst=300000000, lea=171000, lia=66000,       &
@@ -30,14 +32,21 @@
 !      parameter (lda=30000, lst=200000000, lea=500000, lia=80000,         &
 !      parameter (lda=30000, lst=230000000, lea=500000, lia=80000,         &
 !     &           lno=16, lnv=7)
-!     For Laptop, NO = 7:
+!      parameter (lda=100000, lst=2000000000, lea=500000, lia=80000,      &
+!     &           lno=11, lnv=7)
+!     Max lst for Fortran array integer*4 index.
+!      parameter (lda=100000, lst=1700000000, lea=500000, lia=80000,      &
+!     &           lno=11, lnv=7)
+!     For Laptop, NO = 7.
 !      parameter (lda=100000, lst=400000000, lea=500000, lia=80000,         &
 !     &           lno=9, lnv=7)
-!     For Laptop, NO = 9:
+!     For Laptop, NO = 9.
       parameter (lda=100000, lst=700000000, lea=500000, lia=80000,         &
      &           lno=9, lnv=7)
-!      parameter (lda=100000, lst=1500000000, lea=500000, lia=80000,      &
-!     &           lno=12, lnv=7)
+!     For Cluster, NO = 11. Increase virtual memory for SGE by:
+!       #$ -l h_vmem=200G
+!      parameter (lda=100000, lst=2000000000, lea=500000, lia=80000,      &
+!     &           lno=11, lnv=7)
 
 
       integer       nda, ndamaxi

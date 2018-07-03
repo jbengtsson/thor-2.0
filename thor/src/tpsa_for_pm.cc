@@ -5,9 +5,9 @@
 
 //#include "mpi.h"
 
-extern int  no_tps, ndpt_tps;
+extern int no_tps, ndpt_tps;
 
-bool ini_tps = false, header = false, res_basis = false, stable = false,
+bool ini_tps    = false, header = false, res_basis = false, stable = false,
      debug_tpsa = false;
 
 const int n_max = 100;     // max iterations for LieExp
@@ -34,8 +34,8 @@ long int fact(long int n)
 
 long int nok(long int n, long int k)
 {
-  long int  j;
-  double    u;
+  long int j;
+  double   u;
 
   u = 1.0;
   for (j = 0; j < k; j++)
@@ -48,9 +48,9 @@ long int nok(long int n, long int k)
 
 double getmat(const ss_vect<tps> &map, const int i, const int j)
 {
-  int      k;
-  double   r;
-  iVector  jj;
+  int     k;
+  double  r;
+  iVector jj;
 
   for (k = 0; k < nv_tps; k++)
     jj[k] = 0;
@@ -65,8 +65,8 @@ double getmat(const ss_vect<tps> &map, const int i, const int j)
 
 void putmat(ss_vect<tps> &map, const int i, const int j, const double r)
 {
-  int      k;
-  iVector  jj;
+  int     k;
+  iVector jj;
 
   for (k = 0; k < nv_tps; k++)
     jj[k] = 0;
@@ -79,7 +79,7 @@ void putmat(ss_vect<tps> &map, const int i, const int j, const double r)
 
 void getlinmat(const int nv, const ss_vect<tps> &map, Matrix &mat)
 {
-  int  j, k;
+  int j, k;
 
   for (j = 1; j <= nv; j++)
     for (k = 1; k <= nv; k++)
@@ -208,8 +208,9 @@ tps::~tps(void) {
 
 double tps::operator[](const int k) const
 {
-  int     i, jj[ss_dim];
-  double  r;
+  int      i;
+  long int jj[ss_dim];
+  double   r;
 
   for (i = 0; i < ss_dim; i++)
     jj[i] = 0;
@@ -218,22 +219,23 @@ double tps::operator[](const int k) const
   return(r);
 }
 
-double tps::operator[](const int jj[]) const
+double tps::operator[](const long int jj[]) const
 {
-  double  r;
+  double r;
 
   dapek_(intptr, jj, r);
   return(r);
 }
 
-void tps::pook(const int jj[], const double r)
+void tps::pook(const long int jj[], const double r)
 { dapok_(intptr, jj, r); }
 
-void tps::exprt(double rbuf[], int ibuf1[], int ibuf2[], char *name) const
+void tps::exprt(double rbuf[], long int ibuf1[], long int ibuf2[],
+		char *name) const
 { daexp_(intptr, rbuf, ibuf1, ibuf2, name); }
 
 void tps::imprt(const int n, double rbuf[],
-		const int ibuf1[], const int ibuf2[])
+		const int long ibuf1[], const long int ibuf2[])
 { rbuf[0] = n; daimp_(rbuf, ibuf1, ibuf2, intptr); }
 
 tps& tps::operator=(const double r) { dacon_(intptr, r); return *this; }
@@ -268,7 +270,7 @@ tps& tps::operator/=(const tps &x)
 
 tps sqrt(const tps &a)
 {
-  tps  b;
+  tps b;
 
   dafun_("SQRT", a.intptr, b.intptr);
   return b;
@@ -292,7 +294,7 @@ tps pow(const tps &a, const int n)
 
 tps exp(const tps &a)
 {
-  tps  b;
+  tps b;
 
   dafun_("EXP ", a.intptr, b.intptr);
   return b;
@@ -300,7 +302,7 @@ tps exp(const tps &a)
 
 tps log(const tps &a)
 {
-  tps  b;
+  tps b;
 
   dafun_("LOG ", a.intptr, b.intptr);
   return b;
@@ -310,7 +312,7 @@ tps log(const tps &a)
 
 tps sin(const tps &a)
 {
-  tps  b;
+  tps b;
 
   dafun_("SIN ", a.intptr, b.intptr);
   return b;
@@ -318,7 +320,7 @@ tps sin(const tps &a)
 
 tps cos(const tps &a)
 {
-  tps  b;
+  tps b;
 
   dafun_("COS ", a.intptr, b.intptr);
   return b;
@@ -326,7 +328,7 @@ tps cos(const tps &a)
 
 tps tan(const tps &a)
 {
-  tps  b;
+  tps b;
 
   dafun_("TAN ", a.intptr, b.intptr);
   return b;
@@ -336,9 +338,9 @@ tps tan(const tps &a)
 
 tps sin_tps(const tps &a)
 {
-  int       n;
-  long int  k;
-  tps       r, b;
+  int      n;
+  long int k;
+  tps      r, b;
 
   b = 0.0; k = 1; r = a;
   for (n = 1; n <= no_tps; n += 2) {
@@ -350,9 +352,9 @@ tps sin_tps(const tps &a)
 
 tps cos_tps(const tps &a)
 {
-  int       n;
-  long int  k;
-  tps       r, b;
+  int      n;
+  long int k;
+  tps      r, b;
 
   b = 0.0; k = 1; r = 1.0;
   for (n = 0; n <= no_tps; n += 2) {
@@ -365,8 +367,8 @@ tps cos_tps(const tps &a)
 tps sin(const tps &a)
 {
   // sin(a+b) = sin(a)*cos(b) + cos(a)*sin(b)
-  double  cst;
-  tps     b;
+  double cst;
+  tps    b;
 
   cst = a.cst(); b = a - cst;
 
@@ -376,8 +378,8 @@ tps sin(const tps &a)
 tps cos(const tps &a)
 {
   // cos(a+b) = cos(a)*cos(b) - sin(a)*sin(b)
-  double  cst;
-  tps     b;
+  double cst;
+  tps    b;
 
   cst = a.cst(); b = a - cst;
 
@@ -390,7 +392,7 @@ tps tan(const tps &a) { return sin(a)/cos(a); }
 
 tps asin(const tps &a)
 {
-  tps  b;
+  tps b;
 
   dafun_("ASIN", a.intptr, b.intptr);
   return b;
@@ -400,7 +402,7 @@ tps asin(const tps &a)
 
 tps atan(const tps &a)
 {
-  tps  b;
+  tps b;
 
   dafun_("ATAN", a.intptr, b.intptr);
   return b;
@@ -443,8 +445,8 @@ tps atan(const tps &a)
 tps atan(const tps &a)
 {
   // arctan(a+b) to 10th order
-  double  cst;
-  tps     b, c;
+  double cst;
+  tps    b, c;
 
   if (no_tps <= 10) {
     cst = a.cst(); b = a - cst;
@@ -500,7 +502,7 @@ tps atan(const tps &a)
 }*/
 
 tps atan2(const tps &b, const tps &a) {
-  tps  c;
+  tps c;
 
   if (a.cst() > 0.0)
     c = atan(b/a);
@@ -523,7 +525,7 @@ tps atan2(const tps &b, const tps &a) {
 
 tps sinh(const tps &a)
 {
-  tps  b;
+  tps b;
 
   dafun_("SINH", a.intptr, b.intptr);
 
@@ -532,7 +534,7 @@ tps sinh(const tps &a)
 
 tps cosh(const tps &a)
 {
-  tps  b;
+  tps b;
 
   dafun_("COSH", a.intptr, b.intptr);
 
@@ -543,9 +545,9 @@ tps cosh(const tps &a)
 
 tps sinh_tps(const tps &a)
 {
-  int       n;
-  long int  k;
-  tps       r, b;
+  int      n;
+  long int k;
+  tps      r, b;
 
   b = 0.0; k = 1; r = a;
   for (n = 1; n <= no_tps; n += 2) {
@@ -557,9 +559,9 @@ tps sinh_tps(const tps &a)
 
 tps cosh_tps(const tps &a)
 {
-  int       n;
-  long int  k;
-  tps       r, b;
+  int      n;
+  long int k;
+  tps      r, b;
 
   b = 0.0; k = 1; r = 1.0;
   for (n = 0; n <= no_tps; n += 2) {
@@ -583,8 +585,8 @@ tps sinh(const tps &a)
 tps cosh(const tps &a)
 {
   // cos(a+b) = cos(a)*cos(b) - sin(a)*sin(b)
-  double  cst;
-  tps     b;
+  double cst;
+  tps    b;
 
   cst = a.cst(); b = a - cst;
 
@@ -595,8 +597,9 @@ tps cosh(const tps &a)
 
 double tps::cst(void) const
 {
-  int     i, jj[ss_dim];
-  double  r;
+  int      i;
+  long int jj[ss_dim];
+  double   r;
 
   for (i = 0; i < ss_dim; i++)
     jj[i] = 0;
@@ -606,7 +609,7 @@ double tps::cst(void) const
 
 double abs(const tps &a)
 {
-  double  r;
+  double r;
 
   daabs_(a.intptr, r);
   return r;
@@ -614,7 +617,7 @@ double abs(const tps &a)
 
 double abs2(const tps &a)
 {
-  double  r;
+  double r;
 
   daabs2_(a.intptr, r);
   return r;
@@ -629,7 +632,7 @@ void idprset(const int level)
 
 tps Der(const tps &a, const int k)
 {
-  tps  b;
+  tps b;
 
   dader_(k, a.intptr, b.intptr);
   return b;
@@ -637,7 +640,7 @@ tps Der(const tps &a, const int k)
 
 tps pseudo_der(const tps &a, const int k)
 {
-  tps  b;
+  tps b;
 
   datra_(k, a.intptr, b.intptr);
   return b;
@@ -645,7 +648,7 @@ tps pseudo_der(const tps &a, const int k)
 
 tps LieExp(const tps &H, const tps &x)
 {
-  tps  y;
+  tps y;
 
   exp1d_(H.intptr, x.intptr, y.intptr, eps_tps, n_max);
   return y;
@@ -653,8 +656,9 @@ tps LieExp(const tps &H, const tps &x)
 
 ss_vect<tps> LieExp(const tps &H, const ss_vect<tps> &x)
 {
-  int           i, xintptrs[ss_dim], mapintptrs[ss_dim];
-  ss_vect<tps>  map;
+  int          i;
+  long int     xintptrs[ss_dim], mapintptrs[ss_dim];
+  ss_vect<tps> map;
 
   for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; mapintptrs[i] = map[i].intptr;
@@ -666,8 +670,9 @@ ss_vect<tps> LieExp(const tps &H, const ss_vect<tps> &x)
 ss_vect<tps> FExpo(const tps &H, const ss_vect<tps> &x,
                    const int k0, const int k1, const int k)
 {
-  int           i, xintptrs[ss_dim], mapintptrs[ss_dim];
-  ss_vect<tps>  map;
+  int          i;
+  long int     xintptrs[ss_dim], mapintptrs[ss_dim];
+  ss_vect<tps> map;
 
   for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; mapintptrs[i] = map[i].intptr;
@@ -680,8 +685,9 @@ ss_vect<tps> FExpo(const tps &H, const ss_vect<tps> &x,
 
 ss_vect<tps> MTREE(const ss_vect<tps> &x)
 {
-  int           i, xintptrs[ss_dim], yintptrs[ss_dim];
-  ss_vect<tps>  y;
+  int          i;
+  long int     xintptrs[ss_dim], yintptrs[ss_dim];
+  ss_vect<tps> y;
 
   for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
@@ -692,8 +698,9 @@ ss_vect<tps> MTREE(const ss_vect<tps> &x)
 
 ss_vect<double> PPUSH(const ss_vect<tps> &x, ss_vect<double> &y)
 {
-  int              i, xintptrs[ss_dim];
-  ss_vect<double>  z;
+  int             i;
+  long int        xintptrs[ss_dim];
+  ss_vect<double> z;
 
   for (i = 0; i < ss_dim; i++)
     xintptrs[i] = x[i].intptr;
@@ -703,9 +710,10 @@ ss_vect<double> PPUSH(const ss_vect<tps> &x, ss_vect<double> &y)
 
 tps operator*(const tps &x, const ss_vect<tps> &y)
 {
-  int  i, xintptrs[ss_dim], y1intptrs[ss_dim], zintptrs[ss_dim];
-  tps  z;
-  tps  y1[ss_dim];
+  int      i;
+  long int xintptrs[ss_dim], y1intptrs[ss_dim], zintptrs[ss_dim];
+  tps      z;
+  tps      y1[ss_dim];
 
   xintptrs[0] = x.intptr; zintptrs[0] = z.intptr;
   for (i = 0; i < ss_dim; i++) {
@@ -718,8 +726,9 @@ tps operator*(const tps &x, const ss_vect<tps> &y)
 
 ss_vect<tps> operator*(const ss_vect<tps> &x, const ss_vect<tps> &y)
 {
-  int           i, xintptrs[ss_dim], yintptrs[ss_dim], zintptrs[ss_dim];
-  ss_vect<tps>  z;
+  int          i;
+  long int     xintptrs[ss_dim], yintptrs[ss_dim], zintptrs[ss_dim];
+  ss_vect<tps> z;
 
   for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
@@ -731,8 +740,9 @@ ss_vect<tps> operator*(const ss_vect<tps> &x, const ss_vect<tps> &y)
 
 ss_vect<tps> CCT(const ss_vect<tps> &x, const ss_vect<tps> &y)
 {
-  int           i, xintptrs[ss_dim], yintptrs[ss_dim], zintptrs[ss_dim];
-  ss_vect<tps>  z;
+  int          i;
+  long int     xintptrs[ss_dim], yintptrs[ss_dim], zintptrs[ss_dim];
+  ss_vect<tps> z;
 
   for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
@@ -744,8 +754,9 @@ ss_vect<tps> CCT(const ss_vect<tps> &x, const ss_vect<tps> &y)
 
 ss_vect<tps> Inv(const ss_vect<tps> &x)
 {
-  int           i, xintptrs[ss_dim], yintptrs[ss_dim];
-  ss_vect<tps>  y;
+  int          i;
+  long int     xintptrs[ss_dim], yintptrs[ss_dim];
+  ss_vect<tps> y;
 
   for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
@@ -756,8 +767,9 @@ ss_vect<tps> Inv(const ss_vect<tps> &x)
 
 ss_vect<tps> Inv_Ext(const ss_vect<tps> &x)
 {
-  int           i, xintptrs[ss_dim], yintptrs[ss_dim];
-  ss_vect<tps>  y;
+  int          i;
+  long int     xintptrs[ss_dim], yintptrs[ss_dim];
+  ss_vect<tps> y;
 
   for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
@@ -766,10 +778,11 @@ ss_vect<tps> Inv_Ext(const ss_vect<tps> &x)
   return y;
 }
 
-ss_vect<tps> PInv(const ss_vect<tps> &x, const int jj[])
+ss_vect<tps> PInv(const ss_vect<tps> &x, const long int jj[])
 {
-  int           i, xintptrs[ss_dim], yintptrs[ss_dim];
-  ss_vect<tps>  y;
+  int          i;
+  long int     xintptrs[ss_dim], yintptrs[ss_dim];
+  ss_vect<tps> y;
 
   for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; yintptrs[i] = y[i].intptr;
@@ -778,9 +791,11 @@ ss_vect<tps> PInv(const ss_vect<tps> &x, const int jj[])
   return y;
 }
 
-void PInv(const int m, const tps x[], const int n, tps y[], const int jj[])
+void PInv(const int m, const tps x[], const int n, tps y[],
+	  const long int jj[])
 {
-  int  i, xintptrs[m], yintptrs[n];
+  int      i;
+  long int xintptrs[m], yintptrs[n];
 
   for (i = 0; i < m; i++)
     xintptrs[i] = x[i].intptr;
@@ -792,7 +807,8 @@ void PInv(const int m, const tps x[], const int n, tps y[], const int jj[])
 void GoFix(const ss_vect<tps> &xy, ss_vect<tps> &a1, ss_vect<tps> &a1inv,
 	   const int nord)
 {
-  int  i, xyintptrs[ss_dim], a1intptrs[ss_dim], a1invintptrs[ss_dim];
+  int      i;
+  long int xyintptrs[ss_dim], a1intptrs[ss_dim], a1invintptrs[ss_dim];
 
   for (i = 0; i < ss_dim; i++) {
     xyintptrs[i] = xy[i].intptr; a1intptrs[i] = a1[i].intptr;
@@ -804,9 +820,10 @@ void GoFix(const ss_vect<tps> &xy, ss_vect<tps> &a1, ss_vect<tps> &a1inv,
 tps MapNorm(const ss_vect<tps> &x, tps &g, ss_vect<tps> &a2,
 	    ss_vect<tps> &a1, ss_vect<tps> &xy, const int nord)
 {
-  int  i, xintptrs[ss_dim], a2intptrs[ss_dim], a1intptrs[ss_dim];
-  int  xyintptrs[ss_dim];
-  tps  K;
+  int      i;
+  long int xintptrs[ss_dim], a2intptrs[ss_dim], a1intptrs[ss_dim];
+  long int xyintptrs[ss_dim];
+  tps      K;
 
   for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; a2intptrs[i] = a2[i].intptr;
@@ -821,9 +838,10 @@ ss_vect<tps> MapNormF(const ss_vect<tps> &x, ss_vect<tps> &g, ss_vect<tps> &a2,
 		      ss_vect<tps> &a1, ss_vect<tps> &xy,
 		      const int nord, const int kpmax)
 {
-  int   i, xintptrs[ss_dim], gintptrs[ss_dim], a2intptrs[ss_dim];
-  int   a1intptrs[ss_dim], xyintptrs[ss_dim], Kintptrs[ss_dim];
-  ss_vect<tps>  K;
+  int          i;
+  long int     xintptrs[ss_dim], gintptrs[ss_dim], a2intptrs[ss_dim];
+  long int     a1intptrs[ss_dim], xyintptrs[ss_dim], Kintptrs[ss_dim];
+  ss_vect<tps> K;
 
   for (i = 0; i < ss_dim; i++) {
     xintptrs[i] = x[i].intptr; gintptrs[i] = g[i].intptr;
@@ -837,8 +855,9 @@ ss_vect<tps> MapNormF(const ss_vect<tps> &x, ss_vect<tps> &g, ss_vect<tps> &a2,
 
 ss_vect<tps> dHdJ(const tps &H)
 {
-  int           i, nuintptrs[ss_dim];
-  ss_vect<tps>  nu;
+  int          i;
+  long int     nuintptrs[ss_dim];
+  ss_vect<tps> nu;
 
   for (i = 0; i < ss_dim; i++)
     nuintptrs[i] = nu[i].intptr;
@@ -866,8 +885,9 @@ tps LieFact_DF(const ss_vect<tps> &xy, ss_vect<tps> &x)
        M = M_lin exp(:h_3:) exp(:h_4:) ... 
 
   */
-  int  i, xyintptrs[ss_dim], xintptrs[ss_dim];
-  tps  H;
+  int      i;
+  long int xyintptrs[ss_dim], xintptrs[ss_dim];
+  tps      H;
 
   for (i = 0; i < ss_dim; i++) {
     xyintptrs[i] = xy[i].intptr; xintptrs[i] = x[i].intptr;
@@ -888,8 +908,9 @@ tps LieFact(const ss_vect<tps> &xy)
 
 ss_vect<tps> FlowFact(const ss_vect<tps> &xy)
 {
-  int           i, xyintptrs[ss_dim], Vintptrs[ss_dim];
-  ss_vect<tps>  V;
+  int          i;
+  long int     xyintptrs[ss_dim], Vintptrs[ss_dim];
+  ss_vect<tps> V;
 
   for (i = 0; i < ss_dim; i++) {
     xyintptrs[i] = xy[i].intptr; Vintptrs[i] = V[i].intptr;
@@ -900,8 +921,9 @@ ss_vect<tps> FlowFact(const ss_vect<tps> &xy)
 
 tps Intd(const ss_vect<tps> &V, double eps)
 {
-  int  i, Vintptrs[ss_dim];
-  tps  H;
+  int      i;
+  long int Vintptrs[ss_dim];
+  tps      H;
 
   for (i = 0; i < ss_dim; i++)
     Vintptrs[i] = V[i].intptr;
@@ -911,7 +933,7 @@ tps Intd(const ss_vect<tps> &V, double eps)
 
 tps PB(const tps &a, const tps &b)
 {
-  tps  c;
+  tps c;
 
   etpoi_(a.intptr, b.intptr, c.intptr);
   return c;
@@ -919,7 +941,7 @@ tps PB(const tps &a, const tps &b)
 
 tps Take(const tps &H, const int n)
 {
-  tps  Hn;
+  tps Hn;
 
   take_(H.intptr, n, Hn.intptr);
   return Hn;
@@ -927,12 +949,12 @@ tps Take(const tps &H, const int n)
 
 std::istream& operator>>(std::istream &is, tps &a)
 {
-  int     i, n, no1, nv1;
-  int     ibuf1[bufsize], ibuf2[bufsize], jj[ss_dim];
-  double  rbuf[bufsize];
-  char	  line[max_str];
+  int      i, n, no1, nv1;
+  long int ibuf1[bufsize], ibuf2[bufsize], jj[ss_dim];
+  double   rbuf[bufsize];
+  char	   line[max_str];
 
-  const bool  debug = true;
+  const bool debug = true;
 
   if (debug) {
     darea77_(a.intptr, 8);
@@ -950,7 +972,7 @@ std::istream& operator>>(std::istream &is, tps &a)
       n++; 
       for (i = 0; i < ss_dim; i++) {
 	is.getline(line, max_str);
-	sscanf(line, "%d", &jj[i]); 
+	sscanf(line, "%ld", &jj[i]); 
       }
       hash_(no_tps, ss_dim, jj, ibuf1[n], ibuf2[n]);
       is.getline(line, max_str);
@@ -968,13 +990,13 @@ std::istream& operator>>(std::istream &is, tps &a)
 
 std::ostream& operator<<(std::ostream &os, const tps &a)
 {
-  char           name[name_len_for];
-  int            i, j, ord, n, no;
-  int            ibuf1[bufsize], ibuf2[bufsize], jj[ss_dim];
-  double         rbuf[bufsize];
-  std::ostringstream  s;
+  char               name[name_len_for];
+  int                i, j, ord, n, no;
+  long int           ibuf1[bufsize], ibuf2[bufsize], jj[ss_dim];
+  double             rbuf[bufsize];
+  std::ostringstream s;
 
-  const bool  debug = false;
+  const bool debug = false;
 
   if (debug) {
     dapri77_(a.intptr, 7);

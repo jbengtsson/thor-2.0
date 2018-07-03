@@ -5,71 +5,81 @@
 
 extern "C" {
   // Interface to FORTRAN TPSA-library
-  void daini_(const int &, const int &, const int &);
-  void daall_(int &, const int &, const char [], const int &, const int &);
-  void dadal_(int &, const int &);
-  void dacon_(int &, const double &);
-  void davar_(int &, const double &, const int &);
-  void daadd_(const int &, const int &, int &);
-  void dasub_(const int &, const int &, int &);
-  void damul_(const int &, const int &, int &);
-  void dadiv_(const int &, const int &, int &);
-  void dacad_(const int &, const double &, int &);
+  void daini_(const long int &, const long int &, const long int &);
+  void daall_(long int &, const long int &, const char [], const long int &,
+	      const long int &);
+  void dadal_(long int &, const long int &);
+  void dacon_(long int &, const double &);
+  void davar_(long int &, const double &, const long int &);
+  void daadd_(const long int &, const long int &, long int &);
+  void dasub_(const long int &, const long int &, long int &);
+  void damul_(const long int &, const long int &, long int &);
+  void dadiv_(const long int &, const long int &, long int &);
+  void dacad_(const long int &, const double &, long int &);
   // dacsu <=> dacad(a, -r, b)
-  //void dasuc_(const int &, const double &, int &);
-  void dacmu_(const int &, const double &, int &);
+  //void dasuc_(const long int &, const double &, long int &);
+  void dacmu_(const long int &, const double &, long int &);
   // dacdi <=> dacmu(a, 1/r, b)
-  //void dadic_(const int &, const double &, int &);
-  void dafun_(const char [], const int &, int &);
-  void dader_(const int &, const int &, int &);
-  void datra_(const int &, const int &, int &);
-  void danot_(const int &);
+  //void dadic_(const long int &, const double &, long int &);
+  void dafun_(const char [], const long int &, long int &);
+  void dader_(const long int &, const long int &, long int &);
+  void datra_(const long int &, const long int &, long int &);
+  void danot_(const long int &);
   void daeps_(const double &);
-  void dacop_(const int &, int &);
-  void daabs_(const int &, double &);
-  void daabs2_(const int &, double &);
-  void jbabs_(const int &, double &);
-  void dapek_(const int &, const int [], double &);
-  void dapok_(int &, const int [], const double &);
-  void dapri77_(const int &, const int &);
-  void darea77_(const int &, const int &);
-  void dapoi_(const int &, const int &, int &, const int &);
-  void hash_(const int &, const int &, const int [], int &, int &);
-  void dehash_(const int &, const int &, const int &, const int &, int []);
-  void daimp_(const double [], const int [], const int [], int &);
-  void dainv_(const int [], const int &, int [], const int &);
-  void dapin_(const int [], const int &, int [], const int &, const int []);
-  void daexp_(const int &, double [], int [], int [], char []);
-  void dacct_(const int [], const int &, const int [], const int &,
-          int [], const int &);
+  void dacop_(const long int &, long int &);
+  void daabs_(const long int &, double &);
+  void daabs2_(const long int &, double &);
+  void jbabs_(const long int &, double &);
+  void dapek_(const long int &, const long int [], double &);
+  void dapok_(long int &, const long int [], const double &);
+  void dapri77_(const long int &, const long int &);
+  void darea77_(const long int &, const long int &);
+  void dapoi_(const long int &, const long int &, long int &, const long int &);
+  void hash_(const long int &, const long int &, const long int [], long int &,
+	     long int &);
+  void dehash_(const long int &, const long int &, const long int &,
+	       const long int &, long int []);
+  void daimp_(const double [], const long int [], const long int [],
+	      long int &);
+  void dainv_(const long int [], const long int &, long int [],
+	      const long int &);
+  void dapin_(const long int [], const long int &, long int [],
+	      const long int &, const long int []);
+  void daexp_(const long int &, double [], long int [], long int [], char []);
+  void dacct_(const long int [], const long int &, const long int [],
+	      const long int &,
+          long int [], const long int &);
 
-  // Interface to FORTRAN Lie-lib
-  void lieinit_(const int &, const int &, const int &,
-        const int &, const int &, const int &);
-  void idprset_(const int &);
-  void exp1d_(const int &, const int &, int &,
-          const double &, const int &);
-  void expnd2_(const int &, const int [], int [],
-           const double &, const int &);
-  void etinv_(const int [], int []);
-  void etpin_(const int [], int [], const int []);
-  void etcct_(const int [], const int [], int []);
-  bool mapnorm_(const int [], int &, int [], int [], int [],
-        int &, const int &);
-  bool mapnormf_(const int [], int [], int [], int [], int [],
-         int [], const int &, const int &);
-  void gofix_(const int [], int [], int [], const int &);
-  void dhdj_(const int &, int []);
-  void ctor_(const int &, int &, int &);
-  void rtoc_(const int &, const int &, int &);
-  void fexpo_(const int &, const int [], int [], const int &, const int &,
-              const double &, const int &);
-  void liefact_(const int [], int [], int &);
-  void flofacg_(const int [], int [], const double &);
-  void intd_(const int [], int &, double &);
-  void etpoi_(const int &, const int &, int &);
-  void take_(const int &, const int &, int &);
+  // Long Interface to FORTRAN Lie-lib
+  void lieinit_(const long int &, const long int &, const long int &,
+        const long int &, const long int &, const long int &);
+  void idprset_(const long int &);
+  void exp1d_(const long int &, const long int &, long int &,
+          const double &, const long int &);
+  void expnd2_(const long int &, const long int [], long int [],
+           const double &, const long int &);
+  void etinv_(const long int [], long int []);
+  void etpin_(const long int [], long int [], const long int []);
+  void etcct_(const long int [], const long int [], long int []);
+  bool mapnorm_(const long int [], long int &, long int [], long int [],
+		long int [],
+        long int &, const long int &);
+  bool mapnormf_(const long int [], long int [], long int [], long int [],
+		 long int [],
+         long int [], const long int &, const long int &);
+  void gofix_(const long int [], long int [], long int [], const long int &);
+  void dhdj_(const long int &, long int []);
+  void ctor_(const long int &, long int &, long int &);
+  void rtoc_(const long int &, const long int &, long int &);
+  void fexpo_(const long int &, const long int [], long int [],
+	      const long int &, const long int &,
+              const double &, const long int &);
+  void liefact_(const long int [], long int [], long int &);
+  void flofacg_(const long int [], long int [], const double &);
+  void intd_(const long int [], long int &, double &);
+  void etpoi_(const long int &, const long int &, long int &);
+  void take_(const long int &, const long int &, long int &);
   void gettura_(double [], double []);
-  void etmtree_(const int [], int []);
-  void etppush2_(const int [], const ss_vect<double> &, ss_vect<double> &);
+  void etmtree_(const long int [], long int []);
+  void etppush2_(const long int [], const ss_vect<double> &, ss_vect<double> &);
 }
