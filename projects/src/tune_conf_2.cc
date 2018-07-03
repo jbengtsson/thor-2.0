@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 11
+#define NO 7
 
 #include "thor_lib.h"
 
