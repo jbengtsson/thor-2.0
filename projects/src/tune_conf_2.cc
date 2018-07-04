@@ -50,7 +50,7 @@ const double
      {10.6, 8.6}, {11.8, 2.6},  {9.2, 3.2}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {2.2, 2.3}},
   A_max[][2] =
-    {{1.5e-3, 1.5e-3}, {7e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
+    {{1.5e-3, 1.5e-3}, {5e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
      {  5e-3,   3e-3}, {6e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3}, {4e-3, 2e-3}},
   delta_max[] =
@@ -605,32 +605,64 @@ void prt_dnu(tps &K)
 	 h_ijklm(nus_scl[4], 0, 0, 4, 4, 0));
 
   printf("\nksi:\n");
-  printf("  k_22001  k_11111  k_00221\n");
-  printf("  k_11002  k_00112  k_22002  k_11112  k_00222\n");
-  printf("  k_11003  k_00113\n");
-  printf("ksi_x:\n %8.5f %8.5f\n",
+  printf("  k_11001  k_00111  k_22001  k_11111  k_00221\n");
+  printf("  k_11002  k_00112  k_22002  k_11112  k_00222"
+	 "  k_33002  k_22112  k_11222  k_00332\n");
+  printf("  k_11003  k_00113  k_22003  k_11113  k_00223"
+	 "  k_33003  k_22113  k_11223  k_00333\n");
+  printf("  k_11004  k_00114  k_22004  k_11114  k_00224"
+	 "  k_33004  k_22114  k_11224  k_00334\n");
+  printf("ksi_x:\n %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 1),
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 1),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 1));
-  printf(" %8.5f %8.5f %8.5f\n",
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 2),
-	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2));
-  printf(" %8.5f\n",
-	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 3));
-  printf(" %8.5f\n",
-	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 4));
-  printf("ksi_y:\n");
-  printf(" %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2),
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 2),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 2),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 2));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 3),
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 3),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 3),
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 3),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 3),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 3));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 4),
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 4),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 4),
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 4),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 4),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 4));
+
+  printf("ksi_y:\n %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 1),
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 1),
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 1));
-  printf(" %8.5f %8.5f %8.5f\n",
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 2),
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 2),
-	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2));
-  printf(" %8.5f\n",
-	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 3));
-  printf(" %8.5f\n",
-	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 4));
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 2),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 2),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 2));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 3),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 3),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 3),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 3),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 3),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 3));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 4),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 4),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 4),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 4),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 4),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 4));
 
   printf("\nTune confinement:\n");
   // printf(" %11.3e %11.3e\n",
