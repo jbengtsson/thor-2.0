@@ -2092,22 +2092,18 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("sda", 3, 1e4, 1.0);
       bn_prms.add_prm("sfb", 3, 1e4, 1.0);
       bn_prms.add_prm("sdb", 3, 1e4, 1.0);
-      bn_prms.add_prm("sdc", 3, 1e4, 1.0);
-      bn_prms.add_prm("sdd", 3, 1e4, 1.0);
     } else {
       bn_prms.add_prm("o1a", 4, 5e2, 1.0);
       bn_prms.add_prm("o2a", 4, 5e2, 1.0);
-      bn_prms.add_prm("o3a", 4, 5e2, 1.0);
       bn_prms.add_prm("o1b", 4, 5e2, 1.0);
       bn_prms.add_prm("o2b", 4, 5e2, 1.0);
-      bn_prms.add_prm("o3b", 4, 5e2, 1.0);
+      bn_prms.add_prm("o3",  4, 5e2, 1.0);
 
       bn_prms.add_prm("o1a", 6, 5e2, 1.0);
       bn_prms.add_prm("o2a", 6, 5e2, 1.0);
-      bn_prms.add_prm("o3a", 6, 6e2, 1.0);
       bn_prms.add_prm("o1b", 6, 5e2, 1.0);
       bn_prms.add_prm("o2b", 6, 5e2, 1.0);
-      bn_prms.add_prm("o3b", 6, 6e2, 1.0);
+      bn_prms.add_prm("o3",  6, 6e2, 1.0);
 
       // bn_prms.add_prm("s5",  4, 5e2, 1.0);
 
