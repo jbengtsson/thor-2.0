@@ -41,13 +41,13 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II H-8-BA     9.
 // DIAMOND-II H-8-BA II 10.
 // ALS-U                11.
-const int lat_case = 2, n_prt = 8;
+const int lat_case = 6, n_prt = 8;
 
 // Center of straight.
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  {5.2, 3.2}, { 9.8, 5.4}, {9.8, 5.4},
-     {10.6, 8.6}, {11.8, 2.6},  {9.2, 3.2}, {4.6, 7.6},
+     {10.6, 8.6},  {6.9, 5.6},  {9.2, 3.2}, {4.6, 7.6},
       {6.6, 6.1},  {6.0, 2.8},  {2.2, 2.3}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {7e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
@@ -2088,9 +2088,8 @@ void lat_select(const int lat_case)
     n_cell = 2;
 
     if (fit_ksi) {
-      bn_prms.add_prm("sfa", 3, 1e4, 1.0);
+      bn_prms.add_prm("sf",  3, 1e4, 1.0);
       bn_prms.add_prm("sda", 3, 1e4, 1.0);
-      bn_prms.add_prm("sfb", 3, 1e4, 1.0);
       bn_prms.add_prm("sdb", 3, 1e4, 1.0);
     } else {
       bn_prms.add_prm("o1a", 4, 5e2, 1.0);
