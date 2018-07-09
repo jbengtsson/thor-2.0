@@ -26,8 +26,7 @@ double       chi2 = 0e0, *f_lm, **A_lm;
 tps          h_re, h_im, K_re, K_im;
 ss_vect<tps> nus, nus_scl;
 
-const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true,
-             oct = !false;
+const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true;
 const double tpsa_eps = 1e-30;
 
 // MAX-V                 1,
@@ -41,14 +40,14 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II H-8-BA     9.
 // DIAMOND-II H-8-BA II 10.
 // ALS-U                11.
-const int lat_case = 6, n_prt = 8;
+const int lat_case = 11, n_prt = 8;
 
 // Center of straight.
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  {5.2, 3.2}, { 9.8, 5.4}, {9.8, 5.4},
      {10.6, 8.6},  {6.9, 5.6},  {9.2, 3.2}, {4.6, 7.6},
-      {6.6, 6.1},  {6.0, 2.8},  {2.2, 2.3}},
+      {6.6, 6.1},  {6.0, 2.8},  {2.1, 2.3}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {7e-3, 4e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
      {  5e-3,   3e-3}, {6e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
@@ -2021,12 +2020,12 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("sdh",   4, 5e5, 1.0);
       bn_prms.add_prm("sfh",   4, 5e5, 1.0);
 
+      bn_prms.add_prm("sdh",   5, 5e5, 1.0);
+      bn_prms.add_prm("sfh",   5, 5e5, 1.0);
+
       bn_prms.add_prm("sxxh",  4, 5e5, 1.0);
       bn_prms.add_prm("sxyh",  4, 5e5, 1.0);
       bn_prms.add_prm("syyh",  4, 5e5, 1.0);
-
-      bn_prms.add_prm("sdh",   5, 5e5, 1.0);
-      bn_prms.add_prm("sfh",   5, 5e5, 1.0);
 
       bn_prms.add_prm("sxxh",  6, 5e5, 1.0);
       bn_prms.add_prm("sxyh",  6, 5e5, 1.0);
@@ -2154,29 +2153,16 @@ void lat_select(const int lat_case)
     // DIAMOND-II H-8-BA.
     n_cell = 2;
 
-    if (!oct) {
-      bn_prms.add_prm("s1",  3, 5e5, 1.0);
-      bn_prms.add_prm("s2",  3, 5e5, 1.0);
-      bn_prms.add_prm("s3",  3, 5e5, 1.0);
-      bn_prms.add_prm("s4",  3, 5e5, 1.0);
-      bn_prms.add_prm("s5",  3, 5e5, 1.0);
-      bn_prms.add_prm("s6",  3, 5e5, 1.0);
-      bn_prms.add_prm("s7",  3, 5e5, 1.0);
-      bn_prms.add_prm("s8",  3, 5e5, 1.0);
-      bn_prms.add_prm("s9",  3, 5e5, 1.0);
-      bn_prms.add_prm("s10", 3, 5e5, 1.0);
-    } else {
-      bn_prms.add_prm("s1",  4, 5e5, 1.0);
-      bn_prms.add_prm("s2",  4, 5e5, 1.0);
-      bn_prms.add_prm("s3",  4, 5e5, 1.0);
-      bn_prms.add_prm("s4",  4, 5e5, 1.0);
-      bn_prms.add_prm("s5",  4, 5e5, 1.0);
-      bn_prms.add_prm("s6",  4, 5e5, 1.0);
-      bn_prms.add_prm("s7",  4, 5e5, 1.0);
-      bn_prms.add_prm("s8",  4, 5e5, 1.0);
-      bn_prms.add_prm("s9",  4, 5e5, 1.0);
-      bn_prms.add_prm("s10", 4, 5e5, 1.0);
-    }
+    bn_prms.add_prm("s1",  3, 5e5, 1.0);
+    bn_prms.add_prm("s2",  3, 5e5, 1.0);
+    bn_prms.add_prm("s3",  3, 5e5, 1.0);
+    bn_prms.add_prm("s4",  3, 5e5, 1.0);
+    bn_prms.add_prm("s5",  3, 5e5, 1.0);
+    bn_prms.add_prm("s6",  3, 5e5, 1.0);
+    bn_prms.add_prm("s7",  3, 5e5, 1.0);
+    bn_prms.add_prm("s8",  3, 5e5, 1.0);
+    bn_prms.add_prm("s9",  3, 5e5, 1.0);
+    bn_prms.add_prm("s10", 3, 5e5, 1.0);
     break;
   case 10:
     // DIAMOND-II H-8-BA II.
@@ -2213,9 +2199,30 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sd2h", 3, 5e5, 1.0);
     bn_prms.add_prm("sd3h", 3, 5e5, 1.0);
     bn_prms.add_prm("sd4h", 3, 5e5, 1.0);
-    bn_prms.add_prm("sh1",  3, 5e5, 1.0);
-    bn_prms.add_prm("sh2",  3, 5e5, 1.0);
-    bn_prms.add_prm("sh3",  3, 5e5, 1.0);
+
+    bn_prms.add_prm("sf1",  4, 5e5, 1.0);
+    bn_prms.add_prm("sf2",  4, 5e5, 1.0);
+    bn_prms.add_prm("sf3",  4, 5e5, 1.0);
+    bn_prms.add_prm("sd1h", 4, 5e5, 1.0);
+    bn_prms.add_prm("sd2h", 4, 5e5, 1.0);
+    bn_prms.add_prm("sd3h", 4, 5e5, 1.0);
+    bn_prms.add_prm("sd4h", 4, 5e5, 1.0);
+
+    bn_prms.add_prm("sf1",  5, 5e5, 1.0);
+    bn_prms.add_prm("sf2",  5, 5e5, 1.0);
+    bn_prms.add_prm("sf3",  5, 5e5, 1.0);
+    bn_prms.add_prm("sd1h", 5, 5e5, 1.0);
+    bn_prms.add_prm("sd2h", 5, 5e5, 1.0);
+    bn_prms.add_prm("sd3h", 5, 5e5, 1.0);
+    bn_prms.add_prm("sd4h", 5, 5e5, 1.0);
+
+    bn_prms.add_prm("sh1",  4, 5e5, 1.0);
+    bn_prms.add_prm("sh2",  4, 5e5, 1.0);
+    bn_prms.add_prm("sh3",  4, 5e5, 1.0);
+
+    // bn_prms.add_prm("sh1",  6, 5e5, 1.0);
+    // bn_prms.add_prm("sh2",  6, 5e5, 1.0);
+    // bn_prms.add_prm("sh3",  6, 5e5, 1.0);
     break;
   }
 
