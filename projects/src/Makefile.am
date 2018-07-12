@@ -46,5 +46,4 @@ AM_CPPFLAGS = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc  \
 
 AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend -fPIC -Wl,--no-relax
 #CXXFLAGS = -g -Wl,-stack_size -Wl,0x40000000 -O2 -Wall -Wno-non-template-friend
-#AM_LDFLAGS = --no-relax
 UNLIMIT_RESOURCES = datasize memorysize stacksize

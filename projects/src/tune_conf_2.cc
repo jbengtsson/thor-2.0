@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 11
+#define NO 8
 
 #include "thor_lib.h"
 
@@ -40,7 +40,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND-II H-8-BA     9.
 // DIAMOND-II H-8-BA II 10.
 // ALS-U                11.
-const int lat_case = 2, n_prt = 8;
+const int lat_case = 6, n_prt = 8;
 
 // Center of straight.
 const double
@@ -50,7 +50,7 @@ const double
       {6.6, 6.1},  {6.0, 2.8},  {2.1, 2.3}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {5e-3, 3e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {6e-3, 4e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3}, {4e-3, 2e-3}},
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
@@ -2153,9 +2153,9 @@ void lat_select(const int lat_case)
     n_cell = 2;
 
     if (fit_ksi) {
-      bn_prms.add_prm("sf",  3, 1e4, 1.0);
-      bn_prms.add_prm("sda", 3, 1e4, 1.0);
-      bn_prms.add_prm("sdb", 3, 1e4, 1.0);
+      // bn_prms.add_prm("sf",  3, 1e4, 1.0);
+      // bn_prms.add_prm("sda", 3, 1e4, 1.0);
+      // bn_prms.add_prm("sdb", 3, 1e4, 1.0);
     } else {
       bn_prms.add_prm("o1a", 4, 5e2, 1.0);
       bn_prms.add_prm("o2a", 4, 5e2, 1.0);
@@ -2165,9 +2165,9 @@ void lat_select(const int lat_case)
 
       // bn_prms.add_prm("o1a", 6, 5e2, 1.0);
       // bn_prms.add_prm("o2a", 6, 5e2, 1.0);
-      bn_prms.add_prm("o1b", 6, 5e2, 1.0);
-      bn_prms.add_prm("o2b", 6, 5e2, 1.0);
-      bn_prms.add_prm("o3",  6, 6e2, 1.0);
+      // bn_prms.add_prm("o1b", 6, 5e2, 1.0);
+      // bn_prms.add_prm("o2b", 6, 5e2, 1.0);
+      // bn_prms.add_prm("o3",  6, 6e2, 1.0);
 
       // bn_prms.add_prm("s5",  4, 5e2, 1.0);
 
