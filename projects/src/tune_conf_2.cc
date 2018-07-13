@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 8
+#define NO 10
 
 #include "thor_lib.h"
 
@@ -34,11 +34,11 @@ const double tpsa_eps = 1e-30;
 // DIAMOND               3,
 // DIAMOND with VMX      4,
 // DIAMOND-II 4-BA Ref   5,
-// DIAMOND-II H-6-BA     6,
-// DIAMOND-II RB-6-BA    7,
-// DIAMOND-II RB-8-BA    8,
-// DIAMOND-II H-8-BA     9.
-// DIAMOND-II H-8-BA II 10.
+// DIAMOND-II H-6BA     6,
+// DIAMOND-II RB-6BA    7,
+// DIAMOND-II RB-8BA    8,
+// DIAMOND-II H-8BA     9.
+// DIAMOND-II H-8BA II 10.
 // ALS-U                11.
 const int lat_case = 6, n_prt = 8;
 
@@ -50,7 +50,7 @@ const double
       {6.6, 6.1},  {6.0, 2.8},  {2.1, 2.3}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {5e-3, 3e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {3e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {  5e-3,   3e-3}, {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {  5e-3,   3e-3}, {4e-3, 3e-3}, {4e-3, 2e-3}},
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
@@ -68,7 +68,7 @@ const double scl_h[]            = {0e0,   0e-6, 0e-6},
              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
              scl_dnu_conf       = 1e0,
-             scl_dnu_delta_conf = 1e0;
+             scl_dnu_delta_conf = 0e0;
 #else
 const double scl_h[]            = {0e0,  0e-2, 0e-3},
              scl_dnu[]          = {1e-4, 1e-4, 1e-4, 1e-4},
@@ -2257,7 +2257,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("s3",  3, 5e5, 1.0);
     break;
   case 6:
-    // DIAMOND-II H-6-BA.
+    // DIAMOND-II H-6BA.
     n_cell = 2;
 
     if (fit_ksi) {
@@ -2283,9 +2283,9 @@ void lat_select(const int lat_case)
       // bn_prms.add_prm("o5", 4, 5e2, 1.0);
       // bn_prms.add_prm("o6", 4, 5e2, 1.0);
 
-      bn_prms.add_prm("o4", 5, 1e5, 1.0);
-      bn_prms.add_prm("o5", 5, 1e5, 1.0);
-      bn_prms.add_prm("o6", 5, 1e5, 1.0);
+      // bn_prms.add_prm("o4", 5, 1e5, 1.0);
+      // bn_prms.add_prm("o5", 5, 1e5, 1.0);
+      // bn_prms.add_prm("o6", 5, 1e5, 1.0);
 
       // bn_prms.svd_list.push_back(11);
       // bn_prms.svd_list.push_back(8);
@@ -2294,7 +2294,7 @@ void lat_select(const int lat_case)
     }
     break;
   case 7:
-    // DIAMOND-II RB-6-BA.
+    // DIAMOND-II RB-6BA.
     n_cell = 2;
 
     bn_prms.add_prm("sd",  3, 5e5, 1.0);
@@ -2312,7 +2312,7 @@ void lat_select(const int lat_case)
     }
     break;
   case 8:
-    // DIAMOND-II RB-8-BA.
+    // DIAMOND-II RB-8BA.
     n_cell = 2;
 
     bn_prms.add_prm("sfh",  3, 5e5, 1.0);
@@ -2324,7 +2324,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("syyh", 3, 5e5, 1.0);
     break;
   case 9:
-    // DIAMOND-II H-8-BA.
+    // DIAMOND-II H-8BA.
     n_cell = 2;
 
     bn_prms.add_prm("s1",  3, 5e5, 1.0);
@@ -2339,7 +2339,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("s10", 3, 5e5, 1.0);
     break;
   case 10:
-    // DIAMOND-II H-8-BA II.
+    // DIAMOND-II H-8BA II.
     n_cell = 2;
 
     bn_prms.add_prm("s1",  3, 5e5, 1.0);
