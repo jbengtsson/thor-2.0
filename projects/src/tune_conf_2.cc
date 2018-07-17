@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 10
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -29,45 +29,44 @@ ss_vect<tps> nus, nus_scl;
 const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true;
 const double tpsa_eps = 1e-30;
 
-// MAX-V                 1,
-// SLS-2                 2,
-// DIAMOND               3,
-// DIAMOND with VMX      4,
-// DIAMOND-II 4-BA Ref   5,
-// DIAMOND-II H-6BA     6,
-// DIAMOND-II RB-6BA    7,
-// DIAMOND-II RB-8BA    8,
-// DIAMOND-II H-8BA     9.
-// DIAMOND-II H-8BA II 10.
-// ALS-U                11.
-const int lat_case = 6, n_prt = 8;
+// MAX-V         1,
+// SLS-2         2,
+// DIAMOND       3,
+// DIAMOND & VMX 4,
+// D-TBA         5,
+// H-6BA         6,
+// RB-6BA        7,
+// RB-8BA        8,
+// H-8BA         9.
+// ALS-U         10.
+const int lat_case = 5, n_prt = 8;
 
 // Center of straight.
 const double
   beta_inj[][2] =
-    {{ 2.9, 3.1},  {5.2, 3.2}, { 9.8, 5.4}, {9.8, 5.4},
-     {10.6, 8.6},  {6.9, 5.6},  {9.2, 3.2}, {4.6, 7.6},
-      {6.6, 6.1},  {6.0, 2.8},  {2.1, 2.3}},
+    {{2.9, 3.1},  {5.2, 3.2}, {9.8, 5.4}, {9.8, 5.4},
+     {4.9, 2.8},  {6.9, 5.6}, {9.2, 3.2}, {4.6, 7.6},
+     {6.0, 2.8}, {2.1, 2.3}},
   A_max[][2] =
-    {{1.5e-3, 1.5e-3}, {5e-3, 3e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {  5e-3,   3e-3}, {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
-     {  5e-3,   3e-3}, {4e-3, 3e-3}, {4e-3, 2e-3}},
+    {{1.5e-3, 1.5e-3}, {4e-3, 2e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
+     {5e-3,   3e-3},   {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {4e-3, 3e-3},     {4e-3, 2e-3}},
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
      3e-2, 3e-2, 3e-2, 3e-2,
-     3e-2, 3e-2, 3e-2};
+     3e-2, 3e-2};
 
 
 #define FIRST_PASS 1
 
 #if FIRST_PASS
-// const double scl_h[]            = {1e0,  1e-6, 1e-6},
-//              scl_dnu[]          = {1e-4, 1e-4, 1e-4, 1e-4},
-//              scl_ksi[]          = {1e5,  1e-4, 1e-4, 1e-4, 1e-4},
-const double scl_h[]            = {0e0,   0e-6, 0e-6},
+const double scl_h[]            = {1e0,  1e0, 1e0},
              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
-             scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
-             scl_dnu_conf       = 1e0,
+             scl_ksi[]          = {1e5,  0e-4, 0e-4, 0e-4, 0e-4},
+// const double scl_h[]            = {0e0,   0e-6, 0e-6},
+//              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
+//              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
+             scl_dnu_conf       = 0e0,
              scl_dnu_delta_conf = 0e0;
 #else
 const double scl_h[]            = {0e0,  0e-2, 0e-3},
@@ -2164,23 +2163,23 @@ void lat_select(const int lat_case)
     // SLS-2.
     n_cell = 1;
 
-    bn_prms.add_prm("sd", 3, 5e5, 1.0);
-    bn_prms.add_prm("sf", 3, 5e5, 1.0);
+    // bn_prms.add_prm("sd", 3, 5e5, 1.0);
+    // bn_prms.add_prm("sf", 3, 5e5, 1.0);
 
     if (!fit_ksi) {
-      bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
-      bn_prms.add_prm("ocym", 4, 5e5, 1.0);
+      // bn_prms.add_prm("ocxm", 4, 5e5, 1.0);
+      // bn_prms.add_prm("ocym", 4, 5e5, 1.0);
 
-      bn_prms.add_prm("ocxm", 5, 5e5, 1.0);
-      bn_prms.add_prm("ocym", 5, 5e5, 1.0);
+      // bn_prms.add_prm("ocxm", 5, 5e5, 1.0);
+      // bn_prms.add_prm("ocym", 5, 5e5, 1.0);
 
       bn_prms.add_prm("oxx",  4, 5e5, 1.0);
       bn_prms.add_prm("oxy",  4, 5e5, 1.0);
       bn_prms.add_prm("oyy",  4, 5e5, 1.0);
 
-      bn_prms.add_prm("oxx",  6, 5e5, 1.0);
-      bn_prms.add_prm("oxy",  6, 5e5, 1.0);
-      bn_prms.add_prm("oyy",  6, 5e5, 1.0);
+      // bn_prms.add_prm("oxx",  6, 5e5, 1.0);
+      // bn_prms.add_prm("oxy",  6, 5e5, 1.0);
+      // bn_prms.add_prm("oyy",  6, 5e5, 1.0);
     }
 
     // bn_prms.add_prm("sdh", 3, 5e5, 1.0);
@@ -2235,7 +2234,7 @@ void lat_select(const int lat_case)
     }
 
     if (lat_case == 4) {
-      // VMX.
+      // DIAMOND & VMX.
       bn_prms.add_prm("s1", 3, 5e5, 1.0);
       bn_prms.add_prm("s2", 3, 5e5, 1.0);
       bn_prms.add_prm("s3", 3, 5e5, 1.0);
@@ -2244,20 +2243,17 @@ void lat_select(const int lat_case)
     }
     break;
   case 5:
-    // DIAMOND-II 4-BA.
+    // D-TBA.
     n_cell = 2;
 
-    bn_prms.add_prm("s1b", 3, 5e5, 1.0);
-    bn_prms.add_prm("s1d", 3, 5e5, 1.0);
-    bn_prms.add_prm("s2b", 3, 5e5, 1.0);
-    bn_prms.add_prm("s2d", 3, 5e5, 1.0);
-    bn_prms.add_prm("sx1", 3, 5e5, 1.0);
-    bn_prms.add_prm("sy1", 3, 5e5, 1.0);
-
-    bn_prms.add_prm("s3",  3, 5e5, 1.0);
+    bn_prms.add_prm("sf1", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd1a", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd2a", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd1b", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd2b", 3, 5e5, 1.0);
     break;
   case 6:
-    // DIAMOND-II H-6BA.
+    // H-6BA.
     n_cell = 2;
 
     if (fit_ksi) {
@@ -2279,9 +2275,9 @@ void lat_select(const int lat_case)
 
       // bn_prms.add_prm("s5",  4, 5e2, 1.0);
 
-      // bn_prms.add_prm("o4", 4, 5e2, 1.0);
-      // bn_prms.add_prm("o5", 4, 5e2, 1.0);
-      // bn_prms.add_prm("o6", 4, 5e2, 1.0);
+      bn_prms.add_prm("o4", 4, 5e2, 1.0);
+      bn_prms.add_prm("o5", 4, 5e2, 1.0);
+      bn_prms.add_prm("o6", 4, 5e2, 1.0);
 
       // bn_prms.add_prm("o4", 5, 1e5, 1.0);
       // bn_prms.add_prm("o5", 5, 1e5, 1.0);
@@ -2294,7 +2290,7 @@ void lat_select(const int lat_case)
     }
     break;
   case 7:
-    // DIAMOND-II RB-6BA.
+    // RB-6BA.
     n_cell = 2;
 
     bn_prms.add_prm("sd",  3, 5e5, 1.0);
@@ -2312,7 +2308,7 @@ void lat_select(const int lat_case)
     }
     break;
   case 8:
-    // DIAMOND-II RB-8BA.
+    // RB-8BA.
     n_cell = 2;
 
     bn_prms.add_prm("sfh",  3, 5e5, 1.0);
@@ -2324,22 +2320,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("syyh", 3, 5e5, 1.0);
     break;
   case 9:
-    // DIAMOND-II H-8BA.
-    n_cell = 2;
-
-    bn_prms.add_prm("s1",  3, 5e5, 1.0);
-    bn_prms.add_prm("s2",  3, 5e5, 1.0);
-    bn_prms.add_prm("s3",  3, 5e5, 1.0);
-    bn_prms.add_prm("s4",  3, 5e5, 1.0);
-    bn_prms.add_prm("s5",  3, 5e5, 1.0);
-    bn_prms.add_prm("s6",  3, 5e5, 1.0);
-    bn_prms.add_prm("s7",  3, 5e5, 1.0);
-    bn_prms.add_prm("s8",  3, 5e5, 1.0);
-    bn_prms.add_prm("s9",  3, 5e5, 1.0);
-    bn_prms.add_prm("s10", 3, 5e5, 1.0);
-    break;
-  case 10:
-    // DIAMOND-II H-8BA II.
+    // H-8BA.
     n_cell = 2;
 
     bn_prms.add_prm("s1",  3, 5e5, 1.0);
@@ -2362,7 +2343,7 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("s8",  4, 5e5, 1.0);
     }
     break;
-  case 11:
+  case 10:
     // ALS-U.
     n_cell = 1;
 
