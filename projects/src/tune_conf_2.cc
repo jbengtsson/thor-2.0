@@ -2247,10 +2247,13 @@ void lat_select(const int lat_case)
     n_cell = 2;
 
     bn_prms.add_prm("sf1", 3, 5e5, 1.0);
-    bn_prms.add_prm("sd1a", 3, 5e5, 1.0);
-    bn_prms.add_prm("sd2a", 3, 5e5, 1.0);
-    bn_prms.add_prm("sd1b", 3, 5e5, 1.0);
-    bn_prms.add_prm("sd2b", 3, 5e5, 1.0);
+
+    bn_prms.add_prm("sd1", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd2", 3, 5e5, 1.0);
+    // bn_prms.add_prm("sd1a", 3, 5e5, 1.0);
+    // bn_prms.add_prm("sd2a", 3, 5e5, 1.0);
+    // bn_prms.add_prm("sd1b", 3, 5e5, 1.0);
+    // bn_prms.add_prm("sd2b", 3, 5e5, 1.0);
     break;
   case 6:
     // H-6BA.
