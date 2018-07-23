@@ -15,7 +15,9 @@ cd $prm1/dnu
 
 \rm tune_conf_2.cmd.o*
 
-#qsub -l h_rt=$t2 -q $queue $dir/sls_2.cmd
+#qsub -l h_rt=$t2 -q $queue $dir/tune_conf_2.cmd
+# NO = 9: ~30GB.
+qsub -l mem_free=30G,h_vmem=30G -q $queue -v ns=$prm1 $dir/tune_conf_2.cmd
 # NO = 11: ~50GB.
 #qsub -l mem_free=60G,h_vmem=60G -q $queue -v ns=$prm1 $dir/tune_conf_2.cmd
-qsub -q $queue -v ns=$prm1 $dir/tune_conf_2.cmd
+#qsub -q $queue -v ns=$prm1 $dir/tune_conf_2.cmd

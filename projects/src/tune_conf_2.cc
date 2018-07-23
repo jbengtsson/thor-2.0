@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 6
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -62,8 +62,8 @@ const double
 
 #if FIRST_PASS
 const double scl_h[]            = {1e0,  1e-1, 1e-1},
-             scl_dnu[]          = {1e-5, 0e-4, 0e-4, 0e-4},
-             scl_ksi[]          = {1e5,  1e-5, 1e-5, 1e-5, 0e-4},
+             scl_dnu[]          = {1e-6, 1e-6, 1e-6, 1e-6},
+             scl_ksi[]          = {1e5,  1e-6, 1e-6, 1e-6, 1e-6},
 // const double scl_h[]            = {0e0,   0e-6, 0e-6},
 //              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
 //              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
@@ -730,7 +730,7 @@ void prt_dnu(void)
 
 void prt_system(const int m, const int n_b2, double **A, double *b)
 {
-  int i, j, n_h;
+  int i, j;
 
   printf("\n Ax = b:\n          ");
   for (j = 1; j <= n_b2; j++)
@@ -1614,7 +1614,7 @@ void Bubble_Sort2(std::vector<double> &w, std::vector<int> &order)
 
 void SVD_zero_n(const int n, double *w, const int svd_n)
 {
-  int                 j, k, ind;
+  int                 j, ind;
   std::vector<int>    order;
   std::vector<double> w1;
 
