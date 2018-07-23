@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 4
+#define NO 6
 
 #include "thor_lib.h"
 
@@ -21,10 +21,11 @@ int no_tps = NO,
 extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
-int          n_cell, n_cut;
-double       chi2 = 0e0, *f_lm, **A_lm;
-tps          h_re, h_im, K_re, K_im;
-ss_vect<tps> nus, nus_scl;
+std::vector<std::string> drv_term;
+int                      n_cell, n_cut;
+double                   chi2 = 0e0, *f_lm, **A_lm;
+tps                      h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
+ss_vect<tps>             nus, nus_scl;
 
 const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true;
 const double tpsa_eps = 1e-30;
@@ -33,7 +34,7 @@ const double tpsa_eps = 1e-30;
 // SLS-2         2,
 // DIAMOND       3,
 // DIAMOND & VMX 4,
-// D-TBA         5,
+// M-6HBAi       5,
 // H-6BA         6,
 // RB-6BA        7,
 // RB-8BA        8,
@@ -44,12 +45,12 @@ const int lat_case = 5, n_prt = 8;
 // Center of straight.
 const double
   beta_inj[][2] =
-    {{2.9, 3.1},  {5.2, 3.2}, {9.8, 5.4}, {9.8, 5.4},
-     {4.9, 2.8},  {6.9, 5.6}, {9.2, 3.2}, {4.6, 7.6},
-     {6.0, 2.8}, {2.1, 2.3}},
+    {{ 2.9, 3.1},  {5.2, 3.2}, {9.8, 5.4}, {9.8, 5.4},
+     {10.0, 3.0},  {6.9, 5.6}, {9.2, 3.2}, {4.6, 7.6},
+     { 6.0, 2.8},  {2.1, 2.3}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {4e-3, 2e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {5e-3,   3e-3},   {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {5e-3,   2e-3},   {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {4e-3, 3e-3},     {4e-3, 2e-3}},
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
@@ -60,9 +61,9 @@ const double
 #define FIRST_PASS 1
 
 #if FIRST_PASS
-const double scl_h[]            = {1e0,  1e0, 1e0},
-             scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
-             scl_ksi[]          = {1e5,  0e-4, 0e-4, 0e-4, 0e-4},
+const double scl_h[]            = {1e0,  1e-1, 1e-1},
+             scl_dnu[]          = {1e-5, 0e-4, 0e-4, 0e-4},
+             scl_ksi[]          = {1e5,  1e-5, 1e-5, 1e-5, 0e-4},
 // const double scl_h[]            = {0e0,   0e-6, 0e-6},
 //              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
 //              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
@@ -555,13 +556,8 @@ void prt_h_K_sym(void)
 }
 
 
-void prt_dnu(tps &K)
+void prt_dnu(void)
 {
-  tps          K_re, K_im, K_re_scl;
-  ss_vect<tps> nus;
-
-  CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
-  nus = dHdJ(K); nus_scl = nus*Id_scl;
 
   printf("\ndnu:\n");
   printf("   k_22000    k_11110    k_00220\n");
@@ -736,98 +732,18 @@ void prt_system(const int m, const int n_b2, double **A, double *b)
 {
   int i, j, n_h;
 
-  n_h = 0;
-  if (scl_h[0] != 0e0) {
-    if (NO >= 3+1) {
-      if (symm)
-	n_h += 3 + 5;   //  8.
-      else
-	n_h += 2*(3+5); // 16.
-    }
-  }
-  if (scl_h[1] != 0e0) {
-    if (NO >= 4+1) {
-      if (symm)
-	n_h += 8;       // 16.
-      else
-	n_h += 16;      // 24.
-    }
-  }
-  if (scl_h[2] != 0e0) {
-    if (NO >= 5+1) {
-      if (symm)
-	n_h += 14;      // 30.
-      else
-	n_h += 28;      // 44.
-    }
-  }
-
-  printf("\n Ax = b:\n");
+  printf("\n Ax = b:\n          ");
   for (j = 1; j <= n_b2; j++)
     printf("%11d", j);
   printf("\n");
   for (i = 1; i <= m; i++) {
-    if (i-1 == 0) {
-      if (scl_h[0] != 0e0)
-	printf("1st order chromatic\n");
-    } else if ((symm && (i-1 == 3)) || (!symm && (i-1 == 2*3))) {
-      if (scl_h[0] != 0e0)
-	printf("1st order geometric\n");
-    } else if ((NO >= 5) &&
-	       ((symm && (i-1 == 3+5)) || (!symm && (i-1 == 2*(3+5))))) {
-      if (scl_h[1] != 0e0)
-	printf("2nd order geometric\n");
-    } else if ((NO >= 6) &&
-	       ((symm && (i-1 == 3+5+8)) || (!symm && (i-1 == 2*(3+5+8))))) {
-      if (scl_h[2] != 0e0)
-	printf("3rd order geometric\n");
-    }
-
-    if (i-1 == n_h) {
-      if (scl_ksi[0] != 0e0)
-	printf("linear chromaticity\n");
-      else
-	n_h -= 2;
-    }
-
-    if (i-1 == n_h+2)
-      printf("ampl. dependant tune shift: k_22000, k_11110, k_00220\n");
-    else if (i-1 == n_h+2+3)
-      printf("2nd order chromaticity\n");
-    else if (i-1 == n_h+2+3+2)
-      printf("|dnu|\n");
-    else if (i-1 == n_h+2+3+2+1)
-      printf("|dnu_delta|\n");
-    else if (i-1 == n_h+2+3+2+1+1)
-      printf("cross terms: k_22001, k_11111, k_00221\n");
-    else if (i-1 == n_h+2+3+2+1+1+3)
-      printf("3rd order chromaticity\n");
-    else if (i-1 == n_h+2+3+2+1+1+3+2)
-      printf("ampl. dependant tune shift:"
-	     " k_33000, k_22110, k_11220, k_00330\n");
-    else if (i-1 == n_h+2+3+2+1+1+3+2+4)
-      printf("cross terms: k_22002, k_11112, k_00222\n");
-    else if (i-1 == n_h+2+3+2+1+1+3+2+4+3)
-      printf("4th order chromaticity\n");
-    else if (i-1 == n_h+2+3+2+1+1+3+2+4+3+2)
-      printf("cross terms: k_33001, k_22111, k_11221, k_00331"
-	     ", k_22003, k_11113, k_00223\n");
-    else if (i-1 == n_h+2+3+2+1+1+3+2+4+3+2+7)
-      printf("ampl. dependant tune shift:"
-	     " k_44000, k_33110, k_22220, k_11330, k_00440\n");
-    else if (i-1 == n_h+2+3+2+1+1+3+2+4+3+2+7+5)
-      printf("cross terms: k_33002, k_22112, k_11222, k_00332\n");
-    else if (i-1 == n_h+2+3+2+1+1+3+2+4+3+2+7+5+4)
-      printf("ampl. dependant tune shift:"
-	     " k_55000, k_44110, k_33220, k_22330, k_11440, k_00550\n");
-
-    printf("%4d", i);
+    printf("%4d %10s", i, drv_term[i-1].c_str());
     for (j = 1; j <= n_b2; j++)
       printf("%11.3e", A[i][j]);
     printf("%11.3e\n", b[i]);
   }
 
-  prt_dnu(K);
+  prt_dnu();
 }
 
 
@@ -945,9 +861,10 @@ double get_a(const double scale, const tps &t,
 }
 
 
-double get_b(const double scale, const tps &t,
+double get_b(const std::string &label, const double scale, const tps &t,
 	     const int i, const int j, const int k, const int l, const int m)
 {
+  drv_term.push_back(label);
   return scale*(h_ijklm(t, i, j, k, l, m));
 }
 
@@ -986,8 +903,8 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
   }
 
   m = 0;
-  b[++m] = -(get_b(1e0, nus[3], 0, 0, 0, 0, 1)-ksi_x);
-  b[++m] = -(get_b(1e0, nus[4], 0, 0, 0, 0, 1)-ksi_y);
+  b[++m] = -(get_b("ksi1_x", 1e0, nus[3], 0, 0, 0, 0, 1)-ksi_x);
+  b[++m] = -(get_b("ksi1_y", 1e0, nus[4], 0, 0, 0, 0, 1)-ksi_y);
 
   prt_system(m, n_bn, A, b);
 
@@ -1029,7 +946,7 @@ double get_f(double *bns)
   int                 i;
   static double       chi2_ref = 1e30;
   double              chi2;
-  tps                 K_re_scl, h_re_scl, h_im_scl, dnu, dnu_delta;
+  tps                 dnu, dnu_delta;
   std::vector<double> b;
 
   const bool prt = false;
@@ -1058,187 +975,187 @@ double get_f(double *bns)
   printf("|dnu_delta| = %9.3e\n", dnu_delta.cst());
 
   if (scl_h[0] != 0e0) {
-    b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2));
-    b.push_back(get_b(scl_h[0], h_re_scl, 2, 0, 0, 0, 1));
-    b.push_back(get_b(scl_h[0], h_re_scl, 0, 0, 2, 0, 1));
+    b.push_back(get_b("", scl_h[0], h_re_scl, 1, 0, 0, 0, 2));
+    b.push_back(get_b("", scl_h[0], h_re_scl, 2, 0, 0, 0, 1));
+    b.push_back(get_b("", scl_h[0], h_re_scl, 0, 0, 2, 0, 1));
 
     if (!symm) {
-      b.push_back(get_b(scl_h[0], h_im_scl, 1, 0, 0, 0, 2));
-      b.push_back(get_b(scl_h[0], h_im_scl, 2, 0, 0, 0, 1));
-      b.push_back(get_b(scl_h[0], h_im_scl, 0, 0, 2, 0, 1));
+      b.push_back(get_b("", scl_h[0], h_im_scl, 1, 0, 0, 0, 2));
+      b.push_back(get_b("", scl_h[0], h_im_scl, 2, 0, 0, 0, 1));
+      b.push_back(get_b("", scl_h[0], h_im_scl, 0, 0, 2, 0, 1));
     }
 
-    b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 1, 1, 0));
-    b.push_back(get_b(scl_h[0], h_re_scl, 2, 1, 0, 0, 0));
-    b.push_back(get_b(scl_h[0], h_re_scl, 3, 0, 0, 0, 0));
-    b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 0, 2, 0));
-    b.push_back(get_b(scl_h[0], h_re_scl, 1, 0, 2, 0, 0));
+    b.push_back(get_b("", scl_h[0], h_re_scl, 1, 0, 1, 1, 0));
+    b.push_back(get_b("", scl_h[0], h_re_scl, 2, 1, 0, 0, 0));
+    b.push_back(get_b("", scl_h[0], h_re_scl, 3, 0, 0, 0, 0));
+    b.push_back(get_b("", scl_h[0], h_re_scl, 1, 0, 0, 2, 0));
+    b.push_back(get_b("", scl_h[0], h_re_scl, 1, 0, 2, 0, 0));
 
     if (!symm) {
-      b.push_back(get_b(scl_h[0], h_im_scl, 1, 0, 1, 1, 0));
-      b.push_back(get_b(scl_h[0], h_im_scl, 2, 1, 0, 0, 0));
-      b.push_back(get_b(scl_h[0], h_im_scl, 3, 0, 0, 0, 0));
-      b.push_back(get_b(scl_h[0], h_im_scl, 1, 0, 0, 2, 0));
-      b.push_back(get_b(scl_h[0], h_im_scl, 1, 0, 2, 0, 0));
+      b.push_back(get_b("", scl_h[0], h_im_scl, 1, 0, 1, 1, 0));
+      b.push_back(get_b("", scl_h[0], h_im_scl, 2, 1, 0, 0, 0));
+      b.push_back(get_b("", scl_h[0], h_im_scl, 3, 0, 0, 0, 0));
+      b.push_back(get_b("", scl_h[0], h_im_scl, 1, 0, 0, 2, 0));
+      b.push_back(get_b("", scl_h[0], h_im_scl, 1, 0, 2, 0, 0));
     }
   }
 
   if (scl_h[1] != 0e0) {
     if (NO >= 5) {
-      b.push_back(get_b(scl_h[1], h_re_scl, 2, 0, 1, 1, 0));
-      b.push_back(get_b(scl_h[1], h_re_scl, 3, 1, 0, 0, 0));
-      b.push_back(get_b(scl_h[1], h_re_scl, 4, 0, 0, 0, 0));
-      b.push_back(get_b(scl_h[1], h_re_scl, 2, 0, 0, 2, 0));
-      b.push_back(get_b(scl_h[1], h_re_scl, 2, 0, 2, 0, 0));
-      b.push_back(get_b(scl_h[1], h_re_scl, 0, 0, 4, 0, 0));
-      b.push_back(get_b(scl_h[1], h_re_scl, 0, 0, 3, 1, 0));
-      b.push_back(get_b(scl_h[1], h_re_scl, 1, 1, 2, 0, 0));
+      b.push_back(get_b("", scl_h[1], h_re_scl, 2, 0, 1, 1, 0));
+      b.push_back(get_b("", scl_h[1], h_re_scl, 3, 1, 0, 0, 0));
+      b.push_back(get_b("", scl_h[1], h_re_scl, 4, 0, 0, 0, 0));
+      b.push_back(get_b("", scl_h[1], h_re_scl, 2, 0, 0, 2, 0));
+      b.push_back(get_b("", scl_h[1], h_re_scl, 2, 0, 2, 0, 0));
+      b.push_back(get_b("", scl_h[1], h_re_scl, 0, 0, 4, 0, 0));
+      b.push_back(get_b("", scl_h[1], h_re_scl, 0, 0, 3, 1, 0));
+      b.push_back(get_b("", scl_h[1], h_re_scl, 1, 1, 2, 0, 0));
 
       if (!symm) {
-	b.push_back(get_b(scl_h[1], h_im_scl, 2, 0, 1, 1, 0));
-	b.push_back(get_b(scl_h[1], h_im_scl, 3, 1, 0, 0, 0));
-	b.push_back(get_b(scl_h[1], h_im_scl, 4, 0, 0, 0, 0));
-	b.push_back(get_b(scl_h[1], h_im_scl, 2, 0, 0, 2, 0));
-	b.push_back(get_b(scl_h[1], h_im_scl, 2, 0, 2, 0, 0));
-	b.push_back(get_b(scl_h[1], h_im_scl, 0, 0, 4, 0, 0));
-	b.push_back(get_b(scl_h[1], h_im_scl, 0, 0, 3, 1, 0));
-	b.push_back(get_b(scl_h[1], h_im_scl, 1, 1, 2, 0, 0));
+	b.push_back(get_b("", scl_h[1], h_im_scl, 2, 0, 1, 1, 0));
+	b.push_back(get_b("", scl_h[1], h_im_scl, 3, 1, 0, 0, 0));
+	b.push_back(get_b("", scl_h[1], h_im_scl, 4, 0, 0, 0, 0));
+	b.push_back(get_b("", scl_h[1], h_im_scl, 2, 0, 0, 2, 0));
+	b.push_back(get_b("", scl_h[1], h_im_scl, 2, 0, 2, 0, 0));
+	b.push_back(get_b("", scl_h[1], h_im_scl, 0, 0, 4, 0, 0));
+	b.push_back(get_b("", scl_h[1], h_im_scl, 0, 0, 3, 1, 0));
+	b.push_back(get_b("", scl_h[1], h_im_scl, 1, 1, 2, 0, 0));
       }
     }
   }
 
   if (scl_h[2] != 0e0) {
     if (NO >= 6) {
-      b.push_back(get_b(scl_h[2], h_re_scl, 5, 0, 0, 0, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 4, 1, 0, 0, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 3, 2, 0, 0, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 3, 0, 2, 0, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 2, 1, 2, 0, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 2, 1, 0, 2, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 3, 0, 0, 2, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 1, 0, 4, 0, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 1, 0, 0, 4, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 3, 0, 1, 1, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 2, 1, 1, 1, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 1, 0, 3, 1, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 1, 0, 1, 3, 0));
-      b.push_back(get_b(scl_h[2], h_re_scl, 1, 0, 2, 2, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 5, 0, 0, 0, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 4, 1, 0, 0, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 3, 2, 0, 0, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 3, 0, 2, 0, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 2, 1, 2, 0, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 2, 1, 0, 2, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 3, 0, 0, 2, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 1, 0, 4, 0, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 1, 0, 0, 4, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 3, 0, 1, 1, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 2, 1, 1, 1, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 1, 0, 3, 1, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 1, 0, 1, 3, 0));
+      b.push_back(get_b("", scl_h[2], h_re_scl, 1, 0, 2, 2, 0));
 
       if (!symm) {
-	b.push_back(get_b(scl_h[2], h_im_scl, 5, 0, 0, 0, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 4, 1, 0, 0, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 3, 2, 0, 0, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 3, 0, 2, 0, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 2, 1, 2, 0, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 2, 1, 0, 2, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 3, 0, 0, 2, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 1, 0, 4, 0, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 1, 0, 0, 4, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 3, 0, 1, 1, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 2, 1, 1, 1, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 1, 0, 3, 1, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 1, 0, 1, 3, 0));
-	b.push_back(get_b(scl_h[2], h_im_scl, 1, 0, 2, 2, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 5, 0, 0, 0, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 4, 1, 0, 0, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 3, 2, 0, 0, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 3, 0, 2, 0, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 2, 1, 2, 0, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 2, 1, 0, 2, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 3, 0, 0, 2, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 1, 0, 4, 0, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 1, 0, 0, 4, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 3, 0, 1, 1, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 2, 1, 1, 1, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 1, 0, 3, 1, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 1, 0, 1, 3, 0));
+	b.push_back(get_b("", scl_h[2], h_im_scl, 1, 0, 2, 2, 0));
       }
     }
   }
 
   if (scl_ksi[0] != 0e0) {
-    b.push_back(get_b(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1));
-    b.push_back(get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1));
+    b.push_back(get_b("", scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1));
+    b.push_back(get_b("", scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1));
   }
 
   if (NO >= 5) {
     if (scl_dnu[0] != 0e0) {
-      b.push_back(get_b(scl_dnu[0],   K_re_scl,        2, 2, 0, 0, 0));
-      b.push_back(get_b(scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0));
+      b.push_back(get_b("", scl_dnu[0],   K_re_scl,        2, 2, 0, 0, 0));
+      b.push_back(get_b("", scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0));
+      b.push_back(get_b("", scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0));
     }
 
     if (scl_ksi[2] != 0e0) {
-      b.push_back(get_b(scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2));
-      b.push_back(get_b(scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2));
+      b.push_back(get_b("", scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2));
+      b.push_back(get_b("", scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2));
     }
 
     if (scl_dnu_conf != 0e0)
-      b.push_back(get_b(scl_dnu_conf,       dnu,       0, 0, 0, 0, 0));
+      b.push_back(get_b("", scl_dnu_conf,       dnu,       0, 0, 0, 0, 0));
     if (scl_dnu_delta_conf != 0e0)
-      b.push_back(get_b(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0));
+      b.push_back(get_b("", scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0));
   }
 
   if (NO >= 6) {
     if (scl_ksi[1] != 0e0) {
-      b.push_back(get_b(scl_ksi[1], K_re_scl, 2, 2, 0, 0, 1));
-      b.push_back(get_b(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1));
-      b.push_back(get_b(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_scl, 2, 2, 0, 0, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1));
     }
 
     if (scl_ksi[3] != 0e0) {
-      b.push_back(get_b(scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3));
-      b.push_back(get_b(scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3));
     }
   }
 
   if (NO >= 7) {
     if (scl_dnu[1] != 0e0) {
-      b.push_back(get_b(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0));
-      b.push_back(get_b(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0));
-      b.push_back(get_b(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0));
+      b.push_back(get_b("", scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0));
+      b.push_back(get_b("", scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0));
+      b.push_back(get_b("", scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0));
+      b.push_back(get_b("", scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0));
     }
 
     if (scl_ksi[2] != 0e0) {
-      b.push_back(get_b(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2));
-      b.push_back(get_b(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2));
-      b.push_back(get_b(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2));
     }
 
     if (scl_ksi[4] != 0e0) {
-      b.push_back(get_b(scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4));
-      b.push_back(get_b(scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4));
+      b.push_back(get_b("", scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4));
+      b.push_back(get_b("", scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4));
     }
   }
 
   if (NO >= 8) {
     if (scl_ksi[1] != 0e0) {
-      b.push_back(get_b(scl_ksi[1], K_re_scl, 3, 3, 0, 0, 1));
-      b.push_back(get_b(scl_ksi[1], K_re_scl, 2, 2, 1, 1, 1));
-      b.push_back(get_b(scl_ksi[1], K_re_scl, 1, 1, 2, 2, 1));
-      b.push_back(get_b(scl_ksi[1], K_re_scl, 0, 0, 3, 3, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_scl, 3, 3, 0, 0, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_scl, 2, 2, 1, 1, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_scl, 1, 1, 2, 2, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_scl, 0, 0, 3, 3, 1));
     }
 
     if (scl_ksi[3] != 0e0) {
-      b.push_back(get_b(scl_ksi[3], K_re_scl, 2, 2, 0, 0, 3));
-      b.push_back(get_b(scl_ksi[3], K_re_scl, 1, 1, 1, 1, 3));
-      b.push_back(get_b(scl_ksi[3], K_re_scl, 0, 0, 2, 2, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_scl, 2, 2, 0, 0, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_scl, 1, 1, 1, 1, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_scl, 0, 0, 2, 2, 3));
     }
   }
 
   if (NO >= 9) {
     if (scl_dnu[2] != 0e0) {
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 4, 4, 0, 0, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 3, 3, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 2, 2, 2, 2, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 1, 1, 3, 3, 0));
-      b.push_back(get_b(scl_dnu[2], K_re_scl, 0, 0, 4, 4, 0));
+      b.push_back(get_b("", scl_dnu[2], K_re_scl, 4, 4, 0, 0, 0));
+      b.push_back(get_b("", scl_dnu[2], K_re_scl, 3, 3, 1, 1, 0));
+      b.push_back(get_b("", scl_dnu[2], K_re_scl, 2, 2, 2, 2, 0));
+      b.push_back(get_b("", scl_dnu[2], K_re_scl, 1, 1, 3, 3, 0));
+      b.push_back(get_b("", scl_dnu[2], K_re_scl, 0, 0, 4, 4, 0));
     }
 
     if (scl_ksi[2] != 0e0) {
-      b.push_back(get_b(scl_ksi[2], K_re_scl, 3, 3, 0, 0, 2));
-      b.push_back(get_b(scl_ksi[2], K_re_scl, 2, 2, 1, 1, 2));
-      b.push_back(get_b(scl_ksi[2], K_re_scl, 1, 1, 2, 2, 2));
-      b.push_back(get_b(scl_ksi[2], K_re_scl, 0, 0, 3, 3, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_scl, 3, 3, 0, 0, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_scl, 2, 2, 1, 1, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_scl, 1, 1, 2, 2, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_scl, 0, 0, 3, 3, 2));
     }
   }
 
   if (NO >= 11) {
     if (scl_dnu[3] != 0e0) {
-      b.push_back(get_b(scl_dnu[3], K_re_scl, 5, 5, 0, 0, 0));
-      b.push_back(get_b(scl_dnu[3], K_re_scl, 4, 4, 1, 1, 0));
-      b.push_back(get_b(scl_dnu[3], K_re_scl, 3, 3, 2, 2, 0));
-      b.push_back(get_b(scl_dnu[3], K_re_scl, 2, 2, 3, 3, 0));
-      b.push_back(get_b(scl_dnu[3], K_re_scl, 1, 1, 4, 4, 0));
-      b.push_back(get_b(scl_dnu[3], K_re_scl, 0, 0, 5, 5, 0));
+      b.push_back(get_b("", scl_dnu[3], K_re_scl, 5, 5, 0, 0, 0));
+      b.push_back(get_b("", scl_dnu[3], K_re_scl, 4, 4, 1, 1, 0));
+      b.push_back(get_b("", scl_dnu[3], K_re_scl, 3, 3, 2, 2, 0));
+      b.push_back(get_b("", scl_dnu[3], K_re_scl, 2, 2, 3, 3, 0));
+      b.push_back(get_b("", scl_dnu[3], K_re_scl, 1, 1, 4, 4, 0));
+      b.push_back(get_b("", scl_dnu[3], K_re_scl, 0, 0, 5, 5, 0));
     }
   }
 
@@ -1266,7 +1183,7 @@ double get_f(double *bns)
 void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 {
   int    i, j;
-  tps    K_re_scl, h_re_scl, h_im_scl, dnu, dnu_delta;
+  tps    dnu, dnu_delta;
 
   // printf("\n");
   for (i = 1; i <= n_bn; i++) {
@@ -1482,187 +1399,189 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 
   m = 0;
   if (scl_h[0] != 0e0) {
-    f[++m] = get_b(scl_h[0], h_re_scl, 1, 0, 0, 0, 2);
-    f[++m] = get_b(scl_h[0], h_re_scl, 2, 0, 0, 0, 1);
-    f[++m] = get_b(scl_h[0], h_re_scl, 0, 0, 2, 0, 1);
+    f[++m] = get_b("h_re_10002", scl_h[0], h_re_scl, 1, 0, 0, 0, 2);
+    f[++m] = get_b("h_re_20001", scl_h[0], h_re_scl, 2, 0, 0, 0, 1);
+    f[++m] = get_b("h_re_00201", scl_h[0], h_re_scl, 0, 0, 2, 0, 1);
 
     if (!symm) {
-      f[++m] = get_b(scl_h[0], h_im_scl, 1, 0, 0, 0, 2);
-      f[++m] = get_b(scl_h[0], h_im_scl, 2, 0, 0, 0, 1);
-      f[++m] = get_b(scl_h[0], h_im_scl, 0, 0, 2, 0, 1);
+      f[++m] = get_b("h_im_10002", scl_h[0], h_im_scl, 1, 0, 0, 0, 2);
+      f[++m] = get_b("h_im_20001", scl_h[0], h_im_scl, 2, 0, 0, 0, 1);
+      f[++m] = get_b("h_im_00201", scl_h[0], h_im_scl, 0, 0, 2, 0, 1);
     }
 
-    f[++m] = get_b(scl_h[0], h_re_scl, 1, 0, 1, 1, 0);
-    f[++m] = get_b(scl_h[0], h_re_scl, 2, 1, 0, 0, 0);
-    f[++m] = get_b(scl_h[0], h_re_scl, 3, 0, 0, 0, 0);
-    f[++m] = get_b(scl_h[0], h_re_scl, 1, 0, 0, 2, 0);
-    f[++m] = get_b(scl_h[0], h_re_scl, 1, 0, 2, 0, 0);
+    f[++m] = get_b("h_re_10110", scl_h[0], h_re_scl, 1, 0, 1, 1, 0);
+    f[++m] = get_b("h_re_21000", scl_h[0], h_re_scl, 2, 1, 0, 0, 0);
+    f[++m] = get_b("h_re_30000", scl_h[0], h_re_scl, 3, 0, 0, 0, 0);
+    f[++m] = get_b("h_re_10020", scl_h[0], h_re_scl, 1, 0, 0, 2, 0);
+    f[++m] = get_b("h_re_10200", scl_h[0], h_re_scl, 1, 0, 2, 0, 0);
 
     if (!symm) {
-      f[++m] = get_b(scl_h[0], h_im_scl, 1, 0, 1, 1, 0);
-      f[++m] = get_b(scl_h[0], h_im_scl, 2, 1, 0, 0, 0);
-      f[++m] = get_b(scl_h[0], h_im_scl, 3, 0, 0, 0, 0);
-      f[++m] = get_b(scl_h[0], h_im_scl, 1, 0, 0, 2, 0);
-      f[++m] = get_b(scl_h[0], h_im_scl, 1, 0, 2, 0, 0);
+      f[++m] = get_b("h_im_10110", scl_h[0], h_im_scl, 1, 0, 1, 1, 0);
+      f[++m] = get_b("h_im_21000", scl_h[0], h_im_scl, 2, 1, 0, 0, 0);
+      f[++m] = get_b("h_im_30000", scl_h[0], h_im_scl, 3, 0, 0, 0, 0);
+      f[++m] = get_b("h_im_10020", scl_h[0], h_im_scl, 1, 0, 0, 2, 0);
+      f[++m] = get_b("h_im_10200", scl_h[0], h_im_scl, 1, 0, 2, 0, 0);
     }
   }
 
   if (scl_h[1] != 0e0) {
     if (NO >= 5) {
-      f[++m] = get_b(scl_h[1], h_re_scl, 2, 0, 1, 1, 0);
-      f[++m] = get_b(scl_h[1], h_re_scl, 3, 1, 0, 0, 0);
-      f[++m] = get_b(scl_h[1], h_re_scl, 4, 0, 0, 0, 0);
-      f[++m] = get_b(scl_h[1], h_re_scl, 2, 0, 0, 2, 0);
-      f[++m] = get_b(scl_h[1], h_re_scl, 2, 0, 2, 0, 0);
-      f[++m] = get_b(scl_h[1], h_re_scl, 0, 0, 4, 0, 0);
-      f[++m] = get_b(scl_h[1], h_re_scl, 0, 0, 3, 1, 0);
-      f[++m] = get_b(scl_h[1], h_re_scl, 1, 1, 2, 0, 0);
-
+      f[++m] = get_b("h_re_20110", scl_h[1], h_re_scl, 2, 0, 1, 1, 0);
+      f[++m] = get_b("h_re_31000", scl_h[1], h_re_scl, 3, 1, 0, 0, 0);
+      f[++m] = get_b("h_re_40000", scl_h[1], h_re_scl, 4, 0, 0, 0, 0);
+      f[++m] = get_b("h_re_20020", scl_h[1], h_re_scl, 2, 0, 0, 2, 0);
+      f[++m] = get_b("h_re_20200", scl_h[1], h_re_scl, 2, 0, 2, 0, 0);
+      f[++m] = get_b("h_re_00400", scl_h[1], h_re_scl, 0, 0, 4, 0, 0);
+      f[++m] = get_b("h_re_00310", scl_h[1], h_re_scl, 0, 0, 3, 1, 0);
+      f[++m] = get_b("h_re_11200", scl_h[1], h_re_scl, 1, 1, 2, 0, 0);
+  
       if (!symm) {
-	f[++m] = get_b(scl_h[1], h_im_scl, 2, 0, 1, 1, 0);
-	f[++m] = get_b(scl_h[1], h_im_scl, 3, 1, 0, 0, 0);
-	f[++m] = get_b(scl_h[1], h_im_scl, 4, 0, 0, 0, 0);
-	f[++m] = get_b(scl_h[1], h_im_scl, 2, 0, 0, 2, 0);
-	f[++m] = get_b(scl_h[1], h_im_scl, 2, 0, 2, 0, 0);
-	f[++m] = get_b(scl_h[1], h_im_scl, 0, 0, 4, 0, 0);
-	f[++m] = get_b(scl_h[1], h_im_scl, 0, 0, 3, 1, 0);
-	f[++m] = get_b(scl_h[1], h_im_scl, 1, 1, 2, 0, 0);
+	f[++m] = get_b("h_im_20110", scl_h[1], h_im_scl, 2, 0, 1, 1, 0);
+	f[++m] = get_b("h_im_31000", scl_h[1], h_im_scl, 3, 1, 0, 0, 0);
+	f[++m] = get_b("h_im_40000", scl_h[1], h_im_scl, 4, 0, 0, 0, 0);
+	f[++m] = get_b("h_im_20020", scl_h[1], h_im_scl, 2, 0, 0, 2, 0);
+	f[++m] = get_b("h_im_20200", scl_h[1], h_im_scl, 2, 0, 2, 0, 0);
+	f[++m] = get_b("h_im_00400", scl_h[1], h_im_scl, 0, 0, 4, 0, 0);
+	f[++m] = get_b("h_im_00310", scl_h[1], h_im_scl, 0, 0, 3, 1, 0);
+	f[++m] = get_b("h_im_11200", scl_h[1], h_im_scl, 1, 1, 2, 0, 0);
       }
     }
   }
 
   if (scl_h[2] != 0e0) {
     if (NO >= 6) {
-      f[++m] = get_b(scl_h[2], h_re_scl, 5, 0, 0, 0, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 4, 1, 0, 0, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 3, 2, 0, 0, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 3, 0, 2, 0, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 2, 1, 2, 0, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 2, 1, 0, 2, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 3, 0, 0, 2, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 1, 0, 4, 0, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 1, 0, 0, 4, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 3, 0, 1, 1, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 2, 1, 1, 1, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 1, 0, 3, 1, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 1, 0, 1, 3, 0);
-      f[++m] = get_b(scl_h[2], h_re_scl, 1, 0, 2, 2, 0);
-
+      f[++m] = get_b("h_re_50000", scl_h[2], h_re_scl, 5, 0, 0, 0, 0);
+      f[++m] = get_b("h_re_41000", scl_h[2], h_re_scl, 4, 1, 0, 0, 0);
+      f[++m] = get_b("h_re_32000", scl_h[2], h_re_scl, 3, 2, 0, 0, 0);
+      f[++m] = get_b("h_re_30200", scl_h[2], h_re_scl, 3, 0, 2, 0, 0);
+      f[++m] = get_b("h_re_21200", scl_h[2], h_re_scl, 2, 1, 2, 0, 0);
+      f[++m] = get_b("h_re_21020", scl_h[2], h_re_scl, 2, 1, 0, 2, 0);
+      f[++m] = get_b("h_re_30020", scl_h[2], h_re_scl, 3, 0, 0, 2, 0);
+      f[++m] = get_b("h_re_10400", scl_h[2], h_re_scl, 1, 0, 4, 0, 0);
+      f[++m] = get_b("h_re_10040", scl_h[2], h_re_scl, 1, 0, 0, 4, 0);
+      f[++m] = get_b("h_re_30110", scl_h[2], h_re_scl, 3, 0, 1, 1, 0);
+      f[++m] = get_b("h_re_21110", scl_h[2], h_re_scl, 2, 1, 1, 1, 0);
+      f[++m] = get_b("h_re_10310", scl_h[2], h_re_scl, 1, 0, 3, 1, 0);
+      f[++m] = get_b("h_re_10130", scl_h[2], h_re_scl, 1, 0, 1, 3, 0);
+      f[++m] = get_b("h_re_10220", scl_h[2], h_re_scl, 1, 0, 2, 2, 0);
+  
       if (!symm) {
-	f[++m] = get_b(scl_h[2], h_im_scl, 5, 0, 0, 0, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 4, 1, 0, 0, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 3, 2, 0, 0, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 3, 0, 2, 0, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 2, 1, 2, 0, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 2, 1, 0, 2, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 3, 0, 0, 2, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 1, 0, 4, 0, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 1, 0, 0, 4, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 3, 0, 1, 1, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 2, 1, 1, 1, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 1, 0, 3, 1, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 1, 0, 1, 3, 0);
-	f[++m] = get_b(scl_h[2], h_im_scl, 1, 0, 2, 2, 0);
+	f[++m] = get_b("h_im_50000", scl_h[2], h_im_scl, 5, 0, 0, 0, 0);
+	f[++m] = get_b("h_im_41000", scl_h[2], h_im_scl, 4, 1, 0, 0, 0);
+	f[++m] = get_b("h_im_32000", scl_h[2], h_im_scl, 3, 2, 0, 0, 0);
+	f[++m] = get_b("h_im_30200", scl_h[2], h_im_scl, 3, 0, 2, 0, 0);
+	f[++m] = get_b("h_im_21200", scl_h[2], h_im_scl, 2, 1, 2, 0, 0);
+	f[++m] = get_b("h_im_21020", scl_h[2], h_im_scl, 2, 1, 0, 2, 0);
+	f[++m] = get_b("h_im_30020", scl_h[2], h_im_scl, 3, 0, 0, 2, 0);
+	f[++m] = get_b("h_im_10400", scl_h[2], h_im_scl, 1, 0, 4, 0, 0);
+	f[++m] = get_b("h_im_10040", scl_h[2], h_im_scl, 1, 0, 0, 4, 0);
+	f[++m] = get_b("h_im_30110", scl_h[2], h_im_scl, 3, 0, 1, 1, 0);
+	f[++m] = get_b("h_im_21110", scl_h[2], h_im_scl, 2, 1, 1, 1, 0);
+	f[++m] = get_b("h_im_10310", scl_h[2], h_im_scl, 1, 0, 3, 1, 0);
+	f[++m] = get_b("h_im_10130", scl_h[2], h_im_scl, 1, 0, 1, 3, 0);
+	f[++m] = get_b("h_im_10220", scl_h[2], h_im_scl, 1, 0, 2, 2, 0);
       }
     }
   }
 
   if (scl_ksi[0] != 0e0) {
-  f[++m] = get_b(scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
-  f[++m] = get_b(scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
+    f[++m] = get_b("K_re_11001", scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
+    f[++m] = get_b("K_re_11001", scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
   }
 
   if (NO >= 5) {
     if (scl_dnu[0] != 0e0) {
-      f[++m] = get_b(scl_dnu[0],   K_re_scl,        2, 2, 0, 0, 0);
-      f[++m] = get_b(scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0);
+      f[++m] = get_b("K_re_22000", scl_dnu[0],   K_re_scl,        2, 2, 0, 0, 0);
+      f[++m] = get_b("K_re_11110", scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0);
+      f[++m] = get_b("K_re_00220", scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0);
     }
 
     if (scl_ksi[2] != 0e0) {
-      f[++m] = get_b(scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2);
-      f[++m] = get_b(scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2);
+      f[++m] = get_b("K_re_11002", scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2);
+      f[++m] = get_b("K_re_00112", scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2);
     }
 
-    if (scl_dnu_conf != 0e0)
-      f[++m] = get_b(scl_dnu_conf,       dnu,       0, 0, 0, 0, 0);
-    if (scl_dnu_delta_conf != 0e0)
-      f[++m] = get_b(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
+    if (scl_dnu_conf != 0e0) {
+      f[++m] = get_b("|dnu|", scl_dnu_conf,       dnu,       0, 0, 0, 0, 0);
+    }
+    if (scl_dnu_delta_conf != 0e0) {
+      f[++m] = get_b("|dnu(delta)|", scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
+    }
   }
 
   if (NO >= 6) {
     if (scl_ksi[1] != 0e0) {
-      f[++m] = get_b(scl_ksi[1], K_re_scl, 2, 2, 0, 0, 1);
-      f[++m] = get_b(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1);
-      f[++m] = get_b(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1);
+      f[++m] = get_b("K_re_22001", scl_ksi[1], K_re_scl, 2, 2, 0, 0, 1);
+      f[++m] = get_b("K_re_11111", scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1);
+      f[++m] = get_b("K_re_00221", scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1);
     }
 
     if (scl_ksi[3] != 0e0) {
-      f[++m] = get_b(scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3);
-      f[++m] = get_b(scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3);
+      f[++m] = get_b("K_re_11003", scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3);
+      f[++m] = get_b("K_re_00113", scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3);
     }
   }
 
   if (NO >= 7) {
     if (scl_dnu[1] != 0e0) {
-      f[++m] = get_b(scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0);
-      f[++m] = get_b(scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0);
-      f[++m] = get_b(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
+      f[++m] = get_b("K_re_33000", scl_dnu[1], K_re_scl, 3, 3, 0, 0, 0);
+      f[++m] = get_b("K_re_22110", scl_dnu[1], K_re_scl, 2, 2, 1, 1, 0);
+      f[++m] = get_b("K_re_11220", scl_dnu[1], K_re_scl, 1, 1, 2, 2, 0);
+      f[++m] = get_b("K_re_00330", scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
     }
 
     if (scl_ksi[2] != 0e0) {
-      f[++m] = get_b(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
-      f[++m] = get_b(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
-      f[++m] = get_b(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2);
+      f[++m] = get_b("K_re_22002", scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
+      f[++m] = get_b("K_re_11112", scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
+      f[++m] = get_b("K_re_00222", scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2);
     }
 
     if (scl_ksi[4] != 0e0) {
-      f[++m] = get_b(scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4);
-      f[++m] = get_b(scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4);
+      f[++m] = get_b("K_re_11004", scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4);
+      f[++m] = get_b("K_re_00114", scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4);
     }
   }
 
   if (NO >= 8) {
     if (scl_ksi[1] != 0e0) {
-      f[++m] = get_b(scl_ksi[1], K_re_scl, 3, 3, 0, 0, 1);
-      f[++m] = get_b(scl_ksi[1], K_re_scl, 2, 2, 1, 1, 1);
-      f[++m] = get_b(scl_ksi[1], K_re_scl, 1, 1, 2, 2, 1);
-      f[++m] = get_b(scl_ksi[1], K_re_scl, 0, 0, 3, 3, 1);
+      f[++m] = get_b("K_re_33001", scl_ksi[1], K_re_scl, 3, 3, 0, 0, 1);
+      f[++m] = get_b("K_re_22111", scl_ksi[1], K_re_scl, 2, 2, 1, 1, 1);
+      f[++m] = get_b("K_re_11221", scl_ksi[1], K_re_scl, 1, 1, 2, 2, 1);
+      f[++m] = get_b("K_re_00331", scl_ksi[1], K_re_scl, 0, 0, 3, 3, 1);
     }
 
     if (scl_ksi[3] != 0e0) {
-      f[++m] = get_b(scl_ksi[3], K_re_scl, 2, 2, 0, 0, 3);
-      f[++m] = get_b(scl_ksi[3], K_re_scl, 1, 1, 1, 1, 3);
-      f[++m] = get_b(scl_ksi[3], K_re_scl, 0, 0, 2, 2, 3);
+      f[++m] = get_b("K_re_22003", scl_ksi[3], K_re_scl, 2, 2, 0, 0, 3);
+      f[++m] = get_b("K_re_11113", scl_ksi[3], K_re_scl, 1, 1, 1, 1, 3);
+      f[++m] = get_b("K_re_00223", scl_ksi[3], K_re_scl, 0, 0, 2, 2, 3);
     }
   }
 
   if (NO >= 9) {
     if (scl_dnu[2] != 0e0) {
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 4, 4, 0, 0, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 3, 3, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 2, 2, 2, 2, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 1, 1, 3, 3, 0);
-      f[++m] = get_b(scl_dnu[2], K_re_scl, 0, 0, 4, 4, 0);
+      f[++m] = get_b("K_re_44000", scl_dnu[2], K_re_scl, 4, 4, 0, 0, 0);
+      f[++m] = get_b("K_re_33110", scl_dnu[2], K_re_scl, 3, 3, 1, 1, 0);
+      f[++m] = get_b("K_re_22220", scl_dnu[2], K_re_scl, 2, 2, 2, 2, 0);
+      f[++m] = get_b("K_re_11330", scl_dnu[2], K_re_scl, 1, 1, 3, 3, 0);
+      f[++m] = get_b("K_re_00440", scl_dnu[2], K_re_scl, 0, 0, 4, 4, 0);
     }
 
     if (scl_ksi[2] != 0e0) {
-      f[++m] = get_b(scl_ksi[2], K_re_scl, 3, 3, 0, 0, 2);
-      f[++m] = get_b(scl_ksi[2], K_re_scl, 2, 2, 1, 1, 2);
-      f[++m] = get_b(scl_ksi[2], K_re_scl, 1, 1, 2, 2, 2);
-      f[++m] = get_b(scl_ksi[2], K_re_scl, 0, 0, 3, 3, 2);
+      f[++m] = get_b("K_re_33002", scl_ksi[2], K_re_scl, 3, 3, 0, 0, 2);
+      f[++m] = get_b("K_re_22112", scl_ksi[2], K_re_scl, 2, 2, 1, 1, 2);
+      f[++m] = get_b("K_re_11222", scl_ksi[2], K_re_scl, 1, 1, 2, 2, 2);
+      f[++m] = get_b("K_re_00332", scl_ksi[2], K_re_scl, 0, 0, 3, 3, 2);
     }
   }
 
   if (NO >= 11) {
     if (scl_dnu[3] != 0e0) {
-      f[++m] = get_b(scl_dnu[3], K_re_scl, 5, 5, 0, 0, 0);
-      f[++m] = get_b(scl_dnu[3], K_re_scl, 4, 4, 1, 1, 0);
-      f[++m] = get_b(scl_dnu[3], K_re_scl, 3, 3, 2, 2, 0);
-      f[++m] = get_b(scl_dnu[3], K_re_scl, 2, 2, 3, 3, 0);
-      f[++m] = get_b(scl_dnu[3], K_re_scl, 1, 1, 4, 4, 0);
-      f[++m] = get_b(scl_dnu[3], K_re_scl, 0, 0, 5, 5, 0);
+      f[++m] = get_b("K_re_55000", scl_dnu[3], K_re_scl, 5, 5, 0, 0, 0);
+      f[++m] = get_b("K_re_44110", scl_dnu[3], K_re_scl, 4, 4, 1, 1, 0);
+      f[++m] = get_b("K_re_33220", scl_dnu[3], K_re_scl, 3, 3, 2, 2, 0);
+      f[++m] = get_b("K_re_22330", scl_dnu[3], K_re_scl, 2, 2, 3, 3, 0);
+      f[++m] = get_b("K_re_11440", scl_dnu[3], K_re_scl, 1, 1, 4, 4, 0);
+      f[++m] = get_b("K_re_00550", scl_dnu[3], K_re_scl, 0, 0, 5, 5, 0);
     }
   }
 
@@ -2243,17 +2162,18 @@ void lat_select(const int lat_case)
     }
     break;
   case 5:
-    // D-TBA.
+    // M-6HBAi.
     n_cell = 2;
 
     bn_prms.add_prm("sf1", 3, 5e5, 1.0);
-
     bn_prms.add_prm("sd1", 3, 5e5, 1.0);
     bn_prms.add_prm("sd2", 3, 5e5, 1.0);
-    // bn_prms.add_prm("sd1a", 3, 5e5, 1.0);
-    // bn_prms.add_prm("sd2a", 3, 5e5, 1.0);
-    // bn_prms.add_prm("sd1b", 3, 5e5, 1.0);
-    // bn_prms.add_prm("sd2b", 3, 5e5, 1.0);
+
+    if (!fit_ksi) {
+      bn_prms.add_prm("sf1", 4, 5e5, 1.0);
+      bn_prms.add_prm("sd1", 4, 5e5, 1.0);
+      bn_prms.add_prm("sd2", 4, 5e5, 1.0);
+    }
     break;
   case 6:
     // H-6BA.
