@@ -832,6 +832,21 @@ void kick_map_pass(const elem_type<T> &elem, ss_vect<T> &x)
 }*/
 
 
+// template<typename T>
+// void map_pass(const elem_type<T> &elem, ss_vect<T> &x) { x = elem.map->M*x;
+// }
+
+void map_pass(const elem_type<double> &elem, ss_vect<double> &x)
+{
+  x = (elem.map->M*x).cst();
+}
+
+void map_pass(const elem_type<tps> &elem, ss_vect<tps> &x)
+{
+  x = elem.map->M*x;
+}
+
+
 /*void add_IBS(const double Nb, const double L, const double **A1,
 	     const double eps[], const double gamma_rel, double Deps[])
 {*/
@@ -987,7 +1002,8 @@ bool si(const long int i0, const long int i1, ss_vect<T> &x,
     case Kick_map:
       kick_map_pass(elem[i-1], x);
       break;
-    case PS_Rot:
+    case Map_:
+      map_pass(elem[i-1], x);
       break;
     default:
       std::cout << "si_templ: undefined element no "

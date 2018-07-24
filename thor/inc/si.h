@@ -18,8 +18,7 @@ const double C_gamma = 4.0*M_PI*r_e/(3.0*cube(1e-9*m_e));
 
 // Element type codes.
 enum elemkind { Marker = -1, Drift = 0, Mpole = 1, Cavity = 2,
-		Thinkick = 3, Wiggler = 4, Undef = 5, Kick_map = 6,
-		PS_Rot = 7 };
+		Thinkick = 3, Wiggler = 4, Undef = 5, Kick_map = 6, Map_ = 7 };
 
 // Integration methods.
 enum intmeth  { Linear = 0, Second = 2, Fourth = 4 };
@@ -91,6 +90,10 @@ typedef struct {
          *tab1, *tab2;                 // tab of x/z meshes from Radia
 } kick_map_type;
 
+typedef struct {
+  ss_vect<tps> M;
+} map_type;
+
 const int name_length = 20;
 
 /* define element structure */
@@ -114,6 +117,7 @@ template<typename T> class elem_type {
     wiggler_type  *wiggler;
     cavity_type   *cavity;
     kick_map_type *kick_map;
+    map_type      *map;
   };
 };
 

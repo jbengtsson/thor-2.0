@@ -5663,3 +5663,63 @@ void get_emittance(void)
        << ",  1-nu_y = " << std::setw(9) << 1.0-nu_[Y_]
        << ", 1-nu_z = " << std::setw(9) << 1.0-nu_[Z_] << std::endl;
 }
+
+
+void get_map_twiss(const ss_vect<tps> &M,
+		   double beta0[], double beta1[], double nu[], bool stable[])
+{
+  // Assumes that alpha_0 = alpha_1 = 0.
+  int k;
+  double cosmu, sinmu;
+
+  const bool prt = true;
+
+  for (k = 0; k < 2; k++) {
+    stable[k] = M[2*k][2*k]*M[2*k+1][2*k+1] <= 1e0;
+    if (stable[k]) {
+      cosmu = sqrt(M[2*k][2*k]*M[2*k+1][2*k+1]);
+      if (M[2*k][2*k] < 0e0) cosmu = -cosmu;
+      nu[k] = acos(cosmu)/(2e0*M_PI);
+      if (M[2*k][2*k+1] < 0e0) nu[k] = 1e0 - nu[k];
+      sinmu = sin(2e0*M_PI*nu[k]);
+      beta0[k] = M[2*k][2*k+1]*M[2*k+1][2*k+1]/(cosmu*sinmu);
+      beta1[k] = M[2*k][2*k]*M[2*k][2*k+1]/(cosmu*sinmu);
+    }
+  }
+
+  if (prt) {
+    printf("\n  nu    = [%8.5f, %8.5f]\n", nu[X_], nu[Y_]);
+    printf("  beta  = [%8.5f, %8.5f]\n", beta0[X_], beta0[Y_]);
+    printf("  beta  = [%8.5f, %8.5f]\n", beta1[X_], beta1[Y_]);
+  }
+}
+
+
+void set_map(const char *name, const double dnu_x, const double dnu_y)
+{
+  // Insert at zero eta & eta'.
+  bool         stable[2];
+  int          Fnum, k, loc, loc2;
+  double       cosmu, sinmu, nu[2], beta0[2], beta1[2];
+  ss_vect<tps> Id, M;
+
+  const double dnu[] = {dnu_x, dnu_y};
+
+  Fnum = get_Fnum(name); loc = get_loc(Fnum, 1);
+
+  M.identity();
+  M.propagate(1, loc);
+  get_map_twiss(M, beta0, beta1, nu, stable);
+
+  Id.identity();
+  for (k = 0; k < 2; k++) {
+    cosmu = cos(2e0*M_PI*dnu[k]); sinmu = sin(2e0*M_PI*dnu[k]);
+    elem[loc-1].map->M[2*k] = cosmu*Id[2*k] + beta1[k]*sinmu*Id[2*k+1];
+    elem[loc-1].map->M[2*k+1] = -sinmu/beta1[k]*Id[2*k] + cosmu*Id[2*k+1];
+  }
+
+  for (k = 2; k <= get_n_Kids(Fnum); k++) {
+    loc2 = get_loc(Fnum, k);
+    elem[loc2-1].map = elem[loc-1].map;
+  }
+}

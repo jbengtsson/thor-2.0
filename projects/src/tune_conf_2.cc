@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 9
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -2376,6 +2376,8 @@ int main(int argc, char *argv[])
   } else
     printf("Lev. Marq.\n");
 
+  get_nu_ksi();
+  set_map("ps_rot", 0.21/6.0, 0.34/6.0);
   get_nu_ksi();
 
   for (j = 0; j < 2; j++)

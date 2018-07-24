@@ -328,9 +328,9 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	  // free_matrix(f2x, 1, nz, 1, nx); free_matrix(f2z, 1, nz, 1, nx);
       }
       break;
-      case PS_Rot:
-	// Note, L is polymorphic
-	inf.getline(line, max_str); sscanf(line, "%lf", &L);
+      case Map_:
+	elem[ind].map = new map_type;
+	elem[ind].map->M.identity();
 	break;
       default:
 	std::cout << "rd_mfile: undefined element " << elem[ind].Name
