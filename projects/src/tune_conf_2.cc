@@ -62,8 +62,8 @@ const double
 
 #if FIRST_PASS
 const double scl_h[]            = {1e0,  1e-1, 1e-1},
-             scl_dnu[]          = {1e-6, 1e-6, 1e-6, 1e-6},
-             scl_ksi[]          = {1e5,  1e-6, 1e-6, 1e-6, 1e-6},
+             scl_dnu[]          = {1e-5, 1e-5, 1e-5, 1e-5},
+             scl_ksi[]          = {1e5,  1e-5, 1e-5, 1e-5, 1e-5},
 // const double scl_h[]            = {0e0,   0e-6, 0e-6},
 //              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
 //              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},

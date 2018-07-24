@@ -5710,16 +5710,20 @@ void set_map(const char *name, const double dnu_x, const double dnu_y)
   M.identity();
   M.propagate(1, loc);
   get_map_twiss(M, beta0, beta1, nu, stable);
+  printf("\n%7.5f %7.5f\n", nu[X_], nu[Y_]);
 
   Id.identity();
   for (k = 0; k < 2; k++) {
     cosmu = cos(2e0*M_PI*dnu[k]); sinmu = sin(2e0*M_PI*dnu[k]);
     elem[loc-1].map->M[2*k] = cosmu*Id[2*k] + beta1[k]*sinmu*Id[2*k+1];
     elem[loc-1].map->M[2*k+1] = -sinmu/beta1[k]*Id[2*k] + cosmu*Id[2*k+1];
+    elem_tps[loc-1].map->M[2*k] = cosmu*Id[2*k] + beta1[k]*sinmu*Id[2*k+1];
+    elem_tps[loc-1].map->M[2*k+1] = -sinmu/beta1[k]*Id[2*k] + cosmu*Id[2*k+1];
   }
 
   for (k = 2; k <= get_n_Kids(Fnum); k++) {
     loc2 = get_loc(Fnum, k);
     elem[loc2-1].map = elem[loc-1].map;
+    elem_tps[loc2-1].map = elem_tps[loc-1].map;
   }
 }
