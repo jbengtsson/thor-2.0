@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 5
+#define NO 8
 
 #include "thor_lib.h"
 
@@ -27,14 +27,14 @@ double                   chi2 = 0e0, *f_lm, **A_lm;
 tps                      h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 ss_vect<tps>             nus, nus_scl;
 
-const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = true;
+const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = !true;
 const double tpsa_eps = 1e-30;
 
 // MAX-V         1,
 // SLS-2         2,
 // DIAMOND       3,
 // DIAMOND & VMX 4,
-// M-6HBAi       5,
+// M-H6BAi       5,
 // H-6BA         6,
 // RB-6BA        7,
 // RB-8BA        8,
@@ -54,14 +54,14 @@ const double
      {4e-3, 3e-3},     {4e-3, 2e-3}},
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
-     3e-2, 3e-2, 3e-2, 3e-2,
+     1.5e-2, 3e-2, 3e-2, 3e-2,
      3e-2, 3e-2};
 
 
 #define FIRST_PASS 1
 
 #if FIRST_PASS
-const double scl_h[]            = {1e0,  1e-1, 1e-1},
+const double scl_h[]            = {1e-1,  1e-2, 1e-2},
              scl_dnu[]          = {1e-5, 1e-5, 1e-5, 1e-5},
              scl_ksi[]          = {1e5,  1e-5, 1e-5, 1e-5, 1e-5},
 // const double scl_h[]            = {0e0,   0e-6, 0e-6},
@@ -626,6 +626,8 @@ void prt_dnu(void)
 	 "   k_33003    k_22113    k_11223    k_00333\n");
   printf("   k_11004    k_00114    k_22004    k_11114    k_00224"
 	 "   k_33004    k_22114    k_11224    k_00334\n");
+  printf("   k_11005    k_00115    k_22005    k_11115    k_00225"
+	 "   k_33005    k_22115    k_11225    k_00335\n");
   printf(" %10.3e %10.3e %10.3e %10.3e %10.3e\n",
 	 h_ijklm(K_re_scl, 1, 1, 0, 0, 1), h_ijklm(K_re_scl, 0, 0, 1, 1, 1),
 	 h_ijklm(K_re_scl, 2, 2, 0, 0, 1), h_ijklm(K_re_scl, 1, 1, 1, 1, 1),
@@ -648,6 +650,12 @@ void prt_dnu(void)
 	 h_ijklm(K_re_scl, 0, 0, 2, 2, 4), h_ijklm(K_re_scl, 3, 3, 0, 0, 4),
 	 h_ijklm(K_re_scl, 2, 2, 1, 1, 4), h_ijklm(K_re_scl, 1, 1, 2, 2, 4),
 	 h_ijklm(K_re_scl, 0, 0, 3, 3, 4));
+  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	 h_ijklm(K_re_scl, 1, 1, 0, 0, 5), h_ijklm(K_re_scl, 0, 0, 1, 1, 5),
+	 h_ijklm(K_re_scl, 2, 2, 0, 0, 5), h_ijklm(K_re_scl, 1, 1, 1, 1, 5),
+	 h_ijklm(K_re_scl, 0, 0, 2, 2, 5), h_ijklm(K_re_scl, 3, 3, 0, 0, 5),
+	 h_ijklm(K_re_scl, 2, 2, 1, 1, 5), h_ijklm(K_re_scl, 1, 1, 2, 2, 5),
+	 h_ijklm(K_re_scl, 0, 0, 3, 3, 5));
 
   printf("\nksi_x:\n %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 1),
@@ -674,6 +682,13 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 4),
 	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 4),
 	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 4));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 5),
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 5),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 5),
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 5),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 5),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 5));
 
   printf("\nksi_y:\n %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 1),
@@ -700,6 +715,13 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 4),
 	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 4),
 	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 4));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 5),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 5),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 5),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 5),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 5),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 5));
 
   printf("\nTune confinement:\n");
   // printf(" %11.3e %11.3e\n",
@@ -1821,25 +1843,21 @@ void min_lev_marq(void)
   int    n_data, n_bn, i, n, *ia;
   double *x, *y, *sigma, **covar, **alpha, chisq, alambda, alambda0;
 
-  n_data = 0;
-  if (NO >= 3+1) n_data += 3 + 5 + 2;     // 10.
-  if (NO >= 4+1) n_data += 8 + 3 + 2 + 2; // 25.
-  if (NO >= 5+1) n_data += 14 + 3 + 2;    // 44.
-  if (NO >= 6+1) n_data += 4 + 3 + 2;     // 53.
-  // *** Checked up to here.
-  if (NO >= 7+1) n_data += 4 + 1 + 4;     // 46 + 5.
-  if (NO >= 8+1) n_data += 5;             // 51 + 5.
-  if (!symm)     n_data += 16 + 14;
-  printf("\nmin_lev_marq: n_data = %d\n", n_data);
+  const int n_data_max = 100;
 
   n_bn = bn_prms.n_prm;
 
   ia = ivector(1, n_bn);
-  x = dvector(1, n_data); y = dvector(1, n_data); sigma = dvector(1, n_data);
-  covar = dmatrix(1, n_bn, 1, n_bn); alpha = dmatrix(1, n_bn, 1, n_bn);
-  f_lm = dvector(1, n_data); A_lm = dmatrix(1, n_data, 1, n_bn);
+  x = dvector(1, n_data_max); y = dvector(1, n_data_max);
+  sigma = dvector(1, n_data_max); covar = dmatrix(1, n_bn, 1, n_bn);
+  alpha = dmatrix(1, n_bn, 1, n_bn); f_lm = dvector(1, n_data_max);
+  A_lm = dmatrix(1, n_data_max, 1, n_bn);
 
   get_f_grad(n_bn, f_lm, A_lm, chi2, n_data);
+  if (n_data > n_data_max) {
+    printf("\nn_data exceeded: %d (%d)\n", n_data, n_data_max);
+    exit(0);
+  }
   prt_system(n_data, n_bn, A_lm, f_lm);
 
   for (i = 1; i <= n_bn; i++)
@@ -1870,10 +1888,10 @@ void min_lev_marq(void)
   dmrqmin(x, y, sigma, n_data, bn_prms.bn, ia, n_bn,  covar, alpha, &chisq,
 	  get_f_der, &alambda);
 
-  free_dvector(f_lm, 1, n_data); free_dmatrix(A_lm, 1, n_data, 1, n_bn);
+  free_dvector(f_lm, 1, n_data_max); free_dmatrix(A_lm, 1, n_data_max, 1, n_bn);
   free_ivector(ia, 1, n_bn);
-  free_dvector(x, 1, n_data); free_dvector(y, 1, n_data);
-  free_dvector(sigma, 1, n_data);
+  free_dvector(x, 1, n_data_max); free_dvector(y, 1, n_data_max);
+  free_dvector(sigma, 1, n_data_max);
   free_dmatrix(covar, 1, n_bn, 1, n_bn); free_dmatrix(alpha, 1, n_bn, 1, n_bn);
 }
 
@@ -2162,7 +2180,7 @@ void lat_select(const int lat_case)
     }
     break;
   case 5:
-    // M-6HBAi.
+    // M-H6BAi.
     n_cell = 2;
 
     bn_prms.add_prm("sf1", 3, 5e5, 1.0);
@@ -2171,8 +2189,16 @@ void lat_select(const int lat_case)
 
     if (!fit_ksi) {
       bn_prms.add_prm("sf1", 4, 5e5, 1.0);
-      bn_prms.add_prm("sd1", 4, 5e5, 1.0);
-      bn_prms.add_prm("sd2", 4, 5e5, 1.0);
+      // bn_prms.add_prm("sd1", 4, 5e5, 1.0);
+      // bn_prms.add_prm("sd2", 4, 5e5, 1.0);
+
+      // bn_prms.add_prm("sh1a", 4, 5e5, 1.0);
+      // bn_prms.add_prm("sh2b", 4, 5e5, 1.0);
+      // bn_prms.add_prm("of1s", 4, 5e5, 1.0);
+
+      // bn_prms.add_prm("sf1", 5, 5e5, 1.0);
+      // bn_prms.add_prm("sd1", 5, 5e5, 1.0);
+      // bn_prms.add_prm("sd2", 5, 5e5, 1.0);
     }
     break;
   case 6:
@@ -2376,9 +2402,11 @@ int main(int argc, char *argv[])
   } else
     printf("Lev. Marq.\n");
 
-  get_nu_ksi();
-  set_map("ps_rot", 0.21/6.0, 0.34/6.0);
-  get_nu_ksi();
+  if (false) {
+    get_nu_ksi();
+    set_map("ps_rot", 0.01, 0.08);
+    get_nu_ksi();
+  }
 
   for (j = 0; j < 2; j++)
     twoJ[j] = sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
