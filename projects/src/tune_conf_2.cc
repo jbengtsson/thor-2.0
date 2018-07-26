@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -2376,9 +2376,11 @@ int main(int argc, char *argv[])
   } else
     printf("Lev. Marq.\n");
 
-  get_nu_ksi();
-  set_map("ps_rot", 0.21/6.0, 0.34/6.0);
-  get_nu_ksi();
+  if (false) {
+    get_nu_ksi();
+    set_map("ps_rot", 0.21/6.0, 0.34/6.0);
+    get_nu_ksi();
+  }
 
   for (j = 0; j < 2; j++)
     twoJ[j] = sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
