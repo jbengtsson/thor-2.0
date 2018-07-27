@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 8
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -40,7 +40,9 @@ const double tpsa_eps = 1e-30;
 // RB-8BA        8,
 // H-8BA         9.
 // ALS-U         10.
-const int lat_case = 5, n_prt = 8;
+
+const bool set_dnu  = false;
+const int  lat_case = 5, n_prt = 8;
 
 // Center of straight.
 const double
@@ -51,6 +53,10 @@ const double
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {4e-3, 2e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
      {5e-3,   2e-3},   {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
+     {4e-3, 3e-3},     {4e-3, 2e-3}},
+  A_delta_max[][2] =
+    {{1.5e-3, 1.5e-3}, {4e-3, 2e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
+     {1e-3,   0.1e-3},   {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
      {4e-3, 3e-3},     {4e-3, 2e-3}},
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
@@ -100,8 +106,8 @@ public:
 
 param_type   bn_prms;
 int          n_iter, n_powell;
-double       twoJ[2];
-ss_vect<tps> Id_scl;
+double       twoJ[2], twoJ_delta[2];
+ss_vect<tps> Id_scl, Id_delta_scl;
 
 void param_type::add_prm(const std::string Fname, const int n,
 			 const double bn_max, const double bn_scl)
@@ -559,7 +565,8 @@ void prt_h_K_sym(void)
 void prt_dnu(void)
 {
 
-  printf("\ndnu:\n");
+  printf("\ndnu(A=[%3.1f, %3.1f] mm):\n",
+	 1e3*A_max[lat_case-1][X_], 1e3*A_max[lat_case-1][Y_]);
   printf("   k_22000    k_11110    k_00220\n");
   printf("   k_33000    k_22110    k_11220    k_00330\n");
   printf("   k_44000    k_33110    k_22220    k_11330    k_00440\n");
@@ -578,8 +585,7 @@ void prt_dnu(void)
 	 h_ijklm(K_re_scl, 5, 5, 0, 0, 0), h_ijklm(K_re_scl, 4, 4, 1, 1, 0),
 	 h_ijklm(K_re_scl, 3, 3, 2, 2, 0), h_ijklm(K_re_scl, 2, 2, 3, 3, 0),
 	 h_ijklm(K_re_scl, 1, 1, 4, 4, 0), h_ijklm(K_re_scl, 0, 0, 5, 5, 0));
-
-  printf("\ndnu_x:\n %8.5f %8.5f\n",
+  printf("dnu_x:\n %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 0),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
   printf(" %8.5f %8.5f %8.5f\n",
@@ -597,9 +603,7 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[3], 2, 2, 2, 2, 0),
 	 h_ijklm(nus_scl[3], 1, 1, 3, 3, 0),
 	 h_ijklm(nus_scl[3], 0, 0, 4, 4, 0));
-
-  printf("\ndnu_y:\n");
-  printf(" %8.5f %8.5f\n",
+  printf("dnu_y:\n %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 0));
   printf(" %8.5f %8.5f %8.5f\n",
@@ -618,7 +622,7 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[4], 1, 1, 3, 3, 0),
 	 h_ijklm(nus_scl[4], 0, 0, 4, 4, 0));
 
-  printf("\nksi:\n");
+  printf("\nksi(delta=%3.1f%%):\n", 1e2*delta_max[lat_case-1]);
   printf("   k_11001    k_00111    k_22001    k_11111    k_00221\n");
   printf("   k_11002    k_00112    k_22002    k_11112    k_00222"
 	 "   k_33002    k_22112    k_11222    k_00332\n");
@@ -656,8 +660,7 @@ void prt_dnu(void)
 	 h_ijklm(K_re_scl, 0, 0, 2, 2, 5), h_ijklm(K_re_scl, 3, 3, 0, 0, 5),
 	 h_ijklm(K_re_scl, 2, 2, 1, 1, 5), h_ijklm(K_re_scl, 1, 1, 2, 2, 5),
 	 h_ijklm(K_re_scl, 0, 0, 3, 3, 5));
-
-  printf("\nksi_x:\n %8.5f %8.5f %8.5f\n",
+  printf("ksi_x:\n %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 1),
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 1),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 1));
@@ -689,8 +692,7 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 5),
 	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 5),
 	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 5));
-
-  printf("\nksi_y:\n %8.5f %8.5f %8.5f\n",
+  printf("ksi_y:\n %8.5f %8.5f %8.5f\n",
 	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 1),
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 1),
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 1));
@@ -2402,19 +2404,25 @@ int main(int argc, char *argv[])
   } else
     printf("Lev. Marq.\n");
 
-  if (false) {
+  if (set_dnu) {
     get_nu_ksi();
     set_map("ps_rot", 0.01, 0.08);
     get_nu_ksi();
   }
 
-  for (j = 0; j < 2; j++)
+  for (j = 0; j < 2; j++) {
     twoJ[j] = sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
+    twoJ_delta[j] = sqr(A_delta_max[lat_case-1][j])/beta_inj[lat_case-1][j];
+  }
 
   Id_scl.identity();
-  Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
-  Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
+  for (j = 0; j < 4; j++)
+    Id_scl[x_] *= sqrt(twoJ[j/2]);
   Id_scl[delta_] *= delta_max[lat_case-1];
+  Id_delta_scl.identity();
+  for (j = 0; j < 4; j++)
+    Id_delta_scl[x_] *= sqrt(twoJ_delta[j/2]);
+  Id_delta_scl[delta_] *= delta_max[lat_case-1];
 
   if (false) {
     danot_(NO-1);
