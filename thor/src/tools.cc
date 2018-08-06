@@ -142,7 +142,7 @@ void prt_lat(const int i0, const int i1, const char *file_name)
 
 void prt_lat(const char *file_name)
 {
-  prt_lat(0, n_elem, file_name);
+  prt_lat(0, n_elem-1, file_name);
 }
 
 void get_dnu(const int n, const ss_vect<tps> &A, double dnu[])
@@ -374,7 +374,7 @@ void prt_lat(const int i0, const int i1, const char *fname, const int n)
 
 void prt_lat(const char *fname, const int n)
 {
-  prt_lat(0, n_elem, fname, n);
+  prt_lat(0, n_elem-1, fname, n);
 }
 
 
@@ -5695,35 +5695,41 @@ void get_map_twiss(const ss_vect<tps> &M,
 }
 
 
-void set_map(const char *name, const double dnu_x, const double dnu_y)
+void set_map(const char *name, const double dnu_x, const double dnu_y,
+	     const double eta_x, const double etap_x)
 {
-  // Insert at zero eta & eta'.
+  // Set phase-space rotation.
   bool         stable[2];
   int          Fnum, k, loc, loc2;
   double       cosmu, sinmu, nu[2], beta0[2], beta1[2];
-  ss_vect<tps> Id, M;
+  ss_vect<tps> Id, Id_eta, M;
 
   const double dnu[] = {dnu_x, dnu_y};
 
   Fnum = get_Fnum(name); loc = get_loc(Fnum, 1);
 
-  M.identity();
-  M.propagate(1, loc);
-  get_map_twiss(M, beta0, beta1, nu, stable);
-  printf("\n%7.5f %7.5f\n", nu[X_], nu[Y_]);
+  M.identity(); M.propagate(1, loc); get_map_twiss(M, beta0, beta1, nu, stable);
 
   Id.identity();
   for (k = 0; k < 2; k++) {
     cosmu = cos(2e0*M_PI*dnu[k]); sinmu = sin(2e0*M_PI*dnu[k]);
-    elem[loc-1].map->M[2*k] = cosmu*Id[2*k] + beta1[k]*sinmu*Id[2*k+1];
-    elem[loc-1].map->M[2*k+1] = -sinmu/beta1[k]*Id[2*k] + cosmu*Id[2*k+1];
-    elem_tps[loc-1].map->M[2*k] = cosmu*Id[2*k] + beta1[k]*sinmu*Id[2*k+1];
+    elem[loc-1].map->M[2*k]       = cosmu*Id[2*k] + beta1[k]*sinmu*Id[2*k+1];
+    elem[loc-1].map->M[2*k+1]     = -sinmu/beta1[k]*Id[2*k] + cosmu*Id[2*k+1];
+    elem_tps[loc-1].map->M[2*k]   = cosmu*Id[2*k] + beta1[k]*sinmu*Id[2*k+1];
     elem_tps[loc-1].map->M[2*k+1] = -sinmu/beta1[k]*Id[2*k] + cosmu*Id[2*k+1];
   }
 
+  // Zero linear dispersion contribution.
+  Id_eta.zero(); Id_eta[x_] = eta_x*Id[delta_]; Id_eta[px_] = etap_x*Id[delta_];
+  Id_eta = elem[loc-1].map->M*Id_eta;
+  elem[loc-1].map->M[x_]      -= (Id_eta[x_][delta_]-eta_x)*Id[delta_];
+  elem[loc-1].map->M[px_]     -= (Id_eta[px_][delta_]-etap_x)*Id[delta_];
+  elem_tps[loc-1].map->M[x_]  -= (Id_eta[x_][delta_]-eta_x)*Id[delta_];
+  elem_tps[loc-1].map->M[px_] -= (Id_eta[px_][delta_]-etap_x)*Id[delta_];
+
   for (k = 2; k <= get_n_Kids(Fnum); k++) {
     loc2 = get_loc(Fnum, k);
-    elem[loc2-1].map = elem[loc-1].map;
+    elem[loc2-1].map     = elem[loc-1].map;
     elem_tps[loc2-1].map = elem_tps[loc-1].map;
   }
 }

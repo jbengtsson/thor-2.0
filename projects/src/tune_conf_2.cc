@@ -27,7 +27,12 @@ double                   chi2 = 0e0, *f_lm, **A_lm;
 tps                      h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 ss_vect<tps>             nus, nus_scl;
 
-const bool   fit_ksi = !true, symm = !false, scale = !true, c_g = !true;
+const bool
+  fit_ksi = !true,
+  symm    = !false,
+  scale   = !true,
+  c_g     = true;
+
 const double tpsa_eps = 1e-30;
 
 // MAX-V         1,
@@ -41,8 +46,13 @@ const double tpsa_eps = 1e-30;
 // H-8BA         9.
 // ALS-U         10.
 
-const bool set_dnu  = false;
-const int  lat_case = 5, n_prt = 8;
+const bool
+  set_dnu = false,
+  mI_rot  = !false;
+
+const int
+  lat_case = 5,
+  n_prt    = 8;
 
 // Center of straight.
 const double
@@ -61,7 +71,11 @@ const double
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
      1.5e-2, 3e-2, 3e-2, 3e-2,
-     3e-2, 3e-2};
+     3e-2, 3e-2},
+  dnu[]      = {0.03, 0.02},
+  eta_x[]    = {0.0, 0.0},
+  dnu_mI[]   = {1.5-1.44129, 0.5-0.47593},
+  eta_x_mI[] = {0.02466, 0.0};
 
 
 #define FIRST_PASS 1
@@ -454,6 +468,63 @@ void no_mpoles(const int n)
 }
 
 
+void get_twiss(void)
+{
+  int      j, k;
+  double   alpha1[2], beta1[2], eta1[2], etap1[2], dnu1[2], dnu2[2];
+  std::ofstream outf;
+
+  const std::string file_name = "linlat.out";
+
+  file_wr(outf, file_name.c_str());
+
+  danot_(1); get_Map(); danot_(2);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  get_ab(A1, alpha1, beta1, dnu1, eta1, etap1);
+
+  // Crucial; to only store linear part of A.
+  danot_(1);
+
+  for (k = 0; k < 2; k++)
+    dnu1[k] = 0e0;
+
+  for (j = 1; j <= n_elem; j++) {
+    A1.propagate(j, j);
+    elem_tps[j-1].A1 = get_A_CS(2, A1, dnu2);
+    get_ab(A1, alpha1, beta1, dnu2, eta1, etap1);
+    for (k = 0; k < 2; k++) {
+      elem[j-1].Alpha[k] = alpha1[k]; elem[j-1].Beta[k] = beta1[k];
+      elem[j-1].Eta[k] = eta1[k]; elem[j-1].Etap[k] = etap1[k];
+    }
+
+    // Assumes dnu < 360 degrees.
+    for (k = 0; k < 2; k++) {
+      elem[j-1].Nu[k] = floor(elem[j-2].Nu[k]) + dnu2[k];
+      if ((dnu2[k] < dnu1[k]) && (elem[j-1].L >= 0e0)) elem[j-1].Nu[k] += 1e0;
+    }
+    for (k = 0; k < 2; k++)
+      dnu1[k] = dnu2[k];
+
+    outf << std::fixed << std::setprecision(4)
+	 << std::setw(7) << elem[j-1].S
+	 << std::setprecision(4)
+	 << std::setw(9) << elem[j-1].Alpha[X_]
+	      << std::setw(8) << elem[j-1].Beta[X_]
+	 << std::setw(8) << elem[j-1].Nu[X_]
+	 << std::setw(9) << elem[j-1].Eta[X_]
+	      << std::setw(9) << elem[j-1].Etap[X_]
+	 << std::setw(9) << elem[j-1].Alpha[Y_]
+	      << std::setw(8) << elem[j-1].Beta[Y_]
+	 << std::setw(8) << elem[j-1].Nu[Y_]
+	 << std::setw(9) << elem[j-1].Eta[Y_]
+	      << std::setw(9) << elem[j-1].Etap[Y_]
+	 << std::endl;
+  }
+
+  outf.close();
+}
+
+
 void get_map_n(const int n)
 {
   int          k;
@@ -482,13 +553,10 @@ void get_S(void)
 void get_nu_ksi(void)
 {
 
-  danot_(2);
-  get_Map();
-  danot_(3);
+  danot_(2); get_Map(); danot_(3);
   K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
 
-  printf("\nnu  = [%8.5f, %8.5f]\n",
-	 nus[0].cst(), nus[1].cst());
+  printf("\nnu  = [%8.5f, %8.5f]\n", nus[0].cst(), nus[1].cst());
   printf("ksi = [%8.5f, %8.5f]\n",
 	 h_ijklm(nus[0], 0, 0, 0, 0, 1),
 	 h_ijklm(nus[1], 0, 0, 0, 0, 1));
@@ -2406,8 +2474,21 @@ int main(int argc, char *argv[])
 
   if (set_dnu) {
     get_nu_ksi();
-    set_map("ps_rot", 0.01, 0.08);
+    set_map("ps_rot", dnu[X_], dnu[Y_], eta_x_mI[0], eta_x_mI[1]);
     get_nu_ksi();
+  }
+
+  if (mI_rot) {
+    get_nu_ksi();
+    set_map("mi_rot", dnu_mI[X_], dnu_mI[Y_], eta_x_mI[0], eta_x_mI[1]);
+    get_nu_ksi();
+  }
+
+  if (!false) {
+    get_nu_ksi();
+    get_twiss();
+    prt_lat("linlat.out", 10);
+    prt_lat("linlat1.out");
   }
 
   for (j = 0; j < 2; j++) {
