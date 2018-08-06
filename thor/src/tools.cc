@@ -5708,28 +5708,28 @@ void set_map(const char *name, const double dnu_x, const double dnu_y,
 
   Fnum = get_Fnum(name); loc = get_loc(Fnum, 1);
 
+  // Cell[loc].Elem.Map->dnu[X_] = dnu_x; Cell[loc].Elem.Map->dnu[Y_] = dnu_y;
+  // Cell[loc].Elem.Map->eta_x   = eta_x; Cell[loc].Elem.Map->etap_x  = etap_x;
+
   M.identity(); M.propagate(1, loc); get_map_twiss(M, beta0, beta1, nu, stable);
 
   Id.identity();
   for (k = 0; k < 2; k++) {
     cosmu = cos(2e0*M_PI*dnu[k]); sinmu = sin(2e0*M_PI*dnu[k]);
-    elem[loc-1].map->M[2*k]       = cosmu*Id[2*k] + beta1[k]*sinmu*Id[2*k+1];
-    elem[loc-1].map->M[2*k+1]     = -sinmu/beta1[k]*Id[2*k] + cosmu*Id[2*k+1];
-    elem_tps[loc-1].map->M[2*k]   = cosmu*Id[2*k] + beta1[k]*sinmu*Id[2*k+1];
-    elem_tps[loc-1].map->M[2*k+1] = -sinmu/beta1[k]*Id[2*k] + cosmu*Id[2*k+1];
+    elem[loc-1].map->M[2*k]   = cosmu*Id[2*k] + beta1[k]*sinmu*Id[2*k+1];
+    elem[loc-1].map->M[2*k+1] = -sinmu/beta1[k]*Id[2*k] + cosmu*Id[2*k+1];
   }
 
   // Zero linear dispersion contribution.
   Id_eta.zero(); Id_eta[x_] = eta_x*Id[delta_]; Id_eta[px_] = etap_x*Id[delta_];
   Id_eta = elem[loc-1].map->M*Id_eta;
-  elem[loc-1].map->M[x_]      -= (Id_eta[x_][delta_]-eta_x)*Id[delta_];
-  elem[loc-1].map->M[px_]     -= (Id_eta[px_][delta_]-etap_x)*Id[delta_];
-  elem_tps[loc-1].map->M[x_]  -= (Id_eta[x_][delta_]-eta_x)*Id[delta_];
-  elem_tps[loc-1].map->M[px_] -= (Id_eta[px_][delta_]-etap_x)*Id[delta_];
+  elem[loc-1].map->M[x_]  = elem_tps[loc-1].map->M[x_]  -=
+    (Id_eta[x_][delta_]-eta_x)*Id[delta_];
+  elem[loc-1].map->M[px_] = elem_tps[loc-1].map->M[px_] -=
+    (Id_eta[px_][delta_]-etap_x)*Id[delta_];
 
   for (k = 2; k <= get_n_Kids(Fnum); k++) {
     loc2 = get_loc(Fnum, k);
-    elem[loc2-1].map     = elem[loc-1].map;
-    elem_tps[loc2-1].map = elem_tps[loc-1].map;
+    elem[loc2-1].map->M = elem_tps[loc2-1].map->M = elem[loc-1].map->M;
   }
 }
