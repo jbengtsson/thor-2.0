@@ -58,6 +58,9 @@
 */
 
 
+const int line_max = 200;
+
+
 template<typename T>
 void clr_mpole(mpole_type<T> *mpole)
 {
@@ -108,7 +111,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
   long int  ind;
   int       k, order, n_mpole, Fnum, Knum, method, n_step;
   double    drerror, bn, an, L;
-  char      line[max_str];
+  char      line[line_max];
   std::ifstream  inf;
 
   bool  prt = false;
@@ -119,7 +122,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
   file_rd(inf, file_name);
 
   clr_Family(); n_elem = 0;
-  while (inf.getline(line, max_str)) {
+  while (inf.getline(line, line_max)) {
     n_elem++;
     if (n_elem <= max_elem) {
       sscanf(line, "%*s %*d %*d %ld", &ind);
@@ -147,12 +150,12 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	exit(1);
       }
 
-      inf.getline(line, max_str);
+      inf.getline(line, line_max);
       sscanf(line, "%d %d %d", &elem[ind].kind, &method, &n_step);
       if (prt)
 	std::cout << elem[ind].Name << " " << elem[ind].kind << std::endl;
 
-      inf.getline(line, max_str); 
+      inf.getline(line, line_max); 
       sscanf(line, "%lf %lf %lf %lf",
 	     &elem[ind].max_ampl[X_][0], &elem[ind].max_ampl[X_][1],
 	     &elem[ind].max_ampl[Y_][0], &elem[ind].max_ampl[Y_][1]);
@@ -168,7 +171,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	break ;
       case Drift:
 	// Note, L is polymorphic
-	inf.getline(line, max_str); sscanf(line, "%lf", &L);
+	inf.getline(line, line_max); sscanf(line, "%lf", &L);
 	break;
       case Mpole:
 	elem[ind].mpole = new mpole_type<T>;
@@ -178,7 +181,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	elem[ind].mpole->method = method;
 	elem[ind].mpole->n_step = n_step;
 
-	inf.getline(line, max_str);
+	inf.getline(line, line_max);
 	sscanf(line, "%lf %lf %lf %lf",
 	       &elem[ind].dx[X_], &elem[ind].dx[Y_],
 	       &elem[ind].mpole->droll_par, &drerror);
@@ -187,7 +190,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	elem[ind].droll[Y_] =
 	  sin(dtor(elem[ind].mpole->droll_par+drerror));
 
-	inf.getline(line, max_str);
+	inf.getline(line, line_max);
 	sscanf(line, "%lf %lf %lf %lf %lf",
 	       &L, &elem[ind].mpole->h_bend,
 	       &elem[ind].mpole->edge1, &elem[ind].mpole->edge2,
@@ -200,10 +203,10 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	elem[ind].mpole->droll_rms = drerror - elem[ind].mpole->droll_par;
 	elem[ind].mpole->droll_rnd = 1e0;
 
-	inf.getline(line, max_str);
+	inf.getline(line, line_max);
 	sscanf(line, "%d %d", &n_mpole, &elem[ind].mpole->n_design);
 	for (k = 1; k <= n_mpole; k++) {
-	  inf.getline(line, max_str);
+	  inf.getline(line, line_max);
 	  sscanf(line, "%d %lf %lf", &order, &bn, &an);
 	  if (order <= mpole_max) {
 	    elem[ind].mpole->bn[order-1] = bn;
@@ -219,7 +222,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       case Cavity:
 	elem[ind].cavity = new cavity_type;
 
-	inf.getline(line, max_str);
+	inf.getline(line, line_max);
 	sscanf(line, "%lf %lf %d %lf %lf",
 	       &elem[ind].cavity->V_rf, &elem[ind].cavity->f_rf,
 	       &elem[ind].cavity->h_rf, &E0, &elem[ind].cavity->phi_rf);
@@ -236,7 +239,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	elem[ind].mpole->method = method;
 	elem[ind].mpole->n_step = n_step;
 
-	inf.getline(line, max_str);
+	inf.getline(line, line_max);
 	sscanf(line, "%lf %lf %lf", &elem[ind].dx[X_],
 	       &elem[ind].dx[Y_], &drerror);
 
@@ -250,10 +253,10 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	  sin(dtor(elem[ind].mpole->droll_par))*elem[ind].c0;
 	elem[ind].mpole->droll_rms = drerror; elem[ind].mpole->droll_rnd = 1e0;
 
-	inf.getline(line, max_str);
+	inf.getline(line, line_max);
 	sscanf(line, "%d %d", &n_mpole, &elem[ind].mpole->n_design);
 	for (k = 1; k <= n_mpole; k++) {
-	  inf.getline(line, max_str);
+	  inf.getline(line, line_max);
 	  sscanf(line, "%d %lf %lf", &order, &bn, &an);
 	  if (order <= mpole_max) {
 	    elem[ind].mpole->bn[order-1] = bn;
@@ -271,13 +274,13 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	elem[ind].wiggler->method = method;
 	elem[ind].wiggler->n_step = n_step;
 
-	inf.getline(line, max_str);
+	inf.getline(line, line_max);
 	sscanf(line, "%lf %lf", &L, &elem[ind].wiggler->lambda);
 
-	inf.getline(line, max_str);
+	inf.getline(line, line_max);
 	sscanf(line, "%d", &elem[ind].wiggler->n_harm);
 	for (k = 0; k < elem[ind].wiggler->n_harm; k++) {
-	  inf.getline(line, max_str);
+	  inf.getline(line, line_max);
 	  sscanf(line, "%d %lf %lf %lf %lf %lf",
 		 &elem[ind].wiggler->harm[k],
 		 &elem[ind].wiggler->kxV[k],
@@ -292,7 +295,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	elem[ind].kick_map->method = method;
 	elem[ind].kick_map->n_step = n_step;
 
-	inf.getline(line, max_str);
+	inf.getline(line, line_max);
 	sscanf(line, "%lf %d %s", &elem[ind].kick_map->scl,
 	       &elem[ind].kick_map->order, elem[ind].kick_map->file_name);
 
@@ -330,7 +333,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       break;
       case Map_:
 	elem[ind].map = new map_type;
-	inf.getline(line, max_str);
+	inf.getline(line, line_max);
 	sscanf(line, "%lf %lf %lf %lf %lf %lf",
 	       &elem[ind].map->dnu[X_], &elem[ind].map->dnu[Y_],
 	       &elem[ind].map->beta[X_], &elem[ind].map->beta[Y_],

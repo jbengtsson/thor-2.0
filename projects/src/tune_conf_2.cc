@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 5
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -45,10 +45,6 @@ const double tpsa_eps = 1e-30;
 // RB-8BA        8,
 // H-8BA         9.
 // ALS-U         10.
-
-const bool
-  set_dnu = false,
-  mI_rot  = !false;
 
 const int
   lat_case = 5,
@@ -551,11 +547,18 @@ void get_nu_ksi(void)
 
   danot_(2); get_Map(); danot_(3);
   K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+  CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
 
   printf("\nnu  = [%8.5f, %8.5f]\n", nus[0].cst(), nus[1].cst());
   printf("ksi = [%8.5f, %8.5f]\n",
 	 h_ijklm(nus[0], 0, 0, 0, 0, 1),
 	 h_ijklm(nus[1], 0, 0, 0, 0, 1));
+  // printf("\nnu  = [%8.5f, %8.5f]\n",
+  // 	 -h_ijklm(K_re, 1, 1, 0, 0, 0)/M_PI,
+  // 	 -h_ijklm(K_re, 0, 0, 1, 1, 0)/M_PI);
+  // printf("ksi = [%8.5f, %8.5f]\n",
+  // 	 -h_ijklm(h_re, 1, 1, 0, 0, 1)/M_PI,
+  // 	 -h_ijklm(h_re, 0, 0, 1, 1, 1)/M_PI);
 }
 
 
@@ -577,11 +580,13 @@ void prt_h_K(void)
   std::ofstream outf;
 
   file_wr(outf, "h.out");
-  outf << h_re*Id_scl << h_im*Id_scl;
+  // outf << h_re*Id_scl << h_im*Id_scl;
+  outf << h_re*Id_scl;
   outf.close();
 
   file_wr(outf, "K.out");
-  outf << K_re*Id_scl << K_im*Id_scl;
+  // outf << K_re*Id_scl << K_im*Id_scl;
+  outf << K_re*Id_scl;
   outf.close();
 
   file_wr(outf, "nus.out");
@@ -1574,26 +1579,27 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 
   if (scl_ksi[0] != 0e0) {
     f[++m] = get_b("K_re_11001", scl_ksi[0], K_re_scl, 1, 1, 0, 0, 1);
-    f[++m] = get_b("K_re_11001", scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
+    f[++m] = get_b("K_re_00111", scl_ksi[0], K_re_scl, 0, 0, 1, 1, 1);
   }
 
   if (NO >= 5) {
     if (scl_dnu[0] != 0e0) {
-      f[++m] = get_b("K_re_22000", scl_dnu[0],   K_re_scl,        2, 2, 0, 0, 0);
-      f[++m] = get_b("K_re_11110", scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0);
-      f[++m] = get_b("K_re_00220", scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0);
+      f[++m] = get_b("K_re_22000", scl_dnu[0], K_re_scl, 2, 2, 0, 0, 0);
+      f[++m] = get_b("K_re_11110", scl_dnu[0], K_re_scl, 1, 1, 1, 1, 0);
+      f[++m] = get_b("K_re_00220", scl_dnu[0], K_re_scl, 0, 0, 2, 2, 0);
     }
 
     if (scl_ksi[2] != 0e0) {
-      f[++m] = get_b("K_re_11002", scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2);
-      f[++m] = get_b("K_re_00112", scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2);
+      f[++m] = get_b("K_re_11002", scl_ksi[2], K_re_scl, 1, 1, 0, 0, 2);
+      f[++m] = get_b("K_re_00112", scl_ksi[2], K_re_scl, 0, 0, 1, 1, 2);
     }
 
     if (scl_dnu_conf != 0e0) {
-      f[++m] = get_b("|dnu|", scl_dnu_conf,       dnu,       0, 0, 0, 0, 0);
+      f[++m] = get_b("|dnu|", scl_dnu_conf, dnu, 0, 0, 0, 0, 0);
     }
     if (scl_dnu_delta_conf != 0e0) {
-      f[++m] = get_b("|dnu(delta)|", scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
+      f[++m] =
+	get_b("|dnu(delta)|", scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
     }
   }
 
@@ -2254,7 +2260,7 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sd2", 3, 5e5, 1.0);
 
     if (!fit_ksi) {
-      bn_prms.add_prm("sf1", 4, 5e5, 1.0);
+      // bn_prms.add_prm("sf1", 4, 5e5, 1.0);
       // bn_prms.add_prm("sd1", 4, 5e5, 1.0);
       // bn_prms.add_prm("sd2", 4, 5e5, 1.0);
 
@@ -2405,6 +2411,35 @@ void lat_select(const int lat_case)
   }
 }
 
+void get_nu_from_lin_map(const double delta, double nu[])
+{
+  int    k;
+  double c;
+
+  danot_(1);
+  Map.identity(); Map[delta_] += tps(delta, 5);
+  Map.propagate(1, n_elem);
+  for (k = 0; k < 2; k++) {
+    c = (Map[2*k][2*k]+Map[2*k+1][2*k+1])/2e0;
+    nu[k] = acos(c)/(2e0*M_PI); nu[k] = sgn(Map[2*k][2*k+1])*nu[k];
+    if (nu[k] < 0e0) nu[k] += 1e0;
+  }
+}
+
+
+void get_ksi1(void)
+{
+  int    k;
+  double nu1[2], nu2[2], ksi1[2];
+
+  const double d_delta = 1e-5;
+
+  get_nu_from_lin_map(d_delta, nu2); get_nu_from_lin_map(-d_delta, nu1);
+  for (k = 0; k < 2; k++)
+    ksi1[k] = (nu2[k]-nu1[k])/(2e0*d_delta);
+  printf("\nksi1 = [%7.5f, %7.5f]\n", ksi1[X_], ksi1[Y_]);
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -2469,10 +2504,12 @@ int main(int argc, char *argv[])
     printf("Lev. Marq.\n");
 
   if (!false) {
+    // no_mpoles(Sext);
     get_nu_ksi();
     get_twiss();
     prt_lat("linlat.out", 10);
     prt_lat("linlat1.out");
+    // exit(0);
   }
 
   for (j = 0; j < 2; j++) {
@@ -2482,11 +2519,12 @@ int main(int argc, char *argv[])
 
   Id_scl.identity();
   for (j = 0; j < 4; j++)
-    Id_scl[x_] *= sqrt(twoJ[j/2]);
+    Id_scl[j] *= sqrt(twoJ[j/2]);
   Id_scl[delta_] *= delta_max[lat_case-1];
+
   Id_delta_scl.identity();
   for (j = 0; j < 4; j++)
-    Id_delta_scl[x_] *= sqrt(twoJ_delta[j/2]);
+    Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max[lat_case-1];
 
   if (false) {
@@ -2506,11 +2544,9 @@ int main(int argc, char *argv[])
       no_mpoles(Sext);
       no_mpoles(Oct);
     }
-
     danot_(NO-1);
     get_map_n(n_cell);
     prt_alphac();
-
     prt_ct(100, 8e-2);
     exit(0);
   }
@@ -2520,14 +2556,14 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (false) {
+  if (!false) {
     danot_(NO-1);
     get_map_n(n_cell);
     danot_(NO);
     K = MapNorm(Map, g, A1, A0, Map_res, 1);
     CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
-
     prt_h_K();
+    get_ksi1();
     exit(0);
   }
 
