@@ -5695,26 +5695,31 @@ void get_map_twiss(const ss_vect<tps> &M,
 }
 
 
-void set_map(const long int loc)
+void set_map(map_type *map)
 {
   // Set phase-space rotation.
   int          k;
-  double       eta_x, etap_x, cosmu, sinmu, dnu[2], beta[2];
+  double       cosmu, sinmu, dnu[2], beta[2], eta_x, etap_x;
   ss_vect<tps> Id, Id_eta;
 
-  dnu[X_] = elem[loc-1].map->dnu[X_]; dnu[Y_] = elem[loc-1].map->dnu[Y_];
-  eta_x = elem[loc-1].map->eta_x; etap_x = elem[loc-1].map->etap_x;
-
   Id.identity();
+
+  for (k = 0; k < 2; k++) {
+    dnu[k] = map->dnu[k]; beta[k] = map->beta[k];
+  }
+  eta_x = map->eta_x; etap_x = map->etap_x;
+
+  map->M.identity();
   for (k = 0; k < 2; k++) {
     cosmu = cos(2e0*M_PI*dnu[k]); sinmu = sin(2e0*M_PI*dnu[k]);
-    elem[loc-1].map->M[2*k]   = cosmu*Id[2*k] + beta[k]*sinmu*Id[2*k+1];
-    elem[loc-1].map->M[2*k+1] = -sinmu/beta[k]*Id[2*k] + cosmu*Id[2*k+1];
+    map->M[2*k]   = cosmu*Id[2*k] + beta[k]*sinmu*Id[2*k+1];
+    map->M[2*k+1] = -sinmu/beta[k]*Id[2*k] + cosmu*Id[2*k+1];
   }
 
   // Zero linear dispersion contribution.
-  Id_eta.zero(); Id_eta[x_] = eta_x*Id[delta_]; Id_eta[px_] = etap_x*Id[delta_];
-  Id_eta = elem[loc-1].map->M*Id_eta;
-  elem[loc-1].map->M[x_]  -= (Id_eta[x_][delta_]-eta_x)*Id[delta_];
-  elem[loc-1].map->M[px_] -= (Id_eta[px_][delta_]-etap_x)*Id[delta_];
+  Id_eta.identity();
+  Id_eta[x_] = eta_x*Id[delta_]; Id_eta[px_] = etap_x*Id[delta_];
+  Id_eta = map->M*Id_eta;
+  map->M[x_]  -= (Id_eta[x_][delta_]-eta_x)*Id[delta_];
+  map->M[px_] -= (Id_eta[px_][delta_]-etap_x)*Id[delta_];
 }

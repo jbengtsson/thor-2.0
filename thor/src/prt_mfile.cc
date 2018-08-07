@@ -157,6 +157,10 @@ void prt_mfile(const char file_name[])
       break;
     case Map_:
       prt_name(outf, i, Map_, 0, 0);
+      fprintf(outf, " %23.16le %23.16le %23.16le %23.16le %23.16le %23.16le\n",
+	      elem[i].map->dnu[X_],elem[i].map->dnu[Y_],
+	      elem[i].map->beta[X_],elem[i].map->beta[Y_],
+	      elem[i].map->eta_x,elem[i].map->etap_x);
       break;
     default:
       printf("prt_mfile: unknown type %d\n", elem[i].kind);

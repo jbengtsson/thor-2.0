@@ -397,5 +397,4 @@ void get_rad(char *cav_name, double I_beam);
 
 void get_emittance(void);
 
-void set_map(const char *name, const double dnu_x, const double dnu_y,
-	     const double eta_x, const double etap_x);
+void set_map(map_type *map);

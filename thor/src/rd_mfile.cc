@@ -330,7 +330,12 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       break;
       case Map_:
 	elem[ind].map = new map_type;
-	elem[ind].map->M.identity();
+	inf.getline(line, max_str);
+	sscanf(line, "%lf %lf %lf %lf %lf %lf",
+	       &elem[ind].map->dnu[X_], &elem[ind].map->dnu[Y_],
+	       &elem[ind].map->beta[X_], &elem[ind].map->beta[Y_],
+	       &elem[ind].map->eta_x, &elem[ind].map->etap_x);
+	set_map(elem[ind].map);
 	break;
       default:
 	std::cout << "rd_mfile: undefined element " << elem[ind].Name

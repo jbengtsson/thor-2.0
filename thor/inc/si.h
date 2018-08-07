@@ -91,7 +91,7 @@ typedef struct {
 } kick_map_type;
 
 typedef struct {
-  double       dnu[2], eta_x, etap_x;
+  double       dnu[2], beta[2], eta_x, etap_x;
   ss_vect<tps> M;
 } map_type;
 

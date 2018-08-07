@@ -71,12 +71,7 @@ const double
   delta_max[] =
     {3e-2, 4e-2, 3e-2, 3e-2,
      1.5e-2, 3e-2, 3e-2, 3e-2,
-     3e-2, 3e-2},
-  dnu[]      = {0.03, 0.02},
-  eta_x[]    = {0.0, 0.0},
-  // dnu_mI[]   = {1.5-1.44129, 0.5-0.47593},
-  dnu_mI[]   = {0.01, -0.01},
-  eta_x_mI[] = {0.02466, 0.0};
+     3e-2, 3e-2};
 
 
 #define FIRST_PASS 1
@@ -2472,18 +2467,6 @@ int main(int argc, char *argv[])
     // printf("\n");
   } else
     printf("Lev. Marq.\n");
-
-  if (set_dnu) {
-    get_nu_ksi();
-    set_map("ps_rot", dnu[X_], dnu[Y_], eta_x_mI[0], eta_x_mI[1]);
-    get_nu_ksi();
-  }
-
-  if (mI_rot) {
-    get_nu_ksi();
-    set_map("mi_rot", dnu_mI[X_], dnu_mI[Y_], eta_x_mI[0], eta_x_mI[1]);
-    get_nu_ksi();
-  }
 
   if (!false) {
     get_nu_ksi();
