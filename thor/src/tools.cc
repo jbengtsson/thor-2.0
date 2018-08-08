@@ -5699,21 +5699,23 @@ void set_map(map_type *map)
 {
   // Set phase-space rotation.
   int          k;
-  double       cosmu, sinmu, dnu[2], beta[2], eta_x, etap_x;
+  double       dnu[2], alpha[2], beta[2], eta_x, etap_x, cosmu, sinmu;
   ss_vect<tps> Id, Id_eta;
 
   Id.identity();
 
   for (k = 0; k < 2; k++) {
-    dnu[k] = map->dnu[k]; beta[k] = map->beta[k];
+    dnu[k] = map->dnu[k]; alpha[k] = map->alpha[k]; beta[k] = map->beta[k];
   }
   eta_x = map->eta_x; etap_x = map->etap_x;
 
   map->M.identity();
   for (k = 0; k < 2; k++) {
     cosmu = cos(2e0*M_PI*dnu[k]); sinmu = sin(2e0*M_PI*dnu[k]);
-    map->M[2*k]   = cosmu*Id[2*k] + beta[k]*sinmu*Id[2*k+1];
-    map->M[2*k+1] = -sinmu/beta[k]*Id[2*k] + cosmu*Id[2*k+1];
+    map->M[2*k]   = (cosmu+alpha[k]*sinmu)*Id[2*k] + beta[k]*sinmu*Id[2*k+1];
+    map->M[2*k+1] =
+      -(1e0+sqr(alpha[k]))*sinmu/beta[k]*Id[2*k]
+      + (cosmu-alpha[k]*sinmu)*Id[2*k+1];
   }
 
   // Zero linear dispersion contribution.

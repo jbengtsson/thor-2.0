@@ -334,8 +334,9 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       case Map_:
 	elem[ind].map = new map_type;
 	inf.getline(line, line_max);
-	sscanf(line, "%lf %lf %lf %lf %lf %lf",
+	sscanf(line, "%lf %lf %lf %lf %lf %lf %lf %lf",
 	       &elem[ind].map->dnu[X_], &elem[ind].map->dnu[Y_],
+	       &elem[ind].map->alpha[X_], &elem[ind].map->alpha[Y_],
 	       &elem[ind].map->beta[X_], &elem[ind].map->beta[Y_],
 	       &elem[ind].map->eta_x, &elem[ind].map->etap_x);
 	set_map(elem[ind].map);
