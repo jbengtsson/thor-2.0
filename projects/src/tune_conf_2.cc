@@ -2557,6 +2557,13 @@ int main(int argc, char *argv[])
   }
 
   if (!false) {
+    if (!false) {
+      // Tweak linear chromaticity.
+      bn_prms.step = 1.0;
+      bn_prms.ini_prm();
+      fit_ksi1(0e0, 0e0);
+    }
+
     danot_(NO-1);
     get_map_n(n_cell);
     danot_(NO);
