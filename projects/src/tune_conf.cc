@@ -1604,7 +1604,13 @@ int main(int argc, char *argv[])
       exit(0);
     }
 
-    if (false) {
+    if (!false) {
+      danot_(NO-1);
+      get_map_n(n_cell);
+      danot_(NO);
+      K = MapNorm(Map, g, A1, A0, Map_res, 1);
+      CtoR(get_h(), h_re, h_im); nus = dHdJ(K);
+
       prt_h_K();
       exit(0);
     }

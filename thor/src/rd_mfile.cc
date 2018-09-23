@@ -108,10 +108,13 @@ void clr_Family(void)
 template<typename T>
 void rd_mfile(const char file_name[], elem_type<T> elem[])
 {
-  long int  ind;
-  int       k, order, n_mpole, Fnum, Knum, method, n_step;
-  double    drerror, bn, an, L;
-  char      line[line_max];
+  const int n_ps = 6;
+
+  long int       ind;
+  int            j, k, order, n_mpole, Fnum, Knum, method, n_step;
+  double         drerror, bn, an, L, val[n_ps];
+  char           line[line_max];
+  ss_vect<tps>   Id;
   std::ifstream  inf;
 
   bool  prt = false;
@@ -131,7 +134,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       sscanf(line, "%s %d %d", elem[ind].Name, &Fnum, &Knum);
       k = strlen(elem[ind].Name);
       if (k >= name_length) {
-	printf("rd_mfile: name_length) exceeded %d (%d) %s\n",
+	printf("rd_mfile: name_length exceeded %d (%d) %s\n",
 	       k, name_length, elem[ind].Name);
 	exit(1);
       }
@@ -333,13 +336,15 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       break;
       case Map_:
 	elem[ind].map = new map_type;
-	inf.getline(line, line_max);
-	sscanf(line, "%lf %lf %lf %lf %lf %lf %lf %lf",
-	       &elem[ind].map->dnu[X_], &elem[ind].map->dnu[Y_],
-	       &elem[ind].map->alpha[X_], &elem[ind].map->alpha[Y_],
-	       &elem[ind].map->beta[X_], &elem[ind].map->beta[Y_],
-	       &elem[ind].map->eta_x, &elem[ind].map->etap_x);
-	set_map(elem[ind].map);
+	Id.identity(); elem[ind].map->M.zero();
+	for (j = 0; j < n_ps; j++) {
+	  inf.getline(line, line_max);
+	  if (prt) printf("%s\n", line);
+	  sscanf(line, "%lf %lf %lf %lf %lf %lf",
+		 &val[0], &val[1], &val[2], &val[3], &val[4], &val[5]);
+	  for (k = 0; k < n_ps; k++)
+	    elem[ind].map->M[j] += val[k]*Id[k];
+	}
 	break;
       default:
 	std::cout << "rd_mfile: undefined element " << elem[ind].Name
