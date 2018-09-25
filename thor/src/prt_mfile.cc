@@ -84,8 +84,10 @@ void prt_bn(FILE *fp, const int n_design, const double bn[], const double an[],
 
 void prt_mfile(const char file_name[])
 {
-  int   i, j;
-  FILE  *outf;
+  int  i, j, k;
+  FILE *outf;
+
+  const int n_ps = 6;
 
   outf = file_write(file_name);
 
@@ -157,12 +159,11 @@ void prt_mfile(const char file_name[])
       break;
     case Map_:
       prt_name(outf, i, Map_, 0, 0);
-      fprintf(outf, " %23.16e %23.16e %23.16e %23.16e %23.16e %23.16e"
-	      " %23.16e %23.16e\n",
-	      elem[i].map->dnu[X_],elem[i].map->dnu[Y_],
-	      elem[i].map->alpha[X_],elem[i].map->alpha[Y_],
-	      elem[i].map->beta[X_],elem[i].map->beta[Y_],
-	      elem[i].map->eta_x,elem[i].map->etap_x);
+      for (j = 0; j < n_ps; j++) {
+	for (k = 0; k < n_ps; k++)
+	  fprintf(outf, " %23.16le", elem[i].map->M[j][k]);
+	fprintf(outf, "\n");
+      }
       break;
     default:
       printf("prt_mfile: unknown type %d\n", elem[i].kind);
