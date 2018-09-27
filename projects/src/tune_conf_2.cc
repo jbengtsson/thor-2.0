@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -28,9 +28,9 @@ tps                      h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 ss_vect<tps>             nus, nus_scl;
 
 const bool
-  fit_ksi = true,
-  symm    = !false,
-  scale   = !true,
+  fit_ksi = false,
+  symm    = true,
+  scale   = false,
   c_g     = true;
 
 const double tpsa_eps = 1e-30;
@@ -2278,12 +2278,12 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sd1a", 3, 1e4, 1.0);
     bn_prms.add_prm("sd1b", 3, 1e4, 1.0);
 
-    // bn_prms.add_prm("qf1_ms", 3, 1e4, 1.0);
-    // bn_prms.add_prm("qd2_ms", 3, 1e4, 1.0);
+    bn_prms.add_prm("qf1_ms", 3, 1e4, 1.0);
+    bn_prms.add_prm("qd2_ms", 3, 1e4, 1.0);
 
-    // bn_prms.add_prm("qd1_ss", 3, 1e4, 1.0);
-    // bn_prms.add_prm("qf2_ss", 3, 1e4, 1.0);
-    // bn_prms.add_prm("qd3_ss", 3, 1e4, 1.0);
+    bn_prms.add_prm("qd1_ss", 3, 1e4, 1.0);
+    bn_prms.add_prm("qf2_ss", 3, 1e4, 1.0);
+    bn_prms.add_prm("qd3_ss", 3, 1e4, 1.0);
 
     // bn_prms.add_prm("qf1_ls", 3, 1e4, 1.0);
     // bn_prms.add_prm("qd2_ls", 3, 1e4, 1.0);
@@ -2401,7 +2401,7 @@ int main(int argc, char *argv[])
 
   n_cut = atoi(argv[2]);
 
-  lat_select(lat_case);
+  // lat_select(lat_case);
 
   printf("\nn_cell:             %1d\n", n_cell);
   printf("scl_h:              %7.1e, %7.1e, %7.1e\n",
@@ -2482,8 +2482,8 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (false) {
-    if (!false) {
+  if (!false) {
+    if (false) {
       // Tweak linear chromaticity.
       bn_prms.step = 1.0;
       bn_prms.ini_prm();
@@ -2491,7 +2491,7 @@ int main(int argc, char *argv[])
     }
 
     danot_(NO-1);
-    get_map_n(n_cell);
+    get_Map();
     danot_(NO);
     K = MapNorm(Map, g, A1, A0, Map_res, 1);
     CtoR(K, K_re, K_im); CtoR(get_h(), h_re, h_im);
