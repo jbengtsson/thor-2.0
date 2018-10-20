@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 4
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -40,7 +40,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND       3,
 // DIAMOND & VMX 4,
 // M-H6BAi       5,
-// TBA-6x8       6,
+// M-H6BA-0-.-.  6,
 // ALS-U         7.
 
 const int
@@ -51,28 +51,24 @@ const int
 const double
   beta_inj[][2] =
     {{ 2.9, 3.1},  { 5.2, 3.2}, {9.8, 5.4}, {9.8, 5.4},
-     {10.0, 3.0},  {21.0, 3.9}, {9.2, 3.2}, {4.6, 7.6},
-     { 6.0, 2.8},  { 2.1, 2.3}},
+     {10.0, 3.0},  {10.0, 4.2}, {9.2, 3.2}},
   A_max[][2] =
     {{1.5e-3, 1.5e-3}, {4e-3, 2e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {5e-3,   2e-3},   {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
-     {4e-3, 3e-3},     {4e-3, 2e-3}},
+     {5e-3,   3e-3},   {5e-3, 3e-3}, {4e-3, 2e-3}},
   A_delta_max[][2] =
     {{1.5e-3, 1.5e-3}, {4e-3, 2e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {1e-3,   0.1e-3}, {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
-     {4e-3, 3e-3},     {4e-3, 2e-3}},
+     {1e-3,   0.1e-3}, {4e-3, 2e-3}},
   delta_max[] =
     {  3e-2, 4e-2, 3e-2, 3e-2,
-     1.5e-2, 3e-2, 3e-2, 3e-2,
-       3e-2, 3e-2};
+     1.5e-2, 2.5e-2, 3e-2};
 
 
 #define FIRST_PASS 1
 
 #if FIRST_PASS
 const double scl_h[]            = {1e-1,  1e-2, 1e-2},
-             scl_dnu[]          = {1e-5, 1e-5, 1e-5, 1e-5},
-             scl_ksi[]          = {1e5,  1e-5, 1e-5, 1e-5, 1e-5},
+             scl_dnu[]          = {1e-1, 1e-1, 1e-1, 1e-1},
+             scl_ksi[]          = {1e5,  1e-1, 1e-1, 1e-1, 1e-3},
 // const double scl_h[]            = {0e0,   0e-6, 0e-6},
 //              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
 //              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
@@ -2271,26 +2267,28 @@ void lat_select(const int lat_case)
     }
     break;
   case 6:
-    // TBA-6x8.
+    // M-H6BA-0-.-..
     n_cell = 1;
 
-    bn_prms.add_prm("sfh",  3, 1e4, 1.0);
-    bn_prms.add_prm("sd1a", 3, 1e4, 1.0);
-    bn_prms.add_prm("sd1b", 3, 1e4, 1.0);
+    bn_prms.add_prm("sf1", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd1", 3, 5e5, 1.0);
+    bn_prms.add_prm("sd2", 3, 5e5, 1.0);
 
-    bn_prms.add_prm("qf1_ms", 3, 1e4, 1.0);
-    bn_prms.add_prm("qd2_ms", 3, 1e4, 1.0);
+    if (!fit_ksi) {
+      // bn_prms.add_prm("sf1", 4, 5e5, 1.0);
+      // bn_prms.add_prm("sd1", 4, 5e5, 1.0);
+      // bn_prms.add_prm("sd2", 4, 5e5, 1.0);
 
-    bn_prms.add_prm("qd1_ss", 3, 1e4, 1.0);
-    bn_prms.add_prm("qf2_ss", 3, 1e4, 1.0);
-    bn_prms.add_prm("qd3_ss", 3, 1e4, 1.0);
+      // bn_prms.add_prm("sh1a", 4, 5e5, 1.0);
+      // bn_prms.add_prm("sh2b", 4, 5e5, 1.0);
+      // bn_prms.add_prm("of1s", 4, 5e5, 1.0);
 
-    // bn_prms.add_prm("qf1_ls", 3, 1e4, 1.0);
-    // bn_prms.add_prm("qd2_ls", 3, 1e4, 1.0);
-    // bn_prms.add_prm("qf3_ls", 3, 1e4, 1.0);
-    // bn_prms.add_prm("qd4_ls", 3, 1e4, 1.0);
+      // bn_prms.add_prm("sf1", 5, 5e5, 1.0);
+      // bn_prms.add_prm("sd1", 5, 5e5, 1.0);
+      // bn_prms.add_prm("sd2", 5, 5e5, 1.0);
+    }
     break;
-  case 10:
+  case 7:
     // ALS-U.
     n_cell = 1;
 
@@ -2325,6 +2323,9 @@ void lat_select(const int lat_case)
     // bn_prms.add_prm("sh1",  6, 5e5, 1.0);
     // bn_prms.add_prm("sh2",  6, 5e5, 1.0);
     // bn_prms.add_prm("sh3",  6, 5e5, 1.0);
+    break;
+  default:
+    printf("\nlat_select: unknown Lattice type: %d\n", lat_case);
     break;
   }
 
@@ -2401,7 +2402,7 @@ int main(int argc, char *argv[])
 
   n_cut = atoi(argv[2]);
 
-  // lat_select(lat_case);
+  lat_select(lat_case);
 
   printf("\nn_cell:             %1d\n", n_cell);
   printf("scl_h:              %7.1e, %7.1e, %7.1e\n",
@@ -2482,7 +2483,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (!false) {
+  if (false) {
     if (false) {
       // Tweak linear chromaticity.
       bn_prms.step = 1.0;
