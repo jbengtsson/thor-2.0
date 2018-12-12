@@ -2270,9 +2270,8 @@ void lat_select(const int lat_case)
 
     bn_prms.add_prm("sh2",  4, 1e4, 1.0);
     bn_prms.add_prm("of1s", 4, 1e4, 1.0);
-
     break;
-  case 10:
+  case 7:
     // ALS-U.
     n_cell = 1;
 
@@ -2307,6 +2306,9 @@ void lat_select(const int lat_case)
     // bn_prms.add_prm("sh1",  6, 5e5, 1.0);
     // bn_prms.add_prm("sh2",  6, 5e5, 1.0);
     // bn_prms.add_prm("sh3",  6, 5e5, 1.0);
+    break;
+  default:
+    printf("\nlat_select: unknown Lattice type: %d\n", lat_case);
     break;
   }
 
