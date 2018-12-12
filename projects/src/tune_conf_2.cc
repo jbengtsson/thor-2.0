@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 4
+#define NO 8
 
 #include "thor_lib.h"
 
@@ -40,7 +40,7 @@ const double tpsa_eps = 1e-30;
 // DIAMOND       3,
 // DIAMOND & VMX 4,
 // M-H6BAi       5,
-// TBA-6x8       6,
+// M-H6BA        6,
 // ALS-U         7.
 
 const int
@@ -49,30 +49,19 @@ const int
 
 // Center of straight.
 const double
-  beta_inj[][2] =
-    {{ 2.9, 3.1},  { 5.2, 3.2}, {9.8, 5.4}, {9.8, 5.4},
-     {10.0, 3.0},  {21.0, 3.9}, {9.2, 3.2}, {4.6, 7.6},
-     { 6.0, 2.8},  { 2.1, 2.3}},
-  A_max[][2] =
-    {{1.5e-3, 1.5e-3}, {4e-3, 2e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {5e-3,   2e-3},   {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
-     {4e-3, 3e-3},     {4e-3, 2e-3}},
-  A_delta_max[][2] =
-    {{1.5e-3, 1.5e-3}, {4e-3, 2e-3}, {8e-3, 4e-3}, {12e-3, 6e-3},
-     {1e-3,   0.1e-3}, {4e-3, 2e-3}, {3e-3, 2e-3}, { 2e-3, 1e-3},
-     {4e-3, 3e-3},     {4e-3, 2e-3}},
-  delta_max[] =
-    {  3e-2, 4e-2, 3e-2, 3e-2,
-     1.5e-2, 3e-2, 3e-2, 3e-2,
-       3e-2, 3e-2};
+  A_max[]      = {8e-3, 4e-3},
+  beta_inj[]   = {10.0, 4.0},
+  twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
+  twoJ_delta[] = {twoJ[X_], twoJ[Y_]},
+  delta_max    = 3e-2;
 
 
 #define FIRST_PASS 1
 
 #if FIRST_PASS
 const double scl_h[]            = {1e-1,  1e-2, 1e-2},
-             scl_dnu[]          = {1e-5, 1e-5, 1e-5, 1e-5},
-             scl_ksi[]          = {1e5,  1e-5, 1e-5, 1e-5, 1e-5},
+             scl_dnu[]          = {1e-4, 1e-4, 1e-4, 1e-4},
+             scl_ksi[]          = {1e5,  1e-4, 1e-4, 1e-4, 1e-4},
 // const double scl_h[]            = {0e0,   0e-6, 0e-6},
 //              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
 //              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
@@ -109,7 +98,6 @@ public:
 
 param_type   bn_prms;
 int          n_iter, n_powell;
-double       twoJ[2], twoJ_delta[2];
 ss_vect<tps> Id_scl, Id_delta_scl;
 
 void param_type::add_prm(const std::string Fname, const int n,
@@ -365,12 +353,12 @@ double gauss_quad_3D_y1(const double x) { return twoJ[Y_]; }
 
 double gauss_quad_3D_z0(const double x, const double y)
 {
-  return -delta_max[lat_case-1];
+  return -delta_max;
 }
 
 double gauss_quad_3D_z1(const double x, const double y)
 {
-  return delta_max[lat_case-1];
+  return delta_max;
 }
 
 tps gauss_quad_3D_fz(const double z)
@@ -419,7 +407,7 @@ tps f_gauss_quad_3D(double x, double y, double z)
     if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
   }
 
-  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*2e0*delta_max[lat_case-1]);
+  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*2e0*delta_max);
 #else
   Id.identity(); Id[6] = 0e0;
   danot_(NO-1);
@@ -439,7 +427,7 @@ tps f_gauss_quad_3D(double x, double y, double z)
   // std::cout << std::scientific << std::setprecision(3)
   // 	    << "\n |dK| = " << dK << "\n";
 
-  return dK/(twoJ[X_]*twoJ[Y_]*2e0*delta_max[lat_case-1]);
+  return dK/(twoJ[X_]*twoJ[Y_]*2e0*delta_max);
 #endif
 }
 
@@ -632,7 +620,7 @@ void prt_dnu(void)
 {
 
   printf("\ndnu(A=[%3.1f, %3.1f] mm):\n",
-	 1e3*A_max[lat_case-1][X_], 1e3*A_max[lat_case-1][Y_]);
+	 1e3*A_max[X_], 1e3*A_max[Y_]);
   printf("   k_22000    k_11110    k_00220\n");
   printf("   k_33000    k_22110    k_11220    k_00330\n");
   printf("   k_44000    k_33110    k_22220    k_11330    k_00440\n");
@@ -688,7 +676,7 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[4], 1, 1, 3, 3, 0),
 	 h_ijklm(nus_scl[4], 0, 0, 4, 4, 0));
 
-  printf("\nksi(delta=%3.1f%%):\n", 1e2*delta_max[lat_case-1]);
+  printf("\nksi(delta=%3.1f%%):\n", 1e2*delta_max);
   printf("   k_11001    k_00111    k_22001    k_11111    k_00221\n");
   printf("   k_11002    k_00112    k_22002    k_11112    k_00222"
 	 "   k_33002    k_22112    k_11222    k_00332\n");
@@ -2271,24 +2259,18 @@ void lat_select(const int lat_case)
     }
     break;
   case 6:
-    // TBA-6x8.
+    // M-H6BA.
     n_cell = 1;
 
-    bn_prms.add_prm("sfh",  3, 1e4, 1.0);
-    bn_prms.add_prm("sd1a", 3, 1e4, 1.0);
-    bn_prms.add_prm("sd1b", 3, 1e4, 1.0);
+    bn_prms.add_prm("sf1",  3, 1e4, 1.0);
+    bn_prms.add_prm("sd1",  3, 1e4, 1.0);
+    bn_prms.add_prm("sd2",  3, 1e4, 1.0);
 
-    bn_prms.add_prm("qf1_ms", 3, 1e4, 1.0);
-    bn_prms.add_prm("qd2_ms", 3, 1e4, 1.0);
+    bn_prms.add_prm("sh1",  3, 1e4, 1.0);
 
-    bn_prms.add_prm("qd1_ss", 3, 1e4, 1.0);
-    bn_prms.add_prm("qf2_ss", 3, 1e4, 1.0);
-    bn_prms.add_prm("qd3_ss", 3, 1e4, 1.0);
+    bn_prms.add_prm("sh2",  4, 1e4, 1.0);
+    bn_prms.add_prm("of1s", 4, 1e4, 1.0);
 
-    // bn_prms.add_prm("qf1_ls", 3, 1e4, 1.0);
-    // bn_prms.add_prm("qd2_ls", 3, 1e4, 1.0);
-    // bn_prms.add_prm("qf3_ls", 3, 1e4, 1.0);
-    // bn_prms.add_prm("qd4_ls", 3, 1e4, 1.0);
     break;
   case 10:
     // ALS-U.
@@ -2401,7 +2383,7 @@ int main(int argc, char *argv[])
 
   n_cut = atoi(argv[2]);
 
-  // lat_select(lat_case);
+  lat_select(lat_case);
 
   printf("\nn_cell:             %1d\n", n_cell);
   printf("scl_h:              %7.1e, %7.1e, %7.1e\n",
@@ -2416,10 +2398,10 @@ int main(int argc, char *argv[])
   printf("symmetric:          %d\n", symm);
   printf("1st pass:           %d\n", FIRST_PASS);
   printf("\nA_max [mm]:      %7.2f, %7.2f\n",
-	 1e3*A_max[lat_case-1][X_], 1e3*A_max[lat_case-1][Y_]);
-  printf("delta_max:          %7.1e\n", delta_max[lat_case-1]);
+	 1e3*A_max[X_], 1e3*A_max[Y_]);
+  printf("delta_max:          %7.1e\n", delta_max);
   printf("beta_inj:        %7.2f, %7.2f\n",
-	 beta_inj[lat_case-1][X_], beta_inj[lat_case-1][Y_]);
+	 beta_inj[X_], beta_inj[Y_]);
   if (c_g) {
     printf("Conj. Grad.:       %d\n", n_cut);
     // printf("Conj. Grad. List of Singular Values:\n");
@@ -2438,20 +2420,15 @@ int main(int argc, char *argv[])
     // exit(0);
   }
 
-  for (j = 0; j < 2; j++) {
-    twoJ[j] = sqr(A_max[lat_case-1][j])/beta_inj[lat_case-1][j];
-    twoJ_delta[j] = sqr(A_delta_max[lat_case-1][j])/beta_inj[lat_case-1][j];
-  }
-
   Id_scl.identity();
   for (j = 0; j < 4; j++)
     Id_scl[j] *= sqrt(twoJ[j/2]);
-  Id_scl[delta_] *= delta_max[lat_case-1];
+  Id_scl[delta_] *= delta_max;
 
   Id_delta_scl.identity();
   for (j = 0; j < 4; j++)
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
-  Id_delta_scl[delta_] *= delta_max[lat_case-1];
+  Id_delta_scl[delta_] *= delta_max;
 
   if (false) {
     danot_(NO-1);
@@ -2482,7 +2459,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (!false) {
+  if (false) {
     if (false) {
       // Tweak linear chromaticity.
       bn_prms.step = 1.0;
