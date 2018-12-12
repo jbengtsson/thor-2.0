@@ -61,7 +61,7 @@ const double
 #if FIRST_PASS
 const double scl_h[]            = {1e-1,  1e-2, 1e-2},
              scl_dnu[]          = {1e-4, 1e-4, 1e-4, 1e-4},
-             scl_ksi[]          = {1e5,  1e-1, 1e-1, 1e-1, 1e-1},
+             scl_ksi[]          = {1e5,  1e-2, 1e-2, 1e-2, 1e-2},
 // const double scl_h[]            = {0e0,   0e-6, 0e-6},
 //              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
 //              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
@@ -2271,8 +2271,8 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sh2",  4, 1e4, 1.0);
     bn_prms.add_prm("of1s", 4, 1e4, 1.0);
 
-    // bn_prms.add_prm("sh2",  6, 1e4, 1.0);
-    // bn_prms.add_prm("of1s", 6, 1e4, 1.0);
+    bn_prms.add_prm("sh2",  5, 1e4, 1.0);
+    bn_prms.add_prm("of1s", 5, 1e4, 1.0);
     break;
   case 7:
     // ALS-U.
