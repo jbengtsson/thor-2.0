@@ -61,7 +61,7 @@ const double
 #if FIRST_PASS
 const double scl_h[]            = {1e-1,  1e-2, 1e-2},
              scl_dnu[]          = {1e-4, 1e-4, 1e-4, 1e-4},
-             scl_ksi[]          = {1e5,  1e-4, 1e-4, 1e-4, 1e-4},
+             scl_ksi[]          = {1e5,  1e-3, 1e-3, 1e-3, 1e-3},
 // const double scl_h[]            = {0e0,   0e-6, 0e-6},
 //              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
 //              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
@@ -2407,7 +2407,7 @@ int main(int argc, char *argv[])
   printf("beta_inj:        %7.2f, %7.2f\n",
 	 beta_inj[X_], beta_inj[Y_]);
   if (c_g) {
-    printf("Conj. Grad.:       %d\n", n_cut);
+    printf("Conj. Grad.:        %d\n", n_cut);
     // printf("Conj. Grad. List of Singular Values:\n");
     // for (j = 0; j < (int)bn_prms.svd_list.size(); j++)
     //   printf(" %2d", bn_prms.svd_list[j]);
