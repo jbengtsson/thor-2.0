@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 8
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -2266,10 +2266,12 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sd1",  3, 1e4, 1.0);
     bn_prms.add_prm("sd2",  3, 1e4, 1.0);
 
-    bn_prms.add_prm("sh1",  3, 1e4, 1.0);
+    // bn_prms.add_prm("sh1",  3, 1e4, 1.0);
 
     bn_prms.add_prm("sh2",  4, 1e4, 1.0);
     bn_prms.add_prm("of1s", 4, 1e4, 1.0);
+    bn_prms.add_prm("sh2",  6, 1e4, 1.0);
+    bn_prms.add_prm("of1s", 6, 1e4, 1.0);
     break;
   case 7:
     // ALS-U.
