@@ -50,7 +50,7 @@ const int
 // Center of straight.
 const double
   beta_inj[]   = {10.0, 4.0},
-  twoJ[]       = {sqr(8e-3)/beta_inj[X_], sqr(4e-3)/beta_inj[Y_]},
+  twoJ[]       = {sqr(1e-3)/beta_inj[X_], sqr(1e-3)/beta_inj[Y_]},
   twoJ_delta[] = {sqr(1e-3)/10.0, sqr(0.5e-3)/4.0},
   delta_max    = 3e-2;
 
@@ -2266,6 +2266,11 @@ void lat_select(const int lat_case)
     bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
     bn_prms.add_prm("sh2",  4, 1e4, 1.0);
     bn_prms.add_prm("of1s", 4, 1e4, 1.0);
+
+    bn_prms.add_prm("sh1a", 5, 1e4, 1.0);
+    bn_prms.add_prm("sh1b", 5, 1e4, 1.0);
+    bn_prms.add_prm("sh2",  5, 1e4, 1.0);
+    bn_prms.add_prm("of1s", 5, 1e4, 1.0);
 
     // bn_prms.add_prm("sh2",  5, 1e4, 1.0);
     // bn_prms.add_prm("of1s", 5, 1e4, 1.0);
