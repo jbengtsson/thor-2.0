@@ -49,19 +49,18 @@ const int
 
 // Center of straight.
 const double
-  A_max[]      = {8e-3, 4e-3},
   beta_inj[]   = {10.0, 4.0},
-  twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
-  twoJ_delta[] = {twoJ[X_], twoJ[Y_]},
+  twoJ[]       = {sqr(8e-3)/beta_inj[X_], sqr(4e-3)/beta_inj[Y_]},
+  twoJ_delta[] = {sqr(1e-3)/10.0, sqr(0.5e-3)/4.0},
   delta_max    = 3e-2;
 
 
 #define FIRST_PASS 1
 
 #if FIRST_PASS
-const double scl_h[]            = {1e-1,  1e-2, 1e-2},
-             scl_dnu[]          = {1e-4, 1e-4, 1e-4, 1e-4},
-             scl_ksi[]          = {1e5,  1e-2, 1e-2, 1e-2, 1e-2},
+const double scl_h[]            = {1e-1,  1e-2, 0e-2},
+             scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
+             scl_ksi[]          = {1e5,  1e-1, 1e-1, 1e-1, 0e-1},
 // const double scl_h[]            = {0e0,   0e-6, 0e-6},
 //              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
 //              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
@@ -565,12 +564,10 @@ void prt_h_K(void)
   std::ofstream outf;
 
   file_wr(outf, "h.out");
-  // outf << h_re*Id_scl << h_im*Id_scl;
   outf << h_re*Id_scl;
   outf.close();
 
   file_wr(outf, "K.out");
-  // outf << K_re*Id_scl << K_im*Id_scl;
   outf << K_re*Id_scl;
   outf.close();
 
@@ -619,8 +616,7 @@ void prt_h_K_sym(void)
 void prt_dnu(void)
 {
 
-  printf("\ndnu(A=[%3.1f, %3.1f] mm):\n",
-	 1e3*A_max[X_], 1e3*A_max[Y_]);
+  printf("\ndnu(2J=[%10.3e, %10.3e]):\n", twoJ[X_], twoJ[Y_]);
   printf("   k_22000    k_11110    k_00220\n");
   printf("   k_33000    k_22110    k_11220    k_00330\n");
   printf("   k_44000    k_33110    k_22220    k_11330    k_00440\n");
@@ -2262,17 +2258,25 @@ void lat_select(const int lat_case)
     // M-H6BA.
     n_cell = 1;
 
-    bn_prms.add_prm("sf1",  3, 1e4, 1.0);
-    bn_prms.add_prm("sd1",  3, 1e4, 1.0);
-    bn_prms.add_prm("sd2",  3, 1e4, 1.0);
+    // bn_prms.add_prm("sf1", 3, 1e4, 1.0);
+    // bn_prms.add_prm("sd1", 3, 1e4, 1.0);
+    // bn_prms.add_prm("sd2", 3, 1e4, 1.0);
 
     // bn_prms.add_prm("sh1",  3, 1e4, 1.0);
 
-    bn_prms.add_prm("sh2",  4, 1e4, 1.0);
-    bn_prms.add_prm("of1s", 4, 1e4, 1.0);
+    bn_prms.add_prm("sf1", 4, 1e4, 1.0);
+    bn_prms.add_prm("sd1", 4, 1e4, 1.0);
+    bn_prms.add_prm("sd2", 4, 1e4, 1.0);
 
-    bn_prms.add_prm("sh2",  5, 1e4, 1.0);
-    bn_prms.add_prm("of1s", 5, 1e4, 1.0);
+    bn_prms.add_prm("sf1", 5, 1e4, 1.0);
+    bn_prms.add_prm("sd1", 5, 1e4, 1.0);
+    bn_prms.add_prm("sd2", 5, 1e4, 1.0);
+
+    // bn_prms.add_prm("sh2",  4, 1e4, 1.0);
+    // bn_prms.add_prm("of1s", 4, 1e4, 1.0);
+
+    // bn_prms.add_prm("sh2",  5, 1e4, 1.0);
+    // bn_prms.add_prm("of1s", 5, 1e4, 1.0);
     break;
   case 7:
     // ALS-U.
@@ -2402,11 +2406,8 @@ int main(int argc, char *argv[])
   printf("dnu/dJ:             %d\n", DNU);
   printf("symmetric:          %d\n", symm);
   printf("1st pass:           %d\n", FIRST_PASS);
-  printf("\nA_max [mm]:      %7.2f, %7.2f\n",
-	 1e3*A_max[X_], 1e3*A_max[Y_]);
+  printf("\n2J:                 %10.3e, %10.3e\n", twoJ[X_], twoJ[Y_]);
   printf("delta_max:          %7.1e\n", delta_max);
-  printf("beta_inj:        %7.2f, %7.2f\n",
-	 beta_inj[X_], beta_inj[Y_]);
   if (c_g) {
     printf("Conj. Grad.:        %d\n", n_cut);
     // printf("Conj. Grad. List of Singular Values:\n");
