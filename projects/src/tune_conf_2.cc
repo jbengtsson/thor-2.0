@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 6
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -24,7 +24,8 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 std::vector<std::string> drv_term;
 int                      n_cell, n_cut;
 double                   chi2 = 0e0, *f_lm, **A_lm;
-tps                      h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
+tps                      h_re, h_im, h_re_scl, h_im_scl, K_re, K_im;
+tps                      K_re_scl, K_re_delta_scl;
 ss_vect<tps>             nus, nus_scl;
 
 const bool
@@ -50,29 +51,17 @@ const int
 // Center of straight.
 const double
   beta_inj[]   = {10.0, 4.0},
-  twoJ[]       = {sqr(1e-3)/beta_inj[X_], sqr(1e-3)/beta_inj[Y_]},
-  twoJ_delta[] = {sqr(1e-3)/10.0, sqr(0.5e-3)/4.0},
+  twoJ[]       = {sqr(8e-3)/beta_inj[X_], sqr(4e-3)/beta_inj[Y_]},
+  twoJ_delta[] = {sqr(1e-3)/beta_inj[X_], sqr(0.5e-3)/beta_inj[Y_]},
   delta_max    = 3e-2;
 
 
-#define FIRST_PASS 1
-
-#if FIRST_PASS
-const double scl_h[]            = {1e-1,  1e-2, 0e-2},
-             scl_dnu[]          = {1e-4, 1e-4, 1e-4, 1e-4},
-             scl_ksi[]          = {1e5,  1e-1, 1e-1, 1e-1, 1e-1},
-// const double scl_h[]            = {0e0,   0e-6, 0e-6},
-//              scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
-//              scl_ksi[]          = {0e5,   0e-4, 0e-4, 0e-4, 0e-4},
-             scl_dnu_conf       = 0e0,
-             scl_dnu_delta_conf = 0e0;
-#else
-const double scl_h[]            = {0e0,  0e-2, 0e-3},
-             scl_dnu[]          = {1e-4, 1e-4, 1e-4, 1e-4},
-             scl_ksi[]          = {0e5,  1e-4, 1e-4, 1e-4, 1e-4},
-             scl_dnu_conf       = 1e0,
-             scl_dnu_delta_conf = 1e0;
-#endif
+const double
+  scl_h[]            = {0e-1,  0e-2, 0e-2},
+  scl_dnu[]          = {0e-4, 0e-4, 0e-4, 0e-4},
+  scl_ksi[]          = {0e5,  1e-1, 1e-1, 0e-1, 0e-1},
+  scl_dnu_conf       = 0e0,
+  scl_dnu_delta_conf = 0e0;
 
 
 struct param_type {
@@ -563,6 +552,9 @@ void prt_h_K(void)
 {
   std::ofstream outf;
 
+  // Remove numeric noise.
+  daeps_(1e-20);
+
   file_wr(outf, "h.out");
   outf << h_re*Id_scl;
   outf.close();
@@ -573,11 +565,11 @@ void prt_h_K(void)
 
   file_wr(outf, "nus.out");
   nus = dHdJ(K);
-  // Remove numeric noise.
   daeps_(1e-5);
   outf << nus[3]*Id_scl << nus[4]*Id_scl;
-  daeps_(tpsa_eps);
   outf.close();
+
+  daeps_(tpsa_eps);
 }
 
 
@@ -1040,7 +1032,8 @@ double get_f(double *bns)
   danot_(NO);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   nus = dHdJ(K); nus_scl = nus*Id_scl;
-  CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
+  CtoR(K, K_re, K_im);
+  K_re_scl = K_re*Id_scl; K_re_delta_scl = K_re*Id_delta_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
   dnu = gauss_quad_2D(f_gauss_quad_2D, 0e0, twoJ[X_]);
@@ -1141,32 +1134,32 @@ double get_f(double *bns)
 
   if (NO >= 5) {
     if (scl_dnu[0] != 0e0) {
-      b.push_back(get_b("", scl_dnu[0],   K_re_scl,        2, 2, 0, 0, 0));
-      b.push_back(get_b("", scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0));
-      b.push_back(get_b("", scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0));
+      b.push_back(get_b("", scl_dnu[0], K_re_scl, 2, 2, 0, 0, 0));
+      b.push_back(get_b("", scl_dnu[0], K_re_scl, 1, 1, 1, 1, 0));
+      b.push_back(get_b("", scl_dnu[0], K_re_scl, 0, 0, 2, 2, 0));
     }
 
     if (scl_ksi[2] != 0e0) {
-      b.push_back(get_b("", scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2));
-      b.push_back(get_b("", scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 1, 1, 0, 0, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 0, 0, 1, 1, 2));
     }
 
     if (scl_dnu_conf != 0e0)
-      b.push_back(get_b("", scl_dnu_conf,       dnu,       0, 0, 0, 0, 0));
+      b.push_back(get_b("", scl_dnu_conf, dnu, 0, 0, 0, 0, 0));
     if (scl_dnu_delta_conf != 0e0)
       b.push_back(get_b("", scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0));
   }
 
   if (NO >= 6) {
     if (scl_ksi[1] != 0e0) {
-      b.push_back(get_b("", scl_ksi[1], K_re_scl, 2, 2, 0, 0, 1));
-      b.push_back(get_b("", scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1));
-      b.push_back(get_b("", scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 2, 2, 0, 0, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 1, 1, 1, 1, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 0, 0, 2, 2, 1));
     }
 
     if (scl_ksi[3] != 0e0) {
-      b.push_back(get_b("", scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3));
-      b.push_back(get_b("", scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_delta_scl, 1, 1, 0, 0, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_delta_scl, 0, 0, 1, 1, 3));
     }
   }
 
@@ -1179,29 +1172,29 @@ double get_f(double *bns)
     }
 
     if (scl_ksi[2] != 0e0) {
-      b.push_back(get_b("", scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2));
-      b.push_back(get_b("", scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2));
-      b.push_back(get_b("", scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 2, 2, 0, 0, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 1, 1, 1, 1, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 0, 0, 2, 2, 2));
     }
 
     if (scl_ksi[4] != 0e0) {
-      b.push_back(get_b("", scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4));
-      b.push_back(get_b("", scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4));
+      b.push_back(get_b("", scl_ksi[4], K_re_delta_scl, 1, 1, 0, 0, 4));
+      b.push_back(get_b("", scl_ksi[4], K_re_delta_scl, 0, 0, 1, 1, 4));
     }
   }
 
   if (NO >= 8) {
     if (scl_ksi[1] != 0e0) {
-      b.push_back(get_b("", scl_ksi[1], K_re_scl, 3, 3, 0, 0, 1));
-      b.push_back(get_b("", scl_ksi[1], K_re_scl, 2, 2, 1, 1, 1));
-      b.push_back(get_b("", scl_ksi[1], K_re_scl, 1, 1, 2, 2, 1));
-      b.push_back(get_b("", scl_ksi[1], K_re_scl, 0, 0, 3, 3, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 3, 3, 0, 0, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 2, 2, 1, 1, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 1, 1, 2, 2, 1));
+      b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 0, 0, 3, 3, 1));
     }
 
     if (scl_ksi[3] != 0e0) {
-      b.push_back(get_b("", scl_ksi[3], K_re_scl, 2, 2, 0, 0, 3));
-      b.push_back(get_b("", scl_ksi[3], K_re_scl, 1, 1, 1, 1, 3));
-      b.push_back(get_b("", scl_ksi[3], K_re_scl, 0, 0, 2, 2, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_delta_scl, 2, 2, 0, 0, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_delta_scl, 1, 1, 1, 1, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_delta_scl, 0, 0, 2, 2, 3));
     }
   }
 
@@ -1215,10 +1208,10 @@ double get_f(double *bns)
     }
 
     if (scl_ksi[2] != 0e0) {
-      b.push_back(get_b("", scl_ksi[2], K_re_scl, 3, 3, 0, 0, 2));
-      b.push_back(get_b("", scl_ksi[2], K_re_scl, 2, 2, 1, 1, 2));
-      b.push_back(get_b("", scl_ksi[2], K_re_scl, 1, 1, 2, 2, 2));
-      b.push_back(get_b("", scl_ksi[2], K_re_scl, 0, 0, 3, 3, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 3, 3, 0, 0, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 2, 2, 1, 1, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 1, 1, 2, 2, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 0, 0, 3, 3, 2));
     }
   }
 
@@ -1268,7 +1261,8 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     danot_(NO);
     K = MapNorm(Map, g, A1, A0, Map_res, 1);
     nus = dHdJ(K); nus_scl = nus*Id_scl;
-    CtoR(K, K_re, K_im); K_re_scl = K_re*Id_scl;
+    CtoR(K, K_re, K_im);
+    K_re_scl = K_re*Id_scl; K_re_delta_scl = K_re*Id_delta_scl;
     CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
     dnu = gauss_quad_2D(f_gauss_quad_2D, 0e0, twoJ[X_]);
@@ -1370,32 +1364,32 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 
     if (NO >= 5) {
       if (scl_dnu[0] != 0e0) {
-	A[++m][i] = get_a(scl_dnu[0],   K_re_scl,        2, 2, 0, 0, 0);
-	A[++m][i] = get_a(scl_dnu[0],   K_re_scl,        1, 1, 1, 1, 0);
-	A[++m][i] = get_a(scl_dnu[0],   K_re_scl,        0, 0, 2, 2, 0);
+	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 2, 2, 0, 0, 0);
+	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 1, 1, 1, 1, 0);
+	A[++m][i] = get_a(scl_dnu[0], K_re_scl, 0, 0, 2, 2, 0);
       }
 
       if (scl_ksi[2] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[2],   K_re_scl,        1, 1, 0, 0, 2);
-	A[++m][i] = get_a(scl_ksi[2],   K_re_scl,        0, 0, 1, 1, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 1, 1, 0, 0, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 0, 0, 1, 1, 2);
       }
 
       if (scl_dnu_conf != 0e0)
-	A[++m][i] = get_a(scl_dnu_conf,       dnu,       0, 0, 0, 0, 0);
+	A[++m][i] = get_a(scl_dnu_conf, dnu, 0, 0, 0, 0, 0);
       if (scl_dnu_delta_conf != 0e0)
 	A[++m][i] = get_a(scl_dnu_delta_conf, dnu_delta, 0, 0, 0, 0, 0);
     }
 
     if (NO >= 6) {
       if (scl_ksi[1] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[1], K_re_scl, 2, 2, 0, 0, 1);
-	A[++m][i] = get_a(scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1);
-	A[++m][i] = get_a(scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1);
+	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 2, 2, 0, 0, 1);
+	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 1, 1, 1, 1, 1);
+	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 0, 0, 2, 2, 1);
       }
 
       if (scl_ksi[3] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3);
-	A[++m][i] = get_a(scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3);
+	A[++m][i] = get_a(scl_ksi[3], K_re_delta_scl, 1, 1, 0, 0, 3);
+	A[++m][i] = get_a(scl_ksi[3], K_re_delta_scl, 0, 0, 1, 1, 3);
       }
     }
 
@@ -1408,29 +1402,29 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       }
 
       if (scl_ksi[2] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
-	A[++m][i] = get_a(scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
-	A[++m][i] = get_a(scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 2, 2, 0, 0, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 1, 1, 1, 1, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 0, 0, 2, 2, 2);
       }
 
       if (scl_ksi[4] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4);
-	A[++m][i] = get_a(scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4);
+	A[++m][i] = get_a(scl_ksi[4], K_re_delta_scl, 1, 1, 0, 0, 4);
+	A[++m][i] = get_a(scl_ksi[4], K_re_delta_scl, 0, 0, 1, 1, 4);
       }
     }
 
     if (NO >= 8) {
       if (scl_ksi[1] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[1], K_re_scl, 3, 3, 0, 0, 1);
-	A[++m][i] = get_a(scl_ksi[1], K_re_scl, 2, 2, 1, 1, 1);
-	A[++m][i] = get_a(scl_ksi[1], K_re_scl, 1, 1, 2, 2, 1);
-	A[++m][i] = get_a(scl_ksi[1], K_re_scl, 0, 0, 3, 3, 1);
+	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 3, 3, 0, 0, 1);
+	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 2, 2, 1, 1, 1);
+	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 1, 1, 2, 2, 1);
+	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 0, 0, 3, 3, 1);
       }
 
       if (scl_ksi[3] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[3], K_re_scl, 2, 2, 0, 0, 3);
-	A[++m][i] = get_a(scl_ksi[3], K_re_scl, 1, 1, 1, 1, 3);
-	A[++m][i] = get_a(scl_ksi[3], K_re_scl, 0, 0, 2, 2, 3);
+	A[++m][i] = get_a(scl_ksi[3], K_re_delta_scl, 2, 2, 0, 0, 3);
+	A[++m][i] = get_a(scl_ksi[3], K_re_delta_scl, 1, 1, 1, 1, 3);
+	A[++m][i] = get_a(scl_ksi[3], K_re_delta_scl, 0, 0, 2, 2, 3);
       }
     }
 
@@ -1444,10 +1438,10 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       }
 
       if (scl_ksi[2] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[2], K_re_scl, 3, 3, 0, 0, 2);
-	A[++m][i] = get_a(scl_ksi[2], K_re_scl, 2, 2, 1, 1, 2);
-	A[++m][i] = get_a(scl_ksi[2], K_re_scl, 1, 1, 2, 2, 2);
-	A[++m][i] = get_a(scl_ksi[2], K_re_scl, 0, 0, 3, 3, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 3, 3, 0, 0, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 2, 2, 1, 1, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 1, 1, 2, 2, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 0, 0, 3, 3, 2);
       }
     }
 
@@ -1571,8 +1565,8 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     }
 
     if (scl_ksi[2] != 0e0) {
-      f[++m] = get_b("K_re_11002", scl_ksi[2], K_re_scl, 1, 1, 0, 0, 2);
-      f[++m] = get_b("K_re_00112", scl_ksi[2], K_re_scl, 0, 0, 1, 1, 2);
+      f[++m] = get_b("K_re_11002", scl_ksi[2], K_re_delta_scl, 1, 1, 0, 0, 2);
+      f[++m] = get_b("K_re_00112", scl_ksi[2], K_re_delta_scl, 0, 0, 1, 1, 2);
     }
 
     if (scl_dnu_conf != 0e0) {
@@ -1586,14 +1580,14 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 
   if (NO >= 6) {
     if (scl_ksi[1] != 0e0) {
-      f[++m] = get_b("K_re_22001", scl_ksi[1], K_re_scl, 2, 2, 0, 0, 1);
-      f[++m] = get_b("K_re_11111", scl_ksi[1], K_re_scl, 1, 1, 1, 1, 1);
-      f[++m] = get_b("K_re_00221", scl_ksi[1], K_re_scl, 0, 0, 2, 2, 1);
+      f[++m] = get_b("K_re_22001", scl_ksi[1], K_re_delta_scl, 2, 2, 0, 0, 1);
+      f[++m] = get_b("K_re_11111", scl_ksi[1], K_re_delta_scl, 1, 1, 1, 1, 1);
+      f[++m] = get_b("K_re_00221", scl_ksi[1], K_re_delta_scl, 0, 0, 2, 2, 1);
     }
 
     if (scl_ksi[3] != 0e0) {
-      f[++m] = get_b("K_re_11003", scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3);
-      f[++m] = get_b("K_re_00113", scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3);
+      f[++m] = get_b("K_re_11003", scl_ksi[3], K_re_delta_scl, 1, 1, 0, 0, 3);
+      f[++m] = get_b("K_re_00113", scl_ksi[3], K_re_delta_scl, 0, 0, 1, 1, 3);
     }
   }
 
@@ -1606,29 +1600,29 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     }
 
     if (scl_ksi[2] != 0e0) {
-      f[++m] = get_b("K_re_22002", scl_ksi[2], K_re_scl, 2, 2, 0, 0, 2);
-      f[++m] = get_b("K_re_11112", scl_ksi[2], K_re_scl, 1, 1, 1, 1, 2);
-      f[++m] = get_b("K_re_00222", scl_ksi[2], K_re_scl, 0, 0, 2, 2, 2);
+      f[++m] = get_b("K_re_22002", scl_ksi[2], K_re_delta_scl, 2, 2, 0, 0, 2);
+      f[++m] = get_b("K_re_11112", scl_ksi[2], K_re_delta_scl, 1, 1, 1, 1, 2);
+      f[++m] = get_b("K_re_00222", scl_ksi[2], K_re_delta_scl, 0, 0, 2, 2, 2);
     }
 
     if (scl_ksi[4] != 0e0) {
-      f[++m] = get_b("K_re_11004", scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4);
-      f[++m] = get_b("K_re_00114", scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4);
+      f[++m] = get_b("K_re_11004", scl_ksi[4], K_re_delta_scl, 1, 1, 0, 0, 4);
+      f[++m] = get_b("K_re_00114", scl_ksi[4], K_re_delta_scl, 0, 0, 1, 1, 4);
     }
   }
 
   if (NO >= 8) {
     if (scl_ksi[1] != 0e0) {
-      f[++m] = get_b("K_re_33001", scl_ksi[1], K_re_scl, 3, 3, 0, 0, 1);
-      f[++m] = get_b("K_re_22111", scl_ksi[1], K_re_scl, 2, 2, 1, 1, 1);
-      f[++m] = get_b("K_re_11221", scl_ksi[1], K_re_scl, 1, 1, 2, 2, 1);
-      f[++m] = get_b("K_re_00331", scl_ksi[1], K_re_scl, 0, 0, 3, 3, 1);
+      f[++m] = get_b("K_re_33001", scl_ksi[1], K_re_delta_scl, 3, 3, 0, 0, 1);
+      f[++m] = get_b("K_re_22111", scl_ksi[1], K_re_delta_scl, 2, 2, 1, 1, 1);
+      f[++m] = get_b("K_re_11221", scl_ksi[1], K_re_delta_scl, 1, 1, 2, 2, 1);
+      f[++m] = get_b("K_re_00331", scl_ksi[1], K_re_delta_scl, 0, 0, 3, 3, 1);
     }
 
     if (scl_ksi[3] != 0e0) {
-      f[++m] = get_b("K_re_22003", scl_ksi[3], K_re_scl, 2, 2, 0, 0, 3);
-      f[++m] = get_b("K_re_11113", scl_ksi[3], K_re_scl, 1, 1, 1, 1, 3);
-      f[++m] = get_b("K_re_00223", scl_ksi[3], K_re_scl, 0, 0, 2, 2, 3);
+      f[++m] = get_b("K_re_22003", scl_ksi[3], K_re_delta_scl, 2, 2, 0, 0, 3);
+      f[++m] = get_b("K_re_11113", scl_ksi[3], K_re_delta_scl, 1, 1, 1, 1, 3);
+      f[++m] = get_b("K_re_00223", scl_ksi[3], K_re_delta_scl, 0, 0, 2, 2, 3);
     }
   }
 
@@ -1642,10 +1636,10 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     }
 
     if (scl_ksi[2] != 0e0) {
-      f[++m] = get_b("K_re_33002", scl_ksi[2], K_re_scl, 3, 3, 0, 0, 2);
-      f[++m] = get_b("K_re_22112", scl_ksi[2], K_re_scl, 2, 2, 1, 1, 2);
-      f[++m] = get_b("K_re_11222", scl_ksi[2], K_re_scl, 1, 1, 2, 2, 2);
-      f[++m] = get_b("K_re_00332", scl_ksi[2], K_re_scl, 0, 0, 3, 3, 2);
+      f[++m] = get_b("K_re_33002", scl_ksi[2], K_re_delta_scl, 3, 3, 0, 0, 2);
+      f[++m] = get_b("K_re_22112", scl_ksi[2], K_re_delta_scl, 2, 2, 1, 1, 2);
+      f[++m] = get_b("K_re_11222", scl_ksi[2], K_re_delta_scl, 1, 1, 2, 2, 2);
+      f[++m] = get_b("K_re_00332", scl_ksi[2], K_re_delta_scl, 0, 0, 3, 3, 2);
     }
   }
 
@@ -2258,19 +2252,29 @@ void lat_select(const int lat_case)
     // M-H6BA.
     n_cell = 1;
 
-    bn_prms.add_prm("sf1", 3, 1e4, 1.0);
-    bn_prms.add_prm("sd1", 3, 1e4, 1.0);
-    bn_prms.add_prm("sd2", 3, 1e4, 1.0);
+    // bn_prms.add_prm("sf1", 3, 1e4, 1.0);
+    // bn_prms.add_prm("sd1", 3, 1e4, 1.0);
+    // bn_prms.add_prm("sd2", 3, 1e4, 1.0);
 
-    bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
-    bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
-    bn_prms.add_prm("sh2",  4, 1e4, 1.0);
-    bn_prms.add_prm("of1s", 4, 1e4, 1.0);
+    if (!false) {
+      // bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
+      // bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
+      // bn_prms.add_prm("qf6",  4, 1e4, 1.0);
 
-    bn_prms.add_prm("sh1a", 5, 1e4, 1.0);
-    bn_prms.add_prm("sh1b", 5, 1e4, 1.0);
-    bn_prms.add_prm("sh2",  5, 1e4, 1.0);
-    bn_prms.add_prm("of1s", 5, 1e4, 1.0);
+      bn_prms.add_prm("sf1", 4, 1e4, 1.0);
+      bn_prms.add_prm("sd1", 4, 1e4, 1.0);
+      bn_prms.add_prm("sd2", 4, 1e4, 1.0);
+
+      // bn_prms.add_prm("sh2",  4, 1e4, 1.0);
+      // bn_prms.add_prm("of1s", 4, 1e4, 1.0);
+    }
+
+    if (false) {
+      bn_prms.add_prm("sh1a", 5, 1e4, 1.0);
+      bn_prms.add_prm("sh1b", 5, 1e4, 1.0);
+      bn_prms.add_prm("sh2",  5, 1e4, 1.0);
+      bn_prms.add_prm("of1s", 5, 1e4, 1.0);
+    }
 
     // bn_prms.add_prm("sh2",  5, 1e4, 1.0);
     // bn_prms.add_prm("of1s", 5, 1e4, 1.0);
@@ -2402,8 +2406,7 @@ int main(int argc, char *argv[])
   printf("scl_dnu_delta_conf: %7.1e\n", scl_dnu_delta_conf);
   printf("dnu/dJ:             %d\n", DNU);
   printf("symmetric:          %d\n", symm);
-  printf("1st pass:           %d\n", FIRST_PASS);
-  printf("\n2J:                 %10.3e, %10.3e\n", twoJ[X_], twoJ[Y_]);
+  printf("\n2J:                %10.3e, %10.3e\n", twoJ[X_], twoJ[Y_]);
   printf("delta_max:          %7.1e\n", delta_max);
   if (c_g) {
     printf("Conj. Grad.:        %d\n", n_cut);
@@ -2488,10 +2491,6 @@ int main(int argc, char *argv[])
   if (fit_ksi) {
     no_mpoles(Sext); no_mpoles(Oct); no_mpoles(Dodec);
   }
-
-#if FIRST_PASS
-  no_mpoles(Oct); no_mpoles(Dec); no_mpoles(Dodec);
-#endif
 
   bn_prms.ini_prm();
 
