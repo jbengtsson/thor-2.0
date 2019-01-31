@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 6
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -59,7 +59,7 @@ const double
 const double
   scl_h[]            = {0e-1,  0e-2, 0e-2},
   scl_dnu[]          = {1e-5, 0e-4, 0e-4, 0e-4},
-  scl_ksi[]          = {0e5,  1e-1, 1e-1, 1e-1, 0e-1},
+  scl_ksi[]          = {0e5,  1e-1, 1e-1, 1e-1, 1e-1},
   scl_dnu_conf       = 0e0,
   scl_dnu_delta_conf = 0e0;
 
@@ -2257,11 +2257,11 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("sd1", 3, 1e4, 1.0);
       bn_prms.add_prm("sd2", 3, 1e4, 1.0);
     } else {
-      bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
-      bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
+      // bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
+      // bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
 
-      bn_prms.add_prm("sh2",  4, 1e4, 1.0);
-      bn_prms.add_prm("of1",  4, 1e4, 1.0);
+      // bn_prms.add_prm("sh2",  4, 1e4, 1.0);
+      // bn_prms.add_prm("of1",  4, 1e4, 1.0);
 
       // bn_prms.add_prm("sf1",  4, 1e4, 1.0);
       // bn_prms.add_prm("sd1",  4, 1e4, 1.0);
@@ -2270,6 +2270,10 @@ void lat_select(const int lat_case)
       // bn_prms.add_prm("sf1", 5, 1e4, 1.0);
       // bn_prms.add_prm("sd1", 5, 1e4, 1.0);
       // bn_prms.add_prm("sd2", 5, 1e4, 1.0);
+
+      bn_prms.add_prm("sf1", 6, 1e4, 1.0);
+      bn_prms.add_prm("sd1", 6, 1e4, 1.0);
+      bn_prms.add_prm("sd2", 6, 1e4, 1.0);
     }
 
     if (false) {
