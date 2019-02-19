@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -58,8 +58,9 @@ const double
 
 const double
   scl_h[]            = {0e-1,  0e-2, 0e-2},
-  scl_dnu[]          = {1e-3, 1e-3, 1e-3, 1e-3},
+  scl_dnu[]          = {0e-3, 0e-3, 0e-3, 0e-3},
   scl_ksi[]          = {1e5,  1e-1, 1e-1, 1e-1, 1e-1},
+  delta_scl          = 0e0,
   scl_dnu_conf       = 0e0,
   scl_dnu_delta_conf = 0e0;
 
@@ -129,8 +130,7 @@ void param_type::ini_prm(void)
       L = get_L(Fnum[i-1], 1);
       if (L == 0e0) L = 1e0;
       bn_scl[i-1] = 1e0/sqrt(get_n_Kids(Fnum[i-1])*L);
-    } else
-      bn_scl[i-1] = 1e0;
+    }
 
     bn[i] /= bn_scl[i-1];
     printf(" %12.5e (%9.3e)", bn_scl[i-1]*bn[i], bn_scl[i-1]);
@@ -1140,8 +1140,8 @@ double get_f(double *bns)
     }
 
     if (scl_ksi[2] != 0e0) {
-      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 1, 1, 0, 0, 2));
-      b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 0, 0, 1, 1, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_scl, 1, 1, 0, 0, 2));
+      b.push_back(get_b("", scl_ksi[2], K_re_scl, 0, 0, 1, 1, 2));
     }
 
     if (scl_dnu_conf != 0e0)
@@ -1151,15 +1151,15 @@ double get_f(double *bns)
   }
 
   if (NO >= 6) {
-    if (scl_ksi[1] != 0e0) {
+    if (delta_scl*scl_ksi[1] != 0e0) {
       b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 2, 2, 0, 0, 1));
       b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 1, 1, 1, 1, 1));
       b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 0, 0, 2, 2, 1));
     }
 
     if (scl_ksi[3] != 0e0) {
-      b.push_back(get_b("", scl_ksi[3], K_re_delta_scl, 1, 1, 0, 0, 3));
-      b.push_back(get_b("", scl_ksi[3], K_re_delta_scl, 0, 0, 1, 1, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3));
+      b.push_back(get_b("", scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3));
     }
   }
 
@@ -1171,27 +1171,27 @@ double get_f(double *bns)
       b.push_back(get_b("", scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0));
     }
 
-    if (scl_ksi[2] != 0e0) {
+    if (delta_scl*scl_ksi[2] != 0e0) {
       b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 2, 2, 0, 0, 2));
       b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 1, 1, 1, 1, 2));
       b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 0, 0, 2, 2, 2));
     }
 
     if (scl_ksi[4] != 0e0) {
-      b.push_back(get_b("", scl_ksi[4], K_re_delta_scl, 1, 1, 0, 0, 4));
-      b.push_back(get_b("", scl_ksi[4], K_re_delta_scl, 0, 0, 1, 1, 4));
+      b.push_back(get_b("", scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4));
+      b.push_back(get_b("", scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4));
     }
   }
 
   if (NO >= 8) {
-    if (scl_ksi[1] != 0e0) {
+    if (delta_scl*scl_ksi[1] != 0e0) {
       b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 3, 3, 0, 0, 1));
       b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 2, 2, 1, 1, 1));
       b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 1, 1, 2, 2, 1));
       b.push_back(get_b("", scl_ksi[1], K_re_delta_scl, 0, 0, 3, 3, 1));
     }
 
-    if (scl_ksi[3] != 0e0) {
+    if (delta_scl*scl_ksi[3] != 0e0) {
       b.push_back(get_b("", scl_ksi[3], K_re_delta_scl, 2, 2, 0, 0, 3));
       b.push_back(get_b("", scl_ksi[3], K_re_delta_scl, 1, 1, 1, 1, 3));
       b.push_back(get_b("", scl_ksi[3], K_re_delta_scl, 0, 0, 2, 2, 3));
@@ -1207,7 +1207,7 @@ double get_f(double *bns)
       b.push_back(get_b("", scl_dnu[2], K_re_scl, 0, 0, 4, 4, 0));
     }
 
-    if (scl_ksi[2] != 0e0) {
+    if (delta_scl*scl_ksi[2] != 0e0) {
       b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 3, 3, 0, 0, 2));
       b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 2, 2, 1, 1, 2));
       b.push_back(get_b("", scl_ksi[2], K_re_delta_scl, 1, 1, 2, 2, 2));
@@ -1370,8 +1370,8 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       }
 
       if (scl_ksi[2] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 1, 1, 0, 0, 2);
-	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 0, 0, 1, 1, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_scl, 1, 1, 0, 0, 2);
+	A[++m][i] = get_a(scl_ksi[2], K_re_scl, 0, 0, 1, 1, 2);
       }
 
       if (scl_dnu_conf != 0e0)
@@ -1381,15 +1381,15 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     }
 
     if (NO >= 6) {
-      if (scl_ksi[1] != 0e0) {
+      if (delta_scl*scl_ksi[1] != 0e0) {
 	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 2, 2, 0, 0, 1);
 	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 1, 1, 1, 1, 1);
 	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 0, 0, 2, 2, 1);
       }
 
       if (scl_ksi[3] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[3], K_re_delta_scl, 1, 1, 0, 0, 3);
-	A[++m][i] = get_a(scl_ksi[3], K_re_delta_scl, 0, 0, 1, 1, 3);
+	A[++m][i] = get_a(scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3);
+	A[++m][i] = get_a(scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3);
       }
     }
 
@@ -1401,27 +1401,27 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 	A[++m][i] = get_a(scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
       }
 
-      if (scl_ksi[2] != 0e0) {
+      if (delta_scl*scl_ksi[2] != 0e0) {
 	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 2, 2, 0, 0, 2);
 	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 1, 1, 1, 1, 2);
 	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 0, 0, 2, 2, 2);
       }
 
       if (scl_ksi[4] != 0e0) {
-	A[++m][i] = get_a(scl_ksi[4], K_re_delta_scl, 1, 1, 0, 0, 4);
-	A[++m][i] = get_a(scl_ksi[4], K_re_delta_scl, 0, 0, 1, 1, 4);
+	A[++m][i] = get_a(scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4);
+	A[++m][i] = get_a(scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4);
       }
     }
 
     if (NO >= 8) {
-      if (scl_ksi[1] != 0e0) {
+      if (delta_scl*scl_ksi[1] != 0e0) {
 	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 3, 3, 0, 0, 1);
 	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 2, 2, 1, 1, 1);
 	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 1, 1, 2, 2, 1);
 	A[++m][i] = get_a(scl_ksi[1], K_re_delta_scl, 0, 0, 3, 3, 1);
       }
 
-      if (scl_ksi[3] != 0e0) {
+      if (delta_scl*scl_ksi[3] != 0e0) {
 	A[++m][i] = get_a(scl_ksi[3], K_re_delta_scl, 2, 2, 0, 0, 3);
 	A[++m][i] = get_a(scl_ksi[3], K_re_delta_scl, 1, 1, 1, 1, 3);
 	A[++m][i] = get_a(scl_ksi[3], K_re_delta_scl, 0, 0, 2, 2, 3);
@@ -1437,7 +1437,7 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
 	A[++m][i] = get_a(scl_dnu[2], K_re_scl, 0, 0, 4, 4, 0);
       }
 
-      if (scl_ksi[2] != 0e0) {
+      if (delta_scl*scl_ksi[2] != 0e0) {
 	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 3, 3, 0, 0, 2);
 	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 2, 2, 1, 1, 2);
 	A[++m][i] = get_a(scl_ksi[2], K_re_delta_scl, 1, 1, 2, 2, 2);
@@ -1565,8 +1565,8 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
     }
 
     if (scl_ksi[2] != 0e0) {
-      f[++m] = get_b("K_re_11002", scl_ksi[2], K_re_delta_scl, 1, 1, 0, 0, 2);
-      f[++m] = get_b("K_re_00112", scl_ksi[2], K_re_delta_scl, 0, 0, 1, 1, 2);
+      f[++m] = get_b("K_re_11002", scl_ksi[2], K_re_scl, 1, 1, 0, 0, 2);
+      f[++m] = get_b("K_re_00112", scl_ksi[2], K_re_scl, 0, 0, 1, 1, 2);
     }
 
     if (scl_dnu_conf != 0e0) {
@@ -1579,15 +1579,15 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
   }
 
   if (NO >= 6) {
-    if (scl_ksi[1] != 0e0) {
+    if (delta_scl*scl_ksi[1] != 0e0) {
       f[++m] = get_b("K_re_22001", scl_ksi[1], K_re_delta_scl, 2, 2, 0, 0, 1);
       f[++m] = get_b("K_re_11111", scl_ksi[1], K_re_delta_scl, 1, 1, 1, 1, 1);
       f[++m] = get_b("K_re_00221", scl_ksi[1], K_re_delta_scl, 0, 0, 2, 2, 1);
     }
 
     if (scl_ksi[3] != 0e0) {
-      f[++m] = get_b("K_re_11003", scl_ksi[3], K_re_delta_scl, 1, 1, 0, 0, 3);
-      f[++m] = get_b("K_re_00113", scl_ksi[3], K_re_delta_scl, 0, 0, 1, 1, 3);
+      f[++m] = get_b("K_re_11003", scl_ksi[3], K_re_scl, 1, 1, 0, 0, 3);
+      f[++m] = get_b("K_re_00113", scl_ksi[3], K_re_scl, 0, 0, 1, 1, 3);
     }
   }
 
@@ -1599,27 +1599,27 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       f[++m] = get_b("K_re_00330", scl_dnu[1], K_re_scl, 0, 0, 3, 3, 0);
     }
 
-    if (scl_ksi[2] != 0e0) {
+    if (delta_scl*scl_ksi[2] != 0e0) {
       f[++m] = get_b("K_re_22002", scl_ksi[2], K_re_delta_scl, 2, 2, 0, 0, 2);
       f[++m] = get_b("K_re_11112", scl_ksi[2], K_re_delta_scl, 1, 1, 1, 1, 2);
       f[++m] = get_b("K_re_00222", scl_ksi[2], K_re_delta_scl, 0, 0, 2, 2, 2);
     }
 
     if (scl_ksi[4] != 0e0) {
-      f[++m] = get_b("K_re_11004", scl_ksi[4], K_re_delta_scl, 1, 1, 0, 0, 4);
-      f[++m] = get_b("K_re_00114", scl_ksi[4], K_re_delta_scl, 0, 0, 1, 1, 4);
+      f[++m] = get_b("K_re_11004", scl_ksi[4], K_re_scl, 1, 1, 0, 0, 4);
+      f[++m] = get_b("K_re_00114", scl_ksi[4], K_re_scl, 0, 0, 1, 1, 4);
     }
   }
 
   if (NO >= 8) {
-    if (scl_ksi[1] != 0e0) {
+    if (delta_scl*scl_ksi[1] != 0e0) {
       f[++m] = get_b("K_re_33001", scl_ksi[1], K_re_delta_scl, 3, 3, 0, 0, 1);
       f[++m] = get_b("K_re_22111", scl_ksi[1], K_re_delta_scl, 2, 2, 1, 1, 1);
       f[++m] = get_b("K_re_11221", scl_ksi[1], K_re_delta_scl, 1, 1, 2, 2, 1);
       f[++m] = get_b("K_re_00331", scl_ksi[1], K_re_delta_scl, 0, 0, 3, 3, 1);
     }
 
-    if (scl_ksi[3] != 0e0) {
+    if (delta_scl*scl_ksi[3] != 0e0) {
       f[++m] = get_b("K_re_22003", scl_ksi[3], K_re_delta_scl, 2, 2, 0, 0, 3);
       f[++m] = get_b("K_re_11113", scl_ksi[3], K_re_delta_scl, 1, 1, 1, 1, 3);
       f[++m] = get_b("K_re_00223", scl_ksi[3], K_re_delta_scl, 0, 0, 2, 2, 3);
@@ -1635,7 +1635,7 @@ void get_f_grad(const int n_bn, double *f, double **A, double &chi2, int &m)
       f[++m] = get_b("K_re_00440", scl_dnu[2], K_re_scl, 0, 0, 4, 4, 0);
     }
 
-    if (scl_ksi[2] != 0e0) {
+    if (delta_scl*scl_ksi[2] != 0e0) {
       f[++m] = get_b("K_re_33002", scl_ksi[2], K_re_delta_scl, 3, 3, 0, 0, 2);
       f[++m] = get_b("K_re_22112", scl_ksi[2], K_re_delta_scl, 2, 2, 1, 1, 2);
       f[++m] = get_b("K_re_11222", scl_ksi[2], K_re_delta_scl, 1, 1, 2, 2, 2);
@@ -2257,30 +2257,25 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("sd1", 3, 1e4, 1.0);
       bn_prms.add_prm("sd2", 3, 1e4, 1.0);
     } else {
-      bn_prms.add_prm("sf1", 3, 1e4, 1.0);
-      bn_prms.add_prm("sd1", 3, 1e4, 1.0);
-      bn_prms.add_prm("sd2", 3, 1e4, 1.0);
-
-      // bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
-      // bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
-
-      // bn_prms.add_prm("sh2", 4, 1e4, 1.0);
-      // bn_prms.add_prm("of1", 4, 1e4, 1.0);
+      // NO = 4, scl_ksi[0] = 1e5.
+      bn_prms.add_prm("sf1", 3, 1e4, 1e0);
+      bn_prms.add_prm("sd1", 3, 1e4, 1e0);
+      bn_prms.add_prm("sd2", 3, 1e4, 1e0);
 
       // NO = 5, scl_ksi[2] = 1e-1.
-      bn_prms.add_prm("sf1", 4, 1e4, 1.0);
-      bn_prms.add_prm("sd1", 4, 1e4, 1.0);
-      bn_prms.add_prm("sd2", 4, 1e4, 1.0);
+      bn_prms.add_prm("sf1", 4, 1e4, 1e2);
+      bn_prms.add_prm("sd1", 4, 1e4, 1e2);
+      bn_prms.add_prm("sd2", 4, 1e4, 1e2);
 
       // NO = 6, scl_ksi[3] = 1e-1.
-      bn_prms.add_prm("sf1", 5, 1e4, 1.0);
-      bn_prms.add_prm("sd1", 5, 1e4, 1.0);
-      bn_prms.add_prm("sd2", 5, 1e4, 1.0);
+      bn_prms.add_prm("sf1", 5, 1e4, 1e5);
+      bn_prms.add_prm("sd1", 5, 1e4, 1e5);
+      bn_prms.add_prm("sd2", 5, 1e4, 1e5);
 
       // NO = 7, scl_ksi[4] = 1e-1.
-      // bn_prms.add_prm("sf1", 6, 1e4, 1.0);
-      // bn_prms.add_prm("sd1", 6, 1e4, 1.0);
-      // bn_prms.add_prm("sd2", 6, 1e4, 1.0);
+      // bn_prms.add_prm("sf1", 6, 1e4, 1e7);
+      // bn_prms.add_prm("sd1", 6, 1e4, 1e7);
+      // bn_prms.add_prm("sd2", 6, 1e4, 1e7);
     }
 
     if (false) {
