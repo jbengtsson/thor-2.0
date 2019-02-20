@@ -58,7 +58,7 @@ const double
 
 const double
   scl_h[]            = {0e-1,  0e-2, 0e-2},
-  scl_dnu[]          = {1e-1, 1e-1, 1e-1, 1e-1},
+  scl_dnu[]          = {1e-2, 1e-2, 1e-2, 1e-2},
   scl_ksi[]          = {1e5,  1e-1, 1e-1, 1e-1, 1e-1},
   delta_scl          = 0e0,
   scl_dnu_conf       = 0e0,
@@ -2258,19 +2258,19 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("sd2", 3, 1e4, 1.0);
     } else {
       // NO = 4, scl_ksi[0] = 1e5.
-      bn_prms.add_prm("sf1", 3, 1e4, 1e0);
-      bn_prms.add_prm("sd1", 3, 1e4, 1e0);
-      bn_prms.add_prm("sd2", 3, 1e4, 1e0);
+      // bn_prms.add_prm("sf1", 3, 1e4, 1e0);
+      // bn_prms.add_prm("sd1", 3, 1e4, 1e0);
+      // bn_prms.add_prm("sd2", 3, 1e4, 1e0);
 
       // NO = 5, scl_ksi[2] = 1e-1.
-      bn_prms.add_prm("sf1", 4, 1e4, 1e2);
-      bn_prms.add_prm("sd1", 4, 1e4, 1e2);
-      bn_prms.add_prm("sd2", 4, 1e4, 1e2);
+      // bn_prms.add_prm("sf1", 4, 1e4, 1e2);
+      // bn_prms.add_prm("sd1", 4, 1e4, 1e2);
+      // bn_prms.add_prm("sd2", 4, 1e4, 1e2);
 
       // NO = 6, scl_ksi[3] = 1e-1.
-      bn_prms.add_prm("sf1", 5, 1e4, 1e5);
-      bn_prms.add_prm("sd1", 5, 1e4, 1e5);
-      bn_prms.add_prm("sd2", 5, 1e4, 1e5);
+      // bn_prms.add_prm("sf1", 5, 1e4, 1e5);
+      // bn_prms.add_prm("sd1", 5, 1e4, 1e5);
+      // bn_prms.add_prm("sd2", 5, 1e4, 1e5);
 
       // NO = 7, scl_ksi[4] = 1e-1.
       // bn_prms.add_prm("sf1", 6, 1e4, 1e7);
@@ -2285,6 +2285,14 @@ void lat_select(const int lat_case)
       bn_prms.add_prm("sh2",  4, 1e4, 1.0);
       bn_prms.add_prm("of1",  4, 1e4, 1.0);
       bn_prms.add_prm("s",    4, 1e4, 1.0);
+
+      bn_prms.add_prm("sh2",  5, 1e4, 1.0);
+      bn_prms.add_prm("of1",  5, 1e4, 1.0);
+      bn_prms.add_prm("s",    5, 1e4, 1.0);
+
+      bn_prms.add_prm("sh2",  6, 1e4, 1.0);
+      bn_prms.add_prm("of1",  6, 1e4, 1.0);
+      bn_prms.add_prm("s",    6, 1e4, 1.0);
     }
 
     // bn_prms.add_prm("sh2",  5, 1e4, 1.0);
