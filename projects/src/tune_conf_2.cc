@@ -58,7 +58,7 @@ const double
 
 const double
   scl_h[]            = {0e-1,  0e-2, 0e-2},
-  scl_dnu[]          = {0e-3, 0e-3, 0e-3, 0e-3},
+  scl_dnu[]          = {1e-1, 1e-1, 1e-1, 1e-1},
   scl_ksi[]          = {1e5,  1e-1, 1e-1, 1e-1, 1e-1},
   delta_scl          = 0e0,
   scl_dnu_conf       = 0e0,
@@ -2278,11 +2278,13 @@ void lat_select(const int lat_case)
       // bn_prms.add_prm("sd2", 6, 1e4, 1e7);
     }
 
-    if (false) {
-      bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
-      bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
+    if (!false) {
+      // bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
+      // bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
+
       bn_prms.add_prm("sh2",  4, 1e4, 1.0);
       bn_prms.add_prm("of1",  4, 1e4, 1.0);
+      bn_prms.add_prm("s",    4, 1e4, 1.0);
     }
 
     // bn_prms.add_prm("sh2",  5, 1e4, 1.0);
