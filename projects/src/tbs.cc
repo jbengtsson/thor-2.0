@@ -15,12 +15,32 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
+#define DNU 0
+
+
+extern tps          K, g;
+extern ss_vect<tps> Map, A0, A1, Map_res;
+
+const double tpsa_eps = 1e-30;
+
+std::vector<std::string> drv_term;
+
+int          n_iter;
+tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
+ss_vect<tps> nus, nus_scl, Id_scl;
+
+const bool
+  fit_ksi = false,
+  scale   = false;
+
+const int n_prt  = 8;
 
 // Center of straight.
 const double
   beta_inj[]   = {8.1, 2.3},
   twoJ[]       = {sqr(8e-3)/beta_inj[X_], sqr(2e-3)/beta_inj[Y_]},
   delta_max    = 3e-2;
+
 
 
 struct param_type {
@@ -43,12 +63,7 @@ public:
 };
 
 
-tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
-ss_vect<tps> nus, nus_scl, Id_scl;
-param_type   bn_prms;
-
-const int n_prt  = 8;
-const bool scale = false;
+param_type bn_prms;
 
 
 void param_type::add_prm(const std::string Fname, const int n,
@@ -403,6 +418,376 @@ void prt_name(FILE *outf, const char *name, const std::string &str,
 }
 
 
+double get_a(const double scale, const tps &t,
+	     const int i, const int j, const int k, const int l, const int m)
+{
+  return scale*(h_ijklm_p(t, i, j, k, l, m, 7));
+}
+
+
+double get_b(const std::string &label, const double scale, const tps &t,
+	     const int i, const int j, const int k, const int l, const int m)
+{
+  drv_term.push_back(label);
+  return scale*(h_ijklm(t, i, j, k, l, m));
+}
+
+
+void prt_dnu(void)
+{
+
+  printf("\ndnu(2J=[%10.3e, %10.3e]):\n", twoJ[X_], twoJ[Y_]);
+  printf("   k_22000    k_11110    k_00220\n");
+  printf("   k_33000    k_22110    k_11220    k_00330\n");
+  printf("   k_44000    k_33110    k_22220    k_11330    k_00440\n");
+  printf("   k_55000    k_44110    k_33220    k_22330    k_11440    k_00550\n");
+  printf(" %10.3e %10.3e %10.3e\n",
+	 h_ijklm(K_re_scl, 2, 2, 0, 0, 0), h_ijklm(K_re_scl, 1, 1, 1, 1, 0),
+	 h_ijklm(K_re_scl, 0, 0, 2, 2, 0));
+  printf(" %10.3e %10.3e %10.3e %10.3e\n",
+	 h_ijklm(K_re_scl, 3, 3, 0, 0, 0), h_ijklm(K_re_scl, 2, 2, 1, 1, 0),
+	 h_ijklm(K_re_scl, 1, 1, 2, 2, 0), h_ijklm(K_re_scl, 0, 0, 3, 3, 0));
+  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	 h_ijklm(K_re_scl, 4, 4, 0, 0, 0), h_ijklm(K_re_scl, 3, 3, 1, 1, 0),
+	 h_ijklm(K_re_scl, 2, 2, 2, 2, 0), h_ijklm(K_re_scl, 1, 1, 3, 3, 0),
+	 h_ijklm(K_re_scl, 0, 0, 4, 4, 0));
+  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	 h_ijklm(K_re_scl, 5, 5, 0, 0, 0), h_ijklm(K_re_scl, 4, 4, 1, 1, 0),
+	 h_ijklm(K_re_scl, 3, 3, 2, 2, 0), h_ijklm(K_re_scl, 2, 2, 3, 3, 0),
+	 h_ijklm(K_re_scl, 1, 1, 4, 4, 0), h_ijklm(K_re_scl, 0, 0, 5, 5, 0));
+  printf("dnu_x:\n %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
+  printf(" %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
+  printf(" %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 3, 3, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 2, 2, 1, 1, 0),
+	 h_ijklm(nus_scl[3], 1, 1, 2, 2, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 3, 3, 0));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 4, 4, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 3, 3, 1, 1, 0),
+	 h_ijklm(nus_scl[3], 2, 2, 2, 2, 0),
+	 h_ijklm(nus_scl[3], 1, 1, 3, 3, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 4, 4, 0));
+  printf("dnu_y:\n %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 0));
+  printf(" %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 0),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 0),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
+  printf(" %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 3, 3, 0, 0, 0),
+	 h_ijklm(nus_scl[4], 2, 2, 1, 1, 0),
+	 h_ijklm(nus_scl[4], 1, 1, 2, 2, 0),
+	 h_ijklm(nus_scl[4], 0, 0, 3, 3, 0));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 4, 4, 0, 0, 0),
+	 h_ijklm(nus_scl[4], 3, 3, 1, 1, 0),
+	 h_ijklm(nus_scl[4], 2, 2, 2, 2, 0),
+	 h_ijklm(nus_scl[4], 1, 1, 3, 3, 0),
+	 h_ijklm(nus_scl[4], 0, 0, 4, 4, 0));
+
+  printf("\nksi(delta=%3.1f%%):\n", 1e2*delta_max);
+  printf("   k_11001    k_00111    k_22001    k_11111    k_00221\n");
+  printf("   k_11002    k_00112    k_22002    k_11112    k_00222"
+	 "   k_33002    k_22112    k_11222    k_00332\n");
+  printf("   k_11003    k_00113    k_22003    k_11113    k_00223"
+	 "   k_33003    k_22113    k_11223    k_00333\n");
+  printf("   k_11004    k_00114    k_22004    k_11114    k_00224"
+	 "   k_33004    k_22114    k_11224    k_00334\n");
+  printf("   k_11005    k_00115    k_22005    k_11115    k_00225"
+	 "   k_33005    k_22115    k_11225    k_00335\n");
+  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	 h_ijklm(K_re_scl, 1, 1, 0, 0, 1), h_ijklm(K_re_scl, 0, 0, 1, 1, 1),
+	 h_ijklm(K_re_scl, 2, 2, 0, 0, 1), h_ijklm(K_re_scl, 1, 1, 1, 1, 1),
+	 h_ijklm(K_re_scl, 0, 0, 2, 2, 1));
+  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	 h_ijklm(K_re_scl, 1, 1, 0, 0, 2), h_ijklm(K_re_scl, 0, 0, 1, 1, 2),
+	 h_ijklm(K_re_scl, 2, 2, 0, 0, 2), h_ijklm(K_re_scl, 1, 1, 1, 1, 2),
+	 h_ijklm(K_re_scl, 0, 0, 2, 2, 2), h_ijklm(K_re_scl, 3, 3, 0, 0, 2),
+	 h_ijklm(K_re_scl, 2, 2, 1, 1, 2), h_ijklm(K_re_scl, 1, 1, 2, 2, 2),
+	 h_ijklm(K_re_scl, 0, 0, 3, 3, 2));
+  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	 h_ijklm(K_re_scl, 1, 1, 0, 0, 3), h_ijklm(K_re_scl, 0, 0, 1, 1, 3),
+	 h_ijklm(K_re_scl, 2, 2, 0, 0, 3), h_ijklm(K_re_scl, 1, 1, 1, 1, 3),
+	 h_ijklm(K_re_scl, 0, 0, 2, 2, 3), h_ijklm(K_re_scl, 3, 3, 0, 0, 3),
+	 h_ijklm(K_re_scl, 2, 2, 1, 1, 3), h_ijklm(K_re_scl, 1, 1, 2, 2, 3),
+	 h_ijklm(K_re_scl, 0, 0, 3, 3, 3));
+  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	 h_ijklm(K_re_scl, 1, 1, 0, 0, 4), h_ijklm(K_re_scl, 0, 0, 1, 1, 4),
+	 h_ijklm(K_re_scl, 2, 2, 0, 0, 4), h_ijklm(K_re_scl, 1, 1, 1, 1, 4),
+	 h_ijklm(K_re_scl, 0, 0, 2, 2, 4), h_ijklm(K_re_scl, 3, 3, 0, 0, 4),
+	 h_ijklm(K_re_scl, 2, 2, 1, 1, 4), h_ijklm(K_re_scl, 1, 1, 2, 2, 4),
+	 h_ijklm(K_re_scl, 0, 0, 3, 3, 4));
+  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	 h_ijklm(K_re_scl, 1, 1, 0, 0, 5), h_ijklm(K_re_scl, 0, 0, 1, 1, 5),
+	 h_ijklm(K_re_scl, 2, 2, 0, 0, 5), h_ijklm(K_re_scl, 1, 1, 1, 1, 5),
+	 h_ijklm(K_re_scl, 0, 0, 2, 2, 5), h_ijklm(K_re_scl, 3, 3, 0, 0, 5),
+	 h_ijklm(K_re_scl, 2, 2, 1, 1, 5), h_ijklm(K_re_scl, 1, 1, 2, 2, 5),
+	 h_ijklm(K_re_scl, 0, 0, 3, 3, 5));
+  printf("ksi_x:\n %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 1),
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 1),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 1));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 2),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2),
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 2),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 2),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 2));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 3),
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 3),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 3),
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 3),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 3),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 3));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 4),
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 4),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 4),
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 4),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 4),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 4));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 5),
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 5),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 5),
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 5),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 5),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 5));
+  printf("ksi_y:\n %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 1),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 1),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 1));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 2),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 2),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 2),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 2),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 2));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 3),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 3),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 3),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 3),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 3),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 3));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 4),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 4),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 4),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 4),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 4),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 4));
+  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 5),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 5),
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 5),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 5),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 5),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 5));
+
+  printf("\nTune confinement:\n");
+  // printf(" %11.3e %11.3e\n",
+  // 	 h_ijklm(K_re/(3e0*twoJ[X_]), 2, 2, 0, 0, 0),
+  // 	 h_ijklm(K_re, 3, 3, 0, 0, 0));
+  // printf(" %11.3e %11.3e\n",
+  // 	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0),
+  // 	 h_ijklm(K_re, 0, 0, 3, 3, 0));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 0),
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
+
+  printf("\n %11.3e %11.3e %11.3e\n",
+	 h_ijklm(K_re*Id_scl, 1, 1, 1, 1, 0),
+	 h_ijklm(K_re*Id_scl, 2, 2, 1, 1, 0),
+	 h_ijklm(K_re*Id_scl, 1, 1, 2, 2, 0));
+}
+
+
+void prt_system(const int m, const int n_b2, double **A, double *b)
+{
+  int i, j;
+
+  printf("\n Ax = b:\n          ");
+  for (j = 1; j <= n_b2; j++)
+    printf("%11d", j);
+  printf("\n");
+  for (i = 1; i <= m; i++) {
+    printf("%4d %10s", i, drv_term[i-1].c_str());
+    for (j = 1; j <= n_b2; j++)
+      printf("%11.3e", A[i][j]);
+    printf("%11.3e\n", b[i]);
+  }
+
+  prt_dnu();
+}
+
+
+void prt_bn(const param_type &bn_prms)
+{
+  bool     first = true;
+  long int loc;
+  int      j, k, n, n_prm;
+  double   bn;
+  FILE     *outf;
+
+  const std::string file_name = "dnu.out";
+
+  outf = file_write(file_name.c_str());
+
+  n_prm = bn_prms.n_prm;
+  fprintf(outf, "\n");
+  for (k = 0; k < n_prm; k++) {
+    loc = get_loc(bn_prms.Fnum[k], 1) - 1;
+    bn = get_bn(bn_prms.Fnum[k], 1, bn_prms.n[k]);
+    if (bn_prms.n[k] == Sext)
+      fprintf(outf,
+	      "%-8s: sextupole, l = %7.5f"
+	      ", k = %12.5e, n = nsext, Method = Meth;\n",
+	      elem[loc].Name, elem[loc].L, bn);
+    else {
+      n = elem[loc].mpole->order;
+      for (j = Sext; j <= n; j++) {
+	bn = get_bn(bn_prms.Fnum[k], 1, j);
+	if (first && (bn != 0e0)) {
+	  first = false;
+	  fprintf(outf,
+		  "%-8s: multipole, l = %7.5f,"
+		  "\n          hom = (%1d, %12.5e, 0e0",
+		  elem[loc].Name, elem[loc].L, j, bn);
+	} else if (bn != 0e0)
+	  fprintf(outf,
+		  ",\n"
+		  "                 %1d, %12.5e, 0e0", j, bn);
+	if (j == n) {
+	  fprintf(outf,
+		  "),"
+		  "\n          n = nsext, Method = Meth;\n");
+	  first = true;
+	}
+      }
+    }
+  }
+
+  fclose(outf);
+}
+
+
+void prt_h_K(void)
+{
+  std::ofstream outf;
+
+  // Remove numeric noise.
+  daeps_(1e-20);
+
+  file_wr(outf, "h.out");
+  outf << h_re*Id_scl;
+  outf.close();
+
+  file_wr(outf, "K.out");
+  outf << K_re*Id_scl;
+  outf.close();
+
+  file_wr(outf, "nus.out");
+  nus = dHdJ(K);
+  daeps_(1e-5);
+  outf << nus[3]*Id_scl << nus[4]*Id_scl;
+  outf.close();
+
+  daeps_(tpsa_eps);
+}
+
+
+void fit_ksi1(const double ksi_x, const double ksi_y)
+{
+  int    n_bn, i, j, m;
+  double **A, *b, L;
+
+  const int    m_max = 2;
+  const double s_cut = 1e-10;
+
+  n_bn = bn_prms.n_prm;
+
+  b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_bn);
+
+  no_mpoles(Sext); no_mpoles(Oct);
+
+  printf("\n");
+  for (i = 1; i <= n_bn; i++) {
+    bn_prms.set_prm_dep(i-1);
+
+    danot_(3);
+    get_Map();
+    danot_(4);
+    K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+
+    m = 0;
+    A[++m][i] = get_a(1e0, nus[3], 0, 0, 0, 0, 1);
+    A[++m][i] = get_a(1e0, nus[4], 0, 0, 0, 0, 1);
+
+    for (j = 1; j <= m; j++)
+      A[j][i] *= bn_prms.bn_scl[i-1];
+
+    bn_prms.clr_prm_dep(i-1);
+  }
+
+  m = 0;
+  b[++m] = -(get_b("ksi1_x", 1e0, nus[3], 0, 0, 0, 0, 1)-ksi_x);
+  b[++m] = -(get_b("ksi1_y", 1e0, nus[4], 0, 0, 0, 0, 1)-ksi_y);
+
+  prt_system(m, n_bn, A, b);
+
+  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, s_cut, bn_prms.bn, bn_prms.dbn);
+
+  bn_prms.set_dprm();
+
+  printf("\nfit ksi (integrates strength in parenthesis):\n");
+  for (i = 1; i <= n_bn; i++) {
+    L = get_L(bn_prms.Fnum[i-1], 1);
+    printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
+    if (i % n_prt == 0) printf("\n");
+  }
+  if (n_bn % n_prt != 0) printf("\n");
+  printf("\nItegrated strenghts:\n");
+  for (i = 1; i <= n_bn; i++) {
+    L = get_L(bn_prms.Fnum[i-1], 1);
+    printf(" %9.5f", bn_prms.bn_scl[i-1]*bn_prms.bn[i]*L);
+    if (i % n_prt == 0) printf("\n");
+  }
+  if (n_bn % n_prt != 0) printf("\n");
+
+  prt_mfile("flat_file.fit");
+  prt_bn(bn_prms);
+
+  danot_(3);
+  get_Map();
+  danot_(4);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  CtoR(get_h(), h_re, h_im); nus = dHdJ(K);
+  prt_h_K();
+
+  free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_bn);
+}
+
+
 void get_dchi2(double *df)
 {
   int    k, loc;
@@ -456,8 +841,6 @@ double f_nl(double bn[])
   for (i = 1; i <= n_prm; i++)
     set_bn(prm[i-1], prm_n[i-1], bn[i]);
 
-  get_dyn(K_re, g2, dnu2);
-
   chi2 = 0e0;
 
   chi2 += scl_ksi1*sqr(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1));
@@ -468,38 +851,38 @@ double f_nl(double bn[])
 
   if (chi2 < chi2_min) {
     if (prt) {
-      cout << scientific << setprecision(3)
+      cout << std::scientific << std::setprecision(3)
 	   << "ksi = "
 	   << scl_ksi1*sqr(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1))
 	   << " " << scl_ksi1*sqr(ksi1[Y_]*M_PI+h_ijklm(K_re, 0, 0, 1, 1, 1))
-	   << endl;
-      cout << scientific << setprecision(3)
+	   <<std:: endl;
+      cout << std::scientific << std::setprecision(3)
 	   << "g2 = " << scl_res*g2.cst()
-	   << ", dnu2 = " << scl_dnu2*dnu2.cst() << endl;
+	   << ", dnu2 = " << scl_dnu2*dnu2.cst() << std::endl;
     }
 
     chi2_min = min(chi2, chi2_min);
 
-    cout << endl;
+    cout << std::endl;
     cout << "bnL:";
     for (i = 1; i <= n_prm; i++)
-      cout << scientific << setprecision(3)
-	   << setw(11) << get_bnL(prm[i-1], 1, prm_n[i-1]);
-    cout << endl;
+      cout << std::scientific << std::setprecision(3)
+	   << std::setw(11) << get_bnL(prm[i-1], 1, prm_n[i-1]);
+    cout << std::endl;
 
-    cout << endl;
-    cout << scientific << setprecision(1)
-	 << setw(2) << n_iter << ", chi2_min: " << chi2_min << endl;
+    cout << std::endl;
+    cout << std::scientific << std::setprecision(1)
+	 << std::setw(2) << n_iter << ", chi2_min: " << chi2_min << std::endl;
 
-    sext_out << endl;
+    sext_out << std::endl;
     sext_out << "n = " << n_iter << ":" << endl;
     for (i = 1; i <= n_prm; i++)
       for (j = 1; j <= get_n_Kids(prm[i-1]); j++) {
-	sext_out << fixed << setprecision(7) 
-		 << setw(9) << get_Name(prm[i-1])
+	sext_out << std::fixed << std::setprecision(7) 
+		 << std::setw(9) << get_Name(prm[i-1])
 		 << "(" << j << ") = "
-		 << setw(11) << get_bnL(prm[i-1], 1, prm_n[i-1])
-		 << setw(2) << prm_n[i-1] << endl;
+		 << std::setw(11) << get_bnL(prm[i-1], 1, prm_n[i-1])
+		 << std::setw(2) << prm_n[i-1] << std::endl;
       }
 
     sext_out.flush();
@@ -514,7 +897,7 @@ void df_nl(double bn[], double df[])
   int    k;
   tps    K_re, g2, dnu2;
 
-  cout << "df_nl" << endl;
+  std::cout << "df_nl" << std::endl;
 
   for (k = 1; k <= n_prm; k++)
     set_bn(prm[k-1], prm_n[k-1], bn[k]);
@@ -573,9 +956,11 @@ void fit_conj_grad(param_type &bn_prms, double (*f)(double *))
 
 void lat_select(const int lat_case)
 {
-  bn_prms.add_prm("sf1", 3, 1e4, 1.0);
-  bn_prms.add_prm("sd1", 3, 1e4, 1.0);
-  bn_prms.add_prm("sd2", 3, 1e4, 1.0);
+  if (fit_ksi) {
+    bn_prms.add_prm("sf1", 3, 1e4, 1.0);
+    bn_prms.add_prm("sd1", 3, 1e4, 1.0);
+    bn_prms.add_prm("sd2", 3, 1e4, 1.0);
+  }
 
   bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
   bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
@@ -619,6 +1004,11 @@ int main(int argc, char *argv[])
   idprset(1);
   cavity_on = true;
 #endif
+
+  if (fit_ksi) {
+    bn_prms.ini_prm();
+    fit_ksi1(0e0, 0e0);
+  }
 
   Id_scl.identity();
   for (j = 0; j < 4; j++)
