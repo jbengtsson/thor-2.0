@@ -59,7 +59,7 @@ public:
   void set_prm_dep(const int k) const;
   void clr_prm_dep(const int k) const;
   double set_dprm(void) const;
-  void set_prm(void) const;
+  void set_prm(double *bn) const;
 };
 
 
@@ -167,7 +167,7 @@ double param_type::set_dprm(void) const
 }
 
 
-void param_type::set_prm(void) const
+void param_type::set_prm(double *bn) const
 {
   int i;
 
@@ -820,11 +820,11 @@ void get_dchi2(double *df)
 }
 
 
-void f_der(double *b2, double *df)
+void f_der(double *b3, double *df)
 {
-  // bn_prms.set_prm(b3);
+  bn_prms.set_prm(b3);
 
-  // lat_constr.get_dchi2(df);
+  get_dchi2(df);
 }
 
 
@@ -836,57 +836,57 @@ double f_nl(double bn[])
 
   const bool prt = true;
 
-  n_iter++;
+  // n_iter++;
 
-  for (i = 1; i <= n_prm; i++)
-    set_bn(prm[i-1], prm_n[i-1], bn[i]);
+  // for (i = 1; i <= n_prm; i++)
+  //   set_bn(prm[i-1], prm_n[i-1], bn[i]);
 
-  chi2 = 0e0;
+  // chi2 = 0e0;
 
-  chi2 += scl_ksi1*sqr(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1));
-  chi2 += scl_ksi1*sqr(ksi1[Y_]*M_PI+h_ijklm(K_re, 0, 0, 1, 1, 1));
-  chi2 += scl_dnu2*dnu2.cst();
+  // chi2 += scl_ksi1*sqr(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1));
+  // chi2 += scl_ksi1*sqr(ksi1[Y_]*M_PI+h_ijklm(K_re, 0, 0, 1, 1, 1));
+  // chi2 += scl_dnu2*dnu2.cst();
 
-  chi2 += scl_res*g2.cst();
+  // chi2 += scl_res*g2.cst();
 
-  if (chi2 < chi2_min) {
-    if (prt) {
-      cout << std::scientific << std::setprecision(3)
-	   << "ksi = "
-	   << scl_ksi1*sqr(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1))
-	   << " " << scl_ksi1*sqr(ksi1[Y_]*M_PI+h_ijklm(K_re, 0, 0, 1, 1, 1))
-	   <<std:: endl;
-      cout << std::scientific << std::setprecision(3)
-	   << "g2 = " << scl_res*g2.cst()
-	   << ", dnu2 = " << scl_dnu2*dnu2.cst() << std::endl;
-    }
+  // if (chi2 < chi2_min) {
+  //   if (prt) {
+  //     cout << std::scientific << std::setprecision(3)
+  // 	   << "ksi = "
+  // 	   << scl_ksi1*sqr(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1))
+  // 	   << " " << scl_ksi1*sqr(ksi1[Y_]*M_PI+h_ijklm(K_re, 0, 0, 1, 1, 1))
+  // 	   <<std:: endl;
+  //     cout << std::scientific << std::setprecision(3)
+  // 	   << "g2 = " << scl_res*g2.cst()
+  // 	   << ", dnu2 = " << scl_dnu2*dnu2.cst() << std::endl;
+  //   }
 
-    chi2_min = min(chi2, chi2_min);
+  //   chi2_min = min(chi2, chi2_min);
 
-    cout << std::endl;
-    cout << "bnL:";
-    for (i = 1; i <= n_prm; i++)
-      cout << std::scientific << std::setprecision(3)
-	   << std::setw(11) << get_bnL(prm[i-1], 1, prm_n[i-1]);
-    cout << std::endl;
+  //   cout << std::endl;
+  //   cout << "bnL:";
+  //   for (i = 1; i <= n_prm; i++)
+  //     cout << std::scientific << std::setprecision(3)
+  // 	   << std::setw(11) << get_bnL(prm[i-1], 1, prm_n[i-1]);
+  //   cout << std::endl;
 
-    cout << std::endl;
-    cout << std::scientific << std::setprecision(1)
-	 << std::setw(2) << n_iter << ", chi2_min: " << chi2_min << std::endl;
+  //   cout << std::endl;
+  //   cout << std::scientific << std::setprecision(1)
+  // 	 << std::setw(2) << n_iter << ", chi2_min: " << chi2_min << std::endl;
 
-    sext_out << std::endl;
-    sext_out << "n = " << n_iter << ":" << endl;
-    for (i = 1; i <= n_prm; i++)
-      for (j = 1; j <= get_n_Kids(prm[i-1]); j++) {
-	sext_out << std::fixed << std::setprecision(7) 
-		 << std::setw(9) << get_Name(prm[i-1])
-		 << "(" << j << ") = "
-		 << std::setw(11) << get_bnL(prm[i-1], 1, prm_n[i-1])
-		 << std::setw(2) << prm_n[i-1] << std::endl;
-      }
+  //   sext_out << std::endl;
+  //   sext_out << "n = " << n_iter << ":" << endl;
+  //   for (i = 1; i <= n_prm; i++)
+  //     for (j = 1; j <= get_n_Kids(prm[i-1]); j++) {
+  // 	sext_out << std::fixed << std::setprecision(7) 
+  // 		 << std::setw(9) << get_Name(prm[i-1])
+  // 		 << "(" << j << ") = "
+  // 		 << std::setw(11) << get_bnL(prm[i-1], 1, prm_n[i-1])
+  // 		 << std::setw(2) << prm_n[i-1] << std::endl;
+  //     }
 
-    sext_out.flush();
-  }
+  //   sext_out.flush();
+  // }
 
   return chi2;
 }
@@ -897,36 +897,37 @@ void df_nl(double bn[], double df[])
   int    k;
   tps    K_re, g2, dnu2;
 
-  std::cout << "df_nl" << std::endl;
+  // std::cout << "df_nl" << std::endl;
 
-  for (k = 1; k <= n_prm; k++)
-    set_bn(prm[k-1], prm_n[k-1], bn[k]);
+  // for (k = 1; k <= n_prm; k++)
+  //   set_bn(prm[k-1], prm_n[k-1], bn[k]);
 
-  for (k = 1; k <= n_prm; k++) {
-    set_bn_par(prm[k-1], prm_n[k-1], 7);
+  // for (k = 1; k <= n_prm; k++) {
+  //   set_bn_par(prm[k-1], prm_n[k-1], 7);
 
-    get_dyn(K_re, g2, dnu2);
+  //   get_dyn(K_re, g2, dnu2);
 
-    df[k] = 0e0;
+  //   df[k] = 0e0;
 
-    df[k] +=
-      scl_ksi1*2e0*h_ijklm_p(K_re, 1, 1, 0, 0, 1, 7)
-      *(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1));
+  //   df[k] +=
+  //     scl_ksi1*2e0*h_ijklm_p(K_re, 1, 1, 0, 0, 1, 7)
+  //     *(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1));
 
-    df[k] +=
-      scl_ksi1*2e0*h_ijklm_p(K_re, 0, 0, 1, 1, 1, 7)
-      *(ksi1[Y_]*M_PI+h_ijklm(K_re, 0, 0, 1, 1, 1));
+  //   df[k] +=
+  //     scl_ksi1*2e0*h_ijklm_p(K_re, 0, 0, 1, 1, 1, 7)
+  //     *(ksi1[Y_]*M_PI+h_ijklm(K_re, 0, 0, 1, 1, 1));
 
-    df[k] += scl_dnu2*h_ijklm_p(dnu2, 0, 0, 0, 0, 0, 7);
+  //   df[k] += scl_dnu2*h_ijklm_p(dnu2, 0, 0, 0, 0, 0, 7);
 
-    df[k] += scl_res*h_ijklm_p(g2, 0, 0, 0, 0, 0, 7);
+  //   df[k] += scl_res*h_ijklm_p(g2, 0, 0, 0, 0, 0, 7);
 
-    clr_bn_par(prm[k-1], prm_n[k-1]);
-  }
+  //   clr_bn_par(prm[k-1], prm_n[k-1]);
+  // }
 }
 
 
-void fit_conj_grad(param_type &bn_prms, double (*f)(double *))
+void fit_conj_grad(param_type &bn_prms, double (*f)(double *),
+		   void f_der(double *, double *))
 {
   int          n_b2, iter;
   double       *b2, fret;
@@ -956,18 +957,19 @@ void fit_conj_grad(param_type &bn_prms, double (*f)(double *))
 
 void lat_select(const int lat_case)
 {
-  if (fit_ksi) {
-    bn_prms.add_prm("sf1", 3, 1e4, 1.0);
-    bn_prms.add_prm("sd1", 3, 1e4, 1.0);
-    bn_prms.add_prm("sd2", 3, 1e4, 1.0);
-  }
+  bn_prms.add_prm("sf1", 3, 1e4, 1.0);
+  bn_prms.add_prm("sd1", 3, 1e4, 1.0);
+  bn_prms.add_prm("sd2", 3, 1e4, 1.0);
 
-  bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
-  bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
+  bn_prms.add_prm("sf1", 3, 1e4, 1.0);
+  bn_prms.add_prm("sd1", 3, 1e4, 1.0);
+  bn_prms.add_prm("sd2", 3, 1e4, 1.0);
+
+  // bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
+  // bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
   bn_prms.add_prm("sh2",  4, 1e4, 1e2);
   bn_prms.add_prm("s",    4, 1e4, 1e2);
-
-  // bn_prms.add_prm("of1",  4, 1e4, 1e2);
+  bn_prms.add_prm("of1",  4, 1e4, 1e2);
 }
 
 
@@ -1015,4 +1017,5 @@ int main(int argc, char *argv[])
     Id_scl[j] *= sqrt(twoJ[j/2]);
   Id_scl[delta_] *= delta_max;
 
+  fit_conj_grad(bn_prms, f_nl, f_der);
 }
