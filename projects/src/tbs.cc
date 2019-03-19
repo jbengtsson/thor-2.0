@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 5
+#define NO 2
 
 #include "thor_lib.h"
 
@@ -27,7 +27,8 @@ std::vector<std::string> drv_term;
 
 int          n_iter;
 tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
-ss_vect<tps> nus, nus_scl, Id_scl;
+tps          K_re_delta_scl;
+ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
 const bool
   fit_ksi = false,
@@ -37,10 +38,16 @@ const int n_prt  = 8;
 
 // Center of straight.
 const double
-  beta_inj[]   = {8.1, 2.3},
+  beta_inj[]   = {8.7, 2.1},
   twoJ[]       = {sqr(8e-3)/beta_inj[X_], sqr(2e-3)/beta_inj[Y_]},
+  twoJ_delta[] = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max    = 3e-2;
 
+const double
+  scl_h[]            = {0e-1,  0e-2, 0e-2},
+  scl_dnu[]          = {1e-2, 1e-2, 1e-2, 1e-2},
+  scl_ksi[]          = {1e5,  1e-2, 1e-2, 1e-2, 1e-2},
+  delta_scl          = 0e0;
 
 
 struct param_type {
@@ -60,6 +67,7 @@ public:
   void clr_prm_dep(const int k) const;
   double set_dprm(void) const;
   void set_prm(double *bn) const;
+  void set_dparam(const int k, const double eps) const;
 };
 
 
@@ -82,7 +90,7 @@ void param_type::ini_prm(void)
   int i;
   double L;
 
-  const int  n_prt = 4;
+  const int n_prt = 4;
 
   n_prm = Fnum.size();
 
@@ -114,12 +122,7 @@ void param_type::set_prm_dep(const int k) const
   int j;
 
   for (j = 1; j <= get_n_Kids(Fnum[k]); j++)
-    if (n[k] > 0)
-      set_bn_par(Fnum[k], j, n[k], 7);
-    else if (n[k] == -1)
-      set_L_par(Fnum[k], j, 7);
-    else if (n[k] == -2)
-      set_s_par(Fnum[k], j, 7);
+    set_bn_par(Fnum[k], j, n[k], 7);
 }
 
 
@@ -128,12 +131,7 @@ void param_type::clr_prm_dep(const int k) const
   int j;
 
   for (j = 1; j <= get_n_Kids(Fnum[k]); j++)
-    if (n[k] > 0)
-      clr_bn_par(Fnum[k], j, n[k]);
-    else if (n[k] == -1)
-      clr_L_par(Fnum[k], j);
-    else if (n[k] == -2)
-      clr_s_par(Fnum[k], j);
+    clr_bn_par(Fnum[k], j, n[k]);
 }
 
 
@@ -146,16 +144,8 @@ double param_type::set_dprm(void) const
   dbn_max = 0e0;
   for (i = 1; i <= n_prm; i++) {
     dbn[i] *= bn_scl[i-1]*step;
-    if (n[i-1] > 0) {
       set_dbn(Fnum[i-1], n[i-1], dbn[i]);
       bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
-    } else if (n[i-1] == -1) {
-      set_dL(Fnum[i-1], dbn[i]);
-      bn[i] = get_L(Fnum[i-1], 1);
-    } else if (n[i-1] == -2) {
-      set_dbn_s(-Fnum[i-1], n[i-1], dbn[i]);
-      bn[i] = get_bn_s(-Fnum[i-1], 1, n[i-1]);
-    }
     bn[i] /= bn_scl[i-1];
     dbn_max = max(fabs(dbn[i]), dbn_max);
     printf(" %12.5e", bn[i]);
@@ -173,16 +163,20 @@ void param_type::set_prm(double *bn) const
 
   printf("set_prm:\n");
   for (i = 1; i <= n_prm; i++) {
-    if (n[i-1] > 0)
-      set_bn(Fnum[i-1], n[i-1], bn_scl[i-1]*bn[i]);
-    else if (n[i-1] == -1)
-      set_L(Fnum[i-1], bn_scl[i-1]*bn[i]);
-    else if (n[i-1] == -2)
-      set_bn_s(-Fnum[i-1], n[i-1], bn_scl[i-1]*bn[i]);
+    set_bn(Fnum[i-1], n[i-1], bn_scl[i-1]*bn[i]);
     printf(" %12.5e", bn_scl[i-1]*bn[i]);
     if (i % n_prt == 0) printf("\n");
   }
   if (n_prm % n_prt != 0) printf("\n");
+}
+
+
+void param_type::set_dparam(const int k, double eps) const
+{
+
+  printf("set_dparam:\n");
+  set_dbn(Fnum[k-1], n[k-1], eps);
+  printf(" %12.5e\n", eps);
 }
 
 
@@ -197,9 +191,10 @@ tps gauss_quad_2D(tps (*func)(const double), const double a, const double b)
   double xr, xm, dx;
   tps    s;
 
-  static double x[] =
-    {0.0, 0.1488743389, 0.4333953941, 0.6794095682, 0.8650633666, 0.9739065285};
-  static double w[] =
+  static double
+    x[] =
+    {0.0, 0.1488743389, 0.4333953941, 0.6794095682, 0.8650633666, 0.9739065285},
+    w[] =
     {0.0, 0.2955242247, 0.2692667193, 0.2190863625, 0.1494513491, 0.0666713443};
 
   xm = 0.5*(b+a);
@@ -289,9 +284,10 @@ tps gauss_quad_3D(tps (*func)(const double), const double a, const double b)
   double xr, xm, dx;
   tps    s;
 
-  static double x[] =
-    {0.0, 0.1488743389, 0.4333953941, 0.6794095682, 0.8650633666, 0.9739065285};
-  static double w[] =
+  static double
+    x[] =
+    {0.0, 0.1488743389, 0.4333953941, 0.6794095682, 0.8650633666, 0.9739065285},
+    w[] =
     {0.0, 0.2955242247, 0.2692667193, 0.2190863625, 0.1494513491, 0.0666713443};
 
   xm = 0.5*(b+a);
@@ -327,7 +323,8 @@ tps gauss_quad_3D_fy(const double y)
 {
   ysav_3D = y;
   return gauss_quad_3D(gauss_quad_3D_fz,
-		    gauss_quad_3D_z0(xsav_3D, y), gauss_quad_3D_z1(xsav_3D, y));
+		       gauss_quad_3D_z0(xsav_3D, y),
+		       gauss_quad_3D_z1(xsav_3D, y));
 }
 
 tps gauss_quad_3D_fx(const double x)
@@ -788,188 +785,100 @@ void fit_ksi1(const double ksi_x, const double ksi_y)
 }
 
 
-void get_dchi2(double *df)
+double get_chi2(double *bns)
 {
-  int    k, loc;
-  double eps;
-
-  const bool prt = false;
-
-  for (k = 0; k < bn_prms.n_prm; k++) {
-
-    if (prt) {
-      printf("\nget_dchi2: ");
-      loc = get_loc(bn_prms.Fnum[k], 1) - 1;
-      prt_name(stdout, elem[loc].Name, ":", 6);
-      printf(" %2d %10.3e", bn_prms.n[k], eps);
-    }
-
-    // constr_dparam(bn_prms.Fnum[k], bn_prms.n[k], eps);
-    // df[k+1] = lat_constr.get_chi2();
-
-    // constr_dparam(bn_prms.Fnum[k], bn_prms.n[k], -2e0*eps);
-    // df[k+1] -= lat_constr.get_chi2();
-    // df[k+1] /= 2e0*eps;
-
-    // constr_dparam(bn_prms.Fnum[k], bn_prms.n[k], eps);
-  }
-
-  // Avoid: "warning: deprecated conversion from string constant to ‘char*’".
-  // dvdump(stdout,
-  // 	 (char *)"\nget_dchi2:", df, bn_prms.n_prm, (char *)" %12.5e");
-}
-
-
-void f_der(double *b3, double *df)
-{
-  bn_prms.set_prm(b3);
-
-  get_dchi2(df);
-}
-
-
-double f_nl(double bn[])
-{
-  int    i, j;
   double chi2;
-  tps    K_re, g2, dnu2;
 
-  const bool prt = true;
+  bn_prms.set_prm(bns);
 
-  // n_iter++;
+  danot_(NO-1);
+  get_Map();
+  danot_(NO);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  nus = dHdJ(K); nus_scl = nus*Id_scl;
+  CtoR(K, K_re, K_im);
+  K_re_scl = K_re*Id_scl; K_re_delta_scl = K_re*Id_delta_scl;
+  CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
-  // for (i = 1; i <= n_prm; i++)
-  //   set_bn(prm[i-1], prm_n[i-1], bn[i]);
+  chi2 = 0e0;
 
-  // chi2 = 0e0;
-
-  // chi2 += scl_ksi1*sqr(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1));
-  // chi2 += scl_ksi1*sqr(ksi1[Y_]*M_PI+h_ijklm(K_re, 0, 0, 1, 1, 1));
-  // chi2 += scl_dnu2*dnu2.cst();
-
-  // chi2 += scl_res*g2.cst();
-
-  // if (chi2 < chi2_min) {
-  //   if (prt) {
-  //     cout << std::scientific << std::setprecision(3)
-  // 	   << "ksi = "
-  // 	   << scl_ksi1*sqr(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1))
-  // 	   << " " << scl_ksi1*sqr(ksi1[Y_]*M_PI+h_ijklm(K_re, 0, 0, 1, 1, 1))
-  // 	   <<std:: endl;
-  //     cout << std::scientific << std::setprecision(3)
-  // 	   << "g2 = " << scl_res*g2.cst()
-  // 	   << ", dnu2 = " << scl_dnu2*dnu2.cst() << std::endl;
-  //   }
-
-  //   chi2_min = min(chi2, chi2_min);
-
-  //   cout << std::endl;
-  //   cout << "bnL:";
-  //   for (i = 1; i <= n_prm; i++)
-  //     cout << std::scientific << std::setprecision(3)
-  // 	   << std::setw(11) << get_bnL(prm[i-1], 1, prm_n[i-1]);
-  //   cout << std::endl;
-
-  //   cout << std::endl;
-  //   cout << std::scientific << std::setprecision(1)
-  // 	 << std::setw(2) << n_iter << ", chi2_min: " << chi2_min << std::endl;
-
-  //   sext_out << std::endl;
-  //   sext_out << "n = " << n_iter << ":" << endl;
-  //   for (i = 1; i <= n_prm; i++)
-  //     for (j = 1; j <= get_n_Kids(prm[i-1]); j++) {
-  // 	sext_out << std::fixed << std::setprecision(7) 
-  // 		 << std::setw(9) << get_Name(prm[i-1])
-  // 		 << "(" << j << ") = "
-  // 		 << std::setw(11) << get_bnL(prm[i-1], 1, prm_n[i-1])
-  // 		 << std::setw(2) << prm_n[i-1] << std::endl;
-  //     }
-
-  //   sext_out.flush();
-  // }
+  chi2 += scl_ksi[0]*sqr(h_ijklm(K_re, 1, 1, 0, 0, 1));
+  chi2 += scl_ksi[0]*sqr(h_ijklm(K_re, 0, 0, 1, 1, 1));
 
   return chi2;
 }
 
 
-void df_nl(double bn[], double df[])
+void df_nl(double *bns, double *df)
 {
-  int    k;
-  tps    K_re, g2, dnu2;
+  int k;
 
-  // std::cout << "df_nl" << std::endl;
+  const double eps = 1e-2;
 
-  // for (k = 1; k <= n_prm; k++)
-  //   set_bn(prm[k-1], prm_n[k-1], bn[k]);
+  for (k = 1; k <= bn_prms.n_prm; k++) {
+    bn_prms.set_dparam(k, eps);
+    df[k+1] = get_chi2(bns);
+    bn_prms.set_dparam(k, -2e0*eps);
+    df[k+1] -= get_chi2(bns);
+    df[k+1] /= 2e0*eps;
 
-  // for (k = 1; k <= n_prm; k++) {
-  //   set_bn_par(prm[k-1], prm_n[k-1], 7);
+    bn_prms.set_dparam(k, eps);
+  }
+}
 
-  //   get_dyn(K_re, g2, dnu2);
 
-  //   df[k] = 0e0;
+double f_nl(double bns[])
+{
 
-  //   df[k] +=
-  //     scl_ksi1*2e0*h_ijklm_p(K_re, 1, 1, 0, 0, 1, 7)
-  //     *(ksi1[X_]*M_PI+h_ijklm(K_re, 1, 1, 0, 0, 1));
+  n_iter++;
 
-  //   df[k] +=
-  //     scl_ksi1*2e0*h_ijklm_p(K_re, 0, 0, 1, 1, 1, 7)
-  //     *(ksi1[Y_]*M_PI+h_ijklm(K_re, 0, 0, 1, 1, 1));
-
-  //   df[k] += scl_dnu2*h_ijklm_p(dnu2, 0, 0, 0, 0, 0, 7);
-
-  //   df[k] += scl_res*h_ijklm_p(g2, 0, 0, 0, 0, 0, 7);
-
-  //   clr_bn_par(prm[k-1], prm_n[k-1]);
-  // }
+  return get_chi2(bns);
 }
 
 
 void fit_conj_grad(param_type &bn_prms, double (*f)(double *),
-		   void f_der(double *, double *))
+		   void df(double *, double *))
 {
-  int          n_b2, iter;
-  double       *b2, fret;
+  int          n_b3, iter;
+  double       *b3, fret;
   ss_vect<tps> A;
 
   const double ftol = 1e-8;
 
-  n_b2 = bn_prms.n_prm;
+  n_b3 = bn_prms.n_prm;
 
-  b2 = dvector(1, n_b2);
+  b3 = dvector(1, n_b3);
 
   bn_prms.ini_prm();
-  f(b2);
+  f(b3);
 
-  dfrprmn(b2, n_b2, ftol, &iter, &fret, f, f_der);
+  dfrprmn(b3, n_b3, ftol, &iter, &fret, f, df);
 
-  printf("\n  iter = %d fret = %12.5e\n", iter, fret);
-  printf("b2s:\n");
-  // bn_prms.prt_prm(b2);
-  // bn_prms.set_prm(b2);
-  // eps_x = get_lin_opt(false);
-  // f_prt(b2);
+  // printf("\n  iter = %d fret = %12.5e\n", iter, fret);
+  // printf("b3s:\n");
+  // bn_prms.set_prm(b3);
+  // f_prt(b3);
 
-  free_dvector(b2, 1, n_b2);
+  free_dvector(b3, 1, n_b3);
 }
 
 
-void lat_select(const int lat_case)
+void lat_select(void)
 {
   bn_prms.add_prm("sf1", 3, 1e4, 1.0);
   bn_prms.add_prm("sd1", 3, 1e4, 1.0);
   bn_prms.add_prm("sd2", 3, 1e4, 1.0);
 
-  bn_prms.add_prm("sf1", 3, 1e4, 1.0);
-  bn_prms.add_prm("sd1", 3, 1e4, 1.0);
-  bn_prms.add_prm("sd2", 3, 1e4, 1.0);
+  // bn_prms.add_prm("sf1", 4, 1e4, 1.0);
+  // bn_prms.add_prm("sd1", 4, 1e4, 1.0);
+  // bn_prms.add_prm("sd2", 4, 1e4, 1.0);
 
   // bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
   // bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
-  bn_prms.add_prm("sh2",  4, 1e4, 1e2);
-  bn_prms.add_prm("s",    4, 1e4, 1e2);
-  bn_prms.add_prm("of1",  4, 1e4, 1e2);
+
+  // bn_prms.add_prm("sh2",  4, 1e4, 1e2);
+  // bn_prms.add_prm("s",    4, 1e4, 1e2);
+  // bn_prms.add_prm("of1",  4, 1e4, 1e2);
 }
 
 
@@ -1007,15 +916,16 @@ int main(int argc, char *argv[])
   cavity_on = true;
 #endif
 
-  if (fit_ksi) {
-    bn_prms.ini_prm();
-    fit_ksi1(0e0, 0e0);
-  }
-
   Id_scl.identity();
   for (j = 0; j < 4; j++)
     Id_scl[j] *= sqrt(twoJ[j/2]);
   Id_scl[delta_] *= delta_max;
 
-  fit_conj_grad(bn_prms, f_nl, f_der);
+  Id_delta_scl.identity();
+  for (j = 0; j < 4; j++)
+    Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
+  Id_delta_scl[delta_] *= delta_max;
+
+  lat_select();
+  fit_conj_grad(bn_prms, f_nl, df_nl);
 }
