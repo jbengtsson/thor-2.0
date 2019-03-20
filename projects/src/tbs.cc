@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 2
+#define NO 3
 
 #include "thor_lib.h"
 
@@ -54,18 +54,16 @@ struct param_type {
 private:
 
 public:
-  int                 m_constr, n_prm, svd_n_cut;
-  double              bn_tol, step;
-  double              *bn_lim, *bn, *dbn;
+  int                 m_constr, n_bn;
+  double              bn_tol;
   std::vector<double> bn_max, bn_scl;
   std::vector<int>    Fnum, n, svd_list;
 
   void add_prm(const std::string Fname, const int n,
 	       const double bn_max, const double bn_scl);
-  void ini_prm(void);
+  void ini_prm(double *bn);
   void set_prm_dep(const int k) const;
   void clr_prm_dep(const int k) const;
-  double set_dprm(void) const;
   void set_prm(double *bn) const;
   void set_dparam(const int k, const double eps) const;
 };
@@ -81,26 +79,20 @@ void param_type::add_prm(const std::string Fname, const int n,
   this->n.push_back(n);
   this->bn_max.push_back(bn_max);
   this->bn_scl.push_back(bn_scl);
-  n_prm = Fnum.size();
+  n_bn = Fnum.size();
 }
 
 
-void param_type::ini_prm(void)
+void param_type::ini_prm(double *bn)
 {
-  int i;
+  int    i;
   double L;
 
   const int n_prt = 4;
 
-  n_prm = Fnum.size();
-
-  bn_prms.bn_lim = dvector(1, n_prm); bn_prms.bn = dvector(1, n_prm);
-  bn_prms.dbn = dvector(1, n_prm);
-
   printf("\nInitial bn (scale factor in parenthesis):\n");
-  printf("  No of Families: %1d\n", n_prm);
-  for (i = 1; i <= n_prm; i++) {
-    bn_lim[i] = bn_max[i-1];
+  printf("  No of Families: %1d\n", n_bn);
+  for (i = 1; i <= n_bn; i++) {
     bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
 
     if (scale) {
@@ -113,7 +105,7 @@ void param_type::ini_prm(void)
     printf(" %12.5e (%9.3e)", bn_scl[i-1]*bn[i], bn_scl[i-1]);
     if (i % n_prt == 0) printf("\n");
   }
-  if (n_prm % n_prt != 0) printf("\n");
+  if (n_bn % n_prt != 0) printf("\n");
 }
 
 
@@ -135,48 +127,30 @@ void param_type::clr_prm_dep(const int k) const
 }
 
 
-double param_type::set_dprm(void) const
-{
-  int    i;
-  double dbn_max;
-
-  printf("set_dprm:\n");
-  dbn_max = 0e0;
-  for (i = 1; i <= n_prm; i++) {
-    dbn[i] *= bn_scl[i-1]*step;
-      set_dbn(Fnum[i-1], n[i-1], dbn[i]);
-      bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
-    bn[i] /= bn_scl[i-1];
-    dbn_max = max(fabs(dbn[i]), dbn_max);
-    printf(" %12.5e", bn[i]);
-    if (i % n_prt == 0) printf("\n");
-  }
-  if (n_prm % n_prt != 0) printf("\n");
-
-  return dbn_max;
-}
-
-
 void param_type::set_prm(double *bn) const
 {
   int i;
 
-  printf("set_prm:\n");
-  for (i = 1; i <= n_prm; i++) {
+  const bool prt = false;
+
+  if (prt) printf("set_prm:\n");
+  for (i = 1; i <= n_bn; i++) {
     set_bn(Fnum[i-1], n[i-1], bn_scl[i-1]*bn[i]);
-    printf(" %12.5e", bn_scl[i-1]*bn[i]);
-    if (i % n_prt == 0) printf("\n");
+    if (prt) {
+      printf(" %12.5e", bn_scl[i-1]*bn[i]);
+      if (i % n_prt == 0) printf("\n");
+    }
   }
-  if (n_prm % n_prt != 0) printf("\n");
+  if (prt && (n_bn % n_prt != 0)) printf("\n");
 }
 
 
 void param_type::set_dparam(const int k, double eps) const
 {
+  const bool prt = false;
 
-  printf("set_dparam:\n");
+  if (prt) printf("set_dparam: %12.5e\n", eps);
   set_dbn(Fnum[k-1], n[k-1], eps);
-  printf(" %12.5e\n", eps);
 }
 
 
@@ -642,7 +616,7 @@ void prt_bn(const param_type &bn_prms)
 {
   bool     first = true;
   long int loc;
-  int      j, k, n, n_prm;
+  int      j, k, n, n_bn;
   double   bn;
   FILE     *outf;
 
@@ -650,9 +624,9 @@ void prt_bn(const param_type &bn_prms)
 
   outf = file_write(file_name.c_str());
 
-  n_prm = bn_prms.n_prm;
+  n_bn = bn_prms.n_bn;
   fprintf(outf, "\n");
-  for (k = 0; k < n_prm; k++) {
+  for (k = 0; k < n_bn; k++) {
     loc = get_loc(bn_prms.Fnum[k], 1) - 1;
     bn = get_bn(bn_prms.Fnum[k], 1, bn_prms.n[k]);
     if (bn_prms.n[k] == Sext)
@@ -713,83 +687,11 @@ void prt_h_K(void)
 }
 
 
-void fit_ksi1(const double ksi_x, const double ksi_y)
-{
-  int    n_bn, i, j, m;
-  double **A, *b, L;
-
-  const int    m_max = 2;
-  const double s_cut = 1e-10;
-
-  n_bn = bn_prms.n_prm;
-
-  b = dvector(1, m_max); A = dmatrix(1, m_max, 1, n_bn);
-
-  no_mpoles(Sext); no_mpoles(Oct);
-
-  printf("\n");
-  for (i = 1; i <= n_bn; i++) {
-    bn_prms.set_prm_dep(i-1);
-
-    danot_(3);
-    get_Map();
-    danot_(4);
-    K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
-
-    m = 0;
-    A[++m][i] = get_a(1e0, nus[3], 0, 0, 0, 0, 1);
-    A[++m][i] = get_a(1e0, nus[4], 0, 0, 0, 0, 1);
-
-    for (j = 1; j <= m; j++)
-      A[j][i] *= bn_prms.bn_scl[i-1];
-
-    bn_prms.clr_prm_dep(i-1);
-  }
-
-  m = 0;
-  b[++m] = -(get_b("ksi1_x", 1e0, nus[3], 0, 0, 0, 0, 1)-ksi_x);
-  b[++m] = -(get_b("ksi1_y", 1e0, nus[4], 0, 0, 0, 0, 1)-ksi_y);
-
-  prt_system(m, n_bn, A, b);
-
-  SVD_lim(m, n_bn, A, b, bn_prms.bn_lim, s_cut, bn_prms.bn, bn_prms.dbn);
-
-  bn_prms.set_dprm();
-
-  printf("\nfit ksi (integrates strength in parenthesis):\n");
-  for (i = 1; i <= n_bn; i++) {
-    L = get_L(bn_prms.Fnum[i-1], 1);
-    printf(" %12.5e", bn_prms.bn_scl[i-1]*bn_prms.bn[i]);
-    if (i % n_prt == 0) printf("\n");
-  }
-  if (n_bn % n_prt != 0) printf("\n");
-  printf("\nItegrated strenghts:\n");
-  for (i = 1; i <= n_bn; i++) {
-    L = get_L(bn_prms.Fnum[i-1], 1);
-    printf(" %9.5f", bn_prms.bn_scl[i-1]*bn_prms.bn[i]*L);
-    if (i % n_prt == 0) printf("\n");
-  }
-  if (n_bn % n_prt != 0) printf("\n");
-
-  prt_mfile("flat_file.fit");
-  prt_bn(bn_prms);
-
-  danot_(3);
-  get_Map();
-  danot_(4);
-  K = MapNorm(Map, g, A1, A0, Map_res, 1);
-  CtoR(get_h(), h_re, h_im); nus = dHdJ(K);
-  prt_h_K();
-
-  free_dvector(b, 1, m_max); free_dmatrix(A, 1, m_max, 1, n_bn);
-}
-
-
-double get_chi2(double *bns)
+double get_chi2(void)
 {
   double chi2;
 
-  bn_prms.set_prm(bns);
+  const bool prt = false;
 
   danot_(NO-1);
   get_Map();
@@ -805,61 +707,67 @@ double get_chi2(double *bns)
   chi2 += scl_ksi[0]*sqr(h_ijklm(K_re, 1, 1, 0, 0, 1));
   chi2 += scl_ksi[0]*sqr(h_ijklm(K_re, 0, 0, 1, 1, 1));
 
+  if (prt) printf("\nf_nl: %9.3e\n", chi2);
+
   return chi2;
 }
 
 
-void df_nl(double *bns, double *df)
+void df_nl(double *bn, double *df)
 {
   int k;
 
   const double eps = 1e-2;
 
-  for (k = 1; k <= bn_prms.n_prm; k++) {
+  bn_prms.set_prm(bn);
+  for (k = 1; k <= bn_prms.n_bn; k++) {
     bn_prms.set_dparam(k, eps);
-    df[k+1] = get_chi2(bns);
+    df[k] = get_chi2();
     bn_prms.set_dparam(k, -2e0*eps);
-    df[k+1] -= get_chi2(bns);
-    df[k+1] /= 2e0*eps;
+    df[k] -= get_chi2();
+    df[k] /= 2e0*eps;
 
     bn_prms.set_dparam(k, eps);
   }
+
+  dvdump(stdout, (char *)"\df_nl:", df, bn_prms.n_bn, (char *)" %12.5e");
 }
 
 
-double f_nl(double bns[])
+double f_nl(double bn[])
 {
+  double chi2;
 
   n_iter++;
+  bn_prms.set_prm(bn);
 
-  return get_chi2(bns);
+  return get_chi2();
 }
 
 
 void fit_conj_grad(param_type &bn_prms, double (*f)(double *),
 		   void df(double *, double *))
 {
-  int          n_b3, iter;
-  double       *b3, fret;
+  int          iter, k;
+  double       *bn, *df1, fret;
   ss_vect<tps> A;
 
   const double ftol = 1e-8;
 
-  n_b3 = bn_prms.n_prm;
+  bn = dvector(1, bn_prms.n_bn);
+  df1 = dvector(1, bn_prms.n_bn);
 
-  b3 = dvector(1, n_b3);
+  bn_prms.ini_prm(bn);
+  f(bn);
 
-  bn_prms.ini_prm();
-  f(b3);
-
-  dfrprmn(b3, n_b3, ftol, &iter, &fret, f, df);
+  dfrprmn(bn, bn_prms.n_bn, ftol, &iter, &fret, f, df);
 
   // printf("\n  iter = %d fret = %12.5e\n", iter, fret);
-  // printf("b3s:\n");
-  // bn_prms.set_prm(b3);
-  // f_prt(b3);
+  // printf("bns:\n");
+  // bn_prms.set_prm(bn);
+  // f_prt(bn);
 
-  free_dvector(b3, 1, n_b3);
+  free_dvector(bn, 1, bn_prms.n_bn);
 }
 
 

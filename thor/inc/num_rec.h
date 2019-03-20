@@ -95,7 +95,11 @@ extern "C" {
   void dmmult(double **a, int a_rows, int a_cols,
               double **b, int b_rows, int b_cols, double **y);
 
-  // nr.h
+  void dmdump(FILE *outf, const char *text, double **a, int a_rows, int a_cols,
+	      const char *format);
+  void dvdump(FILE *outf, char *text, double *a, int a_els, char *format);
+
+   // nr.h
 
 #ifndef _FCOMPLEX_DECLARE_T_
   typedef struct FCOMPLEX {float r,i;} fcomplex;
