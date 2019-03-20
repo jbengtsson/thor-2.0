@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 3
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -689,9 +689,11 @@ void prt_h_K(void)
 
 double get_chi2(void)
 {
-  double chi2;
+  int                 k;
+  double              chi2;
+  std::vector<double> dnu;
 
-  const bool prt = false;
+  const bool prt = !false;
 
   danot_(NO-1);
   get_Map();
@@ -702,12 +704,34 @@ double get_chi2(void)
   K_re_scl = K_re*Id_scl; K_re_delta_scl = K_re*Id_delta_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
+  dnu.push_back(h_ijklm(K_re, 1, 1, 0, 0, 1));
+  dnu.push_back(h_ijklm(K_re, 0, 0, 1, 1, 1));
+
+  dnu.push_back(h_ijklm(K_re, 2, 2, 0, 0, 0));
+  dnu.push_back(h_ijklm(K_re, 1, 1, 1, 1, 0));
+  dnu.push_back(h_ijklm(K_re, 0, 0, 2, 2, 0));
+
+  dnu.push_back(h_ijklm(K_re, 1, 1, 0, 0, 2));
+  dnu.push_back(h_ijklm(K_re, 0, 0, 1, 1, 2));
+
   chi2 = 0e0;
+  chi2 += scl_ksi[0]*sqr(dnu[0]);
+  chi2 += scl_ksi[0]*sqr(dnu[1]);
 
-  chi2 += scl_ksi[0]*sqr(h_ijklm(K_re, 1, 1, 0, 0, 1));
-  chi2 += scl_ksi[0]*sqr(h_ijklm(K_re, 0, 0, 1, 1, 1));
+  chi2 += scl_dnu[0]*sqr(dnu[2]);
+  chi2 += scl_dnu[0]*sqr(dnu[3]);
+  chi2 += scl_dnu[0]*sqr(dnu[4]);
 
-  if (prt) printf("\nf_nl: %9.3e\n", chi2);
+  chi2 += scl_ksi[2]*sqr(dnu[5]);
+  chi2 += scl_ksi[2]*sqr(dnu[6]);
+
+  if (prt) {
+    printf("\n");
+    for (k = 0; k < dnu.size(); k++)
+      printf(" %10.3e", dnu[k]);
+    printf("\n");
+    printf("\nf_nl: %9.3e\n", chi2);
+  }
 
   return chi2;
 }
@@ -717,6 +741,7 @@ void df_nl(double *bn, double *df)
 {
   int k;
 
+  const bool   prt = !false;
   const double eps = 1e-2;
 
   bn_prms.set_prm(bn);
@@ -730,7 +755,8 @@ void df_nl(double *bn, double *df)
     bn_prms.set_dparam(k, eps);
   }
 
-  dvdump(stdout, (char *)"\df_nl:", df, bn_prms.n_bn, (char *)" %12.5e");
+  if (prt)
+    dvdump(stdout, (char *)"\df_nl:", df, bn_prms.n_bn, (char *)" %12.5e");
 }
 
 
@@ -777,16 +803,16 @@ void lat_select(void)
   bn_prms.add_prm("sd1", 3, 1e4, 1.0);
   bn_prms.add_prm("sd2", 3, 1e4, 1.0);
 
-  // bn_prms.add_prm("sf1", 4, 1e4, 1.0);
-  // bn_prms.add_prm("sd1", 4, 1e4, 1.0);
-  // bn_prms.add_prm("sd2", 4, 1e4, 1.0);
+  bn_prms.add_prm("sf1", 4, 1e4, 1.0);
+  bn_prms.add_prm("sd1", 4, 1e4, 1.0);
+  bn_prms.add_prm("sd2", 4, 1e4, 1.0);
 
   // bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
   // bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
 
-  // bn_prms.add_prm("sh2",  4, 1e4, 1e2);
-  // bn_prms.add_prm("s",    4, 1e4, 1e2);
-  // bn_prms.add_prm("of1",  4, 1e4, 1e2);
+  bn_prms.add_prm("sh2",  4, 1e4, 1e2);
+  bn_prms.add_prm("s",    4, 1e4, 1e2);
+  bn_prms.add_prm("of1",  4, 1e4, 1e2);
 }
 
 
