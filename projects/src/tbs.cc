@@ -66,6 +66,7 @@ public:
   void clr_prm_dep(const int k) const;
   void set_prm(double *bn) const;
   void set_dparam(const int k, const double eps) const;
+  void prt_bn(double *bn) const;
 };
 
 
@@ -151,6 +152,16 @@ void param_type::set_dparam(const int k, double eps) const
 
   if (prt) printf("set_dparam: %12.5e\n", eps);
   set_dbn(Fnum[k-1], n[k-1], eps);
+}
+
+
+void param_type::prt_bn(double *bn) const
+{
+  int k;
+
+  for (k = 1; k <= n_bn; k++)
+    printf(" %10.3e", bn[k]);
+  printf("\n");
 }
 
 
@@ -662,38 +673,13 @@ void prt_bn(const param_type &bn_prms)
 }
 
 
-void prt_h_K(void)
-{
-  std::ofstream outf;
-
-  // Remove numeric noise.
-  daeps_(1e-20);
-
-  file_wr(outf, "h.out");
-  outf << h_re*Id_scl;
-  outf.close();
-
-  file_wr(outf, "K.out");
-  outf << K_re*Id_scl;
-  outf.close();
-
-  file_wr(outf, "nus.out");
-  nus = dHdJ(K);
-  daeps_(1e-5);
-  outf << nus[3]*Id_scl << nus[4]*Id_scl;
-  outf.close();
-
-  daeps_(tpsa_eps);
-}
-
-
 double get_chi2(void)
 {
   int                 k;
   double              chi2;
   std::vector<double> dnu;
 
-  const bool prt = !false;
+  const bool prt = false;
 
   danot_(NO-1);
   get_Map();
@@ -704,15 +690,15 @@ double get_chi2(void)
   K_re_scl = K_re*Id_scl; K_re_delta_scl = K_re*Id_delta_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
-  dnu.push_back(h_ijklm(K_re, 1, 1, 0, 0, 1));
-  dnu.push_back(h_ijklm(K_re, 0, 0, 1, 1, 1));
+  dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 1));
+  dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 1));
 
-  dnu.push_back(h_ijklm(K_re, 2, 2, 0, 0, 0));
-  dnu.push_back(h_ijklm(K_re, 1, 1, 1, 1, 0));
-  dnu.push_back(h_ijklm(K_re, 0, 0, 2, 2, 0));
+  dnu.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
+  dnu.push_back(h_ijklm(K_re_scl, 1, 1, 1, 1, 0));
+  dnu.push_back(h_ijklm(K_re_scl, 0, 0, 2, 2, 0));
 
-  dnu.push_back(h_ijklm(K_re, 1, 1, 0, 0, 2));
-  dnu.push_back(h_ijklm(K_re, 0, 0, 1, 1, 2));
+  dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
+  dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 2));
 
   chi2 = 0e0;
   chi2 += scl_ksi[0]*sqr(dnu[0]);
@@ -726,11 +712,11 @@ double get_chi2(void)
   chi2 += scl_ksi[2]*sqr(dnu[6]);
 
   if (prt) {
-    printf("\n");
+    printf("\nget_chi2:\n ");
     for (k = 0; k < dnu.size(); k++)
       printf(" %10.3e", dnu[k]);
     printf("\n");
-    printf("\nf_nl: %9.3e\n", chi2);
+    printf("  chi2: %9.3e\n", chi2);
   }
 
   return chi2;
@@ -739,13 +725,14 @@ double get_chi2(void)
 
 void df_nl(double *bn, double *df)
 {
-  int k;
+  int    k;
+  double eps;
 
   const bool   prt = !false;
-  const double eps = 1e-2;
 
   bn_prms.set_prm(bn);
   for (k = 1; k <= bn_prms.n_bn; k++) {
+    eps = (k <= 3)? 1e-2 : 1e1;
     bn_prms.set_dparam(k, eps);
     df[k] = get_chi2();
     bn_prms.set_dparam(k, -2e0*eps);
@@ -756,18 +743,30 @@ void df_nl(double *bn, double *df)
   }
 
   if (prt)
-    dvdump(stdout, (char *)"\df_nl:", df, bn_prms.n_bn, (char *)" %12.5e");
+    dvdump(stdout, (char *)"\ndf_nl:", df, bn_prms.n_bn, (char *)" %12.5e");
 }
 
 
 double f_nl(double bn[])
 {
-  double chi2;
+  int           k;
+  double        chi2;
+  static double chi20 = 1e30;
+
+  const bool prt = !false;
 
   n_iter++;
   bn_prms.set_prm(bn);
 
-  return get_chi2();
+  chi2 = get_chi2();
+  if (chi2 < chi20) {
+    printf("\nf_nl:\n");
+    bn_prms.prt_bn(bn);
+    printf("  chi2 = %9.3e -> %9.3e\n", chi20, chi2);
+  }
+  chi20 = min(chi2, chi20);
+
+  return chi2;
 }
 
 
@@ -775,13 +774,12 @@ void fit_conj_grad(param_type &bn_prms, double (*f)(double *),
 		   void df(double *, double *))
 {
   int          iter, k;
-  double       *bn, *df1, fret;
+  double       *bn, fret;
   ss_vect<tps> A;
 
   const double ftol = 1e-8;
 
   bn = dvector(1, bn_prms.n_bn);
-  df1 = dvector(1, bn_prms.n_bn);
 
   bn_prms.ini_prm(bn);
   f(bn);
@@ -793,7 +791,9 @@ void fit_conj_grad(param_type &bn_prms, double (*f)(double *),
   // bn_prms.set_prm(bn);
   // f_prt(bn);
 
-  free_dvector(bn, 1, bn_prms.n_bn);
+  prt_mfile("flat_file.fit");
+
+ free_dvector(bn, 1, bn_prms.n_bn);
 }
 
 
@@ -810,22 +810,9 @@ void lat_select(void)
   // bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
   // bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
 
-  bn_prms.add_prm("sh2",  4, 1e4, 1e2);
-  bn_prms.add_prm("s",    4, 1e4, 1e2);
-  bn_prms.add_prm("of1",  4, 1e4, 1e2);
-}
-
-
-void get_nu_k(void)
-{
-  danot_(NO-1);
-  get_Map();
-  danot_(NO);
-  K = MapNorm(Map, g, A1, A0, Map_res, 1);
-  nus = dHdJ(K); nus_scl = nus*Id_scl;
-  CtoR(K, K_re, K_im);
-  K_re_scl = K_re*Id_scl;
-  CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
+  bn_prms.add_prm("sh2",  4, 1e4, 1.0);
+  bn_prms.add_prm("s",    4, 1e4, 1.0);
+  bn_prms.add_prm("of1",  4, 1e4, 1.0);
 }
 
 
