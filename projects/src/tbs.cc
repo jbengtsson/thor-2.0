@@ -31,37 +31,40 @@ tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 tps          K_re_delta_scl;
 ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
-const bool
-  fit_ksi = false,
-  scale   = false;
+const bool scale = false;
 
 const int n_prt  = 8;
 
 // Center of straight.
 const double
   beta_inj[]   = {8.7, 2.1},
-  A_max[]      = {8e-3, 2e-3},
+  A_max[]      = {7e-3, 2e-3},
   twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[] = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max    = 3e-2;
 
 const double
   scl_h[]            = {0e0, 0e0, 0e0},
-  scl_dnu[]          = {1e0, 1e0, 1e0, 1e0, 1e0},
-  scl_ksi[]          = {0e0, 1e5, 1e0, 1e0, 1e0, 1e0}, // 1st not used.
+  scl_dnu[]          = {1e0, 1e0, 0e0, 0e0, 0e0},
+  scl_ksi[]          = {0e0, 1e5, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl          = 0e0;
 
+
+double bn_internal(const double bn_bounded,
+		   const double bn_min, const double bn_max);
+double bn_bounded(const double bn_internal,
+		  const double bn_min, const double bn_max);
 
 struct param_type {
 private:
 
 public:
   int                 n_bn;
-  std::vector<double> bn_max, bn_scl;
+  std::vector<double> bn_min, bn_max, bn_scl;
   std::vector<int>    Fnum, n;
 
   void add_prm(const std::string Fname, const int n,
-	       const double bn_max, const double bn_scl);
+	       const double bn_min, const double bn_max, const double bn_scl);
   void ini_prm(double *bn);
   void set_prm_dep(const int k) const;
   void clr_prm_dep(const int k) const;
@@ -76,10 +79,12 @@ param_type bn_prms;
 
 
 void param_type::add_prm(const std::string Fname, const int n,
-			 const double bn_max, const double bn_scl)
+			 const double bn_min, const double bn_max,
+			 const double bn_scl)
 {
   Fnum.push_back(get_Fnum(Fname.c_str()));
   this->n.push_back(n);
+  this->bn_min.push_back(bn_min);
   this->bn_max.push_back(bn_max);
   this->bn_scl.push_back(bn_scl);
   n_bn = Fnum.size();
@@ -88,27 +93,26 @@ void param_type::add_prm(const std::string Fname, const int n,
 
 void param_type::ini_prm(double *bn)
 {
-  int    i;
-  double L;
-
-  const int n_prt = 4;
+  int i, loc;
 
   printf("\nInitial bn (scale factor in parenthesis):\n");
   printf("  No of Families: %1d\n", n_bn);
   for (i = 1; i <= n_bn; i++) {
     bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
 
-    if (scale) {
-      L = get_L(Fnum[i-1], 1);
-      if (L == 0e0) L = 1e0;
-      bn_scl[i-1] = 1e0/sqrt(get_n_Kids(Fnum[i-1])*L);
+    // Bounded.
+    if ((bn_min[i-1] <= bn[i]) && (bn[i] <= bn_max[i-1]))
+      bn[i] = bn_internal(bn[i], bn_min[i-1], bn_max[i-1]);
+    else {
+      loc = get_loc(Fnum[i-1], 1);
+      printf("\nini_prm:\n outside range ");
+      printf(" %s %10.3e [%10.3e, %10.3e]\n",
+	     elem[loc].Name, bn[i], bn_min[i-1], bn_max[i-1]);
+      exit(1);
     }
-
-    bn[i] /= bn_scl[i-1];
-    printf(" %12.5e (%9.3e)", bn_scl[i-1]*bn[i], bn_scl[i-1]);
-    if (i % n_prt == 0) printf("\n");
   }
-  if (n_bn % n_prt != 0) printf("\n");
+
+  prt_bn(bn);
 }
 
 
@@ -132,19 +136,21 @@ void param_type::clr_prm_dep(const int k) const
 
 void param_type::set_prm(double *bn) const
 {
-  int i;
+  int    i;
+  double bn_ext;
 
   const bool prt = false;
 
-  if (prt) printf("set_prm:\n");
   for (i = 1; i <= n_bn; i++) {
-    set_bn(Fnum[i-1], n[i-1], bn_scl[i-1]*bn[i]);
-    if (prt) {
-      printf(" %12.5e", bn_scl[i-1]*bn[i]);
-      if (i % n_prt == 0) printf("\n");
-    }
+    // Bounded.
+    bn_ext = bn_bounded(bn[i], bn_min[i-1], bn_max[i-1]);
+    set_bn(Fnum[i-1], n[i-1], bn_ext);
   }
-  if (prt && (n_bn % n_prt != 0)) printf("\n");
+
+  if (prt) {
+    printf("set_prm:\n");
+    prt_bn(bn);
+  }
 }
 
 
@@ -159,10 +165,14 @@ void param_type::set_dparam(const int k, double eps) const
 
 void param_type::prt_bn(double *bn) const
 {
-  int k;
+  int    i;
+  double bn_ext;
 
-  for (k = 1; k <= n_bn; k++)
-    printf(" %12.5e", bn_scl[k-1]*bn[k]);
+  for (i = 1; i <= n_bn; i++) {
+    // Bounded.
+    bn_ext = bn_bounded(bn[i], bn_min[i-1], bn_max[i-1]);
+    printf(" %12.5e", bn_ext);
+  }
   printf("\n");
 }
 
@@ -171,7 +181,7 @@ void param_type::prt_bn_lat(void) const
 {
   bool     first = true;
   long int loc;
-  int      j, k, n_ord, n_bn;
+  int      j, k, n_ord;
   double   bn;
   FILE     *outf;
 
@@ -213,6 +223,20 @@ void param_type::prt_bn_lat(void) const
   }
 
   fclose(outf);
+}
+
+
+double bn_internal(const double bn_bounded,
+		   const double bn_min, const double bn_max)
+{
+  return asin((2e0*(bn_bounded-bn_min))/(bn_max-bn_min)-1e0);
+}
+
+
+double bn_bounded(const double bn_internal,
+		  const double bn_min, const double bn_max)
+{
+  return bn_min + (sin(bn_internal)+1e0)*(bn_max-bn_min)/2e0;
 }
 
 
@@ -468,11 +492,12 @@ double get_b(const std::string &label, const double scale, const tps &t,
 
 double get_chi2(void)
 {
+  bool                prt_ln = false;
   int                 k;
   double              chi2_1;
   std::vector<double> dnu;
 
-  const bool chrom = false, prt = false;
+  const bool chrom = true;
 
   danot_(NO-1);
   get_Map();
@@ -483,6 +508,8 @@ double get_chi2(void)
   K_re_scl = K_re*Id_scl; K_re_delta_scl = K_re*Id_delta_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
+  dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 1));
+  dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 1));
 
   dnu.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
   dnu.push_back(h_ijklm(K_re_scl, 1, 1, 1, 1, 0));
@@ -492,9 +519,6 @@ double get_chi2(void)
   dnu.push_back(h_ijklm(K_re_scl, 2, 2, 1, 1, 0));
   dnu.push_back(h_ijklm(K_re_scl, 1, 1, 2, 2, 0));
   dnu.push_back(h_ijklm(K_re_scl, 0, 0, 3, 3, 0));
-
-  dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 1));
-  dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 1));
 
   if (chrom) {
     dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
@@ -507,6 +531,9 @@ double get_chi2(void)
 
   chi2_1 = 0e0; k = 0;
 
+  chi2_1 += scl_ksi[1]*sqr(dnu[k]); k++;
+  chi2_1 += scl_ksi[1]*sqr(dnu[k]); k++;
+
   chi2_1 += scl_dnu[0]*sqr(dnu[k]); k++;
   chi2_1 += scl_dnu[0]*sqr(dnu[k]); k++;
   chi2_1 += scl_dnu[0]*sqr(dnu[k]); k++;
@@ -515,24 +542,35 @@ double get_chi2(void)
   chi2_1 += scl_dnu[1]*sqr(dnu[k]); k++;
   chi2_1 += scl_dnu[1]*sqr(dnu[k]); k++;
   chi2_1 += scl_dnu[1]*sqr(dnu[k]); k++;
-
-  chi2_1 += scl_ksi[1]*sqr(dnu[k]); k++;
-  chi2_1 += scl_ksi[1]*sqr(dnu[k]); k++;
 
   if (chrom) {
     chi2_1 += scl_ksi[2]*sqr(dnu[k]); k++;
     chi2_1 += scl_ksi[2]*sqr(dnu[k]); k++;
+
     chi2_1 += scl_ksi[3]*sqr(dnu[k]); k++;
     chi2_1 += scl_ksi[3]*sqr(dnu[k]); k++;
+
     chi2_1 += scl_ksi[4]*sqr(dnu[k]); k++;
     chi2_1 += scl_ksi[4]*sqr(dnu[k]); k++;
   }
 
   if (chi2_1 < chi2) {
-    printf("\nchi2: %21.15e -> %21.15e\n ", chi2, chi2_1);
-    for (k = 0; k < dnu.size(); k++)
-      printf(" %10.3e", dnu[k]);
-    printf("\n");
+    printf("\nchi2: %21.15e -> %21.15e\n", chi2, chi2_1);
+    for (k = 1; k <= (int)dnu.size(); k++) {
+      printf(" %10.3e", dnu[k-1]);
+      switch (k) {
+      case 2:
+      case 5:
+      case 9:
+      case 11:
+      case 13:
+      case 15: 
+	printf("\n");
+	prt_ln = true;
+	break;
+      }
+    }
+    if (!prt_ln) printf("\n");
   }
 
   return chi2_1;
@@ -565,17 +603,14 @@ void df_nl(double *bn, double *df)
 
 double f_nl(double bn[])
 {
-  int    k;
   double chi2_1;
-
-  const bool prt = !false;
 
   n_iter++;
   bn_prms.set_prm(bn);
 
   chi2_1 = get_chi2();
   if (chi2_1 < chi2) {
-    printf("bn:\n  ");
+    printf("bn:\n");
     bn_prms.prt_bn(bn);
     chi2 = chi2_1;
 
@@ -599,14 +634,8 @@ void conj_grad(param_type &bn_prms, double (*f)(double *),
   bn = dvector(1, bn_prms.n_bn);
 
   bn_prms.ini_prm(bn);
-  f(bn);
 
   dfrprmn(bn, bn_prms.n_bn, ftol, &iter, &fret, f, df);
-
-  // printf("\n  iter = %d fret = %12.5e\n", iter, fret);
-  // printf("bns:\n");
-  // bn_prms.set_prm(bn);
-  // f_prt(bn);
 
   prt_mfile("flat_file.fit");
   bn_prms.prt_bn_lat();
@@ -624,10 +653,9 @@ void powell(param_type &bn_prms, double (*f)(double *))
 
   n_bn = bn_prms.n_bn;
 
-  bn = dvector(1, bn_prms.n_bn); xi = dmatrix(1, n_bn, 1, n_bn);
+  bn = dvector(1, n_bn); xi = dmatrix(1, n_bn, 1, n_bn);
 
   bn_prms.ini_prm(bn);
-  f(bn);
 
   // Set initial directions (unit vectors).
   for (i = 1; i <= n_bn; i++)
@@ -645,28 +673,37 @@ void powell(param_type &bn_prms, double (*f)(double *))
 
 void lat_select(void)
 {
-  bn_prms.add_prm("sf1", 3, 1e4, 1e0);
-  bn_prms.add_prm("sd1", 3, 1e4, 1e0);
-  bn_prms.add_prm("sd2", 3, 1e4, 1e0);
 
-  bn_prms.add_prm("sf1", 4, 1e4, 1e0);
-  bn_prms.add_prm("sd1", 4, 1e4, 1e0);
-  bn_prms.add_prm("sd2", 4, 1e4, 1e0);
+  if (!true) {
+    bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e0);
+    bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e0);
+    bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e0);
+  }
 
-  bn_prms.add_prm("sf1", 5, 1e4, 1e0);
-  bn_prms.add_prm("sd1", 5, 1e4, 1e0);
-  bn_prms.add_prm("sd2", 5, 1e4, 1e0);
+  if (!false) {
+    // bn_prms.add_prm("sh1a", 4, -5e3, 5e3, 1.0);
+    // bn_prms.add_prm("sh1b", 4, -5e3, 5e3, 1.0);
+
+    bn_prms.add_prm("sh2",  4, -5e3, 5e3, 1e0);
+    bn_prms.add_prm("s",    4, -5e3, 5e3, 1e0);
+    bn_prms.add_prm("of1",  4, -5e3, 5e3, 1e0);
+  }
+
+  if (false) {
+    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e0);
+    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e0);
+    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e0);
+  }
+
+  if (false) {
+    bn_prms.add_prm("sf1", 5, -1e4, 1e4, 1e0);
+    bn_prms.add_prm("sd1", 5, -1e4, 1e4, 1e0);
+    bn_prms.add_prm("sd2", 5, -1e4, 1e4, 1e0);
+  }
 
   // bn_prms.add_prm("sf1", 6, 1e4, 1e0);
   // bn_prms.add_prm("sd1", 6, 1e4, 1e0);
   // bn_prms.add_prm("sd2", 6, 1e4, 1e0);
-
-  // bn_prms.add_prm("sh1a", 4, 1e4, 1.0);
-  // bn_prms.add_prm("sh1b", 4, 1e4, 1.0);
-
-  // bn_prms.add_prm("sh2",  4, 1e4, 1e0);
-  // bn_prms.add_prm("s",    4, 1e4, 1e0);
-  // bn_prms.add_prm("of1",  4, 1e4, 1e0);
 }
 
 
@@ -705,7 +742,7 @@ int main(int argc, char *argv[])
 
   lat_select();
 
-  if (!true)
+  if (true)
     conj_grad(bn_prms, f_nl, df_nl);
   else
     powell(bn_prms, f_nl);
