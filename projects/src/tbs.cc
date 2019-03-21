@@ -601,7 +601,8 @@ void df_nl(double *bn, double *df)
 
   bn_prms.set_prm(bn);
   for (k = 1; k <= bn_prms.n_bn; k++) {
-    eps = (k <= 0)? 1e-2 : 1e0;
+    // eps = (k <= 0)? 1e-2 : 1e0;
+    eps = (k <= 3)? 1e0 : 1e2;
     bn_prms.set_dparam(k, eps);
     df[k] = get_chi2();
     bn_prms.set_dparam(k, -2e0*eps);
