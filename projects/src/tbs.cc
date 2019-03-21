@@ -495,7 +495,8 @@ double get_chi2(void)
   bool                prt_ln = false;
   int                 k;
   double              chi2_1;
-  std::vector<double> dnu;
+  tps                 dnu, dnu_delta;
+  std::vector<double> dnu_vec;
 
   const bool chrom = true;
 
@@ -508,70 +509,75 @@ double get_chi2(void)
   K_re_scl = K_re*Id_scl; K_re_delta_scl = K_re*Id_delta_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
-  dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 1));
-  dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 1));
+  dnu = gauss_quad_2D(f_gauss_quad_2D, 0e0, twoJ[X_]);
+  dnu_delta = gauss_quad_3D(f_gauss_quad_3D, 0e0, twoJ[X_]);
+  printf("\n|dnu|       = %9.3e\n", dnu.cst());
+  printf("|dnu_delta| = %9.3e\n", dnu_delta.cst());
 
-  dnu.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
-  dnu.push_back(h_ijklm(K_re_scl, 1, 1, 1, 1, 0));
-  dnu.push_back(h_ijklm(K_re_scl, 0, 0, 2, 2, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 1));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 1));
 
-  dnu.push_back(h_ijklm(K_re_scl, 3, 3, 0, 0, 0));
-  dnu.push_back(h_ijklm(K_re_scl, 2, 2, 1, 1, 0));
-  dnu.push_back(h_ijklm(K_re_scl, 1, 1, 2, 2, 0));
-  dnu.push_back(h_ijklm(K_re_scl, 0, 0, 3, 3, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 1, 1, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 2, 2, 0));
 
-  dnu.push_back(h_ijklm(K_re_scl, 4, 4, 0, 0, 0));
-  dnu.push_back(h_ijklm(K_re_scl, 3, 3, 1, 1, 0));
-  dnu.push_back(h_ijklm(K_re_scl, 2, 2, 2, 2, 0));
-  dnu.push_back(h_ijklm(K_re_scl, 1, 1, 3, 3, 0));
-  dnu.push_back(h_ijklm(K_re_scl, 0, 0, 4, 4, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 3, 3, 0, 0, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 2, 2, 1, 1, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 2, 2, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 3, 3, 0));
+
+  dnu_vec.push_back(h_ijklm(K_re_scl, 4, 4, 0, 0, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 3, 3, 1, 1, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 2, 2, 2, 2, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 3, 3, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 4, 4, 0));
 
   if (chrom) {
-    dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
-    dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 2));
+    dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
+    dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 2));
 
-    dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 3));
-    dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 3));
+    dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 3));
+    dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 3));
 
-    dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 4));
-    dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 4));
+    dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 4));
+    dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 4));
   }
 
   chi2_1 = 0e0; k = 0;
 
-  chi2_1 += scl_ksi[1]*sqr(dnu[k]); k++;
-  chi2_1 += scl_ksi[1]*sqr(dnu[k]); k++;
+  chi2_1 += scl_ksi[1]*sqr(dnu_vec[k]); k++;
+  chi2_1 += scl_ksi[1]*sqr(dnu_vec[k]); k++;
 
-  chi2_1 += scl_dnu[0]*sqr(dnu[k]); k++;
-  chi2_1 += scl_dnu[0]*sqr(dnu[k]); k++;
-  chi2_1 += scl_dnu[0]*sqr(dnu[k]); k++;
+  chi2_1 += scl_dnu[0]*sqr(dnu_vec[k]); k++;
+  chi2_1 += scl_dnu[0]*sqr(dnu_vec[k]); k++;
+  chi2_1 += scl_dnu[0]*sqr(dnu_vec[k]); k++;
 
-  chi2_1 += scl_dnu[1]*sqr(dnu[k]); k++;
-  chi2_1 += scl_dnu[1]*sqr(dnu[k]); k++;
-  chi2_1 += scl_dnu[1]*sqr(dnu[k]); k++;
-  chi2_1 += scl_dnu[1]*sqr(dnu[k]); k++;
+  chi2_1 += scl_dnu[1]*sqr(dnu_vec[k]); k++;
+  chi2_1 += scl_dnu[1]*sqr(dnu_vec[k]); k++;
+  chi2_1 += scl_dnu[1]*sqr(dnu_vec[k]); k++;
+  chi2_1 += scl_dnu[1]*sqr(dnu_vec[k]); k++;
 
-  chi2_1 += scl_dnu[2]*sqr(dnu[k]); k++;
-  chi2_1 += scl_dnu[2]*sqr(dnu[k]); k++;
-  chi2_1 += scl_dnu[2]*sqr(dnu[k]); k++;
-  chi2_1 += scl_dnu[2]*sqr(dnu[k]); k++;
-  chi2_1 += scl_dnu[2]*sqr(dnu[k]); k++;
+  chi2_1 += scl_dnu[2]*sqr(dnu_vec[k]); k++;
+  chi2_1 += scl_dnu[2]*sqr(dnu_vec[k]); k++;
+  chi2_1 += scl_dnu[2]*sqr(dnu_vec[k]); k++;
+  chi2_1 += scl_dnu[2]*sqr(dnu_vec[k]); k++;
+  chi2_1 += scl_dnu[2]*sqr(dnu_vec[k]); k++;
 
   if (chrom) {
-    chi2_1 += scl_ksi[2]*sqr(dnu[k]); k++;
-    chi2_1 += scl_ksi[2]*sqr(dnu[k]); k++;
+    chi2_1 += scl_ksi[2]*sqr(dnu_vec[k]); k++;
+    chi2_1 += scl_ksi[2]*sqr(dnu_vec[k]); k++;
 
-    chi2_1 += scl_ksi[3]*sqr(dnu[k]); k++;
-    chi2_1 += scl_ksi[3]*sqr(dnu[k]); k++;
+    chi2_1 += scl_ksi[3]*sqr(dnu_vec[k]); k++;
+    chi2_1 += scl_ksi[3]*sqr(dnu_vec[k]); k++;
 
-    chi2_1 += scl_ksi[4]*sqr(dnu[k]); k++;
-    chi2_1 += scl_ksi[4]*sqr(dnu[k]); k++;
+    chi2_1 += scl_ksi[4]*sqr(dnu_vec[k]); k++;
+    chi2_1 += scl_ksi[4]*sqr(dnu_vec[k]); k++;
   }
 
   if (chi2_1 < chi2) {
     printf("\nchi2: %21.15e -> %21.15e\n", chi2, chi2_1);
-    for (k = 1; k <= (int)dnu.size(); k++) {
-      printf(" %10.3e", dnu[k-1]);
+    for (k = 1; k <= (int)dnu_vec.size(); k++) {
+      printf(" %10.3e", dnu_vec[k-1]);
       switch (k) {
       case 2:
       case 5:
