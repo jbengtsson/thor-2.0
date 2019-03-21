@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 6
+#define NO 8
 
 #include "thor_lib.h"
 
@@ -38,15 +38,15 @@ const int n_prt  = 8;
 // Center of straight.
 const double
   beta_inj[]   = {8.7, 2.1},
-  A_max[]      = {7e-3, 2e-3},
+  A_max[]      = {6e-3, 2e-3},
   twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[] = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max    = 3e-2;
 
 const double
   scl_h[]            = {0e0, 0e0, 0e0},
-  scl_dnu[]          = {1e0, 1e0, 0e0, 0e0, 0e0},
-  scl_ksi[]          = {0e0, 1e5, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
+  scl_dnu[]          = {1e0, 1e0, 1e0, 0e0, 0e0},
+  scl_ksi[]          = {0e0, 1e8, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl          = 0e0;
 
 
@@ -520,6 +520,12 @@ double get_chi2(void)
   dnu.push_back(h_ijklm(K_re_scl, 1, 1, 2, 2, 0));
   dnu.push_back(h_ijklm(K_re_scl, 0, 0, 3, 3, 0));
 
+  dnu.push_back(h_ijklm(K_re_scl, 4, 4, 0, 0, 0));
+  dnu.push_back(h_ijklm(K_re_scl, 3, 3, 1, 1, 0));
+  dnu.push_back(h_ijklm(K_re_scl, 2, 2, 2, 2, 0));
+  dnu.push_back(h_ijklm(K_re_scl, 1, 1, 3, 3, 0));
+  dnu.push_back(h_ijklm(K_re_scl, 0, 0, 4, 4, 0));
+
   if (chrom) {
     dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
     dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 2));
@@ -543,6 +549,12 @@ double get_chi2(void)
   chi2_1 += scl_dnu[1]*sqr(dnu[k]); k++;
   chi2_1 += scl_dnu[1]*sqr(dnu[k]); k++;
 
+  chi2_1 += scl_dnu[2]*sqr(dnu[k]); k++;
+  chi2_1 += scl_dnu[2]*sqr(dnu[k]); k++;
+  chi2_1 += scl_dnu[2]*sqr(dnu[k]); k++;
+  chi2_1 += scl_dnu[2]*sqr(dnu[k]); k++;
+  chi2_1 += scl_dnu[2]*sqr(dnu[k]); k++;
+
   if (chrom) {
     chi2_1 += scl_ksi[2]*sqr(dnu[k]); k++;
     chi2_1 += scl_ksi[2]*sqr(dnu[k]); k++;
@@ -562,9 +574,10 @@ double get_chi2(void)
       case 2:
       case 5:
       case 9:
-      case 11:
-      case 13:
-      case 15: 
+      case 14:
+      case 16:
+      case 18: 
+      case 20: 
 	printf("\n");
 	prt_ln = true;
 	break;
@@ -681,12 +694,18 @@ void lat_select(void)
   }
 
   if (!false) {
+    // Sextupole Length is 0.1 m.
+
     // bn_prms.add_prm("sh1a", 4, -5e3, 5e3, 1.0);
     // bn_prms.add_prm("sh1b", 4, -5e3, 5e3, 1.0);
 
-    bn_prms.add_prm("sh2",  4, -5e3, 5e3, 1e0);
-    bn_prms.add_prm("s",    4, -5e3, 5e3, 1e0);
-    bn_prms.add_prm("of1",  4, -5e3, 5e3, 1e0);
+    bn_prms.add_prm("sh2",  4, -1e3/0.1, 1e3/0.1, 1e0);
+    bn_prms.add_prm("s",    4, -1e3/0.1, 1e3/0.1, 1e0);
+    bn_prms.add_prm("of1",  4, -1e3,     1e3,     1e0);
+
+    bn_prms.add_prm("sh2",  6, -1e6/0.1, 1e6/0.1, 1e0);
+    bn_prms.add_prm("s",    6, -1e6/0.1, 1e6/0.1, 1e0);
+    bn_prms.add_prm("of1",  6, -1e6,     1e6,     1e0);
   }
 
   if (false) {
