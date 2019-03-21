@@ -529,8 +529,10 @@ double get_chi2(void)
   if (chrom) {
     dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
     dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 2));
+
     dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 3));
     dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 3));
+
     dnu.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 4));
     dnu.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 4));
   }
