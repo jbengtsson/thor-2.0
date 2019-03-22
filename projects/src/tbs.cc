@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 6
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -39,14 +39,14 @@ const double
   A_max[]      = {3e-3, 1e-3},
   twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[] = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
-  delta_max    = 2e-2;
+  delta_max    = 2.5e-2;
 
 const double
   scl_h[]            = {0e0, 0e0, 0e0},
   scl_dnu[]          = {1e0, 1e0, 1e0, 0e0, 0e0},
-  scl_ksi[]          = {0e0, 1e5, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
+  scl_ksi[]          = {0e0, 0e5, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl          = 0e0,
-  scl_dnu_conf       = 1e0,
+  scl_dnu_conf       = 1e5,
   scl_dnu_delta_conf = 0e0;
 
 
@@ -278,7 +278,8 @@ double f_gauss_quad_2D(double x, double y)
 {
   int             k;
   long int        jj[ss_dim];
-  tps             dK, dnu[2], K_re_no_m_one, K_re_no;
+  double          dnu[2];
+  tps             dK;
   ss_vect<double> ps;
   ss_vect<tps>    Id;
 
@@ -290,21 +291,14 @@ double f_gauss_quad_2D(double x, double y)
 
 #if DNU
   for (k = 0; k < 2; k++) {
-    dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
+    dnu[k] = ((nus[k+3]-nus[k+3].cst())*ps).cst();
     // Compute absolute value.
-    if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
+    if (dnu[k] < 0e0) dnu[k] = -dnu[k];
   }
 
-  return (dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_])).cst();
+  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]);
 #else
-  Id.identity(); Id[6] = 0e0;
-  danot_(NO-1);
-  K_re_no_m_one = K_re*Id;
-  danot_(NO);
-  K_re_no = K_re*Id - K_re_no_m_one;
-  dK = K_re - K_re_no;
-  Id.identity(); Id[delta_] = 0e0;
-  dK = dK*Id;
+  dK = K_re;
   for (k = 0; k < ss_dim; k++)
     jj[k] = 0;
   jj[x_] = 1; jj[px_] = 1;
@@ -391,8 +385,10 @@ double gauss_quad_3D(double (*func)(const double, const double, const double),
 
 double f_gauss_quad_3D(double x, double y, double z)
 {
-  int             k, jj[ss_dim];
-  tps             dK, dnu[2], K_re_no_m_one, K_re_no, K_re_no_J;
+  int             k;
+  long int        jj[ss_dim];
+  double          dnu[2];
+  tps             dK;
   ss_vect<double> ps;
   ss_vect<tps>    Id;
 
@@ -405,23 +401,20 @@ double f_gauss_quad_3D(double x, double y, double z)
 
 #if DNU
   for (k = 0; k < 2; k++) {
-    dnu[k] = (nus[k+3]-nus[k+3].cst())*ps;
+    dnu[k] = ((nus[k+3]-nus[k+3].cst())*ps).cst();
     // Compute absolute value.
-    if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
+    if (dnu[k] < 0e0) dnu[k] = -dnu[k];
   }
 
-  return (dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*2e0*delta_max)).cst();
+  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*2e0*delta_max);
 #else
-  Id.identity(); Id[6] = 0e0;
-  danot_(NO-1);
-  K_re_no_m_one = K_re*Id;
-  danot_(NO);
-  K_re_no = K_re*Id - K_re_no_m_one;
-  dK = K_re - K_re_no;
-  Id.identity(); Id[delta_] = 0e0;
-  dK = dK - dK*Id;
-  Id.identity(); Id[x_] = Id[px_] = Id[y_] = Id[py_] = 0e0;
-  dK = dK - dK*Id;
+  dK = K_re;
+  for (k = 0; k < ss_dim; k++)
+    jj[k] = 0;
+  jj[x_] = 1; jj[px_] = 1;
+  dK.pook(jj, 0e0);
+  jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
+  dK.pook(jj, 0e0);
   // std::cout << std::scientific << std::setprecision(3)
   // 	    << "\n |dK| = " << dK << "\n";
   dK = dK*ps;
@@ -506,33 +499,29 @@ double get_chi2(const bool prt)
   dnu_vec.push_back(dnu);
   dnu_vec.push_back(dnu_delta);
 
-  if (!true) {
-    dnu_vec.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 1, 1, 0));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 2, 2, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 1, 1, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 2, 2, 0));
 
-    dnu_vec.push_back(h_ijklm(K_re_scl, 3, 3, 0, 0, 0));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 2, 2, 1, 1, 0));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 2, 2, 0));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 3, 3, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 3, 3, 0, 0, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 2, 2, 1, 1, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 2, 2, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 3, 3, 0));
 
-    dnu_vec.push_back(h_ijklm(K_re_scl, 4, 4, 0, 0, 0));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 3, 3, 1, 1, 0));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 2, 2, 2, 2, 0));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 3, 3, 0));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 4, 4, 0));
-  }
+  dnu_vec.push_back(h_ijklm(K_re_scl, 4, 4, 0, 0, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 3, 3, 1, 1, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 2, 2, 2, 2, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 3, 3, 0));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 4, 4, 0));
 
-  if (chrom) {
-    dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 2));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 2));
 
-    dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 3));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 3));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 3));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 3));
 
-    dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 4));
-    dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 4));
-  }
+  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 4));
+  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 4));
 
   chi2_1 = 0e0; k = 0;
 
@@ -573,20 +562,27 @@ double get_chi2(const bool prt)
   if (prt && (chi2_1 < chi2)) {
     printf("\nchi2: %21.15e -> %21.15e\n", chi2, chi2_1);
     for (k = 1; k <= (int)dnu_vec.size(); k++) {
-      printf(" %10.3e", dnu_vec[k-1]);
       switch (k) {
-      case 2:
-      case 4:
-      case 9:
-      case 14:
-      case 16:
-      case 18: 
-      case 20: 
-	printf("\n");
-	prt_ln = true;
+      case 1:  printf("\nksi:\n");
+	break;
+      case 3:  printf("\ntune conf.:\n");
+	break;
+      case 5:  printf("\ntune shift:\n");
+	break;
+      case 8: printf("\n");
+	break;
+      case 12: printf("\n");
+	break;
+      case 17: printf("\nksi nl:\n");
+	break;
+      case 19: printf("\n"); 
+	break;
+      case 21: printf("\n"); 
 	break;
       }
+      printf(" %10.3e", dnu_vec[k-1]);
     }
+    printf("\n");
   }
 
   return chi2_1;
@@ -626,7 +622,7 @@ double f_nl(double *bn)
 
   chi2_1 = get_chi2(true);
   if (chi2_1 < chi2) {
-    printf("bn:\n");
+    printf("\nbn:\n");
     bn_prms.prt_bn(bn);
     chi2 = chi2_1;
 
@@ -702,13 +698,13 @@ void lat_select(void)
     // bn_prms.add_prm("sh1a", 4, -5e3/0.1, 5e3/0.1, 1e1);
     // bn_prms.add_prm("sh1b", 4, -5e3/0.1, 5e3/0.1, 1e1);
 
-    bn_prms.add_prm("sh2",  4, -1e4/0.1, 1e4/0.1, 1e1);
-    bn_prms.add_prm("s",    4, -1e4/0.1, 1e4/0.1, 1e1);
-    bn_prms.add_prm("of1",  4, -1e4,     1e4,     1e1);
+    bn_prms.add_prm("sh2",  4, -1e3/0.1, 1e3/0.1, 1e1);
+    bn_prms.add_prm("s",    4, -1e3/0.1, 1e3/0.1, 1e1);
+    bn_prms.add_prm("of1",  4, -1e3,     1e3,     1e1);
 
-    // bn_prms.add_prm("sh2",  6, -1e6/0.1, 1e6/0.1, 1e0);
-    // bn_prms.add_prm("s",    6, -1e6/0.1, 1e6/0.1, 1e0);
-    // bn_prms.add_prm("of1",  6, -1e6,     1e6,     1e0);
+    // bn_prms.add_prm("sh2",  6, -1e6/0.1, 1e6/0.1, 1e2);
+    // bn_prms.add_prm("s",    6, -1e6/0.1, 1e6/0.1, 1e2);
+    // bn_prms.add_prm("of1",  6, -1e6,     1e6,     1e2);
   }
 
   if (false) {
@@ -755,7 +751,7 @@ int main(int argc, char *argv[])
   Id_scl.identity();
   for (j = 0; j < 4; j++)
     Id_scl[j] *= sqrt(twoJ[j/2]);
-  Id_scl[delta_] = 0e0;
+  Id_scl[delta_] *= delta_max;
 
   Id_delta_scl.identity();
   for (j = 0; j < 4; j++)
