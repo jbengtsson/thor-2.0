@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 5
+#define NO 6
 
 #include "thor_lib.h"
 
@@ -15,7 +15,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU 0
+#define DNU 1
 
 
 extern tps          K, g;
@@ -31,9 +31,7 @@ tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 tps          K_re_delta_scl;
 ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
-const bool scale = false;
-
-const int n_prt  = 8;
+const int n_prt = 8;
 
 // Center of straight.
 const double
@@ -46,10 +44,10 @@ const double
 const double
   scl_h[]            = {0e0, 0e0, 0e0},
   scl_dnu[]          = {1e0, 1e0, 1e0, 0e0, 0e0},
-  scl_ksi[]          = {0e0, 1e8, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
+  scl_ksi[]          = {0e0, 1e5, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl          = 0e0,
-  scl_dnu_conf       = 1e5,
-  scl_dnu_delta_conf = 1e5;
+  scl_dnu_conf       = 1e0,
+  scl_dnu_delta_conf = 0e0;
 
 
 double bn_internal(const double bn_bounded,
@@ -62,15 +60,12 @@ private:
 
 public:
   int                 n_bn;
-  std::vector<double> bn_min, bn_max, bn_scl, dbn;
+  std::vector<double> bn_min, bn_max, dbn;
   std::vector<int>    Fnum, n;
 
   void add_prm(const std::string Fname, const int n,
-	       const double bn_min, const double bn_max, const double bn_scl,
-	       const double dbn);
+	       const double bn_min, const double bn_max, const double dbn);
   void ini_prm(double *bn);
-  void set_prm_dep(const int k) const;
-  void clr_prm_dep(const int k) const;
   void set_prm(double *bn) const;
   void set_dparam(const int k, const double eps) const;
   void prt_bn(double *bn) const;
@@ -83,13 +78,12 @@ param_type bn_prms;
 
 void param_type::add_prm(const std::string Fname, const int n,
 			 const double bn_min, const double bn_max,
-			 const double bn_scl, const double dbn)
+			 const double dbn)
 {
   Fnum.push_back(get_Fnum(Fname.c_str()));
   this->n.push_back(n);
   this->bn_min.push_back(bn_min);
   this->bn_max.push_back(bn_max);
-  this->bn_scl.push_back(bn_scl);
   this->dbn.push_back(dbn);
   n_bn = Fnum.size();
 }
@@ -101,40 +95,22 @@ void param_type::ini_prm(double *bn)
 
   printf("\nInitial bn (scale factor in parenthesis):\n");
   printf("  No of Families: %1d\n", n_bn);
-  for (i = 1; i <= n_bn; i++) {
-    bn[i] = get_bn(Fnum[i-1], 1, n[i-1]);
+  for (i = 0; i < n_bn; i++) {
+    bn[i+1] = get_bn(Fnum[i], 1, n[i]);
 
     // Bounded.
-    if ((bn_min[i-1] <= bn[i]) && (bn[i] <= bn_max[i-1]))
-      bn[i] = bn_internal(bn[i], bn_min[i-1], bn_max[i-1]);
+    if ((bn_min[i] <= bn[i+1]) && (bn[i+1] <= bn_max[i]))
+      bn[i+1] = bn_internal(bn[i+1], bn_min[i], bn_max[i]);
     else {
-      loc = get_loc(Fnum[i-1], 1);
+      loc = get_loc(Fnum[i], 1);
       printf("\nini_prm:\n outside range ");
       printf(" %s %10.3e [%10.3e, %10.3e]\n",
-	     elem[loc].Name, bn[i], bn_min[i-1], bn_max[i-1]);
+	     elem[loc].Name, bn[i+1], bn_min[i], bn_max[i]);
       exit(1);
     }
   }
 
   prt_bn(bn);
-}
-
-
-void param_type::set_prm_dep(const int k) const
-{
-  int j;
-
-  for (j = 1; j <= get_n_Kids(Fnum[k]); j++)
-    set_bn_par(Fnum[k], j, n[k], 7);
-}
-
-
-void param_type::clr_prm_dep(const int k) const
-{
-  int j;
-
-  for (j = 1; j <= get_n_Kids(Fnum[k]); j++)
-    clr_bn_par(Fnum[k], j, n[k]);
 }
 
 
@@ -145,10 +121,10 @@ void param_type::set_prm(double *bn) const
 
   const bool prt = false;
 
-  for (i = 1; i <= n_bn; i++) {
+  for (i = 0; i < n_bn; i++) {
     // Bounded.
-    bn_ext = bn_bounded(bn[i], bn_min[i-1], bn_max[i-1]);
-    set_bn(Fnum[i-1], n[i-1], bn_ext);
+    bn_ext = bn_bounded(bn[i+1], bn_min[i], bn_max[i]);
+    set_bn(Fnum[i], n[i], bn_ext);
   }
 
   if (prt) {
@@ -160,10 +136,17 @@ void param_type::set_prm(double *bn) const
 
 void param_type::set_dparam(const int k, double eps) const
 {
+  char ch;
+
   const bool prt = false;
 
-  if (prt) printf("set_dparam: %12.5e\n", eps);
-  set_dbn(Fnum[k-1], n[k-1], eps);
+  if (prt) {
+    ch = (eps >= 0e0)? '+' : '-';
+    printf("\nset_dparam:\n  %12.5e %c %11.5e",
+	   get_bn(Fnum[k], 1, n[k]), ch, fabs(eps));
+  }
+  set_dbn(Fnum[k], n[k], eps);
+  if (prt) printf(" = %12.5e\n", get_bn(Fnum[k], 1, n[k]));
 }
 
 
@@ -172,9 +155,9 @@ void param_type::prt_bn(double *bn) const
   int    i;
   double bn_ext;
 
-  for (i = 1; i <= n_bn; i++) {
+  for (i = 0; i < n_bn; i++) {
     // Bounded.
-    bn_ext = bn_bounded(bn[i], bn_min[i-1], bn_max[i-1]);
+    bn_ext = bn_bounded(bn[i+1], bn_min[i], bn_max[i]);
     printf(" %12.5e", bn_ext);
   }
   printf("\n");
@@ -247,13 +230,13 @@ double bn_bounded(const double bn_internal,
 // ---> Tune confinement.
 
 static double xsav_2D;
-static tps (*func_save_2D)(const double, const double);
+static double (*func_save_2D)(const double, const double);
 
-tps gauss_quad_2D(tps (*func)(const double), const double a, const double b)
+double gauss_quad_2D(double (*func)(const double),
+		     const double a, const double b)
 {
   int    j;
-  double xr, xm, dx;
-  tps    s;
+  double xr, xm, dx, s;
 
   static double
     x[] =
@@ -275,31 +258,32 @@ double gauss_quad_2D_y0(const double x) { return 0e0; }
 
 double gauss_quad_2D_y1(const double x) { return twoJ[Y_]; }
 
-tps gauss_quad_2D_fy(const double y)  { return (*func_save_2D)(xsav_2D, y); }
+double gauss_quad_2D_fy(const double y)  { return (*func_save_2D)(xsav_2D, y); }
 
-tps gauss_quad_2D_fx(const double x)
+double gauss_quad_2D_fx(const double x)
 {
   xsav_2D = x;
   return gauss_quad_2D(gauss_quad_2D_fy, gauss_quad_2D_y0(x),
 		       gauss_quad_2D_y1(x));
 }
 
-tps gauss_quad_2D(tps (*func)(const double, const double),
-		  const double x0, const double x1)
+double gauss_quad_2D(double (*func)(const double, const double),
+		     const double x0, const double x1)
 {
   func_save_2D = func;
   return gauss_quad_2D(gauss_quad_2D_fx, x0, x1);
 }
 
-tps f_gauss_quad_2D(double x, double y)
+double f_gauss_quad_2D(double x, double y)
 {
-  int          k;
-  long int     jj[ss_dim];
-  tps          dK, dnu[2], K_re_no_m_one, K_re_no;
-  ss_vect<tps> ps, Id;
+  int             k;
+  long int        jj[ss_dim];
+  tps             dK, dnu[2], K_re_no_m_one, K_re_no;
+  ss_vect<double> ps;
+  ss_vect<tps>    Id;
 
   // printf("f_gauss_quad_2D\n");
-  ps.identity();
+  ps.zero();
   ps[x_] = ps[px_] = sqrt(x);
   ps[y_] = ps[py_] = sqrt(y);
   ps[delta_] = 0e0;
@@ -311,7 +295,7 @@ tps f_gauss_quad_2D(double x, double y)
     if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
   }
 
-  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]);
+  return (dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_])).cst();
 #else
   Id.identity(); Id[6] = 0e0;
   danot_(NO-1);
@@ -335,18 +319,18 @@ tps f_gauss_quad_2D(double x, double y)
   // std::cout << std::scientific << std::setprecision(3)
   // 	      << "\n |dK| = " << dK << "\n";
 
-  return dK/(twoJ[X_]*twoJ[Y_]);
+  return (dK/(twoJ[X_]*twoJ[Y_])).cst();
 #endif
 }
 
 static double xsav_3D, ysav_3D;
-static tps (*func_save_3D)(const double, const double, const double);
+static double (*func_save_3D)(const double, const double, const double);
 
-tps gauss_quad_3D(tps (*func)(const double), const double a, const double b)
+double gauss_quad_3D(double (*func)(const double),
+		     const double a, const double b)
 {
   int    j;
-  double xr, xm, dx;
-  tps    s;
+  double xr, xm, dx, s;
 
   static double
     x[] =
@@ -378,12 +362,12 @@ double gauss_quad_3D_z1(const double x, const double y)
   return delta_max;
 }
 
-tps gauss_quad_3D_fz(const double z)
+double gauss_quad_3D_fz(const double z)
 {
   return (*func_save_3D)(xsav_3D, ysav_3D, z);
 }
 
-tps gauss_quad_3D_fy(const double y)
+double gauss_quad_3D_fy(const double y)
 {
   ysav_3D = y;
   return gauss_quad_3D(gauss_quad_3D_fz,
@@ -391,29 +375,30 @@ tps gauss_quad_3D_fy(const double y)
 		       gauss_quad_3D_z1(xsav_3D, y));
 }
 
-tps gauss_quad_3D_fx(const double x)
+double gauss_quad_3D_fx(const double x)
 {
   xsav_3D = x;
   return gauss_quad_3D(gauss_quad_3D_fy, gauss_quad_3D_y0(x),
 		       gauss_quad_3D_y1(x));
 }
 
-tps gauss_quad_3D(tps (*func)(const double, const double, const double),
-		  const double x0, const double x1)
+double gauss_quad_3D(double (*func)(const double, const double, const double),
+		     const double x0, const double x1)
 {
   func_save_3D = func;
   return gauss_quad_3D(gauss_quad_3D_fx, x0, x1);
 }
 
-tps f_gauss_quad_3D(double x, double y, double z)
+double f_gauss_quad_3D(double x, double y, double z)
 {
-  int          k, jj[ss_dim];
-  tps          dK, dnu[2], K_re_no_m_one, K_re_no, K_re_no_J;
-  ss_vect<tps> Id, ps;
+  int             k, jj[ss_dim];
+  tps             dK, dnu[2], K_re_no_m_one, K_re_no, K_re_no_J;
+  ss_vect<double> ps;
+  ss_vect<tps>    Id;
 
   // printf("f_gauss_quad_3D\n");
 
-  ps.identity();
+  ps.zero();
   ps[x_] = ps[px_] = sqrt(x);
   ps[y_] = ps[py_] = sqrt(y);
   ps[delta_] = z;
@@ -425,7 +410,7 @@ tps f_gauss_quad_3D(double x, double y, double z)
     if (dnu[k].cst() < 0e0) dnu[k] = -dnu[k];
   }
 
-  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*2e0*delta_max);
+  return (dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*2e0*delta_max)).cst();
 #else
   Id.identity(); Id[6] = 0e0;
   danot_(NO-1);
@@ -445,7 +430,7 @@ tps f_gauss_quad_3D(double x, double y, double z)
   // std::cout << std::scientific << std::setprecision(3)
   // 	    << "\n |dK| = " << dK << "\n";
 
-  return dK/(twoJ[X_]*twoJ[Y_]*2e0*delta_max);
+  return (dK/(twoJ[X_]*twoJ[Y_]*2e0*delta_max)).cst();
 #endif
 }
 
@@ -494,12 +479,11 @@ double get_b(const std::string &label, const double scale, const tps &t,
 }
 
 
-double get_chi2(void)
+double get_chi2(const bool prt)
 {
   bool                prt_ln = false;
   int                 k;
-  double              chi2_1;
-  tps                 dnu, dnu_delta;
+  double              chi2_1, dnu, dnu_delta;
   std::vector<double> dnu_vec;
 
   const bool chrom = false;
@@ -516,8 +500,11 @@ double get_chi2(void)
   dnu = gauss_quad_2D(f_gauss_quad_2D, 0e0, twoJ[X_]);
   dnu_delta = gauss_quad_3D(f_gauss_quad_3D, 0e0, twoJ[X_]);
 
-  dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 1));
-  dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 1));
+  dnu_vec.push_back(h_ijklm(K_re, 1, 1, 0, 0, 1));
+  dnu_vec.push_back(h_ijklm(K_re, 0, 0, 1, 1, 1));
+
+  dnu_vec.push_back(dnu);
+  dnu_vec.push_back(dnu_delta);
 
   if (!true) {
     dnu_vec.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
@@ -546,9 +533,6 @@ double get_chi2(void)
     dnu_vec.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 4));
     dnu_vec.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 4));
   }
-
-  dnu_vec.push_back(dnu.cst());
-  dnu_vec.push_back(dnu_delta.cst());
 
   chi2_1 = 0e0; k = 0;
 
@@ -586,7 +570,7 @@ double get_chi2(void)
     chi2_1 += scl_ksi[4]*sqr(dnu_vec[k]); k++;
   }
 
-  if (chi2_1 < chi2) {
+  if (prt && (chi2_1 < chi2)) {
     printf("\nchi2: %21.15e -> %21.15e\n", chi2, chi2_1);
     for (k = 1; k <= (int)dnu_vec.size(); k++) {
       printf(" %10.3e", dnu_vec[k-1]);
@@ -617,14 +601,13 @@ void df_nl(double *bn, double *df)
   const bool prt = !false;
 
   bn_prms.set_prm(bn);
-  for (k = 1; k <= bn_prms.n_bn; k++) {
-    eps = (k <= 3)? 1e-2 : 1e0;
-    // eps = (k <= 6)? 1e0 : 1e2;
+  for (k = 0; k < bn_prms.n_bn; k++) {
+    eps = bn_prms.dbn[k];
     bn_prms.set_dparam(k, eps);
-    df[k] = get_chi2();
+    df[k+1] = get_chi2(false);
     bn_prms.set_dparam(k, -2e0*eps);
-    df[k] -= get_chi2();
-    df[k] /= 2e0*eps;
+    df[k+1] -= get_chi2(false);
+    df[k+1] /= 2e0*eps;
 
     bn_prms.set_dparam(k, eps);
   }
@@ -634,14 +617,14 @@ void df_nl(double *bn, double *df)
 }
 
 
-double f_nl(double bn[])
+double f_nl(double *bn)
 {
   double chi2_1;
 
   n_iter++;
   bn_prms.set_prm(bn);
 
-  chi2_1 = get_chi2();
+  chi2_1 = get_chi2(true);
   if (chi2_1 < chi2) {
     printf("bn:\n");
     bn_prms.prt_bn(bn);
@@ -656,7 +639,7 @@ double f_nl(double bn[])
 
 
 void conj_grad(param_type &bn_prms, double (*f)(double *),
-		   void df(double *, double *))
+	       void df(double *, double *))
 {
   int          iter;
   double       *bn, fret;
@@ -707,21 +690,21 @@ void powell(param_type &bn_prms, double (*f)(double *))
 void lat_select(void)
 {
 
-  if (true) {
-    bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e0, 1e-2);
-    bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e0, 1e-2);
-    bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e0, 1e-2);
+  if (!true) {
+    bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e-2);
+    bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e-2);
+    bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e-2);
   }
 
-  if (false) {
+  if (!false) {
     // Sextupole Length is 0.1 m.
 
-    // bn_prms.add_prm("sh1a", 4, -5e3, 5e3, 1e0, 1e0);
-    // bn_prms.add_prm("sh1b", 4, -5e3, 5e3, 1e0, 1e0);
+    // bn_prms.add_prm("sh1a", 4, -5e3/0.1, 5e3/0.1, 1e1);
+    // bn_prms.add_prm("sh1b", 4, -5e3/0.1, 5e3/0.1, 1e1);
 
-    bn_prms.add_prm("sh2",  4, -1e3/0.1, 1e3/0.1, 1e0, 1e0);
-    bn_prms.add_prm("s",    4, -1e3/0.1, 1e3/0.1, 1e0, 1e0);
-    bn_prms.add_prm("of1",  4, -1e3,     1e3,     1e0, 1e0);
+    bn_prms.add_prm("sh2",  4, -1e4/0.1, 1e4/0.1, 1e1);
+    bn_prms.add_prm("s",    4, -1e4/0.1, 1e4/0.1, 1e1);
+    bn_prms.add_prm("of1",  4, -1e4,     1e4,     1e1);
 
     // bn_prms.add_prm("sh2",  6, -1e6/0.1, 1e6/0.1, 1e0);
     // bn_prms.add_prm("s",    6, -1e6/0.1, 1e6/0.1, 1e0);
@@ -729,20 +712,20 @@ void lat_select(void)
   }
 
   if (false) {
-    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e0, 1e0);
-    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e0, 1e0);
-    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e0, 1e0);
+    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e0);
+    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e0);
+    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e0);
   }
 
   if (false) {
-    bn_prms.add_prm("sf1", 5, -1e4, 1e4, 1e0, 1e1);
-    bn_prms.add_prm("sd1", 5, -1e4, 1e4, 1e0, 1e1);
-    bn_prms.add_prm("sd2", 5, -1e4, 1e4, 1e0, 1e1);
+    bn_prms.add_prm("sf1", 5, -1e4, 1e4, 1e1);
+    bn_prms.add_prm("sd1", 5, -1e4, 1e4, 1e1);
+    bn_prms.add_prm("sd2", 5, -1e4, 1e4, 1e1);
   }
 
-  // bn_prms.add_prm("sf1", 6, 1e4, 1e0, 1e2);
-  // bn_prms.add_prm("sd1", 6, 1e4, 1e0, 1e2);
-  // bn_prms.add_prm("sd2", 6, 1e4, 1e0, 1e2);
+  // bn_prms.add_prm("sf1", 6, 1e4, 1e2);
+  // bn_prms.add_prm("sd1", 6, 1e4, 1e2);
+  // bn_prms.add_prm("sd2", 6, 1e4, 1e2);
 }
 
 
@@ -772,7 +755,7 @@ int main(int argc, char *argv[])
   Id_scl.identity();
   for (j = 0; j < 4; j++)
     Id_scl[j] *= sqrt(twoJ[j/2]);
-  Id_scl[delta_] *= delta_max;
+  Id_scl[delta_] = 0e0;
 
   Id_delta_scl.identity();
   for (j = 0; j < 4; j++)
