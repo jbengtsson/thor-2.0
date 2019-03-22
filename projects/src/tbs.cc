@@ -38,10 +38,10 @@ const int n_prt  = 8;
 // Center of straight.
 const double
   beta_inj[]   = {8.7, 2.1},
-  A_max[]      = {6e-3, 2e-3},
+  A_max[]      = {3e-3, 1e-3},
   twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[] = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
-  delta_max    = 3e-2;
+  delta_max    = 2e-2;
 
 const double
   scl_h[]            = {0e0, 0e0, 0e0},
@@ -49,7 +49,7 @@ const double
   scl_ksi[]          = {0e0, 1e8, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl          = 0e0,
   scl_dnu_conf       = 1e5,
-  scl_dnu_delta_conf = 0e0;
+  scl_dnu_delta_conf = 1e5;
 
 
 double bn_internal(const double bn_bounded,
@@ -619,8 +619,8 @@ void df_nl(double *bn, double *df)
 
   bn_prms.set_prm(bn);
   for (k = 1; k <= bn_prms.n_bn; k++) {
-    // eps = (k <= 0)? 1e-2 : 1e0;
-    eps = (k <= 3)? 1e0 : 1e2;
+    eps = (k <= 3)? 1e-2 : 1e0;
+    // eps = (k <= 6)? 1e0 : 1e2;
     bn_prms.set_dparam(k, eps);
     df[k] = get_chi2();
     bn_prms.set_dparam(k, -2e0*eps);
@@ -708,7 +708,7 @@ void powell(param_type &bn_prms, double (*f)(double *))
 void lat_select(void)
 {
 
-  if (!true) {
+  if (true) {
     bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e0);
     bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e0);
     bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e0);
@@ -729,7 +729,7 @@ void lat_select(void)
     // bn_prms.add_prm("of1",  6, -1e6,     1e6,     1e0);
   }
 
-  if (false) {
+  if (!false) {
     bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e0);
     bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e0);
     bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e0);
