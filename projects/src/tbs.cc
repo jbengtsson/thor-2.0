@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -62,11 +62,12 @@ private:
 
 public:
   int                 n_bn;
-  std::vector<double> bn_min, bn_max, bn_scl;
+  std::vector<double> bn_min, bn_max, bn_scl, dbn;
   std::vector<int>    Fnum, n;
 
   void add_prm(const std::string Fname, const int n,
-	       const double bn_min, const double bn_max, const double bn_scl);
+	       const double bn_min, const double bn_max, const double bn_scl,
+	       const double dbn);
   void ini_prm(double *bn);
   void set_prm_dep(const int k) const;
   void clr_prm_dep(const int k) const;
@@ -82,13 +83,14 @@ param_type bn_prms;
 
 void param_type::add_prm(const std::string Fname, const int n,
 			 const double bn_min, const double bn_max,
-			 const double bn_scl)
+			 const double bn_scl, const double dbn)
 {
   Fnum.push_back(get_Fnum(Fname.c_str()));
   this->n.push_back(n);
   this->bn_min.push_back(bn_min);
   this->bn_max.push_back(bn_max);
   this->bn_scl.push_back(bn_scl);
+  this->dbn.push_back(dbn);
   n_bn = Fnum.size();
 }
 
@@ -601,9 +603,6 @@ double get_chi2(void)
 	break;
       }
     }
-    if (!prt_ln) printf("\n");
-    printf("\n|dnu|       = %9.3e\n", dnu.cst());
-    printf("|dnu_delta| = %9.3e\n", dnu_delta.cst());
   }
 
   return chi2_1;
@@ -709,41 +708,41 @@ void lat_select(void)
 {
 
   if (true) {
-    bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e0);
-    bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e0);
-    bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e0);
+    bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e0, 1e-2);
+    bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e0, 1e-2);
+    bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e0, 1e-2);
   }
 
-  if (!false) {
+  if (false) {
     // Sextupole Length is 0.1 m.
 
-    // bn_prms.add_prm("sh1a", 4, -5e3, 5e3, 1.0);
-    // bn_prms.add_prm("sh1b", 4, -5e3, 5e3, 1.0);
+    // bn_prms.add_prm("sh1a", 4, -5e3, 5e3, 1e0, 1e0);
+    // bn_prms.add_prm("sh1b", 4, -5e3, 5e3, 1e0, 1e0);
 
-    bn_prms.add_prm("sh2",  4, -1e3/0.1, 1e3/0.1, 1e0);
-    bn_prms.add_prm("s",    4, -1e3/0.1, 1e3/0.1, 1e0);
-    bn_prms.add_prm("of1",  4, -1e3,     1e3,     1e0);
+    bn_prms.add_prm("sh2",  4, -1e3/0.1, 1e3/0.1, 1e0, 1e0);
+    bn_prms.add_prm("s",    4, -1e3/0.1, 1e3/0.1, 1e0, 1e0);
+    bn_prms.add_prm("of1",  4, -1e3,     1e3,     1e0, 1e0);
 
     // bn_prms.add_prm("sh2",  6, -1e6/0.1, 1e6/0.1, 1e0);
     // bn_prms.add_prm("s",    6, -1e6/0.1, 1e6/0.1, 1e0);
     // bn_prms.add_prm("of1",  6, -1e6,     1e6,     1e0);
   }
 
-  if (!false) {
-    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e0);
-    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e0);
-    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e0);
+  if (false) {
+    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e0, 1e0);
+    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e0, 1e0);
+    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e0, 1e0);
   }
 
   if (false) {
-    bn_prms.add_prm("sf1", 5, -1e4, 1e4, 1e0);
-    bn_prms.add_prm("sd1", 5, -1e4, 1e4, 1e0);
-    bn_prms.add_prm("sd2", 5, -1e4, 1e4, 1e0);
+    bn_prms.add_prm("sf1", 5, -1e4, 1e4, 1e0, 1e1);
+    bn_prms.add_prm("sd1", 5, -1e4, 1e4, 1e0, 1e1);
+    bn_prms.add_prm("sd2", 5, -1e4, 1e4, 1e0, 1e1);
   }
 
-  // bn_prms.add_prm("sf1", 6, 1e4, 1e0);
-  // bn_prms.add_prm("sd1", 6, 1e4, 1e0);
-  // bn_prms.add_prm("sd2", 6, 1e4, 1e0);
+  // bn_prms.add_prm("sf1", 6, 1e4, 1e0, 1e2);
+  // bn_prms.add_prm("sd1", 6, 1e4, 1e0, 1e2);
+  // bn_prms.add_prm("sd2", 6, 1e4, 1e0, 1e2);
 }
 
 
