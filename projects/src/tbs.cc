@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 4
+#define NO 6
 
 #include "thor_lib.h"
 
@@ -15,7 +15,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU 1
+#define DNU 0
 
 
 extern tps          K, g;
@@ -43,7 +43,7 @@ const double
 
 const double
   scl_h[]            = {0e0, 0e0, 0e0},
-  scl_dnu[]          = {1e0, 1e0, 1e0, 0e0, 0e0},
+  scl_dnu[]          = {1e0, 1e0, 1e0, 1e0, 1e0},
   scl_ksi[]          = {0e0, 0e5, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl          = 0e0,
   scl_dnu_conf       = 1e5,
@@ -752,8 +752,8 @@ double get_chi2(const bool prt)
   }
 
   if (prt && (chi2_1 < chi2)) {
-    printf("\nchi2: %21.15e -> %21.15e\n", chi2, chi2_1);
     prt_dnu();
+    printf("\nchi2: %21.15e -> %21.15e\n", chi2, chi2_1);
   }
 
   return chi2_1;
