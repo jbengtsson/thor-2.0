@@ -15,7 +15,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU 0
+#define DNU 1
 
 
 extern tps          K, g;
@@ -44,9 +44,13 @@ const double
 const double
   scl_h[]            = {0e0, 0e0, 0e0},
   scl_dnu[]          = {1e0, 1e0, 1e0, 1e0, 1e0},
-  scl_ksi[]          = {0e0, 0e5, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
+  scl_ksi[]          = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl          = 0e0,
-  scl_dnu_conf       = 1e5,
+#if DNU
+  scl_dnu_conf       = 1e6,
+#else
+  scl_dnu_conf       = 0e-7,
+#endif
   scl_dnu_delta_conf = 0e0;
 
 
@@ -278,25 +282,20 @@ double f_gauss_quad_2D(double x, double y)
 {
   int             k;
   long int        jj[ss_dim];
-  double          dnu[2];
+  double          dnu_xy, dK_abs;
   tps             dK;
   ss_vect<double> ps;
-  ss_vect<tps>    Id;
 
-  // printf("f_gauss_quad_2D\n");
+  const bool prt = false;
+
+  if (prt) printf("f_gauss_quad_2D\n");
   ps.zero();
-  ps[x_] = ps[px_] = sqrt(x);
-  ps[y_] = ps[py_] = sqrt(y);
-  ps[delta_] = 0e0;
+  ps[x_] = ps[px_] = sqrt(x); ps[y_] = ps[py_] = sqrt(y); ps[delta_] = 0e0;
 
 #if DNU
-  for (k = 0; k < 2; k++) {
-    dnu[k] = ((nus[k+3]-nus[k+3].cst())*ps).cst();
-    // Compute absolute value.
-    if (dnu[k] < 0e0) dnu[k] = -dnu[k];
-  }
+  dnu_xy = abs(((nus[3]-nus[3].cst())*(nus[4]-nus[4].cst()))*ps);
 
-  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]);
+  return dnu_xy/(twoJ[X_]*twoJ[Y_]);
 #else
   dK = K_re;
   for (k = 0; k < ss_dim; k++)
@@ -305,15 +304,15 @@ double f_gauss_quad_2D(double x, double y)
   dK.pook(jj, 0e0);
   jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
   dK.pook(jj, 0e0);
-  // std::cout << std::scientific << std::setprecision(3)
-  // 	    << std::setw(11) << dK << "\n";
-  dK = dK*ps;
-  // Compute absolute value.
-  if (dK.cst() < 0e0) dK = -dK;
-  // std::cout << std::scientific << std::setprecision(3)
-  // 	      << "\n |dK| = " << dK << "\n";
+  if (prt)
+    std::cout << std::scientific << std::setprecision(3)
+	      << std::setw(11) << dK << "\n";
+  dK_abs = abs(dK*ps);
+  if (prt)
+    std::cout << std::scientific << std::setprecision(3)
+  	      << "\n |dK| = " << dK_abs << "\n";
 
-  return (dK/(twoJ[X_]*twoJ[Y_])).cst();
+  return dK_abs/(twoJ[X_]*twoJ[Y_]);
 #endif
 }
 
@@ -344,7 +343,7 @@ double gauss_quad_3D(double (*func)(const double),
 
 double gauss_quad_3D_y0(const double x) { return 0e0; }
 
-double gauss_quad_3D_y1(const double x) { return twoJ[Y_]; }
+double gauss_quad_3D_y1(const double x) { return twoJ_delta[Y_]; }
 
 double gauss_quad_3D_z0(const double x, const double y)
 {
@@ -387,26 +386,24 @@ double f_gauss_quad_3D(double x, double y, double z)
 {
   int             k;
   long int        jj[ss_dim];
-  double          dnu[2];
+  double          dnu_xy, dK_abs;
   tps             dK;
   ss_vect<double> ps;
-  ss_vect<tps>    Id;
 
-  // printf("f_gauss_quad_3D\n");
+  const bool prt = false;
+
+  if (prt) printf("f_gauss_quad_3D\n");
 
   ps.zero();
-  ps[x_] = ps[px_] = sqrt(x);
-  ps[y_] = ps[py_] = sqrt(y);
-  ps[delta_] = z;
+  ps[x_] = ps[px_] = sqrt(x); ps[y_] = ps[py_] = sqrt(y); ps[delta_] = z;
+  if (prt)
+    std::cout << std::scientific << std::setprecision(3)
+	      << "\nps:\n" << std::setw(11) << ps << "\n";
 
 #if DNU
-  for (k = 0; k < 2; k++) {
-    dnu[k] = ((nus[k+3]-nus[k+3].cst())*ps).cst();
-    // Compute absolute value.
-    if (dnu[k] < 0e0) dnu[k] = -dnu[k];
-  }
+  dnu_xy = abs(((nus[3]-nus[3].cst())*(nus[4]-nus[4].cst()))*ps);
 
-  return dnu[X_]*dnu[Y_]/(twoJ[X_]*twoJ[Y_]*2e0*delta_max);
+  return dnu_xy/(twoJ[X_]*twoJ[Y_]*2e0*delta_max);
 #else
   dK = K_re;
   for (k = 0; k < ss_dim; k++)
@@ -415,15 +412,15 @@ double f_gauss_quad_3D(double x, double y, double z)
   dK.pook(jj, 0e0);
   jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
   dK.pook(jj, 0e0);
-  // std::cout << std::scientific << std::setprecision(3)
-  // 	    << "\n |dK| = " << dK << "\n";
-  dK = dK*ps;
-  // Compute absolute value.
-  if (dK.cst() < 0e0) dK = -dK;
-  // std::cout << std::scientific << std::setprecision(3)
-  // 	    << "\n |dK| = " << dK << "\n";
+  if (prt)
+    std::cout << std::scientific << std::setprecision(3)
+	      << "\n |dK| = " << dK << "\n";
+  dK_abs = abs(dK*ps);
+  if (prt)
+    std::cout << std::scientific << std::setprecision(3)
+	      << "\n |dK| = " << dK_abs << "\n";
 
-  return (dK/(twoJ[X_]*twoJ[Y_]*2e0*delta_max)).cst();
+  return dK_abs/(twoJ[X_]*twoJ[Y_]*2e0*delta_max);
 #endif
 }
 
@@ -475,8 +472,10 @@ double get_b(const std::string &label, const double scale, const tps &t,
 void get_dK(std::vector<double> &dK)
 {
 
-  dK.push_back(h_ijklm(K_re, 1, 1, 0, 0, 1));
-  dK.push_back(h_ijklm(K_re, 0, 0, 1, 1, 1));
+  dK.clear();
+
+  dK.push_back(h_ijklm(nus[3], 0, 0, 0, 0, 1));
+  dK.push_back(h_ijklm(nus[4], 0, 0, 0, 0, 1));
 
   dK.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
   dK.push_back(h_ijklm(K_re_scl, 1, 1, 1, 1, 0));
@@ -506,6 +505,8 @@ void get_dK(std::vector<double> &dK)
 
 void prt_dnu(void)
 {
+
+  const bool chrom = !true;
 
   printf("\ndnu(2J=[%10.3e, %10.3e]):\n", twoJ[X_], twoJ[Y_]);
   printf("   k_22000    k_11110    k_00220\n");
@@ -563,108 +564,110 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[4], 1, 1, 3, 3, 0),
 	 h_ijklm(nus_scl[4], 0, 0, 4, 4, 0));
 
-  printf("\nksi(delta=%3.1f%%):\n", 1e2*delta_max);
-  printf("   k_11001    k_00111    k_22001    k_11111    k_00221\n");
-  printf("   k_11002    k_00112    k_22002    k_11112    k_00222"
-	 "   k_33002    k_22112    k_11222    k_00332\n");
-  printf("   k_11003    k_00113    k_22003    k_11113    k_00223"
-	 "   k_33003    k_22113    k_11223    k_00333\n");
-  printf("   k_11004    k_00114    k_22004    k_11114    k_00224"
-	 "   k_33004    k_22114    k_11224    k_00334\n");
-  printf("   k_11005    k_00115    k_22005    k_11115    k_00225"
-	 "   k_33005    k_22115    k_11225    k_00335\n");
-  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e\n",
-	 h_ijklm(K_re_scl, 1, 1, 0, 0, 1), h_ijklm(K_re_scl, 0, 0, 1, 1, 1),
-	 h_ijklm(K_re_scl, 2, 2, 0, 0, 1), h_ijklm(K_re_scl, 1, 1, 1, 1, 1),
-	 h_ijklm(K_re_scl, 0, 0, 2, 2, 1));
-  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
-	 h_ijklm(K_re_scl, 1, 1, 0, 0, 2), h_ijklm(K_re_scl, 0, 0, 1, 1, 2),
-	 h_ijklm(K_re_scl, 2, 2, 0, 0, 2), h_ijklm(K_re_scl, 1, 1, 1, 1, 2),
-	 h_ijklm(K_re_scl, 0, 0, 2, 2, 2), h_ijklm(K_re_scl, 3, 3, 0, 0, 2),
-	 h_ijklm(K_re_scl, 2, 2, 1, 1, 2), h_ijklm(K_re_scl, 1, 1, 2, 2, 2),
-	 h_ijklm(K_re_scl, 0, 0, 3, 3, 2));
-  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
-	 h_ijklm(K_re_scl, 1, 1, 0, 0, 3), h_ijklm(K_re_scl, 0, 0, 1, 1, 3),
-	 h_ijklm(K_re_scl, 2, 2, 0, 0, 3), h_ijklm(K_re_scl, 1, 1, 1, 1, 3),
-	 h_ijklm(K_re_scl, 0, 0, 2, 2, 3), h_ijklm(K_re_scl, 3, 3, 0, 0, 3),
-	 h_ijklm(K_re_scl, 2, 2, 1, 1, 3), h_ijklm(K_re_scl, 1, 1, 2, 2, 3),
-	 h_ijklm(K_re_scl, 0, 0, 3, 3, 3));
-  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
-	 h_ijklm(K_re_scl, 1, 1, 0, 0, 4), h_ijklm(K_re_scl, 0, 0, 1, 1, 4),
-	 h_ijklm(K_re_scl, 2, 2, 0, 0, 4), h_ijklm(K_re_scl, 1, 1, 1, 1, 4),
-	 h_ijklm(K_re_scl, 0, 0, 2, 2, 4), h_ijklm(K_re_scl, 3, 3, 0, 0, 4),
-	 h_ijklm(K_re_scl, 2, 2, 1, 1, 4), h_ijklm(K_re_scl, 1, 1, 2, 2, 4),
-	 h_ijklm(K_re_scl, 0, 0, 3, 3, 4));
-  printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
-	 h_ijklm(K_re_scl, 1, 1, 0, 0, 5), h_ijklm(K_re_scl, 0, 0, 1, 1, 5),
-	 h_ijklm(K_re_scl, 2, 2, 0, 0, 5), h_ijklm(K_re_scl, 1, 1, 1, 1, 5),
-	 h_ijklm(K_re_scl, 0, 0, 2, 2, 5), h_ijklm(K_re_scl, 3, 3, 0, 0, 5),
-	 h_ijklm(K_re_scl, 2, 2, 1, 1, 5), h_ijklm(K_re_scl, 1, 1, 2, 2, 5),
-	 h_ijklm(K_re_scl, 0, 0, 3, 3, 5));
-  printf("ksi_x:\n %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 1),
-	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 1),
-	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 1));
-  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
-	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 2),
-	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2),
-	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 2),
-	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 2),
-	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 2));
-  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 3),
-	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 3),
-	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 3),
-	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 3),
-	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 3),
-	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 3));
-  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 4),
-	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 4),
-	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 4),
-	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 4),
-	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 4),
-	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 4));
-  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 5),
-	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 5),
-	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 5),
-	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 5),
-	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 5),
-	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 5));
-  printf("ksi_y:\n %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 1),
-	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 1),
-	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 1));
-  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 2),
-	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 2),
-	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2),
-	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 2),
-	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 2),
-	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 2));
-  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 3),
-	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 3),
-	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 3),
-	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 3),
-	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 3),
-	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 3));
-  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 4),
-	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 4),
-	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 4),
-	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 4),
-	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 4),
-	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 4));
-  printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
-	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 5),
-	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 5),
-	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 5),
-	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 5),
-	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 5),
-	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 5));
+  if (chrom) {
+    printf("\nksi(delta=%3.1f%%):\n", 1e2*delta_max);
+    printf("   k_11001    k_00111    k_22001    k_11111    k_00221\n");
+    printf("   k_11002    k_00112    k_22002    k_11112    k_00222"
+	   "   k_33002    k_22112    k_11222    k_00332\n");
+    printf("   k_11003    k_00113    k_22003    k_11113    k_00223"
+	   "   k_33003    k_22113    k_11223    k_00333\n");
+    printf("   k_11004    k_00114    k_22004    k_11114    k_00224"
+	   "   k_33004    k_22114    k_11224    k_00334\n");
+    printf("   k_11005    k_00115    k_22005    k_11115    k_00225"
+	   "   k_33005    k_22115    k_11225    k_00335\n");
+    printf(" %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	   h_ijklm(K_re_scl, 1, 1, 0, 0, 1), h_ijklm(K_re_scl, 0, 0, 1, 1, 1),
+	   h_ijklm(K_re_scl, 2, 2, 0, 0, 1), h_ijklm(K_re_scl, 1, 1, 1, 1, 1),
+	   h_ijklm(K_re_scl, 0, 0, 2, 2, 1));
+    printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	   h_ijklm(K_re_scl, 1, 1, 0, 0, 2), h_ijklm(K_re_scl, 0, 0, 1, 1, 2),
+	   h_ijklm(K_re_scl, 2, 2, 0, 0, 2), h_ijklm(K_re_scl, 1, 1, 1, 1, 2),
+	   h_ijklm(K_re_scl, 0, 0, 2, 2, 2), h_ijklm(K_re_scl, 3, 3, 0, 0, 2),
+	   h_ijklm(K_re_scl, 2, 2, 1, 1, 2), h_ijklm(K_re_scl, 1, 1, 2, 2, 2),
+	   h_ijklm(K_re_scl, 0, 0, 3, 3, 2));
+    printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	   h_ijklm(K_re_scl, 1, 1, 0, 0, 3), h_ijklm(K_re_scl, 0, 0, 1, 1, 3),
+	   h_ijklm(K_re_scl, 2, 2, 0, 0, 3), h_ijklm(K_re_scl, 1, 1, 1, 1, 3),
+	   h_ijklm(K_re_scl, 0, 0, 2, 2, 3), h_ijklm(K_re_scl, 3, 3, 0, 0, 3),
+	   h_ijklm(K_re_scl, 2, 2, 1, 1, 3), h_ijklm(K_re_scl, 1, 1, 2, 2, 3),
+	   h_ijklm(K_re_scl, 0, 0, 3, 3, 3));
+    printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	   h_ijklm(K_re_scl, 1, 1, 0, 0, 4), h_ijklm(K_re_scl, 0, 0, 1, 1, 4),
+	   h_ijklm(K_re_scl, 2, 2, 0, 0, 4), h_ijklm(K_re_scl, 1, 1, 1, 1, 4),
+	   h_ijklm(K_re_scl, 0, 0, 2, 2, 4), h_ijklm(K_re_scl, 3, 3, 0, 0, 4),
+	   h_ijklm(K_re_scl, 2, 2, 1, 1, 4), h_ijklm(K_re_scl, 1, 1, 2, 2, 4),
+	   h_ijklm(K_re_scl, 0, 0, 3, 3, 4));
+    printf(" %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	   h_ijklm(K_re_scl, 1, 1, 0, 0, 5), h_ijklm(K_re_scl, 0, 0, 1, 1, 5),
+	   h_ijklm(K_re_scl, 2, 2, 0, 0, 5), h_ijklm(K_re_scl, 1, 1, 1, 1, 5),
+	   h_ijklm(K_re_scl, 0, 0, 2, 2, 5), h_ijklm(K_re_scl, 3, 3, 0, 0, 5),
+	   h_ijklm(K_re_scl, 2, 2, 1, 1, 5), h_ijklm(K_re_scl, 1, 1, 2, 2, 5),
+	   h_ijklm(K_re_scl, 0, 0, 3, 3, 5));
+    printf("ksi_x:\n %8.5f %8.5f %8.5f\n",
+	   h_ijklm(nus_scl[3], 0, 0, 0, 0, 1),
+	   h_ijklm(nus_scl[3], 1, 1, 0, 0, 1),
+	   h_ijklm(nus_scl[3], 0, 0, 1, 1, 1));
+    printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	   h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
+	   h_ijklm(nus_scl[3], 1, 1, 0, 0, 2),
+	   h_ijklm(nus_scl[3], 0, 0, 1, 1, 2),
+	   h_ijklm(nus_scl[3], 2, 2, 0, 0, 2),
+	   h_ijklm(nus_scl[3], 1, 1, 1, 1, 2),
+	   h_ijklm(nus_scl[3], 0, 0, 2, 2, 2));
+    printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	   h_ijklm(nus_scl[3], 0, 0, 0, 0, 3),
+	   h_ijklm(nus_scl[3], 1, 1, 0, 0, 3),
+	   h_ijklm(nus_scl[3], 0, 0, 1, 1, 3),
+	   h_ijklm(nus_scl[3], 2, 2, 0, 0, 3),
+	   h_ijklm(nus_scl[3], 1, 1, 1, 1, 3),
+	   h_ijklm(nus_scl[3], 0, 0, 2, 2, 3));
+    printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	   h_ijklm(nus_scl[3], 0, 0, 0, 0, 4),
+	   h_ijklm(nus_scl[3], 1, 1, 0, 0, 4),
+	   h_ijklm(nus_scl[3], 0, 0, 1, 1, 4),
+	   h_ijklm(nus_scl[3], 2, 2, 0, 0, 4),
+	   h_ijklm(nus_scl[3], 1, 1, 1, 1, 4),
+	   h_ijklm(nus_scl[3], 0, 0, 2, 2, 4));
+    printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	   h_ijklm(nus_scl[3], 0, 0, 0, 0, 5),
+	   h_ijklm(nus_scl[3], 1, 1, 0, 0, 5),
+	   h_ijklm(nus_scl[3], 0, 0, 1, 1, 5),
+	   h_ijklm(nus_scl[3], 2, 2, 0, 0, 5),
+	   h_ijklm(nus_scl[3], 1, 1, 1, 1, 5),
+	   h_ijklm(nus_scl[3], 0, 0, 2, 2, 5));
+    printf("ksi_y:\n %8.5f %8.5f %8.5f\n",
+	   h_ijklm(nus_scl[4], 0, 0, 0, 0, 1),
+	   h_ijklm(nus_scl[4], 1, 1, 0, 0, 1),
+	   h_ijklm(nus_scl[4], 0, 0, 1, 1, 1));
+    printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	   h_ijklm(nus_scl[4], 0, 0, 0, 0, 2),
+	   h_ijklm(nus_scl[4], 1, 1, 0, 0, 2),
+	   h_ijklm(nus_scl[4], 0, 0, 1, 1, 2),
+	   h_ijklm(nus_scl[4], 2, 2, 0, 0, 2),
+	   h_ijklm(nus_scl[4], 1, 1, 1, 1, 2),
+	   h_ijklm(nus_scl[4], 0, 0, 2, 2, 2));
+    printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	   h_ijklm(nus_scl[4], 0, 0, 0, 0, 3),
+	   h_ijklm(nus_scl[4], 1, 1, 0, 0, 3),
+	   h_ijklm(nus_scl[4], 0, 0, 1, 1, 3),
+	   h_ijklm(nus_scl[4], 2, 2, 0, 0, 3),
+	   h_ijklm(nus_scl[4], 1, 1, 1, 1, 3),
+	   h_ijklm(nus_scl[4], 0, 0, 2, 2, 3));
+    printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	   h_ijklm(nus_scl[4], 0, 0, 0, 0, 4),
+	   h_ijklm(nus_scl[4], 1, 1, 0, 0, 4),
+	   h_ijklm(nus_scl[4], 0, 0, 1, 1, 4),
+	   h_ijklm(nus_scl[4], 2, 2, 0, 0, 4),
+	   h_ijklm(nus_scl[4], 1, 1, 1, 1, 4),
+	   h_ijklm(nus_scl[4], 0, 0, 2, 2, 4));
+    printf(" %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",
+	   h_ijklm(nus_scl[4], 0, 0, 0, 0, 5),
+	   h_ijklm(nus_scl[4], 1, 1, 0, 0, 5),
+	   h_ijklm(nus_scl[4], 0, 0, 1, 1, 5),
+	   h_ijklm(nus_scl[4], 2, 2, 0, 0, 5),
+	   h_ijklm(nus_scl[4], 1, 1, 1, 1, 5),
+	   h_ijklm(nus_scl[4], 0, 0, 2, 2, 5));
+  }
 
   printf("\nTune confinement:\n");
   // printf(" %11.3e %11.3e\n",
@@ -711,7 +714,7 @@ double get_chi2(const bool prt)
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
   dnu = gauss_quad_2D(f_gauss_quad_2D, 0e0, twoJ[X_]);
-  dnu_delta = gauss_quad_3D(f_gauss_quad_3D, 0e0, twoJ[X_]);
+  dnu_delta = gauss_quad_3D(f_gauss_quad_3D, 0e0, twoJ_delta[X_]);
 
   get_dK(dK);
 
@@ -753,7 +756,11 @@ double get_chi2(const bool prt)
 
   if (prt && (chi2_1 < chi2)) {
     prt_dnu();
-    printf("\nchi2: %21.15e -> %21.15e\n", chi2, chi2_1);
+    printf("\n  ksi1        = [%7.5f, %7.5f]\n",
+	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1));
+    printf("  |dnu|       = %9.3e\n", dnu);
+    printf("  |dnu_delta| = %9.3e\n", dnu_delta);
+    printf("\n  %4d chi2: %21.15e -> %21.15e\n", n_iter, chi2, chi2_1);
   }
 
   return chi2_1;
@@ -857,31 +864,38 @@ void powell(param_type &bn_prms, double (*f)(double *))
 void lat_select(void)
 {
 
-  if (!true) {
-    bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e-2);
-    bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e-2);
-    bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e-2);
-  }
+  //                                      b_3  b_4  b_5     b_6
+  const double bn_max[] = {0e0, 0e0, 0e0, 5e2, 2e3, 0e0, 1e6};
 
-  if (!false) {
-    // Sextupole Length is 0.1 m.
+  if (true) {
+    bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], 1e-2);
+    bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], 1e-2);
+    bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], 1e-2);
 
-    // bn_prms.add_prm("sh1a", 4, -5e3/0.1, 5e3/0.1, 1e1);
-    // bn_prms.add_prm("sh1b", 4, -5e3/0.1, 5e3/0.1, 1e1);
-
-    bn_prms.add_prm("sh2",  4, -1e3/0.1, 1e3/0.1, 1e1);
-    bn_prms.add_prm("s",    4, -1e3/0.1, 1e3/0.1, 1e1);
-    bn_prms.add_prm("of1",  4, -1e3,     1e3,     1e1);
-
-    // bn_prms.add_prm("sh2",  6, -1e6/0.1, 1e6/0.1, 1e2);
-    // bn_prms.add_prm("s",    6, -1e6/0.1, 1e6/0.1, 1e2);
-    // bn_prms.add_prm("of1",  6, -1e6,     1e6,     1e2);
+    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], 1e-2);
   }
 
   if (false) {
-    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e0);
-    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e0);
-    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e0);
+    // Sextupole Length is 0.1 m.
+
+    bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+    bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+
+    bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+    bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+    bn_prms.add_prm("of1",  4, -bn_max[4],     bn_max[4],     1e1);
+
+    if (false) {
+      bn_prms.add_prm("sh2",  6, -bn_max[6]/0.1, bn_max[6]/0.1, 1e2);
+      bn_prms.add_prm("s",    6, -bn_max[6]/0.1, bn_max[6]/0.1, 1e2);
+      bn_prms.add_prm("of1",  6, -bn_max[6],     bn_max[6],     1e2);
+    }
+  }
+
+  if (false) {
+    bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], 1e0);
+    bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], 1e0);
+    bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], 1e0);
   }
 
   if (false) {
@@ -930,6 +944,8 @@ int main(int argc, char *argv[])
   Id_delta_scl[delta_] *= delta_max;
 
   lat_select();
+
+  if (false) no_mpoles(3);
 
   if (true)
     conj_grad(bn_prms, f_nl, df_nl);
