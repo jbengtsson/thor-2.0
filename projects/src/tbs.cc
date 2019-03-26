@@ -15,7 +15,7 @@ int no_tps = NO,
   ndpt_tps = 0;
 #endif
 
-#define DNU 1
+#define DNU 0
 
 
 extern tps          K, g;
@@ -36,7 +36,7 @@ const int n_prt = 8;
 // Center of straight.
 const double
   beta_inj[]   = {8.7, 2.1},
-  A_max[]      = {1.5e-3, 0.5e-3},
+  A_max[]      = {3e-3, 0.5e-3},
   twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[] = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max    = 2.5e-2;
@@ -49,7 +49,7 @@ const double
 #if DNU
   scl_dnu_conf       = 1e6,
 #else
-  scl_dnu_conf       = 0e-7,
+  scl_dnu_conf       = 1e16,
 #endif
   scl_dnu_delta_conf = 0e0;
 
@@ -865,27 +865,32 @@ void lat_select(void)
 {
 
   //                                      b_3  b_4  b_5     b_6
-  const double bn_max[] = {0e0, 0e0, 0e0, 5e2, 2e3, 0e0, 1e6};
+  const double bn_max[] = {0e0, 0e0, 0e0, 5e2, 2e3, 0e0, 1e7};
 
   if (true) {
     bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], 1e-2);
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], 1e-2);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], 1e-2);
 
-    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], 1e-2);
+    // bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], 1e-2);
   }
 
-  if (false) {
+  if (!false) {
     // Sextupole Length is 0.1 m.
 
-    bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
-    bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+    if (!false) {
+      // bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+      // bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
 
-    bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
-    bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
-    bn_prms.add_prm("of1",  4, -bn_max[4],     bn_max[4],     1e1);
+      bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+      bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+      bn_prms.add_prm("of1",  4, -bn_max[4],     bn_max[4],     1e1);
+    }
 
     if (false) {
+      bn_prms.add_prm("sh1a", 6, -bn_max[6]/0.1, bn_max[6]/0.1, 1e1);
+      bn_prms.add_prm("sh1b", 6, -bn_max[6]/0.1, bn_max[6]/0.1, 1e1);
+
       bn_prms.add_prm("sh2",  6, -bn_max[6]/0.1, bn_max[6]/0.1, 1e2);
       bn_prms.add_prm("s",    6, -bn_max[6]/0.1, bn_max[6]/0.1, 1e2);
       bn_prms.add_prm("of1",  6, -bn_max[6],     bn_max[6],     1e2);
