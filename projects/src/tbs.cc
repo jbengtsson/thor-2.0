@@ -36,7 +36,7 @@ const int n_prt = 8;
 // Center of straight.
 const double
   beta_inj[]   = {8.7, 2.1},
-  A_max[]      = {3e-3, 1e-3},
+  A_max[]      = {1.5e-3, 0.5e-3},
   twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[] = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max    = 2.5e-2;
