@@ -879,8 +879,8 @@ void lat_select(void)
     // Sextupole Length is 0.1 m.
 
     if (!false) {
-      // bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
-      // bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+      bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+      bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
 
       bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
       bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
