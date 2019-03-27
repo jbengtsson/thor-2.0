@@ -35,11 +35,13 @@ const int n_prt = 8;
 
 // Center of straight.
 const double
-  beta_inj[]   = {8.7, 2.1},
-  A_max[]      = {3e-3, 0.75e-3},
-  twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
-  twoJ_delta[] = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
-  delta_max    = 2.5e-2;
+  beta_inj[]     = {8.7, 2.1},
+  A_max[]        = {2.5e-3, 0.5e-3},
+  twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
+  twoJ_tot       = sqrt(sqr(twoJ[X_])+sqr(twoJ[Y_])),
+  twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
+  twoJ_tot_delta = sqrt(sqr(twoJ_delta[X_])+sqr(twoJ_delta[Y_])),
+  delta_max      = 2.5e-2;
 
 const double
   scl_h[]        = {0e0, 0e0, 0e0},
@@ -261,7 +263,10 @@ double gauss_quad_2D(double (*func)(const double),
 
 double gauss_quad_2D_y0(const double x) { return 0e0; }
 
-double gauss_quad_2D_y1(const double x) { return twoJ[Y_]; }
+double gauss_quad_2D_y1(const double x)
+{
+  return sqrt(sqr(twoJ_tot)-sqr(twoJ[Y_]));
+}
 
 double gauss_quad_2D_fy(const double y)  { return (*func_save_2D)(xsav_2D, y); }
 
@@ -344,7 +349,10 @@ double gauss_quad_3D(double (*func)(const double),
 
 double gauss_quad_3D_y0(const double x) { return 0e0; }
 
-double gauss_quad_3D_y1(const double x) { return twoJ_delta[Y_]; }
+double gauss_quad_3D_y1(const double x)
+{
+  return sqrt(sqr(twoJ_tot_delta)-sqr(twoJ_delta[Y_]));
+}
 
 double gauss_quad_3D_z0(const double x, const double y)
 {
