@@ -922,7 +922,7 @@ void lat_select(void)
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
-    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
   if (false) {
