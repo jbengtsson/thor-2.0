@@ -36,7 +36,7 @@ const int n_prt = 8;
 // Center of straight.
 const double
   beta_inj[]   = {8.7, 2.1},
-  A_max[]      = {2.5e-3, 0.3e-3},
+  A_max[]      = {3e-3, 0.75e-3},
   twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[] = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max    = 2.5e-2;
@@ -46,11 +46,11 @@ const double
   scl_dnu[]      = {1e0, 1e0, 1e0, 1e0, 1e0},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e2, 1e2, 1e2, 1e2},
+  scl_dnu_conf[] = {0e3, 0e2, 0e2, 0e2},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 1e5,
+  scl_dnu_2d     = 1e15,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -685,13 +685,13 @@ void get_dK(std::vector<double> &dK)
   dK.push_back(h_ijklm(nus[4], 0, 0, 0, 0, 1));
 
   dK.push_back(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)
-	       -h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
+	       +h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
   dK.push_back(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)
-	       -h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
+	       +h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
   dK.push_back(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)
-	       -h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
+	       +h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
   dK.push_back(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)
-	       -h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
+	       +h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
 
   dK.push_back(dnu);
   dK.push_back(dnu_delta);
@@ -729,6 +729,7 @@ void get_b(std::vector<double> &dK, std::vector<double> &b)
   const bool chrom = false;
 
   k = 0;
+  b.clear();
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
@@ -773,7 +774,7 @@ void get_b(std::vector<double> &dK, std::vector<double> &b)
 double get_chi2(const bool prt)
 {
   int                 k;
-  double              chi2;
+  double              chi2, b_tc;
   std::vector<double> dK, b;
 
   get_dK(dK);
@@ -783,12 +784,16 @@ double get_chi2(const bool prt)
   for (k = 0; k < (int)b.size(); k++)
     chi2 += b[k];
  
+  // b_tc = 1e7*sqr(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)+1e-4);
+  // chi2 += b_tc;
+
   if (prt && (chi2 < chi2_ref)) {
     prt_dnu();
     printf("\n  ksi1        = [%7.5f, %7.5f] ([%9.3e, %9.3e])\n",
 	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
 	   b[0], b[1]);
     printf("  Tune Conf.:   %9.3e %9.3e %9.3e %9.3e\n", b[2], b[3], b[4], b[5]);
+    // printf("                %9.3e\n", b_tc);
     printf("  |dnu|       = %9.3e\n", b[6]);
     printf("  |dnu_delta| = %9.3e\n", b[7]);
     printf("\n  %4d chi2: %21.15e -> %21.15e\n", n_iter, chi2_ref, chi2);
@@ -826,11 +831,11 @@ double f_nl(double *bn)
 {
   double chi2;
 
-  n_iter++;
   bn_prms.set_prm(bn);
 
   chi2 = get_chi2(true);
   if (chi2 < chi2_ref) {
+    n_iter++;
     printf("\nbn:\n");
     bn_prms.prt_bn(bn);
     chi2_ref = chi2;
@@ -855,6 +860,8 @@ void conj_grad(param_type &bn_prms, double (*f)(double *),
   bn = dvector(1, bn_prms.n_bn);
 
   bn_prms.ini_prm(bn);
+
+  n_iter = 1;
 
   dfrprmn(bn, bn_prms.n_bn, ftol, &iter, &fret, f, df);
 
@@ -883,6 +890,8 @@ void powell(param_type &bn_prms, double (*f)(double *))
     for (j = 1; j <= n_bn; j++)
       xi[i][j] = (i == j)? 1e0 : 0e0;
 
+  n_iter = 1;
+
   dpowell(bn, xi, n_bn, bn_tol, &iter, &fret, f);
 
   prt_mfile("flat_file.fit");
@@ -905,7 +914,7 @@ void lat_select(void)
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
-    // bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
   if (false) {
