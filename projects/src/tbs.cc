@@ -26,7 +26,7 @@ const double tpsa_eps = 1e-30;
 std::vector<std::string> drv_term;
 
 int          n_iter;
-double       chi2 = 1e30;
+double       chi2_ref = 1e30;
 tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 tps          K_re_delta_scl;
 ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
@@ -36,22 +36,23 @@ const int n_prt = 8;
 // Center of straight.
 const double
   beta_inj[]   = {8.7, 2.1},
-  A_max[]      = {3e-3, 0.5e-3},
+  A_max[]      = {2.5e-3, 0.3e-3},
   twoJ[]       = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[] = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max    = 2.5e-2;
 
 const double
-  scl_h[]            = {0e0, 0e0, 0e0},
-  scl_dnu[]          = {1e0, 1e0, 1e0, 1e0, 1e0},
-  scl_ksi[]          = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
-  delta_scl          = 0e0,
+  scl_h[]        = {0e0, 0e0, 0e0},
+  scl_dnu[]      = {1e0, 1e0, 1e0, 1e0, 1e0},
+  scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
+  delta_scl      = 0e0,
+  scl_dnu_conf[] = {1e2, 1e2, 1e2, 1e2},
 #if DNU
-  scl_dnu_conf       = 1e6,
+  scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_conf       = 1e16,
+  scl_dnu_2d     = 1e5,
 #endif
-  scl_dnu_delta_conf = 0e0;
+  scl_dnu_3d     = 0e0;
 
 
 double bn_internal(const double bn_bounded,
@@ -469,40 +470,6 @@ double get_b(const std::string &label, const double scale, const tps &t,
 }
 
 
-void get_dK(std::vector<double> &dK)
-{
-
-  dK.clear();
-
-  dK.push_back(h_ijklm(nus[3], 0, 0, 0, 0, 1));
-  dK.push_back(h_ijklm(nus[4], 0, 0, 0, 0, 1));
-
-  dK.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 1, 1, 0));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 2, 2, 0));
-
-  dK.push_back(h_ijklm(K_re_scl, 3, 3, 0, 0, 0));
-  dK.push_back(h_ijklm(K_re_scl, 2, 2, 1, 1, 0));
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 2, 2, 0));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 3, 3, 0));
-
-  dK.push_back(h_ijklm(K_re_scl, 4, 4, 0, 0, 0));
-  dK.push_back(h_ijklm(K_re_scl, 3, 3, 1, 1, 0));
-  dK.push_back(h_ijklm(K_re_scl, 2, 2, 2, 2, 0));
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 3, 3, 0));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 4, 4, 0));
-
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 2));
-
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 3));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 3));
-
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 4));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 4));
-}
-
-
 void prt_dnu(void)
 {
 
@@ -696,13 +663,9 @@ void prt_dnu(void)
 }
 
 
-double get_chi2(const bool prt)
+void get_dK(std::vector<double> &dK)
 {
-  int                 k;
-  double              chi2_1, dnu, dnu_delta;
-  std::vector<double> dK;
-
-  const bool chrom = false;
+  double dnu, dnu_delta;
 
   danot_(NO-1);
   get_Map();
@@ -710,60 +673,128 @@ double get_chi2(const bool prt)
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   nus = dHdJ(K); nus_scl = nus*Id_scl;
   CtoR(K, K_re, K_im);
-  K_re_scl = K_re*Id_scl; K_re_delta_scl = K_re*Id_delta_scl;
+  K_re_scl = 1e6*K_re*Id_scl; K_re_delta_scl = 1e6*K_re*Id_delta_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
   dnu = gauss_quad_2D(f_gauss_quad_2D, 0e0, twoJ[X_]);
   dnu_delta = gauss_quad_3D(f_gauss_quad_3D, 0e0, twoJ_delta[X_]);
 
-  get_dK(dK);
+  dK.clear();
 
-  chi2_1 = 0e0; k = 0;
+  dK.push_back(h_ijklm(nus[3], 0, 0, 0, 0, 1));
+  dK.push_back(h_ijklm(nus[4], 0, 0, 0, 0, 1));
 
-  chi2_1 += scl_ksi[1]*sqr(dK[k]); k++;
-  chi2_1 += scl_ksi[1]*sqr(dK[k]); k++;
+  dK.push_back(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)
+	       -h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
+  dK.push_back(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)
+	       -h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
+  dK.push_back(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)
+	       -h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
+  dK.push_back(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)
+	       -h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
 
-  chi2_1 += scl_dnu_conf*sqr(dnu);
-  chi2_1 += scl_dnu_delta_conf*sqr(dnu_delta);
+  dK.push_back(dnu);
+  dK.push_back(dnu_delta);
+
+  dK.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
+  dK.push_back(h_ijklm(K_re_scl, 1, 1, 1, 1, 0));
+  dK.push_back(h_ijklm(K_re_scl, 0, 0, 2, 2, 0));
+
+  dK.push_back(h_ijklm(K_re_scl, 3, 3, 0, 0, 0));
+  dK.push_back(h_ijklm(K_re_scl, 2, 2, 1, 1, 0));
+  dK.push_back(h_ijklm(K_re_scl, 1, 1, 2, 2, 0));
+  dK.push_back(h_ijklm(K_re_scl, 0, 0, 3, 3, 0));
+
+  dK.push_back(h_ijklm(K_re_scl, 4, 4, 0, 0, 0));
+  dK.push_back(h_ijklm(K_re_scl, 3, 3, 1, 1, 0));
+  dK.push_back(h_ijklm(K_re_scl, 2, 2, 2, 2, 0));
+  dK.push_back(h_ijklm(K_re_scl, 1, 1, 3, 3, 0));
+  dK.push_back(h_ijklm(K_re_scl, 0, 0, 4, 4, 0));
+
+  dK.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
+  dK.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 2));
+
+  dK.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 3));
+  dK.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 3));
+
+  dK.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 4));
+  dK.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 4));
+}
+
+
+void get_b(std::vector<double> &dK, std::vector<double> &b)
+{
+  int k;
+
+  const bool chrom = false;
+
+  k = 0;
+  b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
+  b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
+
+  b.push_back(scl_dnu_conf[0]*sqr(dK[k])); k++;
+  b.push_back(scl_dnu_conf[1]*sqr(dK[k])); k++;
+  b.push_back(scl_dnu_conf[2]*sqr(dK[k])); k++;
+  b.push_back(scl_dnu_conf[3]*sqr(dK[k])); k++;
+
+  b.push_back(scl_dnu_2d*sqr(dK[k])); k++;
+  b.push_back(scl_dnu_3d*sqr(dK[k])); k++;
 
   if (!true) {
-    chi2_1 += scl_dnu[0]*sqr(dK[k]); k++;
-    chi2_1 += scl_dnu[0]*sqr(dK[k]); k++;
-    chi2_1 += scl_dnu[0]*sqr(dK[k]); k++;
+    b.push_back(scl_dnu[0]*sqr(dK[k])); k++;
+    b.push_back(scl_dnu[0]*sqr(dK[k])); k++;
+    b.push_back(scl_dnu[0]*sqr(dK[k])); k++;
 
-    chi2_1 += scl_dnu[1]*sqr(dK[k]); k++;
-    chi2_1 += scl_dnu[1]*sqr(dK[k]); k++;
-    chi2_1 += scl_dnu[1]*sqr(dK[k]); k++;
-    chi2_1 += scl_dnu[1]*sqr(dK[k]); k++;
+    b.push_back(scl_dnu[1]*sqr(dK[k])); k++;
+    b.push_back(scl_dnu[1]*sqr(dK[k])); k++;
+    b.push_back(scl_dnu[1]*sqr(dK[k])); k++;
+    b.push_back(scl_dnu[1]*sqr(dK[k])); k++;
 
-    chi2_1 += scl_dnu[2]*sqr(dK[k]); k++;
-    chi2_1 += scl_dnu[2]*sqr(dK[k]); k++;
-    chi2_1 += scl_dnu[2]*sqr(dK[k]); k++;
-    chi2_1 += scl_dnu[2]*sqr(dK[k]); k++;
-    chi2_1 += scl_dnu[2]*sqr(dK[k]); k++;
+    b.push_back(scl_dnu[2]*sqr(dK[k])); k++;
+    b.push_back(scl_dnu[2]*sqr(dK[k])); k++;
+    b.push_back(scl_dnu[2]*sqr(dK[k])); k++;
+    b.push_back(scl_dnu[2]*sqr(dK[k])); k++;
+    b.push_back(scl_dnu[2]*sqr(dK[k])); k++;
   }
 
   if (chrom) {
-    chi2_1 += scl_ksi[2]*sqr(dK[k]); k++;
-    chi2_1 += scl_ksi[2]*sqr(dK[k]); k++;
+    b.push_back(scl_ksi[2]*sqr(dK[k])); k++;
+    b.push_back(scl_ksi[2]*sqr(dK[k])); k++;
 
-    chi2_1 += scl_ksi[3]*sqr(dK[k]); k++;
-    chi2_1 += scl_ksi[3]*sqr(dK[k]); k++;
+    b.push_back(scl_ksi[3]*sqr(dK[k])); k++;
+    b.push_back(scl_ksi[3]*sqr(dK[k])); k++;
 
-    chi2_1 += scl_ksi[4]*sqr(dK[k]); k++;
-    chi2_1 += scl_ksi[4]*sqr(dK[k]); k++;
+    b.push_back(scl_ksi[4]*sqr(dK[k])); k++;
+    b.push_back(scl_ksi[4]*sqr(dK[k])); k++;
   }
+}
 
-  if (prt && (chi2_1 < chi2)) {
+
+double get_chi2(const bool prt)
+{
+  int                 k;
+  double              chi2;
+  std::vector<double> dK, b;
+
+  get_dK(dK);
+  get_b(dK, b);
+
+  chi2 = 0e0;
+  for (k = 0; k < (int)b.size(); k++)
+    chi2 += b[k];
+ 
+  if (prt && (chi2 < chi2_ref)) {
     prt_dnu();
-    printf("\n  ksi1        = [%7.5f, %7.5f]\n",
-	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1));
-    printf("  |dnu|       = %9.3e\n", dnu);
-    printf("  |dnu_delta| = %9.3e\n", dnu_delta);
-    printf("\n  %4d chi2: %21.15e -> %21.15e\n", n_iter, chi2, chi2_1);
+    printf("\n  ksi1        = [%7.5f, %7.5f] ([%9.3e, %9.3e])\n",
+	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
+	   b[0], b[1]);
+    printf("  Tune Conf.:   %9.3e %9.3e %9.3e %9.3e\n", b[2], b[3], b[4], b[5]);
+    printf("  |dnu|       = %9.3e\n", b[6]);
+    printf("  |dnu_delta| = %9.3e\n", b[7]);
+    printf("\n  %4d chi2: %21.15e -> %21.15e\n", n_iter, chi2_ref, chi2);
   }
 
-  return chi2_1;
+  return chi2;
 }
 
 
@@ -793,22 +824,22 @@ void df_nl(double *bn, double *df)
 
 double f_nl(double *bn)
 {
-  double chi2_1;
+  double chi2;
 
   n_iter++;
   bn_prms.set_prm(bn);
 
-  chi2_1 = get_chi2(true);
-  if (chi2_1 < chi2) {
+  chi2 = get_chi2(true);
+  if (chi2 < chi2_ref) {
     printf("\nbn:\n");
     bn_prms.prt_bn(bn);
-    chi2 = chi2_1;
+    chi2_ref = chi2;
 
     prt_mfile("flat_file.fit");
     bn_prms.prt_bn_lat();
   }
 
-  return chi2_1;
+  return chi2;
 }
 
 
@@ -864,27 +895,29 @@ void powell(param_type &bn_prms, double (*f)(double *))
 void lat_select(void)
 {
 
-  //                                      b_3  b_4  b_5     b_6
-  const double bn_max[] = {0e0, 0e0, 0e0, 5e2, 2e3, 0e0, 1e7};
+  const double
+    //                         b_3   b_4  b_5  b_6
+    bn_max[] = {0e0, 0e0, 0e0, 5e2,  2e3, 0e0, 1e7},
+    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 0e2, 1e4};
 
   if (true) {
-    bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], 1e-2);
-    bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], 1e-2);
-    bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], 1e-2);
+    bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
-    // bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], 1e-2);
+    // bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
-  if (!false) {
+  if (false) {
     // Sextupole Length is 0.1 m.
 
     if (!false) {
-      bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
-      bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
+      // bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      // bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
 
-      bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
-      bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, 1e1);
-      bn_prms.add_prm("of1",  4, -bn_max[4],     bn_max[4],     1e1);
+      bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      bn_prms.add_prm("of1",  4, -bn_max[4],     bn_max[4],     dbn[4]);
     }
 
     if (false) {
@@ -898,9 +931,9 @@ void lat_select(void)
   }
 
   if (false) {
-    bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], 1e0);
-    bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], 1e0);
-    bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], 1e0);
+    bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
   }
 
   if (false) {
