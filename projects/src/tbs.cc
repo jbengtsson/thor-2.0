@@ -46,12 +46,12 @@ const double
   scl_dnu[]      = {1e0, 1e0, 1e0, 1e0, 1e0},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1,
-                    1e1, 1e1, 1e1, 1e1},
+  scl_dnu_conf[] = {1e1,  1e1,  1e1,  1e1,
+                    1e-1, 1e-1, 1e-1, 1e-1},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 0e10,
+  scl_dnu_2d     = 1e12,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -803,11 +803,6 @@ double get_chi2(const bool prt)
   // b_tc.push_back(1e7*sqr(b_tc[1]));
   // chi2 += b_tc[2];
 
-  // b_tc.push_back(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
-  // b_tc.push_back(b_tc[3]+1e-2);
-  // b_tc.push_back(1e6*sqr(b_tc[4]));
-  // chi2 += b_tc[5];
-
   if (prt && (chi2 < chi2_ref)) {
     prt_dnu();
     printf("\n  ksi1        = [%7.5f, %7.5f] ([%9.3e, %9.3e])\n",
@@ -824,8 +819,6 @@ double get_chi2(const bool prt)
 
     // printf("\n                %10.3e %10.3e %10.3e\n",
     // 	   b_tc[0], b_tc[1], b_tc[2]);
-    // printf("                %10.3e %10.3e %10.3e\n",
-    // 	   b_tc[3], b_tc[4], b_tc[5]);
 
     printf("\n  |dnu|       = %10.3e\n", b[6]);
     printf("  |dnu_delta| = %10.3e\n", b[7]);
@@ -939,7 +932,7 @@ void lat_select(void)
 
   const double
     //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e4, 0e0, 1e11},
+    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e3, 0e0, 1e11},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e2};
 
   if (true) {
@@ -947,15 +940,15 @@ void lat_select(void)
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
-    // bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
-  if (!false) {
+  if (false) {
     // Sextupole Length is 0.1 m.
 
     if (!false) {
-      bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
-      bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      // bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      // bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
 
       bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
       bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
@@ -963,8 +956,8 @@ void lat_select(void)
     }
 
     if (false) {
-      // bn_prms.add_prm("sh1a", 6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
-      // bn_prms.add_prm("sh1b", 6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
+      bn_prms.add_prm("sh1a", 6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
+      bn_prms.add_prm("sh1b", 6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
 
       bn_prms.add_prm("sh2",  6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
       bn_prms.add_prm("s",    6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
