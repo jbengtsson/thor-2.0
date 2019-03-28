@@ -36,7 +36,7 @@ const int n_prt = 8;
 // Center of straight.
 const double
   beta_inj[]     = {8.7, 2.1},
-  A_max[]        = {2.5e-3, 0.5e-3},
+  A_max[]        = {3e-3, 0.75e-3},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max      = 2.5e-2;
@@ -46,8 +46,8 @@ const double
   scl_dnu[]      = {1e0, 1e0, 1e0, 1e0, 1e0},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {5e1,  5e1,  5e1,  5e1,
-                    1e0, 1e0, 1e0, 1e0},
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1,
+                    1e1, 1e1, 1e1, 1e1},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -745,10 +745,10 @@ void get_b(std::vector<double> &dK, std::vector<double> &b,
   c.push_back(exp(c[6])-1e0);
   c.push_back(exp(c[7])-1e0);
 
-  b.push_back(scl_dnu_conf[4]*exp(c[8]));
-  b.push_back(scl_dnu_conf[5]*exp(c[9]));
-  b.push_back(scl_dnu_conf[6]*exp(c[10]));
-  b.push_back(scl_dnu_conf[7]*exp(c[11]));
+  b.push_back(scl_dnu_conf[4]*c[8]);
+  b.push_back(scl_dnu_conf[5]*c[9]);
+  b.push_back(scl_dnu_conf[6]*c[10]);
+  b.push_back(scl_dnu_conf[7]*c[11]);
 
   b.push_back(scl_dnu_2d*sqr(dK[k])); k++;
   b.push_back(scl_dnu_3d*sqr(dK[k])); k++;
@@ -786,8 +786,8 @@ void get_b(std::vector<double> &dK, std::vector<double> &b,
 double get_chi2(const bool prt)
 {
   int                 k;
-  double              chi2, b_tc;
-  std::vector<double> dK, b, c;
+  double              chi2;
+  std::vector<double> dK, b, c, b_tc;
 
   get_dK(dK);
   get_b(dK, b, c);
@@ -796,23 +796,40 @@ double get_chi2(const bool prt)
   for (k = 0; k < (int)b.size(); k++)
     chi2 += b[k];
  
-  // b_tc = 1e7*sqr(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)+1e-4);
-  // chi2 += b_tc;
+  // b_tc.clear();
+
+  // b_tc.push_back(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
+  // b_tc.push_back(b_tc[0]+2e-2);
+  // b_tc.push_back(1e7*sqr(b_tc[1]));
+  // chi2 += b_tc[2];
+
+  // b_tc.push_back(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
+  // b_tc.push_back(b_tc[3]+1e-2);
+  // b_tc.push_back(1e6*sqr(b_tc[4]));
+  // chi2 += b_tc[5];
 
   if (prt && (chi2 < chi2_ref)) {
     prt_dnu();
     printf("\n  ksi1        = [%7.5f, %7.5f] ([%9.3e, %9.3e])\n",
 	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
 	   b[0], b[1]);
-    printf("  Tune Conf.:   %9.3e %9.3e %9.3e %9.3e\n", c[0], c[1], c[2], c[3]);
-    printf("                %9.3e %9.3e %9.3e %9.3e\n", c[4], c[5], c[6], c[7]);
-    printf("                %9.3e %9.3e %9.3e %9.3e\n",
+    printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
+	   c[0], c[1], c[2], c[3]);
+    printf("                %10.3e %10.3e %10.3e %10.3e\n",
+	   c[4], c[5], c[6], c[7]);
+    printf("                %10.3e %10.3e %10.3e %10.3e\n",
 	   c[8], c[9], c[10], c[11]);
-    printf("                %9.3e %9.3e %9.3e %9.3e\n", b[2], b[3], b[4], b[5]);
-    // printf("                %9.3e\n", b_tc);
-    printf("  |dnu|       = %9.3e\n", b[6]);
-    printf("  |dnu_delta| = %9.3e\n", b[7]);
-    printf("\n  %4d chi2: %21.15e -> %21.15e\n", n_iter, chi2_ref, chi2);
+    printf("                %10.3e %10.3e %10.3e %10.3e\n",
+	   b[2], b[3], b[4], b[5]);
+
+    // printf("\n                %10.3e %10.3e %10.3e\n",
+    // 	   b_tc[0], b_tc[1], b_tc[2]);
+    // printf("                %10.3e %10.3e %10.3e\n",
+    // 	   b_tc[3], b_tc[4], b_tc[5]);
+
+    printf("\n  |dnu|       = %10.3e\n", b[6]);
+    printf("  |dnu_delta| = %10.3e\n", b[7]);
+    printf("\n  %-4d chi2: %21.15e -> %21.15e\n", n_iter, chi2_ref, chi2);
   }
 
   return chi2;
@@ -922,7 +939,7 @@ void lat_select(void)
 
   const double
     //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e4, 0e0, 1e8},
+    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e4, 0e0, 1e11},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e2};
 
   if (true) {
@@ -933,12 +950,12 @@ void lat_select(void)
     // bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
-  if (false) {
+  if (!false) {
     // Sextupole Length is 0.1 m.
 
     if (!false) {
-      // bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
-      // bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
 
       bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
       bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
