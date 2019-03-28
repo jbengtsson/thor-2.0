@@ -46,8 +46,8 @@ const double
   scl_dnu[]      = {1e0, 1e0, 1e0, 1e0, 1e0},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e2,  1e2,  1e2,  1e2,
-                    1e-3, 1e-3, 1e-3, 1e-3},
+  scl_dnu_conf[] = {5e1,  5e1,  5e1,  5e1,
+                    1e0, 1e0, 1e0, 1e0},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -740,10 +740,10 @@ void get_b(std::vector<double> &dK, std::vector<double> &b,
   c.push_back(scl_dnu_conf[2]*c[2]);
   c.push_back(scl_dnu_conf[3]*c[3]);
 
-  c.push_back(exp(c[4]));
-  c.push_back(exp(c[5]));
-  c.push_back(exp(c[6]));
-  c.push_back(exp(c[7]));
+  c.push_back(exp(c[4])-1e0);
+  c.push_back(exp(c[5])-1e0);
+  c.push_back(exp(c[6])-1e0);
+  c.push_back(exp(c[7])-1e0);
 
   b.push_back(scl_dnu_conf[4]*exp(c[8]));
   b.push_back(scl_dnu_conf[5]*exp(c[9]));
@@ -930,7 +930,7 @@ void lat_select(void)
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
-    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
   if (false) {
