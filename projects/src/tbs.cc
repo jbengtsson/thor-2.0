@@ -38,9 +38,7 @@ const double
   beta_inj[]     = {8.7, 2.1},
   A_max[]        = {2.5e-3, 0.5e-3},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
-  twoJ_tot       = sqrt(sqr(twoJ[X_])+sqr(twoJ[Y_])),
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
-  twoJ_tot_delta = sqrt(sqr(twoJ_delta[X_])+sqr(twoJ_delta[Y_])),
   delta_max      = 2.5e-2;
 
 const double
@@ -48,11 +46,12 @@ const double
   scl_dnu[]      = {1e0, 1e0, 1e0, 1e0, 1e0},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {0e3, 0e2, 0e2, 0e2},
+  scl_dnu_conf[] = {1e2,  1e2,  1e2,  1e2,
+                    1e-3, 1e-3, 1e-3, 1e-3},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 1e15,
+  scl_dnu_2d     = 0e10,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -263,12 +262,9 @@ double gauss_quad_2D(double (*func)(const double),
 
 double gauss_quad_2D_y0(const double x) { return 0e0; }
 
-double gauss_quad_2D_y1(const double x)
-{
-  return sqrt(sqr(twoJ_tot)-sqr(twoJ[Y_]));
-}
+double gauss_quad_2D_y1(const double x) { return twoJ[Y_]; }
 
-double gauss_quad_2D_fy(const double y)  { return (*func_save_2D)(xsav_2D, y); }
+double gauss_quad_2D_fy(const double y) { return (*func_save_2D)(xsav_2D, y); }
 
 double gauss_quad_2D_fx(const double x)
 {
@@ -349,20 +345,11 @@ double gauss_quad_3D(double (*func)(const double),
 
 double gauss_quad_3D_y0(const double x) { return 0e0; }
 
-double gauss_quad_3D_y1(const double x)
-{
-  return sqrt(sqr(twoJ_tot_delta)-sqr(twoJ_delta[Y_]));
-}
+double gauss_quad_3D_y1(const double x) { return twoJ_delta[Y_]; }
 
-double gauss_quad_3D_z0(const double x, const double y)
-{
-  return -delta_max;
-}
+double gauss_quad_3D_z0(const double x, const double y) { return -delta_max; }
 
-double gauss_quad_3D_z1(const double x, const double y)
-{
-  return delta_max;
-}
+double gauss_quad_3D_z1(const double x, const double y) { return delta_max; }
 
 double gauss_quad_3D_fz(const double z)
 {
@@ -730,7 +717,8 @@ void get_dK(std::vector<double> &dK)
 }
 
 
-void get_b(std::vector<double> &dK, std::vector<double> &b)
+void get_b(std::vector<double> &dK, std::vector<double> &b,
+	   std::vector<double> &c)
 {
   int k;
 
@@ -738,13 +726,29 @@ void get_b(std::vector<double> &dK, std::vector<double> &b)
 
   k = 0;
   b.clear();
+  c.clear();
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
-  b.push_back(scl_dnu_conf[0]*sqr(dK[k])); k++;
-  b.push_back(scl_dnu_conf[1]*sqr(dK[k])); k++;
-  b.push_back(scl_dnu_conf[2]*sqr(dK[k])); k++;
-  b.push_back(scl_dnu_conf[3]*sqr(dK[k])); k++;
+  c.push_back(fabs(dK[k])); k++;
+  c.push_back(fabs(dK[k])); k++;
+  c.push_back(fabs(dK[k])); k++;
+  c.push_back(fabs(dK[k])); k++;
+
+  c.push_back(scl_dnu_conf[0]*c[0]);
+  c.push_back(scl_dnu_conf[1]*c[1]);
+  c.push_back(scl_dnu_conf[2]*c[2]);
+  c.push_back(scl_dnu_conf[3]*c[3]);
+
+  c.push_back(exp(c[4]));
+  c.push_back(exp(c[5]));
+  c.push_back(exp(c[6]));
+  c.push_back(exp(c[7]));
+
+  b.push_back(scl_dnu_conf[4]*exp(c[8]));
+  b.push_back(scl_dnu_conf[5]*exp(c[9]));
+  b.push_back(scl_dnu_conf[6]*exp(c[10]));
+  b.push_back(scl_dnu_conf[7]*exp(c[11]));
 
   b.push_back(scl_dnu_2d*sqr(dK[k])); k++;
   b.push_back(scl_dnu_3d*sqr(dK[k])); k++;
@@ -783,10 +787,10 @@ double get_chi2(const bool prt)
 {
   int                 k;
   double              chi2, b_tc;
-  std::vector<double> dK, b;
+  std::vector<double> dK, b, c;
 
   get_dK(dK);
-  get_b(dK, b);
+  get_b(dK, b, c);
 
   chi2 = 0e0;
   for (k = 0; k < (int)b.size(); k++)
@@ -800,7 +804,11 @@ double get_chi2(const bool prt)
     printf("\n  ksi1        = [%7.5f, %7.5f] ([%9.3e, %9.3e])\n",
 	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
 	   b[0], b[1]);
-    printf("  Tune Conf.:   %9.3e %9.3e %9.3e %9.3e\n", b[2], b[3], b[4], b[5]);
+    printf("  Tune Conf.:   %9.3e %9.3e %9.3e %9.3e\n", c[0], c[1], c[2], c[3]);
+    printf("                %9.3e %9.3e %9.3e %9.3e\n", c[4], c[5], c[6], c[7]);
+    printf("                %9.3e %9.3e %9.3e %9.3e\n",
+	   c[8], c[9], c[10], c[11]);
+    printf("                %9.3e %9.3e %9.3e %9.3e\n", b[2], b[3], b[4], b[5]);
     // printf("                %9.3e\n", b_tc);
     printf("  |dnu|       = %9.3e\n", b[6]);
     printf("  |dnu_delta| = %9.3e\n", b[7]);
@@ -914,15 +922,15 @@ void lat_select(void)
 
   const double
     //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 5e2,  2e3, 0e0, 1e7},
-    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 0e2, 1e4};
+    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e4, 0e0, 1e8},
+    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e2};
 
   if (true) {
     bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
-    // bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
   if (false) {
@@ -938,12 +946,12 @@ void lat_select(void)
     }
 
     if (false) {
-      bn_prms.add_prm("sh1a", 6, -bn_max[6]/0.1, bn_max[6]/0.1, 1e1);
-      bn_prms.add_prm("sh1b", 6, -bn_max[6]/0.1, bn_max[6]/0.1, 1e1);
+      // bn_prms.add_prm("sh1a", 6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
+      // bn_prms.add_prm("sh1b", 6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
 
-      bn_prms.add_prm("sh2",  6, -bn_max[6]/0.1, bn_max[6]/0.1, 1e2);
-      bn_prms.add_prm("s",    6, -bn_max[6]/0.1, bn_max[6]/0.1, 1e2);
-      bn_prms.add_prm("of1",  6, -bn_max[6],     bn_max[6],     1e2);
+      bn_prms.add_prm("sh2",  6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
+      bn_prms.add_prm("s",    6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
+      bn_prms.add_prm("of1",  6, -bn_max[6],     bn_max[6],     dbn[6]);
     }
   }
 
@@ -954,14 +962,14 @@ void lat_select(void)
   }
 
   if (false) {
-    bn_prms.add_prm("sf1", 5, -1e4, 1e4, 1e1);
-    bn_prms.add_prm("sd1", 5, -1e4, 1e4, 1e1);
-    bn_prms.add_prm("sd2", 5, -1e4, 1e4, 1e1);
+    bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], 1e1);
+    bn_prms.add_prm("sd1", 5, -bn_max[5], bn_max[5], 1e1);
+    bn_prms.add_prm("sd2", 5, -bn_max[5], bn_max[5], 1e1);
   }
 
-  // bn_prms.add_prm("sf1", 6, 1e4, 1e2);
-  // bn_prms.add_prm("sd1", 6, 1e4, 1e2);
-  // bn_prms.add_prm("sd2", 6, 1e4, 1e2);
+  // bn_prms.add_prm("sf1", 6, -bn_max[6], bn_max[6], dbn[6]);
+  // bn_prms.add_prm("sd1", 6, -bn_max[6], bn_max[6], dbn[6]);
+  // bn_prms.add_prm("sd2", 6, -bn_max[6], bn_max[6], dbn[6]);
 }
 
 
