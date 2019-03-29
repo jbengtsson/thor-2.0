@@ -23,8 +23,6 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 const double tpsa_eps = 1e-30;
 
-std::vector<std::string> drv_term;
-
 int          n_iter;
 double       chi2_ref = 1e30;
 tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
@@ -43,7 +41,7 @@ const double
 
 const double
   scl_h[]        = {0e0, 0e0, 0e0},
-  scl_dnu[]      = {1e0, 1e0, 0e0},
+  scl_dnu[]      = {1e0, 1e0, 1e0},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
   scl_dnu_conf[] = {1e2, 1e0, 1e0, 1e0,
@@ -480,20 +478,10 @@ void prt_name(FILE *outf, const char *name, const std::string &str,
 }
 
 
-tps get_a(const double scale, const tps &t,
-	     const int i, const int j, const int k, const int l, const int m)
+tps get_a(const tps &t,
+	  const int i, const int j, const int k, const int l, const int m)
 {
-  return
-    scale*(h_ijklm(t, i, j, k, l, m)
-	   +h_ijklm_p(t, i, j, k, l, m, 7)*tps(0e0, 7));
-}
-
-
-double get_b(const std::string &label, const double scale, const tps &t,
-	     const int i, const int j, const int k, const int l, const int m)
-{
-  drv_term.push_back(label);
-  return scale*(h_ijklm(t, i, j, k, l, m));
+  return h_ijklm(t, i, j, k, l, m) + h_ijklm_p(t, i, j, k, l, m, 7)*tps(0e0, 7);
 }
 
 
@@ -690,9 +678,9 @@ void prt_dnu(void)
 }
 
 
-template<typename T>
-void get_dK(std::vector<T> &dK)
+void get_dK(std::vector<tps> &dK)
 {
+  int    k;
   double dnu, dnu_delta;
 
   danot_(NO-1);
@@ -707,55 +695,54 @@ void get_dK(std::vector<T> &dK)
   dnu = gauss_quad_2D(f_gauss_quad_2D, 0e0, twoJ[X_]);
   dnu_delta = gauss_quad_3D(f_gauss_quad_3D, 0e0, twoJ_delta[X_]);
 
-  dK.clear();
+  k = 0;
 
-  dK.push_back(h_ijklm(nus[3], 0, 0, 0, 0, 1));
-  dK.push_back(h_ijklm(nus[4], 0, 0, 0, 0, 1));
+  dK[k++] = get_a(nus[3], 0, 0, 0, 0, 1);
+  dK[k++] = get_a(nus[4], 0, 0, 0, 0, 1);
 
-  dK.push_back(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0));
-  dK.push_back(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
+  dK[k++] = get_a(nus_scl[3], 1, 1, 0, 0, 0);
+  dK[k++] = get_a(nus_scl[3], 2, 2, 0, 0, 0);
 
-  dK.push_back(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
-  dK.push_back(h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
+  dK[k++] = get_a(nus_scl[3], 0, 0, 1, 1, 0);
+  dK[k++] = get_a(nus_scl[3], 0, 0, 2, 2, 0);
 
-  dK.push_back(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0));
-  dK.push_back(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
+  dK[k++] = get_a(nus_scl[4], 0, 0, 1, 1, 0);
+  dK[k++] = get_a(nus_scl[4], 0, 0, 2, 2, 0);
 
-  dK.push_back(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0));
-  dK.push_back(h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
+  dK[k++] = get_a(nus_scl[4], 1, 1, 0, 0, 0);
+  dK[k++] = get_a(nus_scl[4], 2, 2, 0, 0, 0);
 
-  dK.push_back(dnu);
-  dK.push_back(dnu_delta);
+  dK[k++] = dnu;
+  dK[k++] = dnu_delta;
 
-  dK.push_back(h_ijklm(K_re_scl, 2, 2, 0, 0, 0));
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 1, 1, 0));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 2, 2, 0));
+  dK[k++] = get_a(K_re_scl, 2, 2, 0, 0, 0);
+  dK[k++] = get_a(K_re_scl, 1, 1, 1, 1, 0);
+  dK[k++] = get_a(K_re_scl, 0, 0, 2, 2, 0);
 
-  dK.push_back(h_ijklm(K_re_scl, 3, 3, 0, 0, 0));
-  dK.push_back(h_ijklm(K_re_scl, 2, 2, 1, 1, 0));
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 2, 2, 0));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 3, 3, 0));
+  dK[k++] = get_a(K_re_scl, 3, 3, 0, 0, 0);
+  dK[k++] = get_a(K_re_scl, 2, 2, 1, 1, 0);
+  dK[k++] = get_a(K_re_scl, 1, 1, 2, 2, 0);
+  dK[k++] = get_a(K_re_scl, 0, 0, 3, 3, 0);
 
-  dK.push_back(h_ijklm(K_re_scl, 4, 4, 0, 0, 0));
-  dK.push_back(h_ijklm(K_re_scl, 3, 3, 1, 1, 0));
-  dK.push_back(h_ijklm(K_re_scl, 2, 2, 2, 2, 0));
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 3, 3, 0));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 4, 4, 0));
+  dK[k++] = get_a(K_re_scl, 4, 4, 0, 0, 0);
+  dK[k++] = get_a(K_re_scl, 3, 3, 1, 1, 0);
+  dK[k++] = get_a(K_re_scl, 2, 2, 2, 2, 0);
+  dK[k++] = get_a(K_re_scl, 1, 1, 3, 3, 0);
+  dK[k++] = get_a(K_re_scl, 0, 0, 4, 4, 0);
 
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 2));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 2));
+  dK[k++] = get_a(K_re_scl, 1, 1, 0, 0, 2);
+  dK[k++] = get_a(K_re_scl, 0, 0, 1, 1, 2);
 
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 3));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 3));
+  dK[k++] = get_a(K_re_scl, 1, 1, 0, 0, 3);
+  dK[k++] = get_a(K_re_scl, 0, 0, 1, 1, 3);
 
-  dK.push_back(h_ijklm(K_re_scl, 1, 1, 0, 0, 4));
-  dK.push_back(h_ijklm(K_re_scl, 0, 0, 1, 1, 4));
+  dK[k++] = get_a(K_re_scl, 1, 1, 0, 0, 4);
+  dK[k++] = get_a(K_re_scl, 0, 0, 1, 1, 4);
 }
 
 
 template<typename T>
-void dK_shift(const double scl, const T dnu1, const T dnu2,
-	      std::vector<T> &dK)
+void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &dK)
 {
   double dnu[2], dnu_m;
 
@@ -829,42 +816,42 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, std::vector<T> &c)
 
 double get_chi2(const bool prt)
 {
-  int                 k;
-  double              chi2;
-  std::vector<double> dK, b, c;
+  int              k;
+  double           chi2;
+  std::vector<tps> dK, b, c;
 
   get_dK(dK);
   get_b(dK, b, c);
 
   chi2 = 0e0;
   for (k = 0; k < (int)b.size(); k++)
-    chi2 += b[k];
+    chi2 += b[k].cst();
  
   if (prt && (chi2 < chi2_ref)) {
     prt_dnu();
 
     printf("\n  ksi1        = [%7.5f, %7.5f] ([%9.3e, %9.3e])\n",
 	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
-	   b[0], b[1]);
+	   b[0].cst(), b[1].cst());
 
     printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
-	   c[0], c[2], c[4], c[6]);
+	   c[0].cst(), c[2].cst(), c[4].cst(), c[6].cst());
     printf("                %10.3e %10.3e %10.3e %10.3e\n",
-	   c[1], c[3], c[5], c[7]);
+	   c[1].cst(), c[3].cst(), c[5].cst(), c[7].cst());
     printf("\n                %10.3e %10.3e %10.3e %10.3e\n",
-	   b[2], b[4], b[6], b[8]);
+	   b[2].cst(), b[4].cst(), b[6].cst(), b[8].cst());
     printf("                %10.3e %10.3e %10.3e %10.3e\n",
-	   b[3], b[5], b[7], b[9]);
+	   b[3].cst(), b[5].cst(), b[7].cst(), b[9].cst());
 
-    printf("\n  |dnu|       = %10.3e\n", b[10]);
-    printf("  |dnu_delta| = %10.3e\n", b[11]);
+    printf("\n  |dnu|       = %10.3e\n", b[10].cst());
+    printf("  |dnu_delta| = %10.3e\n", b[11].cst());
 
     printf("\n  K:            %10.3e %10.3e %10.3e\n",
-	   b[12], b[13], b[14]);
+	   b[12].cst(), b[13].cst(), b[14].cst());
     printf("                %10.3e %10.3e %10.3e %10.3e\n",
-	   b[15], b[16], b[17], b[18]);
+	   b[15].cst(), b[16].cst(), b[17].cst(), b[18].cst());
     printf("                %10.3e %10.3e %10.3e %10.3e %10.3e\n",
-	   b[19], b[20], b[21], b[22], b[23]);
+	   b[19].cst(), b[20].cst(), b[21].cst(), b[22].cst(), b[23].cst());
 
     printf("\n  %-4d chi2: %21.15e -> %21.15e\n", n_iter, chi2_ref, chi2);
   }
