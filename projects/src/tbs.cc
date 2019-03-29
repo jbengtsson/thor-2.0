@@ -480,10 +480,12 @@ void prt_name(FILE *outf, const char *name, const std::string &str,
 }
 
 
-double get_a(const double scale, const tps &t,
+tps get_a(const double scale, const tps &t,
 	     const int i, const int j, const int k, const int l, const int m)
 {
-  return scale*(h_ijklm_p(t, i, j, k, l, m, 7));
+  return
+    scale*(h_ijklm(t, i, j, k, l, m)
+	   +h_ijklm_p(t, i, j, k, l, m, 7)*tps(0e0, 7));
 }
 
 
@@ -893,17 +895,24 @@ void df_nl(double *bn, double *df)
 
 void df_nl2(double *bn, double *df)
 {
-  int    k;
-  double eps;
+  int                 i, k;
+  double              chi2;
+  std::vector<double> dK, b, c;
 
   const bool prt = !false;
 
   bn_prms.set_prm(bn);
-  for (k = 0; k < bn_prms.n_bn; k++) {
-    bn_prms.set_prm_dep(k);
+  for (i = 0; i < bn_prms.n_bn; i++) {
+    bn_prms.set_prm_dep(i);
 
+  get_dK(dK);
+  get_b(dK, b, c);
 
-    bn_prms.clr_prm_dep(k);
+  chi2 = 0e0;
+  for (k = 0; k < (int)b.size(); k++)
+    chi2 += b[k];
+ 
+    bn_prms.clr_prm_dep(i);
    }
 
   if (prt)
