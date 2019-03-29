@@ -690,7 +690,8 @@ void prt_dnu(void)
 }
 
 
-void get_dK(std::vector<double> &dK)
+template<typename T>
+void get_dK(std::vector<T> &dK)
 {
   double dnu, dnu_delta;
 
@@ -752,19 +753,22 @@ void get_dK(std::vector<double> &dK)
 }
 
 
-void dK_shift(const double scl, const double dnu1, const double dnu2,
-	      std::vector<double> &dK)
+template<typename T>
+void dK_shift(const double scl, const T dnu1, const T dnu2,
+	      std::vector<T> &dK)
 {
-  double dnu_m;
+  double dnu[2], dnu_m;
 
-  dnu_m = (fabs(dnu1)+fabs(dnu2))/2e0;
-  dK.push_back(scl*fabs(fabs(dnu1)-dnu_m));
-  dK.push_back(scl*fabs(fabs(dnu2)-dnu_m));
+  dnu[0] = fabs(is_double<T>::cst(dnu1));
+  dnu[1] = fabs(is_double<T>::cst(dnu2));
+  dnu_m = (dnu[0]+dnu[1])/2e0;
+  dK.push_back(scl*(dnu[0]-dnu_m));
+  dK.push_back(scl*(dnu[1]-dnu_m));
 }
 
 
-void get_b(std::vector<double> &dK, std::vector<double> &b,
-	   std::vector<double> &c)
+template<typename T>
+void get_b(std::vector<T> &dK, std::vector<T> &b, std::vector<T> &c)
 {
   int k;
 
@@ -895,9 +899,9 @@ void df_nl(double *bn, double *df)
 
 void df_nl2(double *bn, double *df)
 {
-  int                 i, k;
-  double              chi2;
-  std::vector<double> dK, b, c;
+  int              i, k;
+  tps              chi2;
+  std::vector<tps> dK, b, c;
 
   const bool prt = !false;
 
@@ -905,12 +909,12 @@ void df_nl2(double *bn, double *df)
   for (i = 0; i < bn_prms.n_bn; i++) {
     bn_prms.set_prm_dep(i);
 
-  get_dK(dK);
-  get_b(dK, b, c);
+    get_dK(dK);
+    get_b(dK, b, c);
 
-  chi2 = 0e0;
-  for (k = 0; k < (int)b.size(); k++)
-    chi2 += b[k];
+    chi2 = 0e0;
+    for (k = 0; k < (int)b.size(); k++)
+      chi2 += b[k];
  
     bn_prms.clr_prm_dep(i);
    }
