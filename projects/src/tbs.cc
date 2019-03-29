@@ -36,22 +36,22 @@ const int n_prt = 8;
 // Center of straight.
 const double
   beta_inj[]     = {8.7, 2.1},
-  A_max[]        = {3e-3, 0.75e-3},
+  A_max[]        = {3e-3, 1e-3},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max      = 2.5e-2;
 
 const double
   scl_h[]        = {0e0, 0e0, 0e0},
-  scl_dnu[]      = {1e0, 1e0, 1e0, 1e0, 1e0},
+  scl_dnu[]      = {1e0, 1e0, 0e0},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e1,  1e1,  1e1,  1e1,
-                    1e-1, 1e-1, 1e-1, 1e-1},
+  scl_dnu_conf[] = {1e2, 1e0, 1e0, 1e0,
+                    1e0, 1e0, 1e0, 1e0},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 1e12,
+  scl_dnu_2d     = 1e8,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -73,7 +73,9 @@ public:
 	       const double bn_min, const double bn_max, const double dbn);
   void ini_prm(double *bn);
   void set_prm(double *bn) const;
-  void set_dparam(const int k, const double eps) const;
+  void set_prm_dep(const int k) const;
+  void clr_prm_dep(const int k) const;
+  void set_dprm(const int k, const double eps) const;
   void prt_bn(double *bn) const;
   void prt_bn_lat(void) const;
 };
@@ -140,7 +142,35 @@ void param_type::set_prm(double *bn) const
 }
 
 
-void param_type::set_dparam(const int k, double eps) const
+void param_type::set_prm_dep(const int k) const
+{
+  int j;
+
+  for (j = 1; j <= get_n_Kids(Fnum[k]); j++)
+    if (n[k] > 0)
+      set_bn_par(Fnum[k], j, n[k], 7);
+    else if (n[k] == -1)
+      set_L_par(Fnum[k], j, 7);
+    else if (n[k] == -2)
+      set_s_par(Fnum[k], j, 7);
+}
+
+
+void param_type::clr_prm_dep(const int k) const
+{
+  int j;
+
+  for (j = 1; j <= get_n_Kids(Fnum[k]); j++)
+    if (n[k] > 0)
+      clr_bn_par(Fnum[k], j, n[k]);
+    else if (n[k] == -1)
+      clr_L_par(Fnum[k], j);
+    else if (n[k] == -2)
+      clr_s_par(Fnum[k], j);
+}
+
+
+void param_type::set_dprm(const int k, double eps) const
 {
   char ch;
 
@@ -148,7 +178,7 @@ void param_type::set_dparam(const int k, double eps) const
 
   if (prt) {
     ch = (eps >= 0e0)? '+' : '-';
-    printf("\nset_dparam:\n  %12.5e %c %11.5e",
+    printf("\nset_dprm:\n  %12.5e %c %11.5e",
 	   get_bn(Fnum[k], 1, n[k]), ch, fabs(eps));
   }
   set_dbn(Fnum[k], n[k], eps);
@@ -679,14 +709,17 @@ void get_dK(std::vector<double> &dK)
   dK.push_back(h_ijklm(nus[3], 0, 0, 0, 0, 1));
   dK.push_back(h_ijklm(nus[4], 0, 0, 0, 0, 1));
 
-  dK.push_back(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)
-	       +h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
-  dK.push_back(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)
-	       +h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
-  dK.push_back(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)
-	       +h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
-  dK.push_back(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)
-	       +h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
+  dK.push_back(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0));
+  dK.push_back(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
+
+  dK.push_back(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
+  dK.push_back(h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
+
+  dK.push_back(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0));
+  dK.push_back(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
+
+  dK.push_back(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0));
+  dK.push_back(h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
 
   dK.push_back(dnu);
   dK.push_back(dnu_delta);
@@ -717,6 +750,17 @@ void get_dK(std::vector<double> &dK)
 }
 
 
+void dK_shift(const double scl, const double dnu1, const double dnu2,
+	      std::vector<double> &dK)
+{
+  double dnu_m;
+
+  dnu_m = (fabs(dnu1)+fabs(dnu2))/2e0;
+  dK.push_back(scl*fabs(fabs(dnu1)-dnu_m));
+  dK.push_back(scl*fabs(fabs(dnu2)-dnu_m));
+}
+
+
 void get_b(std::vector<double> &dK, std::vector<double> &b,
 	   std::vector<double> &c)
 {
@@ -730,30 +774,24 @@ void get_b(std::vector<double> &dK, std::vector<double> &b,
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
-  c.push_back(fabs(dK[k])); k++;
-  c.push_back(fabs(dK[k])); k++;
-  c.push_back(fabs(dK[k])); k++;
-  c.push_back(fabs(dK[k])); k++;
+  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], c); k += 2;
+  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], c); k += 2;
+  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], c); k += 2;
+  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], c); k += 2;
 
-  c.push_back(scl_dnu_conf[0]*c[0]);
-  c.push_back(scl_dnu_conf[1]*c[1]);
-  c.push_back(scl_dnu_conf[2]*c[2]);
-  c.push_back(scl_dnu_conf[3]*c[3]);
-
-  c.push_back(exp(c[4])-1e0);
-  c.push_back(exp(c[5])-1e0);
-  c.push_back(exp(c[6])-1e0);
-  c.push_back(exp(c[7])-1e0);
-
-  b.push_back(scl_dnu_conf[4]*c[8]);
-  b.push_back(scl_dnu_conf[5]*c[9]);
-  b.push_back(scl_dnu_conf[6]*c[10]);
-  b.push_back(scl_dnu_conf[7]*c[11]);
+  b.push_back(scl_dnu_conf[4]*(exp(c[0])-1e0));
+  b.push_back(scl_dnu_conf[4]*(exp(c[1])-1e0));
+  b.push_back(scl_dnu_conf[5]*(exp(c[2])-1e0));
+  b.push_back(scl_dnu_conf[5]*(exp(c[3])-1e0));
+  b.push_back(scl_dnu_conf[6]*(exp(c[4])-1e0));
+  b.push_back(scl_dnu_conf[6]*(exp(c[5])-1e0));
+  b.push_back(scl_dnu_conf[7]*(exp(c[6])-1e0));
+  b.push_back(scl_dnu_conf[7]*(exp(c[7])-1e0));
 
   b.push_back(scl_dnu_2d*sqr(dK[k])); k++;
   b.push_back(scl_dnu_3d*sqr(dK[k])); k++;
 
-  if (!true) {
+  if (true) {
     b.push_back(scl_dnu[0]*sqr(dK[k])); k++;
     b.push_back(scl_dnu[0]*sqr(dK[k])); k++;
     b.push_back(scl_dnu[0]*sqr(dK[k])); k++;
@@ -787,7 +825,7 @@ double get_chi2(const bool prt)
 {
   int                 k;
   double              chi2;
-  std::vector<double> dK, b, c, b_tc;
+  std::vector<double> dK, b, c;
 
   get_dK(dK);
   get_b(dK, b, c);
@@ -796,32 +834,32 @@ double get_chi2(const bool prt)
   for (k = 0; k < (int)b.size(); k++)
     chi2 += b[k];
  
-  // b_tc.clear();
-
-  // b_tc.push_back(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
-  // b_tc.push_back(b_tc[0]+2e-2);
-  // b_tc.push_back(1e7*sqr(b_tc[1]));
-  // chi2 += b_tc[2];
-
   if (prt && (chi2 < chi2_ref)) {
     prt_dnu();
+
     printf("\n  ksi1        = [%7.5f, %7.5f] ([%9.3e, %9.3e])\n",
 	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
 	   b[0], b[1]);
+
     printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
-	   c[0], c[1], c[2], c[3]);
+	   c[0], c[2], c[4], c[6]);
     printf("                %10.3e %10.3e %10.3e %10.3e\n",
-	   c[4], c[5], c[6], c[7]);
+	   c[1], c[3], c[5], c[7]);
+    printf("\n                %10.3e %10.3e %10.3e %10.3e\n",
+	   b[2], b[4], b[6], b[8]);
     printf("                %10.3e %10.3e %10.3e %10.3e\n",
-	   c[8], c[9], c[10], c[11]);
-    printf("                %10.3e %10.3e %10.3e %10.3e\n",
-	   b[2], b[3], b[4], b[5]);
+	   b[3], b[5], b[7], b[9]);
 
-    // printf("\n                %10.3e %10.3e %10.3e\n",
-    // 	   b_tc[0], b_tc[1], b_tc[2]);
+    printf("\n  |dnu|       = %10.3e\n", b[10]);
+    printf("  |dnu_delta| = %10.3e\n", b[11]);
 
-    printf("\n  |dnu|       = %10.3e\n", b[6]);
-    printf("  |dnu_delta| = %10.3e\n", b[7]);
+    printf("\n  K:            %10.3e %10.3e %10.3e\n",
+	   b[12], b[13], b[14]);
+    printf("                %10.3e %10.3e %10.3e %10.3e\n",
+	   b[15], b[16], b[17], b[18]);
+    printf("                %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	   b[19], b[20], b[21], b[22], b[23]);
+
     printf("\n  %-4d chi2: %21.15e -> %21.15e\n", n_iter, chi2_ref, chi2);
   }
 
@@ -839,14 +877,34 @@ void df_nl(double *bn, double *df)
   bn_prms.set_prm(bn);
   for (k = 0; k < bn_prms.n_bn; k++) {
     eps = bn_prms.dbn[k];
-    bn_prms.set_dparam(k, eps);
+    bn_prms.set_dprm(k, eps);
     df[k+1] = get_chi2(false);
-    bn_prms.set_dparam(k, -2e0*eps);
+    bn_prms.set_dprm(k, -2e0*eps);
     df[k+1] -= get_chi2(false);
     df[k+1] /= 2e0*eps;
 
-    bn_prms.set_dparam(k, eps);
+    bn_prms.set_dprm(k, eps);
   }
+
+  if (prt)
+    dvdump(stdout, (char *)"\ndf_nl:", df, bn_prms.n_bn, (char *)" %12.5e");
+}
+
+
+void df_nl2(double *bn, double *df)
+{
+  int    k;
+  double eps;
+
+  const bool prt = !false;
+
+  bn_prms.set_prm(bn);
+  for (k = 0; k < bn_prms.n_bn; k++) {
+    bn_prms.set_prm_dep(k);
+
+
+    bn_prms.clr_prm_dep(k);
+   }
 
   if (prt)
     dvdump(stdout, (char *)"\ndf_nl:", df, bn_prms.n_bn, (char *)" %12.5e");
