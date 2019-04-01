@@ -34,7 +34,7 @@ const int n_prt = 8;
 // Center of straight.
 const double
   beta_inj[]     = {8.7, 2.1},
-  A_max[]        = {3e-3, 1e-3},
+  A_max[]        = {2.5e-3, 0.5e-3},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max      = 2.5e-2;
@@ -44,12 +44,12 @@ const double
   scl_dnu[]      = {1e-1, 1e-1, 1e-1},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e2, 1e0, 1e0, 1e0,
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1,
                     1e1, 1e1, 1e1, 1e1},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 0e8,
+  scl_dnu_2d     = 1e10,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -490,7 +490,7 @@ void prt_dnu(void)
 
   const bool chrom = !true;
 
-  printf("\ndnu(2J=[%10.3e, %10.3e]):\n", twoJ[X_], twoJ[Y_]);
+  printf("\ndnu(2J=[%9.3e, %9.3e]):\n", twoJ[X_], twoJ[Y_]);
   printf("   k_22000    k_11110    k_00220\n");
   printf("   k_33000    k_22110    k_11220    k_00330\n");
   printf("   k_44000    k_33110    k_22220    k_11330    k_00440\n");
@@ -740,16 +740,24 @@ void get_dK(std::vector<tps> &dK)
 }
 
 
+tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
+
+
 template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &dK)
 {
-  tps dnu[2], dnu_m;
+  dK.push_back(scl*tps_abs((dnu1+dnu2)));
+}
 
-  dnu[0] = (dnu1.cst() > 0e0)? dnu1 : -dnu1;
-  dnu[1] = (dnu2.cst() > 0e0)? dnu2 : -dnu2;
-  dnu_m = (dnu[0]+dnu[1])/2e0;
-  dK.push_back(scl*(dnu[0]-dnu_m));
-  dK.push_back(scl*(dnu[1]-dnu_m));
+
+template<typename T>
+void dK_shift2(const double scl, const T dnu1, const T dnu2, std::vector<T> &dK)
+{
+  double dnu_m;
+
+  dnu_m = (dnu1.cst()+dnu2.cst())/2e0;
+  dK.push_back(scl*tps_abs(dnu1+dnu_m));
+  dK.push_back(scl*tps_abs(dnu2+dnu_m));
 }
 
 
@@ -763,13 +771,14 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, std::vector<T> &c)
   k = 0;
   b.clear();
   c.clear();
+
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
-  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], c); k += 2;
-  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], c); k += 2;
-  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], c); k += 2;
-  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], c); k += 2;
+  dK_shift2(scl_dnu_conf[0], dK[k], dK[k+1], c); k += 2;
+  dK_shift2(scl_dnu_conf[1], dK[k], dK[k+1], c); k += 2;
+  dK_shift2(scl_dnu_conf[2], dK[k], dK[k+1], c); k += 2;
+  dK_shift2(scl_dnu_conf[3], dK[k], dK[k+1], c); k += 2;
 
   b.push_back(scl_dnu_conf[4]*(exp(c[0])-1e0));
   b.push_back(scl_dnu_conf[4]*(exp(c[1])-1e0));
@@ -813,11 +822,13 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, std::vector<T> &c)
 }
 
 
-double get_chi2(const bool prt)
+double get_chi2(double *bn, const bool prt)
 {
   int              k;
   double           chi2;
   std::vector<tps> dK, b, c;
+
+  bn_prms.set_prm(bn);
 
   get_dK(dK);
   get_b(dK, b, c);
@@ -827,32 +838,46 @@ double get_chi2(const bool prt)
     chi2 += b[k].cst();
  
   if (prt && (chi2 < chi2_ref)) {
+    n_iter++;
+
     prt_dnu();
 
+    k = 0;
     printf("\n  ksi1        = [%7.5f, %7.5f] ([%9.3e, %9.3e])\n",
 	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
-	   b[0].cst(), b[1].cst());
-
+	   b[k].cst(), b[k+1].cst());
+    k += 2;
     printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
 	   c[0].cst(), c[2].cst(), c[4].cst(), c[6].cst());
     printf("                %10.3e %10.3e %10.3e %10.3e\n",
 	   c[1].cst(), c[3].cst(), c[5].cst(), c[7].cst());
     printf("\n                %10.3e %10.3e %10.3e %10.3e\n",
-	   b[2].cst(), b[4].cst(), b[6].cst(), b[8].cst());
+	   b[k].cst(), b[k+2].cst(), b[k+4].cst(), b[k+6].cst());
     printf("                %10.3e %10.3e %10.3e %10.3e\n",
-	   b[3].cst(), b[5].cst(), b[7].cst(), b[9].cst());
-
-    printf("\n  |dnu|       = %10.3e\n", b[10].cst());
-    printf("  |dnu_delta| = %10.3e\n", b[11].cst());
-
+	   b[k+1].cst(), b[k+3].cst(), b[k+5].cst(), b[k+7].cst());
+    k += 8;
+    printf("\n  |dnu|       = %10.3e\n", b[k].cst());
+    printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
+    k += 2;
     printf("\n  K:            %10.3e %10.3e %10.3e\n",
-	   b[12].cst(), b[13].cst(), b[14].cst());
+	   b[k].cst(), b[k+1].cst(), b[k+2].cst());
+    k += 3;
     printf("                %10.3e %10.3e %10.3e %10.3e\n",
-	   b[15].cst(), b[16].cst(), b[17].cst(), b[18].cst());
+	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
+    k += 4;
     printf("                %10.3e %10.3e %10.3e %10.3e %10.3e\n",
-	   b[19].cst(), b[20].cst(), b[21].cst(), b[22].cst(), b[23].cst());
+	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst(), b[k+4].cst());
+    k += 5;
+
+    printf("\n  bn:\n  ");
+    bn_prms.prt_bn(bn);
 
     printf("\n  %-4d chi2: %21.15e -> %21.15e\n", n_iter, chi2_ref, chi2);
+
+    prt_mfile("flat_file.fit");
+    bn_prms.prt_bn_lat();
+
+    chi2_ref = chi2;
   }
 
   return chi2;
@@ -898,9 +923,9 @@ void df_nl(double *bn, double *df)
   for (k = 0; k < bn_prms.n_bn; k++) {
     eps = bn_prms.dbn[k];
     bn_prms.set_dprm(k, eps);
-    df[k+1] = get_chi2(false);
+    df[k+1] = get_chi2(bn, false);
     bn_prms.set_dprm(k, -2e0*eps);
-    df[k+1] -= get_chi2(false);
+    df[k+1] -= get_chi2(bn, false);
     df[k+1] /= 2e0*eps;
     bn_prms.set_dprm(k, eps);
   }
@@ -912,25 +937,7 @@ void df_nl(double *bn, double *df)
 }
 
 
-double f_nl(double *bn)
-{
-  double chi2;
-
-  bn_prms.set_prm(bn);
-
-  chi2 = get_chi2(true);
-  if (chi2 < chi2_ref) {
-    n_iter++;
-    printf("\nbn:\n");
-    bn_prms.prt_bn(bn);
-    chi2_ref = chi2;
-
-    prt_mfile("flat_file.fit");
-    bn_prms.prt_bn_lat();
-  }
-
-  return chi2;
-}
+double f_nl(double *bn) { return get_chi2(bn, true); }
 
 
 void conj_grad(param_type &bn_prms, double (*f)(double *),
@@ -1000,18 +1007,20 @@ void lat_select(void)
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("of1", 3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
-  if (false) {
+  if (!false) {
     // Sextupole Length is 0.1 m.
 
     if (!false) {
       // bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
       // bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
 
-      bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
-      bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
-      bn_prms.add_prm("of1",  4, -bn_max[4],     bn_max[4],     dbn[4]);
+      // bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      // bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      // bn_prms.add_prm("of1",  4, -bn_max[4],     bn_max[4],     dbn[4]);
     }
 
     if (false) {
