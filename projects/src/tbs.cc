@@ -41,15 +41,15 @@ const double
 
 const double
   scl_h[]        = {0e0, 0e0, 0e0},
-  scl_dnu[]      = {1e0, 1e0, 1e0},
+  scl_dnu[]      = {1e-1, 1e-1, 1e-1},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
   scl_dnu_conf[] = {1e2, 1e0, 1e0, 1e0,
-                    1e0, 1e0, 1e0, 1e0},
+                    1e1, 1e1, 1e1, 1e1},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 1e8,
+  scl_dnu_2d     = 0e8,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -680,7 +680,6 @@ void prt_dnu(void)
 
 void get_dK(std::vector<tps> &dK)
 {
-  int    k;
   double dnu, dnu_delta;
 
   danot_(NO-1);
@@ -695,59 +694,59 @@ void get_dK(std::vector<tps> &dK)
   dnu = gauss_quad_2D(f_gauss_quad_2D, 0e0, twoJ[X_]);
   dnu_delta = gauss_quad_3D(f_gauss_quad_3D, 0e0, twoJ_delta[X_]);
 
-  k = 0;
+  dK.clear();
 
-  dK[k++] = get_a(nus[3], 0, 0, 0, 0, 1);
-  dK[k++] = get_a(nus[4], 0, 0, 0, 0, 1);
+  dK.push_back(get_a(nus[3], 0, 0, 0, 0, 1));
+  dK.push_back(get_a(nus[4], 0, 0, 0, 0, 1));
 
-  dK[k++] = get_a(nus_scl[3], 1, 1, 0, 0, 0);
-  dK[k++] = get_a(nus_scl[3], 2, 2, 0, 0, 0);
+  dK.push_back(get_a(nus_scl[3], 1, 1, 0, 0, 0));
+  dK.push_back(get_a(nus_scl[3], 2, 2, 0, 0, 0));
 
-  dK[k++] = get_a(nus_scl[3], 0, 0, 1, 1, 0);
-  dK[k++] = get_a(nus_scl[3], 0, 0, 2, 2, 0);
+  dK.push_back(get_a(nus_scl[3], 0, 0, 1, 1, 0));
+  dK.push_back(get_a(nus_scl[3], 0, 0, 2, 2, 0));
 
-  dK[k++] = get_a(nus_scl[4], 0, 0, 1, 1, 0);
-  dK[k++] = get_a(nus_scl[4], 0, 0, 2, 2, 0);
+  dK.push_back(get_a(nus_scl[4], 0, 0, 1, 1, 0));
+  dK.push_back(get_a(nus_scl[4], 0, 0, 2, 2, 0));
 
-  dK[k++] = get_a(nus_scl[4], 1, 1, 0, 0, 0);
-  dK[k++] = get_a(nus_scl[4], 2, 2, 0, 0, 0);
+  dK.push_back(get_a(nus_scl[4], 1, 1, 0, 0, 0));
+  dK.push_back(get_a(nus_scl[4], 2, 2, 0, 0, 0));
 
-  dK[k++] = dnu;
-  dK[k++] = dnu_delta;
+  dK.push_back(dnu);
+  dK.push_back(dnu_delta);
 
-  dK[k++] = get_a(K_re_scl, 2, 2, 0, 0, 0);
-  dK[k++] = get_a(K_re_scl, 1, 1, 1, 1, 0);
-  dK[k++] = get_a(K_re_scl, 0, 0, 2, 2, 0);
+  dK.push_back(get_a(K_re_scl, 2, 2, 0, 0, 0));
+  dK.push_back(get_a(K_re_scl, 1, 1, 1, 1, 0));
+  dK.push_back(get_a(K_re_scl, 0, 0, 2, 2, 0));
 
-  dK[k++] = get_a(K_re_scl, 3, 3, 0, 0, 0);
-  dK[k++] = get_a(K_re_scl, 2, 2, 1, 1, 0);
-  dK[k++] = get_a(K_re_scl, 1, 1, 2, 2, 0);
-  dK[k++] = get_a(K_re_scl, 0, 0, 3, 3, 0);
+  dK.push_back(get_a(K_re_scl, 3, 3, 0, 0, 0));
+  dK.push_back(get_a(K_re_scl, 2, 2, 1, 1, 0));
+  dK.push_back(get_a(K_re_scl, 1, 1, 2, 2, 0));
+  dK.push_back(get_a(K_re_scl, 0, 0, 3, 3, 0));
 
-  dK[k++] = get_a(K_re_scl, 4, 4, 0, 0, 0);
-  dK[k++] = get_a(K_re_scl, 3, 3, 1, 1, 0);
-  dK[k++] = get_a(K_re_scl, 2, 2, 2, 2, 0);
-  dK[k++] = get_a(K_re_scl, 1, 1, 3, 3, 0);
-  dK[k++] = get_a(K_re_scl, 0, 0, 4, 4, 0);
+  dK.push_back(get_a(K_re_scl, 4, 4, 0, 0, 0));
+  dK.push_back(get_a(K_re_scl, 3, 3, 1, 1, 0));
+  dK.push_back(get_a(K_re_scl, 2, 2, 2, 2, 0));
+  dK.push_back(get_a(K_re_scl, 1, 1, 3, 3, 0));
+  dK.push_back(get_a(K_re_scl, 0, 0, 4, 4, 0));
 
-  dK[k++] = get_a(K_re_scl, 1, 1, 0, 0, 2);
-  dK[k++] = get_a(K_re_scl, 0, 0, 1, 1, 2);
+  dK.push_back(get_a(K_re_scl, 1, 1, 0, 0, 2));
+  dK.push_back(get_a(K_re_scl, 0, 0, 1, 1, 2));
 
-  dK[k++] = get_a(K_re_scl, 1, 1, 0, 0, 3);
-  dK[k++] = get_a(K_re_scl, 0, 0, 1, 1, 3);
+  dK.push_back(get_a(K_re_scl, 1, 1, 0, 0, 3));
+  dK.push_back(get_a(K_re_scl, 0, 0, 1, 1, 3));
 
-  dK[k++] = get_a(K_re_scl, 1, 1, 0, 0, 4);
-  dK[k++] = get_a(K_re_scl, 0, 0, 1, 1, 4);
+  dK.push_back(get_a(K_re_scl, 1, 1, 0, 0, 4));
+  dK.push_back(get_a(K_re_scl, 0, 0, 1, 1, 4));
 }
 
 
 template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &dK)
 {
-  double dnu[2], dnu_m;
+  tps dnu[2], dnu_m;
 
-  dnu[0] = fabs(is_double<T>::cst(dnu1));
-  dnu[1] = fabs(is_double<T>::cst(dnu2));
+  dnu[0] = (dnu1.cst() > 0e0)? dnu1 : -dnu1;
+  dnu[1] = (dnu2.cst() > 0e0)? dnu2 : -dnu2;
   dnu_m = (dnu[0]+dnu[1])/2e0;
   dK.push_back(scl*(dnu[0]-dnu_m));
   dK.push_back(scl*(dnu[1]-dnu_m));
@@ -860,37 +859,13 @@ double get_chi2(const bool prt)
 }
 
 
-void df_nl(double *bn, double *df)
-{
-  int    k;
-  double eps;
-
-  const bool prt = !false;
-
-  bn_prms.set_prm(bn);
-  for (k = 0; k < bn_prms.n_bn; k++) {
-    eps = bn_prms.dbn[k];
-    bn_prms.set_dprm(k, eps);
-    df[k+1] = get_chi2(false);
-    bn_prms.set_dprm(k, -2e0*eps);
-    df[k+1] -= get_chi2(false);
-    df[k+1] /= 2e0*eps;
-
-    bn_prms.set_dprm(k, eps);
-  }
-
-  if (prt)
-    dvdump(stdout, (char *)"\ndf_nl:", df, bn_prms.n_bn, (char *)" %12.5e");
-}
-
-
 void df_nl2(double *bn, double *df)
 {
   int              i, k;
   tps              chi2;
   std::vector<tps> dK, b, c;
 
-  const bool prt = !false;
+  const bool prt = false;
 
   bn_prms.set_prm(bn);
   for (i = 0; i < bn_prms.n_bn; i++) {
@@ -902,9 +877,35 @@ void df_nl2(double *bn, double *df)
     chi2 = 0e0;
     for (k = 0; k < (int)b.size(); k++)
       chi2 += b[k];
+    df[i+1] = h_ijklm_p(chi2, 0, 0, 0, 0, 0, 7);
  
     bn_prms.clr_prm_dep(i);
-   }
+  }
+
+  if (prt)
+    dvdump(stdout, (char *)"\ndf_nl2:", df, bn_prms.n_bn, (char *)" %12.5e");
+}
+
+
+void df_nl(double *bn, double *df)
+{
+  int    k;
+  double eps;
+
+  const bool prt = false;
+
+  bn_prms.set_prm(bn);
+  for (k = 0; k < bn_prms.n_bn; k++) {
+    eps = bn_prms.dbn[k];
+    bn_prms.set_dprm(k, eps);
+    df[k+1] = get_chi2(false);
+    bn_prms.set_dprm(k, -2e0*eps);
+    df[k+1] -= get_chi2(false);
+    df[k+1] /= 2e0*eps;
+    bn_prms.set_dprm(k, eps);
+  }
+
+  df_nl2(bn, df);
 
   if (prt)
     dvdump(stdout, (char *)"\ndf_nl:", df, bn_prms.n_bn, (char *)" %12.5e");
