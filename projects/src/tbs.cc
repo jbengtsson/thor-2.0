@@ -45,7 +45,7 @@ const double
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1,
-                    1e1, 0e1, 0e1, 0e1},
+                    1e1, 1e1, 1e1, 1e1},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -1090,7 +1090,7 @@ int main(int argc, char *argv[])
 
   if (false) no_mpoles(3);
 
-  if (true)
+  if (!true)
     conj_grad(bn_prms, f_nl, df_nl);
   else
     powell(bn_prms, f_nl);
