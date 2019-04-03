@@ -42,7 +42,7 @@ const double
 const double
   scl_h[]        = {0e0, 0e0, 0e0},
   scl_dnu[]      = {1e-1, 1e-1, 1e-1},
-  scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
+  scl_ksi[]      = {0e0, 1e1, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1,
                     1e1, 1e1, 1e1, 1e1},
@@ -1005,7 +1005,7 @@ void lat_select(void)
 
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("of1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("of1", 3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
   if (!false) {
@@ -1083,7 +1083,7 @@ int main(int argc, char *argv[])
 
   lat_select();
 
-  if (!false) no_mpoles(3);
+  if (false) no_mpoles(3);
 
   if (!true)
     conj_grad(bn_prms, f_nl, df_nl);

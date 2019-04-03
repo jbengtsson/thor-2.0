@@ -10,44 +10,47 @@
 		http://www.netlib.org/f2c/libf2c.zip
 */
 
+#include <cmath>
+
 #include "f2c.h"
+
 
 /* Table of constant values */
 
-static integer c__1 = 1;
+static int c__1 = 1;
 
-/* Subroutine */ int bigden_(integer *n, integer *npt, doublereal *xopt, 
-	doublereal *xpt, doublereal *bmat, doublereal *zmat, integer *idz, 
-	integer *ndim, integer *kopt, integer *knew, doublereal *d__, 
-	doublereal *w, doublereal *vlag, doublereal *beta, doublereal *s, 
-	doublereal *wvec, doublereal *prod)
+/* Subroutine */ int bigden_(int *n, int *npt, double *xopt, 
+	double *xpt, double *bmat, double *zmat, int *idz, 
+	int *ndim, int *kopt, int *knew, double *d__, 
+	double *w, double *vlag, double *beta, double *s, 
+	double *wvec, double *prod)
 {
     /* System generated locals */
-    integer xpt_dim1, xpt_offset, bmat_dim1, bmat_offset, zmat_dim1, 
+    int xpt_dim1, xpt_offset, bmat_dim1, bmat_offset, zmat_dim1, 
 	    zmat_offset, wvec_dim1, wvec_offset, prod_dim1, prod_offset, i__1,
 	     i__2;
-    doublereal d__1;
+    double d__1;
 
     /* Builtin functions */
-    double atan(doublereal), sqrt(doublereal), cos(doublereal), sin(
-	    doublereal);
+    double atan(double), sqrt(double), cos(double), sin(
+	    double);
 
     /* Local variables */
-    static integer i__, j, k;
-    static doublereal dd;
-    static integer jc;
-    static doublereal ds;
-    static integer ip, iu, nw;
-    static doublereal ss, den[9], one, par[9], tau, sum, two, diff, half, 
+    static int i__, j, k;
+    static double dd;
+    static int jc;
+    static double ds;
+    static int ip, iu, nw;
+    static double ss, den[9], one, par[9], tau, sum, two, diff, half, 
 	    temp;
-    static integer ksav;
-    static doublereal step;
-    static integer nptm;
-    static doublereal zero, alpha, angle, denex[9];
-    static integer iterc;
-    static doublereal tempa, tempb, tempc;
-    static integer isave;
-    static doublereal ssden, dtest, quart, xoptd, twopi, xopts, denold, 
+    static int ksav;
+    static double step;
+    static int nptm;
+    static double zero, alpha, angle, denex[9];
+    static int iterc;
+    static double tempa, tempb, tempc;
+    static int isave;
+    static double ssden, dtest, quart, xoptd, twopi, xopts, denold, 
 	    denmax, densav, dstemp, sumold, sstemp, xoptsq;
 
 
@@ -385,11 +388,11 @@ L70:
     denmax = sum;
     isave = 0;
     iu = 49;
-    temp = twopi / (doublereal) (iu + 1);
+    temp = twopi / (double) (iu + 1);
     par[0] = one;
     i__1 = iu;
     for (i__ = 1; i__ <= i__1; ++i__) {
-	angle = (doublereal) i__ * temp;
+	angle = (double) i__ * temp;
 	par[1] = cos(angle);
 	par[2] = sin(angle);
 	for (j = 4; j <= 8; j += 2) {
@@ -424,7 +427,7 @@ L70:
 	tempb -= denmax;
 	step = half * (tempa - tempb) / (tempa + tempb);
     }
-    angle = temp * ((doublereal) isave + step);
+    angle = temp * ((double) isave + step);
 
 /*     Calculate the new parameters of the denominator, the new VLAG vector */
 /*     and the new D. Then test for convergence. */
@@ -531,31 +534,31 @@ L340:
     return 0;
 } /* bigden_ */
 
-/* Subroutine */ int biglag_(integer *n, integer *npt, doublereal *xopt, 
-	doublereal *xpt, doublereal *bmat, doublereal *zmat, integer *idz, 
-	integer *ndim, integer *knew, doublereal *delta, doublereal *d__, 
-	doublereal *alpha, doublereal *hcol, doublereal *gc, doublereal *gd, 
-	doublereal *s, doublereal *w)
+/* Subroutine */ int biglag_(int *n, int *npt, double *xopt, 
+	double *xpt, double *bmat, double *zmat, int *idz, 
+	int *ndim, int *knew, double *delta, double *d__, 
+	double *alpha, double *hcol, double *gc, double *gd, 
+	double *s, double *w)
 {
     /* System generated locals */
-    integer xpt_dim1, xpt_offset, bmat_dim1, bmat_offset, zmat_dim1, 
+    int xpt_dim1, xpt_offset, bmat_dim1, bmat_offset, zmat_dim1, 
 	    zmat_offset, i__1, i__2;
-    doublereal d__1;
+    double d__1;
 
     /* Builtin functions */
-    double atan(doublereal), sqrt(doublereal), cos(doublereal), sin(
-	    doublereal);
+    double atan(double), sqrt(double), cos(double), sin(
+	    double);
 
     /* Local variables */
-    static integer i__, j, k;
-    static doublereal dd, gg;
-    static integer iu;
-    static doublereal sp, ss, cf1, cf2, cf3, cf4, cf5, dhd, cth, one, tau, 
+    static int i__, j, k;
+    static double dd, gg;
+    static int iu;
+    static double sp, ss, cf1, cf2, cf3, cf4, cf5, dhd, cth, one, tau, 
 	    sth, sum, half, temp, step;
-    static integer nptm;
-    static doublereal zero, angle, scale, denom;
-    static integer iterc, isave;
-    static doublereal delsq, tempa, tempb, twopi, taubeg, tauold, taumax;
+    static int nptm;
+    static double zero, angle, scale, denom;
+    static int iterc, isave;
+    static double delsq, tempa, tempb, twopi, taubeg, tauold, taumax;
 
 
 /*     N is the number of variables. */
@@ -769,10 +772,10 @@ L80:
     tauold = taubeg;
     isave = 0;
     iu = 49;
-    temp = twopi / (doublereal) (iu + 1);
+    temp = twopi / (double) (iu + 1);
     i__2 = iu;
     for (i__ = 1; i__ <= i__2; ++i__) {
-	angle = (doublereal) i__ * temp;
+	angle = (double) i__ * temp;
 	cth = cos(angle);
 	sth = sin(angle);
 	tau = cf1 + (cf2 + cf4 * cth) * cth + (cf3 + cf5 * cth) * sth;
@@ -798,7 +801,7 @@ L80:
 	tempb -= taumax;
 	step = half * (tempa - tempb) / (tempa + tempb);
     }
-    angle = temp * ((doublereal) isave + step);
+    angle = temp * ((double) isave + step);
 
 /*     Calculate the new D and GD. Then test for convergence. */
 
@@ -822,16 +825,16 @@ L160:
     return 0;
 } /* biglag_ */
 
-/* Subroutine */ int calfun_(integer *n, doublereal *x, doublereal *f)
+/* Subroutine */ int calfun_(int *n, double *x, double *f)
 {
     /* System generated locals */
-    integer i__1, i__2;
+    int i__1, i__2;
 
     /* Local variables */
-    static integer i__, j;
-    static doublereal y[100]	/* was [10][10] */;
-    static integer np, iw;
-    static doublereal sum;
+    static int i__, j;
+    static double y[100]	/* was [10][10] */;
+    static int np, iw;
+    static double sum;
 
     /* Parameter adjustments */
     --x;
@@ -863,9 +866,9 @@ L160:
 /* L30: */
 	    sum += y[i__ + j * 10 - 11];
 	}
-	sum /= (doublereal) (*n);
+	sum /= (double) (*n);
 	if (iw > 0) {
-	    sum += 1. / (doublereal) (i__ * i__ - (i__ << 1));
+	    sum += 1. / (double) (i__ * i__ - (i__ << 1));
 	}
 	iw = -iw;
 /* L40: */
@@ -874,12 +877,12 @@ L160:
     return 0;
 } /* calfun_ */
 
-/* Subroutine */ int newuob_(integer *n, integer *npt, doublereal *x, 
-	doublereal *rhobeg, doublereal *rhoend, integer *iprint, integer *
-	maxfun, doublereal *xbase, doublereal *xopt, doublereal *xnew, 
-	doublereal *xpt, doublereal *fval, doublereal *gq, doublereal *hq, 
-	doublereal *pq, doublereal *bmat, doublereal *zmat, integer *ndim, 
-	doublereal *d__, doublereal *vlag, doublereal *w)
+/* Subroutine */ int newuob_(int *n, int *npt, double *x, 
+	double *rhobeg, double *rhoend, int *iprint, int *
+	maxfun, double *xbase, double *xopt, double *xnew, 
+	double *xpt, double *fval, double *gq, double *hq, 
+	double *pq, double *bmat, double *zmat, int *ndim, 
+	double *d__, double *vlag, double *w)
 {
     /* Format strings */
     static char fmt_320[] = "(/4x,\002Return from NEWUOA because CALFUN has "
@@ -897,56 +900,56 @@ L160:
 	    "umber of function values =\002,i6)";
 
     /* System generated locals */
-    integer xpt_dim1, xpt_offset, bmat_dim1, bmat_offset, zmat_dim1, 
+    int xpt_dim1, xpt_offset, bmat_dim1, bmat_offset, zmat_dim1, 
 	    zmat_offset, i__1, i__2, i__3;
-    doublereal d__1, d__2, d__3;
+    double d__1, d__2, d__3;
 
     /* Builtin functions */
-    double sqrt(doublereal);
-    integer s_wsfe(cilist *), e_wsfe(void), do_fio(integer *, char *, ftnlen);
+    double sqrt(double);
+    int s_wsfe(cilist *), e_wsfe(void), do_fio(int *, char *, ftnlen);
 
     /* Local variables */
-    static doublereal f;
-    static integer i__, j, k, ih, nf, nh, ip, jp;
-    static doublereal dx;
-    static integer np, nfm;
-    static doublereal one;
-    static integer idz;
-    static doublereal dsq, rho;
-    static integer ipt, jpt;
-    static doublereal sum, fbeg, diff, half, beta;
-    static integer nfmm;
-    static doublereal gisq;
-    static integer knew;
-    static doublereal temp, suma, sumb, fopt, bsum, gqsq;
-    static integer kopt, nptm;
-    static doublereal zero, xipt, xjpt, sumz, diffa, diffb, diffc, hdiag, 
+    static double f;
+    static int i__, j, k, ih, nf, nh, ip, jp;
+    static double dx;
+    static int np, nfm;
+    static double one;
+    static int idz;
+    static double dsq, rho;
+    static int ipt, jpt;
+    static double sum, fbeg, diff, half, beta;
+    static int nfmm;
+    static double gisq;
+    static int knew;
+    static double temp, suma, sumb, fopt, bsum, gqsq;
+    static int kopt, nptm;
+    static double zero, xipt, xjpt, sumz, diffa, diffb, diffc, hdiag, 
 	    alpha, delta, recip, reciq, fsave;
-    static integer ksave, nfsav, itemp;
-    static doublereal dnorm, ratio, dstep, tenth, vquad;
-    static integer ktemp;
-    static doublereal tempq;
-    static integer itest;
-    static doublereal rhosq;
-    extern /* Subroutine */ int biglag_(integer *, integer *, doublereal *, 
-	    doublereal *, doublereal *, doublereal *, integer *, integer *, 
-	    integer *, doublereal *, doublereal *, doublereal *, doublereal *,
-	     doublereal *, doublereal *, doublereal *, doublereal *), bigden_(
-	    integer *, integer *, doublereal *, doublereal *, doublereal *, 
-	    doublereal *, integer *, integer *, integer *, integer *, 
-	    doublereal *, doublereal *, doublereal *, doublereal *, 
-	    doublereal *, doublereal *, doublereal *), calfun_(integer *, 
-	    doublereal *, doublereal *), update_(integer *, integer *, 
-	    doublereal *, doublereal *, integer *, integer *, doublereal *, 
-	    doublereal *, integer *, doublereal *);
-    static doublereal detrat, crvmin;
-    static integer nftest;
-    static doublereal distsq;
-    extern /* Subroutine */ int trsapp_(integer *, integer *, doublereal *, 
-	    doublereal *, doublereal *, doublereal *, doublereal *, 
-	    doublereal *, doublereal *, doublereal *, doublereal *, 
-	    doublereal *, doublereal *, doublereal *);
-    static doublereal xoptsq;
+    static int ksave, nfsav, itemp;
+    static double dnorm, ratio, dstep, tenth, vquad;
+    static int ktemp;
+    static double tempq;
+    static int itest;
+    static double rhosq;
+    extern /* Subroutine */ int biglag_(int *, int *, double *, 
+	    double *, double *, double *, int *, int *, 
+	    int *, double *, double *, double *, double *,
+	     double *, double *, double *, double *), bigden_(
+	    int *, int *, double *, double *, double *, 
+	    double *, int *, int *, int *, int *, 
+	    double *, double *, double *, double *, 
+	    double *, double *, double *), calfun_(int *, 
+	    double *, double *), update_(int *, int *, 
+	    double *, double *, int *, int *, double *, 
+	    double *, int *, double *);
+    static double detrat, crvmin;
+    static int nftest;
+    static double distsq;
+    extern /* Subroutine */ int trsapp_(int *, int *, double *, 
+	    double *, double *, double *, double *, 
+	    double *, double *, double *, double *, 
+	    double *, double *, double *);
+    static double xoptsq;
 
     /* Fortran I/O blocks */
     static cilist io___141 = { 0, 6, 0, fmt_320, 0 };
@@ -1438,11 +1441,11 @@ L310:
     calfun_(n, &x[1], &f);
     if (*iprint == 3) {
 	s_wsfe(&io___142);
-	do_fio(&c__1, (char *)&nf, (ftnlen)sizeof(integer));
-	do_fio(&c__1, (char *)&f, (ftnlen)sizeof(doublereal));
+	do_fio(&c__1, (char *)&nf, (ftnlen)sizeof(int));
+	do_fio(&c__1, (char *)&f, (ftnlen)sizeof(double));
 	i__2 = *n;
 	for (i__ = 1; i__ <= i__2; ++i__) {
-	    do_fio(&c__1, (char *)&x[i__], (ftnlen)sizeof(doublereal));
+	    do_fio(&c__1, (char *)&x[i__], (ftnlen)sizeof(double));
 	}
 	e_wsfe();
     }
@@ -1781,15 +1784,15 @@ L490:
 		e_wsfe();
 	    }
 	    s_wsfe(&io___155);
-	    do_fio(&c__1, (char *)&rho, (ftnlen)sizeof(doublereal));
-	    do_fio(&c__1, (char *)&nf, (ftnlen)sizeof(integer));
+	    do_fio(&c__1, (char *)&rho, (ftnlen)sizeof(double));
+	    do_fio(&c__1, (char *)&nf, (ftnlen)sizeof(int));
 	    e_wsfe();
 	    s_wsfe(&io___156);
-	    do_fio(&c__1, (char *)&fopt, (ftnlen)sizeof(doublereal));
+	    do_fio(&c__1, (char *)&fopt, (ftnlen)sizeof(double));
 	    i__2 = *n;
 	    for (i__ = 1; i__ <= i__2; ++i__) {
 		d__1 = xbase[i__] + xopt[i__];
-		do_fio(&c__1, (char *)&d__1, (ftnlen)sizeof(doublereal));
+		do_fio(&c__1, (char *)&d__1, (ftnlen)sizeof(double));
 	    }
 	    e_wsfe();
 	}
@@ -1813,47 +1816,47 @@ L530:
     }
     if (*iprint >= 1) {
 	s_wsfe(&io___157);
-	do_fio(&c__1, (char *)&nf, (ftnlen)sizeof(integer));
+	do_fio(&c__1, (char *)&nf, (ftnlen)sizeof(int));
 	e_wsfe();
 	s_wsfe(&io___158);
-	do_fio(&c__1, (char *)&f, (ftnlen)sizeof(doublereal));
+	do_fio(&c__1, (char *)&f, (ftnlen)sizeof(double));
 	i__2 = *n;
 	for (i__ = 1; i__ <= i__2; ++i__) {
-	    do_fio(&c__1, (char *)&x[i__], (ftnlen)sizeof(doublereal));
+	    do_fio(&c__1, (char *)&x[i__], (ftnlen)sizeof(double));
 	}
 	e_wsfe();
     }
     return 0;
 } /* newuob_ */
 
-/* Subroutine */ int trsapp_(integer *n, integer *npt, doublereal *xopt, 
-	doublereal *xpt, doublereal *gq, doublereal *hq, doublereal *pq, 
-	doublereal *delta, doublereal *step, doublereal *d__, doublereal *g, 
-	doublereal *hd, doublereal *hs, doublereal *crvmin)
+/* Subroutine */ int trsapp_(int *n, int *npt, double *xopt, 
+	double *xpt, double *gq, double *hq, double *pq, 
+	double *delta, double *step, double *d__, double *g, 
+	double *hd, double *hs, double *crvmin)
 {
     /* System generated locals */
-    integer xpt_dim1, xpt_offset, i__1, i__2;
-    doublereal d__1, d__2;
+    int xpt_dim1, xpt_offset, i__1, i__2;
+    double d__1, d__2;
 
     /* Builtin functions */
-    double atan(doublereal), sqrt(doublereal), cos(doublereal), sin(
-	    doublereal);
+    double atan(double), sqrt(double), cos(double), sin(
+	    double);
 
     /* Local variables */
-    static integer i__, j, k;
-    static doublereal dd, cf, dg, gg;
-    static integer ih;
-    static doublereal ds, sg;
-    static integer iu;
-    static doublereal ss, dhd, dhs, cth, sgk, shs, sth, qadd, half, qbeg, 
+    static int i__, j, k;
+    static double dd, cf, dg, gg;
+    static int ih;
+    static double ds, sg;
+    static int iu;
+    static double ss, dhd, dhs, cth, sgk, shs, sth, qadd, half, qbeg, 
 	    qred, qmin, temp, qsav, qnew, zero, ggbeg, alpha, angle, reduc;
-    static integer iterc;
-    static doublereal ggsav, delsq, tempa, tempb;
-    static integer isave;
-    static doublereal bstep, ratio, twopi;
-    static integer itersw;
-    static doublereal angtest;
-    static integer itermax;
+    static int iterc;
+    static double ggsav, delsq, tempa, tempb;
+    static int isave;
+    static double bstep, ratio, twopi;
+    static int itersw;
+    static double angtest;
+    static int itermax;
 
 
 /*     N is the number of variables of a quadratic objective function, Q say. */
@@ -2064,10 +2067,10 @@ L120:
     qmin = qbeg;
     isave = 0;
     iu = 49;
-    temp = twopi / (doublereal) (iu + 1);
+    temp = twopi / (double) (iu + 1);
     i__1 = iu;
     for (i__ = 1; i__ <= i__1; ++i__) {
-	angle = (doublereal) i__ * temp;
+	angle = (double) i__ * temp;
 	cth = cos(angle);
 	sth = sin(angle);
 	qnew = (sg + cf * cth) * cth + (dg + dhs * cth) * sth;
@@ -2081,7 +2084,7 @@ L120:
 /* L140: */
 	qsav = qnew;
     }
-    if ((doublereal) isave == zero) {
+    if ((double) isave == zero) {
 	tempa = qnew;
     }
     if (isave == iu) {
@@ -2093,7 +2096,7 @@ L120:
 	tempb -= qmin;
 	angle = half * (tempa - tempb) / (tempa + tempb);
     }
-    angle = temp * ((doublereal) isave + angle);
+    angle = temp * ((double) isave + angle);
 
 /*     Calculate the new STEP and HS. Then test for convergence. */
 
@@ -2166,24 +2169,24 @@ L170:
     goto L120;
 } /* trsapp_ */
 
-/* Subroutine */ int update_(integer *n, integer *npt, doublereal *bmat, 
-	doublereal *zmat, integer *idz, integer *ndim, doublereal *vlag, 
-	doublereal *beta, integer *knew, doublereal *w)
+/* Subroutine */ int update_(int *n, int *npt, double *bmat, 
+	double *zmat, int *idz, int *ndim, double *vlag, 
+	double *beta, int *knew, double *w)
 {
     /* System generated locals */
-    integer bmat_dim1, bmat_offset, zmat_dim1, zmat_offset, i__1, i__2;
-    doublereal d__1, d__2;
+    int bmat_dim1, bmat_offset, zmat_dim1, zmat_offset, i__1, i__2;
+    double d__1, d__2;
 
     /* Builtin functions */
-    double sqrt(doublereal);
+    double sqrt(double);
 
     /* Local variables */
-    static integer i__, j, ja, jb, jl, jp;
-    static doublereal one, tau, temp;
-    static integer nptm;
-    static doublereal zero;
-    static integer iflag;
-    static doublereal scala, scalb, alpha, denom, tempa, tempb, tausq;
+    static int i__, j, ja, jb, jl, jp;
+    static double one, tau, temp;
+    static int nptm;
+    static double zero;
+    static int iflag;
+    static double scala, scalb, alpha, denom, tempa, tempb, tausq;
 
 
 /*     The arrays BMAT and ZMAT with IDZ are updated, in order to shift the */
@@ -2352,25 +2355,25 @@ L170:
     return 0;
 } /* update_ */
 
-/* Subroutine */ int newuoa_(integer *n, integer *npt, doublereal *x, 
-	doublereal *rhobeg, doublereal *rhoend, integer *iprint, integer *
-	maxfun, doublereal *w)
+/* Subroutine */ int newuoa_(int *n, int *npt, double *x, 
+	double *rhobeg, double *rhoend, int *iprint, int *
+	maxfun, double *w)
 {
     /* Format strings */
     static char fmt_10[] = "(/4x,\002Return from NEWUOA because NPT is not"
 	    " in\002,\002 the required interval\002)";
 
     /* Builtin functions */
-    integer s_wsfe(cilist *), e_wsfe(void);
+    int s_wsfe(cilist *), e_wsfe(void);
 
     /* Local variables */
-    static integer id, np, iw, igq, ihq, ixb, ifv, ipq, ivl, ixn, ixo, ixp, 
+    static int id, np, iw, igq, ihq, ixb, ifv, ipq, ivl, ixn, ixo, ixp, 
 	    ndim, nptm, ibmat, izmat;
-    extern /* Subroutine */ int newuob_(integer *, integer *, doublereal *, 
-	    doublereal *, doublereal *, integer *, integer *, doublereal *, 
-	    doublereal *, doublereal *, doublereal *, doublereal *, 
-	    doublereal *, doublereal *, doublereal *, doublereal *, 
-	    doublereal *, integer *, doublereal *, doublereal *, doublereal *)
+    extern /* Subroutine */ int newuob_(int *, int *, double *, 
+	    double *, double *, int *, int *, double *, 
+	    double *, double *, double *, double *, 
+	    double *, double *, double *, double *, 
+	    double *, int *, double *, double *, double *)
 	    ;
 
     /* Fortran I/O blocks */
