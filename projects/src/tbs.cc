@@ -753,7 +753,7 @@ tps dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &dK)
 template<typename T>
 tps dK_shift2(const T dnu1, const T dnu2)
 {
-  return(tps_abs((dnu1+dnu2)/2e0));
+  return(tps_abs(dnu1+dnu2+(dnu1.cst()+dnu2.cst())/2e0));
 }
 
 
@@ -818,20 +818,16 @@ double get_chi2(const bool prt)
 {
   int              n, k;
   double           chi2;
-  std::vector<tps> dK, b, c, b_extra;
+  std::vector<tps> dK, b, c;
 
   get_dK(dK);
   get_b(dK, b, c);
 
-  b_extra.clear();
   chi2 = 0e0;
   n = b.size();
   for (k = 0; k < n; k++)
     chi2 += b[k].cst();
 
-  b_extra.push_back(1e0*exp(1e2*(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)+1e-3)));
-  // chi2 += b_extra[0].cst();
- 
   if (prt && (chi2 < chi2_ref)) {
     printf("\nget_chi2(%1d):\n", n);
     prt_dnu();
@@ -846,7 +842,6 @@ double get_chi2(const bool prt)
     printf("                %10.3e %10.3e %10.3e %10.3e\n",
 	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
     k += 4;
-    printf("                %10.3e\n", b_extra[0].cst());
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
     k += 2;
@@ -1008,9 +1003,9 @@ void lat_select(void)
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
-    // bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("of1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("of1", 3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
   if (!false) {
@@ -1088,7 +1083,7 @@ int main(int argc, char *argv[])
 
   lat_select();
 
-  if (false) no_mpoles(3);
+  if (!false) no_mpoles(3);
 
   if (!true)
     conj_grad(bn_prms, f_nl, df_nl);
