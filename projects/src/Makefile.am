@@ -1,3 +1,5 @@
+SUBDIRS      = Powell
+
 bin_PROGRAMS = H_min max_iv_match max_iv_uc max_iv_dnu \
 	       vlad vlad_2 vlad_3 vlad_4 vlad_5 sls_2 diamond_ii delta \
                delta_lo delta_lo2 quad2d quad3d tune_conf tune_conf_2 \
@@ -45,7 +47,7 @@ AM_CPPFLAGS = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc  \
               -I$(HOME)/R-2.8.1/include \
 	      -I/usr/local/include -I/usr/include/openmpi
 
-#AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend -fPIC -Wl,--no-relax
-AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend -fPIC
+AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend -fPIC -Wl,--no-relax
+#AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend -fPIC
 #CXXFLAGS = -g -Wl,-stack_size -Wl,0x40000000 -O2 -Wall -Wno-non-template-friend
 UNLIMIT_RESOURCES = datasize memorysize stacksize
