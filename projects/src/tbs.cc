@@ -34,15 +34,15 @@ const int n_prt = 8;
 // Center of straight.
 const double
   beta_inj[]     = {8.7, 2.1},
-  A_max[]        = {3e-3, 1e-3},
+  A_max[]        = {4e-3, 1e-3},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max      = 2.5e-2;
 
 const double
   scl_h[]        = {0e0, 0e0, 0e0},
-  scl_dnu[]      = {1e-1, 1e-1, 1e-1},
-  scl_ksi[]      = {0e0, 1e1, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
+  scl_dnu[]      = {10e-1, 1e-1, 1e-1},
+  scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1,
                     1e1, 1e1, 1e1, 1e1},
@@ -660,16 +660,16 @@ void prt_dnu(void)
   // 	 h_ijklm(K_re, 0, 0, 3, 3, 0));
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 0),
-	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
+	 2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 0),
-	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
+	 2e0*h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 0),
-	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
+	 2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
-	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
+	 2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
 
   printf("\n %11.3e %11.3e %11.3e\n",
 	 h_ijklm(K_re*Id_scl, 1, 1, 1, 1, 0),
@@ -682,13 +682,15 @@ void get_dK(std::vector<tps> &dK)
 {
   double dnu, dnu_delta;
 
+  const double K_scl = 1e6;
+
   danot_(NO-1);
   get_Map();
   danot_(NO);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   nus = dHdJ(K); nus_scl = nus*Id_scl;
   CtoR(K, K_re, K_im);
-  K_re_scl = 1e6*K_re*Id_scl; K_re_delta_scl = 1e6*K_re*Id_delta_scl;
+  K_re_scl = K_scl*K_re*Id_scl; K_re_delta_scl = K_scl*K_re*Id_delta_scl;
   CtoR(get_h(), h_re, h_im); h_re_scl = h_re*Id_scl; h_im_scl = h_im*Id_scl;
 
   dnu = gauss_quad_2D(f_gauss_quad_2D, 0e0, twoJ[X_]);
@@ -753,7 +755,7 @@ tps dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &dK)
 template<typename T>
 tps dK_shift2(const T dnu1, const T dnu2)
 {
-  return(tps_abs(dnu1+dnu2+(dnu1.cst()+dnu2.cst())/2e0));
+  return(tps_abs(dnu1+2e0*dnu2+(dnu1.cst()+2e0*dnu2.cst())/2e0));
 }
 
 
@@ -1005,7 +1007,7 @@ void lat_select(void)
 
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("of1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("of1", 3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
   if (!false) {
