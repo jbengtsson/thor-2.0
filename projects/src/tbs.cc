@@ -4,6 +4,8 @@
 
 #include "thor_lib.h"
 
+#include "Powell/src/newuoa.h"
+
 int no_tps = NO,
 
 #define DOF_3 0
@@ -34,22 +36,22 @@ const int n_prt = 8;
 // Center of straight.
 const double
   beta_inj[]     = {8.7, 2.1},
-  A_max[]        = {4e-3, 1e-3},
+  A_max[]        = {3e-3, 0.75e-3},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
   delta_max      = 2.5e-2;
 
 const double
   scl_h[]        = {0e0, 0e0, 0e0},
-  scl_dnu[]      = {10e-1, 1e-1, 1e-1},
+  scl_dnu[]      = {1e-2, 1e-2, 1e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1,
-                    1e1, 1e1, 1e1, 1e1},
+                    1e0, 1e0, 1e0, 1e0},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 1e10,
+  scl_dnu_2d     = 1e8,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -965,25 +967,40 @@ void conj_grad(param_type &bn_prms, double (*f)(double *),
 
 void powell(param_type &bn_prms, double (*f)(double *))
 {
-  int    n_bn, i, j, iter;
-  double *bn, **xi, fret;
+  const int
+    n_bn    = bn_prms.n_bn,
+    n_pt    = n_bn + 2,
+    n_w     = (n_pt+13)*(n_pt+n_bn)+3*n_bn*(n_bn+3)/2,
+    n_prt   = 2,
+    max_fun = 5000;
+
+  const double
+    rho_beg = bn_prms.dbn[0],
+    rho_end = 1e-6;
+
+  int    i, j, iter;
+  double *bn, **xi, fret, w[n_w], x[n_bn];
 
   double const bn_tol = 1e-10;
-
-  n_bn = bn_prms.n_bn;
 
   bn = dvector(1, n_bn); xi = dmatrix(1, n_bn, 1, n_bn);
 
   bn_prms.ini_prm(bn);
 
-  // Set initial directions (unit vectors).
-  for (i = 1; i <= n_bn; i++)
-    for (j = 1; j <= n_bn; j++)
-      xi[i][j] = (i == j)? 1e0 : 0e0;
-
   n_iter = 1;
 
-  dpowell(bn, xi, n_bn, bn_tol, &iter, &fret, f);
+  if (true) {
+    // Set initial directions (unit vectors).
+    for (i = 1; i <= n_bn; i++)
+      for (j = 1; j <= n_bn; j++)
+	xi[i][j] = (i == j)? 1e0 : 0e0;
+
+    dpowell(bn, xi, n_bn, bn_tol, &iter, &fret, f);
+  } else {
+    for (i = 1; i <= n_bn; i++)
+      x[i-1] = bn[i];
+    newuoa_(n_bn, n_pt, x, rho_beg, rho_end, n_prt, max_fun, w);
+  }
 
   prt_mfile("flat_file.fit");
   bn_prms.prt_bn_lat();
@@ -1001,13 +1018,17 @@ void lat_select(void)
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e2};
 
   if (true) {
-    bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
-    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("of1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+
+    bn_prms.add_prm("sh1a", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh1b", 3, -bn_max[3], bn_max[3], dbn[3]);
+
+    // bn_prms.add_prm("of1",  3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
   if (!false) {
