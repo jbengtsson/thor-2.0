@@ -46,7 +46,7 @@ const double
   scl_dnu[]      = {1e-2, 1e-2, 1e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e4, 1e4, 1e4, 1e4},
+  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -749,16 +749,11 @@ tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
 template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 {
-  double dnu;
 
-  dnu = (dnu1.cst()+2e0*dnu2.cst())/2e0;
-  if (dnu1.cst() > dnu2.cst()) {
-    b.push_back(scl*sqr(dnu1+dnu));
-    b.push_back(scl*sqr(dnu2-dnu));
-  } else {
-    b.push_back(scl*sqr(dnu2-dnu));
-    b.push_back(scl*sqr(dnu1+dnu));
-  }
+  if (fabs(dnu1.cst()) > fabs(dnu2.cst()))
+    b.push_back(scl*sqr(dnu2+fabs(dnu1.cst())));
+  else 
+    b.push_back(scl*sqr(dnu1+fabs(dnu2.cst())));
 }
 
 
@@ -775,10 +770,10 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
-  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b); k += 2;
-  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b); k += 2;
-  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b); k += 2;
-  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[0], dK[k], 2e0*dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[1], dK[k], 2e0*dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[2], dK[k], 2e0*dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[3], dK[k], 2e0*dK[k+1], b); k += 2;
 
   b.push_back(scl_dnu_2d*sqr(dK[k])); k++;
   b.push_back(scl_dnu_3d*sqr(dK[k])); k++;
@@ -838,9 +833,7 @@ double get_chi2(const bool prt)
     k += 2;
     printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
 	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
-    printf("                %10.3e %10.3e %10.3e %10.3e\n",
-	   b[k+4].cst(), b[k+5].cst(), b[k+6].cst(), b[k+7].cst());
-    k += 8;
+    k += 4;
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
     k += 2;
