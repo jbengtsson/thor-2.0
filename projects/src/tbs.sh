@@ -1,6 +1,6 @@
 #!/bin/sh
 
-prm1=${1-0}
+prm1=$1
 
 queue="ap-high.q"
 #queue="ap-medium.q"
@@ -15,7 +15,7 @@ dir=$THOR_LIB/projects/src
 
 #qsub -l h_rt=$t2 -q $queue $dir/tbs.cmd
 # NO = 9: ~30GB.
-qsub -l mem_free=30G,h_vmem=30G -q $queue $dir/tbs.cmd
+qsub -l mem_free=30G,h_vmem=30G -q $queue -v lat_file=$prm1 $dir/tbs.cmd
 # NO = 11: ~50GB.
 #qsub -l mem_free=60G,h_vmem=60G -q $queue $dir/tbs.cmd
 #qsub -q $queue $dir/tbs.cmd
