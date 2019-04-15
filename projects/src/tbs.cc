@@ -1070,6 +1070,23 @@ void lat_select(void)
 }
 
 
+void m_c(const int n)
+{
+  int    k;
+  double r;
+
+  const int n_prt = 10;
+
+  printf("\nm_c: %d\n", RAND_MAX);
+  for (k = 1; k <= n; k++) {
+    r = (double)rand()/(double)RAND_MAX;
+    printf(" %7.5f", r);
+    if (k % n_prt == 0) printf("\n");
+  }
+  printf("\n");
+}
+
+
 int main(int argc, char *argv[])
 {
   int j;
@@ -1090,6 +1107,11 @@ int main(int argc, char *argv[])
   idprset(1);
   cavity_on = true;
 #endif
+
+  if (false) {
+    m_c(100);
+    exit(0);
+  }
 
   daeps_(tpsa_eps);
 
