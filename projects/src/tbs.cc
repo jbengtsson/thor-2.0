@@ -749,7 +749,7 @@ tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
 template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 {
-  const double eps = 1e-4;
+  const double eps = -1e-4;
 
   if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
