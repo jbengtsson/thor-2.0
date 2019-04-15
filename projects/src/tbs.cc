@@ -749,7 +749,7 @@ tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
 template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 {
-  const double eps = -1e-4;
+  const double eps = 1e-4;
 
   if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
@@ -824,8 +824,12 @@ double get_chi2(const bool prt)
 
   chi2 = 0e0;
   n = b.size();
-  for (k = 0; k < n; k++)
+  printf("\nget_chi2:\n");
+  for (k = 0; k < n; k++) {
+    printf(" %8.5f", b[k].cst());
     chi2 += b[k].cst();
+  }
+  printf("\n");
 
   if (prt && (chi2 < chi2_ref)) {
     printf("\nget_chi2(%1d):\n", n);
