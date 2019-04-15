@@ -43,14 +43,14 @@ const double
 
 const double
   scl_h[]        = {0e0, 0e0, 0e0},
-  scl_dnu[]      = {1e-2, 1e-2, 1e-2},
+  scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3},
+  scl_dnu_conf[] = {1e7, 1e7, 1e7, 1e7},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 1e8,
+  scl_dnu_2d     = 0e8,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -749,11 +749,16 @@ tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
 template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 {
+  const double eps = 1e-4;
 
-  if (fabs(dnu1.cst()) > fabs(dnu2.cst()))
-    b.push_back(scl*sqr(dnu2+fabs(dnu1.cst())));
-  else 
-    b.push_back(scl*sqr(dnu1+fabs(dnu2.cst())));
+  if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
+    b.push_back(scl*sqr(dnu1+2e0*dnu2));
+  else {
+    if (dnu1.cst() > dnu2.cst())
+      b.push_back(scl*sqr(2e0*dnu2+eps));
+    else
+      b.push_back(scl*sqr(dnu1+eps));
+  }
 }
 
 
@@ -770,10 +775,10 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
-  dK_shift(scl_dnu_conf[0], dK[k], 2e0*dK[k+1], b); k += 2;
-  dK_shift(scl_dnu_conf[1], dK[k], 2e0*dK[k+1], b); k += 2;
-  dK_shift(scl_dnu_conf[2], dK[k], 2e0*dK[k+1], b); k += 2;
-  dK_shift(scl_dnu_conf[3], dK[k], 2e0*dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b); k += 8;
+  // dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b); k += 2;
+  // dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b); k += 2;
+  // dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b); k += 2;
 
   b.push_back(scl_dnu_2d*sqr(dK[k])); k++;
   b.push_back(scl_dnu_3d*sqr(dK[k])); k++;
@@ -831,9 +836,11 @@ double get_chi2(const bool prt)
 	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
 	   b[k].cst(), b[k+1].cst());
     k += 2;
-    printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
-	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
-    k += 4;
+    // printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
+    // 	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
+    // k += 4;
+    printf("\n  Tune Conf.:   %10.3e\n", b[k].cst());
+    k += 1;
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
     k += 2;
@@ -1006,12 +1013,12 @@ void lat_select(void)
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e2};
 
   if (true) {
+    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
-
-    // bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
     // bn_prms.add_prm("sh1a", 3, -bn_max[3], bn_max[3], dbn[3]);
     // bn_prms.add_prm("sh1b", 3, -bn_max[3], bn_max[3], dbn[3]);
