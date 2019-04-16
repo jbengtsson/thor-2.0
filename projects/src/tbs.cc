@@ -1072,18 +1072,26 @@ void lat_select(void)
 
 void m_c(const int n)
 {
-  int    k;
-  double r;
+  int                             j, k;
+  double                          r;
+  std::vector<int>                bn_Fam;
+  std::vector< std::vector<int> > bn;
 
   const int n_prt = 10;
 
+  bn_Fam.push_back(get_Fnum("sf1"));
+  bn_Fam.push_back(get_Fnum("sd1"));
+  bn_Fam.push_back(get_Fnum("sd2"));
+
   printf("\nm_c: %d\n", RAND_MAX);
-  for (k = 1; k <= n; k++) {
-    r = (double)rand()/(double)RAND_MAX;
-    printf(" %7.5f", r);
-    if (k % n_prt == 0) printf("\n");
+  for (j = 2; j < (int)bn_Fam.size(); j++) {
+    for (k = 1; k <= n; k++) {
+      r = 2e0*(double)rand()/(double)RAND_MAX - 1e0;
+      printf(" %7.5f", r);
+      if (k % n_prt == 0) printf("\n");
+    }
+    printf("\n");
   }
-  printf("\n");
 }
 
 
