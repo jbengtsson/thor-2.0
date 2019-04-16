@@ -31,8 +31,6 @@ tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 tps          K_re_delta_scl;
 ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
-const int n_prt = 8;
-
 // Center of straight.
 const double
   beta_inj[]     = {8.7, 2.1},
@@ -1064,28 +1062,127 @@ void lat_select(void)
 }
 
 
-void m_c(const int n)
+void fit_ksi1(const double ksi_x, const double ksi_y,
+	      const std::vector<int> &Fnum)
 {
-  int                             j, k;
-  double                          r;
-  std::vector<int>                bn_Fam;
-  std::vector< std::vector<int> > bn;
+  int    i, n_svd;
+  double **A, **U, **V, *w, *b, *x;
 
-  const int n_prt = 10;
+  const bool prt = false;
 
-  bn_Fam.push_back(get_Fnum("sf1"));
-  bn_Fam.push_back(get_Fnum("sd1"));
-  bn_Fam.push_back(get_Fnum("sd2"));
+  const int
+    m    = 2,
+    n_b3 = Fnum.size();
 
-  printf("\nm_c: %d\n", RAND_MAX);
-  for (j = 2; j < (int)bn_Fam.size(); j++) {
-    for (k = 1; k <= n; k++) {
-      r = 2e0*(double)rand()/(double)RAND_MAX - 1e0;
-      printf(" %7.5f", r);
-      if (k % n_prt == 0) printf("\n");
+  const double svd_cut = 1e-10;
+
+  A = dmatrix(1, m, 1, n_b3); U = dmatrix(1, m, 1, n_b3);
+  V = dmatrix(1, n_b3, 1, n_b3);
+  w = dvector(1, n_b3); b = dvector(1, m); x = dvector(1, n_b3);
+
+  for (i = 1; i <= n_b3; i++) {
+    set_bn_par(Fnum[i-1], Sext, 7);
+
+    danot_(3);
+    get_Map();
+    danot_(4);
+    K = MapNorm(Map, g, A1, A0, Map_res, 1); nus = dHdJ(K);
+
+    A[1][i] = h_ijklm_p(nus[3], 0, 0, 0, 0, 1, 7);
+    A[2][i] = h_ijklm_p(nus[4], 0, 0, 0, 0, 1, 7);
+
+    clr_bn_par(Fnum[i-1], Sext, 7);
+  }
+
+  b[1] = -(h_ijklm(nus[3], 0, 0, 0, 0, 1)-ksi_x);
+  b[2] = -(h_ijklm(nus[4], 0, 0, 0, 0, 1)-ksi_y);
+
+  dmcopy(A, m, n_b3, U); dsvdcmp(U, m, n_b3, w, V);
+
+  if (prt) printf("\nfit_ksi1:\n  singular values:\n  ");
+  n_svd = 0;
+  for (i = 1; i <= n_b3; i++) {
+    if (prt) printf("%10.3e", w[i]);
+    if (w[i] < svd_cut) {
+      w[i] = 0e0;
+      if (prt) printf(" (zeroed)");
+    } else {
+      if (n_svd > 2) {
+	if (prt) printf("fit_ksi1: more than 2 non-zero singular values");
+	exit(1);
+      }
     }
+  }
+  if (prt) printf("\n");
+
+  dsvbksb(U, w, V, m, n_b3, b, x);
+
+  for (i = 1; i <= n_b3; i++)
+    set_dbn(Fnum[i-1], Sext, x[i]);
+
+  if (prt) {
+    printf("b3:\n");
+    for (i = 1; i <= n_b3; i++)
+      printf(" %12.5e", get_bn(Fnum[i-1], 1, Sext));
     printf("\n");
   }
+
+  free_dmatrix(A, 1, m, 1, n_b3); free_dmatrix(U, 1, m, 1, n_b3);
+  free_dmatrix(V, 1, n_b3, 1, n_b3);
+  free_dvector(w, 1, n_b3); free_dvector(b, 1, m); free_dvector(x, 1, n_b3);
+}
+
+
+double rnd(const double x_min, const double x_max)
+{
+  return (x_max-x_min)*(double)rand()/(double)RAND_MAX + x_min;
+}
+
+
+void bn_ini(const int n_stats, const std::vector<int> &Fnum)
+{
+  int              j, k, n;
+  double           bn;
+  std::vector<int> Fnum_ksi1;
+
+  const int rand_seed = 100001;
+
+  srand(rand_seed);
+
+  n = Fnum.size();
+  Fnum_ksi1.push_back(Fnum[0]);
+  Fnum_ksi1.push_back(Fnum[1]);
+
+  printf("\nbn_ini:\n");
+  for (j = 1; j <= n_stats; j++) {
+    for (k = 2; k < (int)Fnum.size(); k++) {
+      bn = rnd(-330e0, 100e0);
+      set_bn(Fnum[k], Sext, bn);
+    }
+    fit_ksi1(0e0, 0e0, Fnum_ksi1);
+
+    for (k = 0; k < (int)Fnum.size(); k++)
+      printf("  %8.3f", get_bn(Fnum[k], 1, Sext));
+    printf("\n");
+  }
+}
+
+
+void m_c(const int n)
+{
+  int              j;
+  std::vector<int> Fnum;
+
+  const int
+    n_ini = 5,
+    n_prt = 10;
+
+  Fnum.push_back(get_Fnum("sf1"));
+  Fnum.push_back(get_Fnum("sd1"));
+  Fnum.push_back(get_Fnum("sd2"));
+
+  for (j = 0; j < (int)Fnum.size()-2; j++)
+    bn_ini(n_ini, Fnum);
 }
 
 
@@ -1110,7 +1207,7 @@ int main(int argc, char *argv[])
   cavity_on = true;
 #endif
 
-  if (false) {
+  if (!false) {
     m_c(100);
     exit(0);
   }
