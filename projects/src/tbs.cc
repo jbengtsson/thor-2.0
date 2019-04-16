@@ -1009,8 +1009,8 @@ void lat_select(void)
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e2};
 
   if (true) {
-    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1066,9 +1066,9 @@ void fit_ksi1(const double ksi_x, const double ksi_y,
 	      const std::vector<int> &Fnum)
 {
   int    i, n_svd;
-  double **A, **U, **V, *w, *b, *x;
+  double **A, **U, **V, *w, *b, *dbn, *bn, *bn_lim;
 
-  const bool prt = false;
+  const bool prt = !false;
 
   const int
     m    = 2,
@@ -1078,7 +1078,13 @@ void fit_ksi1(const double ksi_x, const double ksi_y,
 
   A = dmatrix(1, m, 1, n_b3); U = dmatrix(1, m, 1, n_b3);
   V = dmatrix(1, n_b3, 1, n_b3);
-  w = dvector(1, n_b3); b = dvector(1, m); x = dvector(1, n_b3);
+  w = dvector(1, n_b3); b = dvector(1, m); dbn = dvector(1, n_b3);
+  bn = dvector(1, n_b3); bn_lim = dvector(1, n_b3);
+
+  for (i = 1; i <= n_b3; i++) {
+    bn_lim[i] = 1e4;
+    bn[i] = get_bn(Fnum[i-1], 1, Sext);
+  }
 
   for (i = 1; i <= n_b3; i++) {
     set_bn_par(Fnum[i-1], Sext, 7);
@@ -1096,10 +1102,16 @@ void fit_ksi1(const double ksi_x, const double ksi_y,
 
   b[1] = -(h_ijklm(nus[3], 0, 0, 0, 0, 1)-ksi_x);
   b[2] = -(h_ijklm(nus[4], 0, 0, 0, 0, 1)-ksi_y);
+  if (prt)
+    printf("\nfit_ksi1:\n  ksi = [%5.3f, %5.3f]\n",
+	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1));
 
+#if 0
+  SVD_lim(m, n_b3, A, b, bn_lim, svd_cut, bn, dbn);
+#else
   dmcopy(A, m, n_b3, U); dsvdcmp(U, m, n_b3, w, V);
 
-  if (prt) printf("\nfit_ksi1:\n  singular values:\n  ");
+  if (prt) printf("  singular values:\n   ");
   n_svd = 0;
   for (i = 1; i <= n_b3; i++) {
     if (prt) printf("%10.3e", w[i]);
@@ -1115,21 +1127,23 @@ void fit_ksi1(const double ksi_x, const double ksi_y,
   }
   if (prt) printf("\n");
 
-  dsvbksb(U, w, V, m, n_b3, b, x);
+  dsvbksb(U, w, V, m, n_b3, b, dbn);
+#endif
 
   for (i = 1; i <= n_b3; i++)
-    set_dbn(Fnum[i-1], Sext, x[i]);
+    set_dbn(Fnum[i-1], Sext, dbn[i]);
 
   if (prt) {
-    printf("b3:\n");
+    printf("  b3:\n  ");
     for (i = 1; i <= n_b3; i++)
-      printf(" %12.5e", get_bn(Fnum[i-1], 1, Sext));
+      printf(" %12.5e (%12.5e)", get_bn(Fnum[i-1], 1, Sext), dbn[i]);
     printf("\n");
   }
 
   free_dmatrix(A, 1, m, 1, n_b3); free_dmatrix(U, 1, m, 1, n_b3);
   free_dmatrix(V, 1, n_b3, 1, n_b3);
-  free_dvector(w, 1, n_b3); free_dvector(b, 1, m); free_dvector(x, 1, n_b3);
+  free_dvector(w, 1, n_b3); free_dvector(b, 1, m); free_dvector(dbn, 1, n_b3);
+  free_dvector(bn, 1, n_b3); free_dvector(bn_lim, 1, n_b3);
 }
 
 
@@ -1139,31 +1153,75 @@ double rnd(const double x_min, const double x_max)
 }
 
 
-void bn_ini(const int n_stats, const std::vector<int> &Fnum)
+void get_perf(int &n_good, double &chi2)
 {
-  int              j, k, n;
-  double           bn;
+    danot_(NO-1);
+    get_Map();
+    danot_(NO);
+    K = MapNorm(Map, g, A1, A0, Map_res, 1);
+    nus = dHdJ(K); nus_scl = nus*Id_scl;
+
+    n_good = 0;
+    if (sgn(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0))
+	!= sgn(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)))
+      n_good++;
+    if (sgn(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0))
+	!= sgn(h_ijklm(nus_scl[3], 0, 0, 2, 2, 0)))
+      n_good++;
+    if (sgn(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0))
+	!= sgn(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)))
+      n_good++;
+    if (sgn(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0))
+	!= sgn(h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)))
+      n_good++;
+
+    chi2 = 0e0;
+    chi2 += sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0));
+    chi2 += sqr(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
+    chi2 += sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
+    chi2 += sqr(h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
+    chi2 += sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0));
+    chi2 += sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
+    chi2 += sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0));
+    chi2 += sqr(h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
+}
+
+
+void bn_ini(const int n_stats, const std::vector<int> &Fnum,
+	    const double bn_min, const double bn_max)
+{
+  int              j, k, n_good;
+  double           chi2;
   std::vector<int> Fnum_ksi1;
 
-  const int rand_seed = 100001;
+  const int
+    rand_seed = 100001,
+    n_bn      = Fnum.size();
 
   srand(rand_seed);
 
-  n = Fnum.size();
   Fnum_ksi1.push_back(Fnum[0]);
   Fnum_ksi1.push_back(Fnum[1]);
+  Fnum_ksi1.push_back(Fnum[2]);
+  no_mpoles(3);
+  fit_ksi1(0e0, 0e0, Fnum_ksi1);
+  prt_mfile("flat_file.fit");
+  exit(0);
 
   printf("\nbn_ini:\n");
   for (j = 1; j <= n_stats; j++) {
-    for (k = 2; k < (int)Fnum.size(); k++) {
-      bn = rnd(-330e0, 100e0);
-      set_bn(Fnum[k], Sext, bn);
-    }
+    for (k = 2; k < n_bn; k++)
+      set_bn(Fnum[k], Sext, rnd(bn_min, bn_max));
     fit_ksi1(0e0, 0e0, Fnum_ksi1);
 
-    for (k = 0; k < (int)Fnum.size(); k++)
-      printf("  %8.3f", get_bn(Fnum[k], 1, Sext));
+    get_perf(n_good, chi2);
+
+    for (k = 0; k < n_bn; k++)
+      printf(" %8.3f", get_bn(Fnum[k], 1, Sext));
+    printf(" %1d %10.3e", n_good, chi2);
     printf("\n");
+
+    prt_mfile("flat_file.fit");
   }
 }
 
@@ -1173,16 +1231,14 @@ void m_c(const int n)
   int              j;
   std::vector<int> Fnum;
 
-  const int
-    n_ini = 5,
-    n_prt = 10;
+  const int n_ini = 1;
 
   Fnum.push_back(get_Fnum("sf1"));
   Fnum.push_back(get_Fnum("sd1"));
   Fnum.push_back(get_Fnum("sd2"));
 
   for (j = 0; j < (int)Fnum.size()-2; j++)
-    bn_ini(n_ini, Fnum);
+    bn_ini(n_ini, Fnum, -350e0, -250e0);
 }
 
 
@@ -1207,11 +1263,6 @@ int main(int argc, char *argv[])
   cavity_on = true;
 #endif
 
-  if (!false) {
-    m_c(100);
-    exit(0);
-  }
-
   daeps_(tpsa_eps);
 
   Id_scl.identity();
@@ -1223,6 +1274,11 @@ int main(int argc, char *argv[])
   for (j = 0; j < 4; j++)
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max;
+
+  if (!false) {
+    m_c(100);
+    exit(0);
+  }
 
   lat_select();
 
