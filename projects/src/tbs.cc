@@ -46,7 +46,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e7, 1e7, 1e7, 1e7},
+  scl_dnu_conf[] = {1e6, 1e6, 1e6, 1e6},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -749,7 +749,7 @@ tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
 template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 {
-  const double eps = 1e-4;
+  const double eps = 5e-3;
 
   if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
@@ -776,9 +776,9 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
   dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b); k += 8;
-  // dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b); k += 2;
-  // dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b); k += 2;
-  // dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b); k += 2;
 
   b.push_back(scl_dnu_2d*sqr(dK[k])); k++;
   b.push_back(scl_dnu_3d*sqr(dK[k])); k++;
@@ -824,12 +824,8 @@ double get_chi2(const bool prt)
 
   chi2 = 0e0;
   n = b.size();
-  printf("\nget_chi2:\n");
-  for (k = 0; k < n; k++) {
-    printf(" %8.5f", b[k].cst());
+  for (k = 0; k < n; k++)
     chi2 += b[k].cst();
-  }
-  printf("\n");
 
   if (prt && (chi2 < chi2_ref)) {
     printf("\nget_chi2(%1d):\n", n);
@@ -840,11 +836,9 @@ double get_chi2(const bool prt)
 	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
 	   b[k].cst(), b[k+1].cst());
     k += 2;
-    // printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
-    // 	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
-    // k += 4;
-    printf("\n  Tune Conf.:   %10.3e\n", b[k].cst());
-    k += 1;
+    printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
+    	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
+    k += 4;
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
     k += 2;
