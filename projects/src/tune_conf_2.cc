@@ -2252,17 +2252,17 @@ void lat_select(const int lat_case)
     // M-H6BA.
     n_cell = 1;
 
-    // bn_prms.add_prm("sf1", 3, 1e4, 1.0);
-    // bn_prms.add_prm("sd1", 3, 1e4, 1.0);
-    // bn_prms.add_prm("sd2", 3, 1e4, 1.0);
+    bn_prms.add_prm("sf1", 3, 1e4, 1.0);
+    bn_prms.add_prm("sd1", 3, 1e4, 1.0);
+    bn_prms.add_prm("sd2", 3, 1e4, 1.0);
 
-    bn_prms.add_prm("sf1", 4, 1e4, 1e0);
-    bn_prms.add_prm("sd1", 4, 1e4, 1e0);
-    bn_prms.add_prm("sd2", 4, 1e4, 1e0);
+    // bn_prms.add_prm("sf1", 4, 1e4, 1e0);
+    // bn_prms.add_prm("sd1", 4, 1e4, 1e0);
+    // bn_prms.add_prm("sd2", 4, 1e4, 1e0);
 
-    bn_prms.add_prm("sh2", 4, 1e4, 1e0);
-    bn_prms.add_prm("s",   4, 1e4, 1e0);
-    bn_prms.add_prm("of1", 4, 1e4, 1e0);
+    // bn_prms.add_prm("sh2", 4, 1e4, 1e0);
+    // bn_prms.add_prm("s",   4, 1e4, 1e0);
+    // bn_prms.add_prm("of1", 4, 1e4, 1e0);
     break;
   case 7:
     // ALS-U.

@@ -1097,14 +1097,17 @@ void fit_ksi1(const double ksi_x, const double ksi_y,
     A[1][i] = h_ijklm_p(nus[3], 0, 0, 0, 0, 1, 7);
     A[2][i] = h_ijklm_p(nus[4], 0, 0, 0, 0, 1, 7);
 
-    clr_bn_par(Fnum[i-1], Sext, 7);
+    clr_bn_par(Fnum[i-1], Sext);
+  }
+
+  for (int j = 1; j <= 2; j++) {
+    for (i = 1; i <= n_b3; i++)
+      printf(" %10.3e", A[j][i]);
+    printf("\n");
   }
 
   b[1] = -(h_ijklm(nus[3], 0, 0, 0, 0, 1)-ksi_x);
   b[2] = -(h_ijklm(nus[4], 0, 0, 0, 0, 1)-ksi_y);
-  if (prt)
-    printf("\nfit_ksi1:\n  ksi = [%5.3f, %5.3f]\n",
-	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1));
 
 #if 0
   SVD_lim(m, n_b3, A, b, bn_lim, svd_cut, bn, dbn);
