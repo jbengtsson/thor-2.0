@@ -751,21 +751,23 @@ tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
 template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 {
-  const double eps = 5e-3;
+  const double
+    eps  = 5e-3,
+    scl2 = 1e1;
 
   if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
   else {
     if (fabs(dnu1.cst()) > fabs(dnu2.cst())) {
       if (dnu1.cst() > 0e0)
-	b.push_back(scl*sqr(2e0*dnu2+eps));
+	b.push_back(scl2*scl*sqr(2e0*dnu2+eps));
       else
-	b.push_back(scl*sqr(2e0*dnu2-eps));
+	b.push_back(scl2*scl*sqr(2e0*dnu2-eps));
     } else {
       if (dnu2.cst() > 0e0)
-	b.push_back(scl*sqr(dnu1+eps));
+	b.push_back(scl2*scl*sqr(dnu1+eps));
       else
-	b.push_back(scl*sqr(dnu1-eps));
+	b.push_back(scl2*scl*sqr(dnu1-eps));
     }
   }
 }
