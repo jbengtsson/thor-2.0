@@ -23,6 +23,10 @@ int no_tps = NO,
 extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
+
+typedef std::vector< std::vector<double> > perf_vec;
+
+
 const double tpsa_eps = 1e-30;
 
 int          n_iter;
@@ -44,7 +48,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e6, 1e6, 1e6, 1e6},
+  scl_dnu_conf[] = {1e4, 1e4, 1e4, 1e4},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -752,10 +756,17 @@ void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
   if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
   else {
-    if (dnu1.cst() > dnu2.cst())
-      b.push_back(scl*sqr(2e0*dnu2+eps));
-    else
-      b.push_back(scl*sqr(dnu1+eps));
+    if (fabs(dnu1.cst()) > fabs(dnu2.cst())) {
+      if (dnu1.cst() > 0e0)
+	b.push_back(scl*sqr(2e0*dnu2+eps));
+      else
+	b.push_back(scl*sqr(2e0*dnu2-eps));
+    } else {
+      if (dnu2.cst() > 0e0)
+	b.push_back(scl*sqr(dnu1+eps));
+      else
+	b.push_back(scl*sqr(dnu1-eps));
+    }
   }
 }
 
@@ -1009,8 +1020,8 @@ void lat_select(void)
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e2};
 
   if (true) {
-    // bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1066,9 +1077,9 @@ void fit_ksi1(const double ksi_x, const double ksi_y,
 	      const std::vector<int> &Fnum)
 {
   int    i, n_svd;
-  double **A, **U, **V, *w, *b, *dbn, *bn, *bn_lim;
+  double **A, **U, **V, *w, *b, *dbn;
 
-  const bool prt = !false;
+  const bool prt = false;
 
   const int
     m    = 2,
@@ -1079,12 +1090,6 @@ void fit_ksi1(const double ksi_x, const double ksi_y,
   A = dmatrix(1, m, 1, n_b3); U = dmatrix(1, m, 1, n_b3);
   V = dmatrix(1, n_b3, 1, n_b3);
   w = dvector(1, n_b3); b = dvector(1, m); dbn = dvector(1, n_b3);
-  bn = dvector(1, n_b3); bn_lim = dvector(1, n_b3);
-
-  for (i = 1; i <= n_b3; i++) {
-    bn_lim[i] = 1e4;
-    bn[i] = get_bn(Fnum[i-1], 1, Sext);
-  }
 
   for (i = 1; i <= n_b3; i++) {
     set_bn_par(Fnum[i-1], Sext, 7);
@@ -1100,18 +1105,9 @@ void fit_ksi1(const double ksi_x, const double ksi_y,
     clr_bn_par(Fnum[i-1], Sext);
   }
 
-  for (int j = 1; j <= 2; j++) {
-    for (i = 1; i <= n_b3; i++)
-      printf(" %10.3e", A[j][i]);
-    printf("\n");
-  }
-
   b[1] = -(h_ijklm(nus[3], 0, 0, 0, 0, 1)-ksi_x);
   b[2] = -(h_ijklm(nus[4], 0, 0, 0, 0, 1)-ksi_y);
 
-#if 0
-  SVD_lim(m, n_b3, A, b, bn_lim, svd_cut, bn, dbn);
-#else
   dmcopy(A, m, n_b3, U); dsvdcmp(U, m, n_b3, w, V);
 
   if (prt) printf("  singular values:\n   ");
@@ -1131,7 +1127,6 @@ void fit_ksi1(const double ksi_x, const double ksi_y,
   if (prt) printf("\n");
 
   dsvbksb(U, w, V, m, n_b3, b, dbn);
-#endif
 
   for (i = 1; i <= n_b3; i++)
     set_dbn(Fnum[i-1], Sext, dbn[i]);
@@ -1146,13 +1141,43 @@ void fit_ksi1(const double ksi_x, const double ksi_y,
   free_dmatrix(A, 1, m, 1, n_b3); free_dmatrix(U, 1, m, 1, n_b3);
   free_dmatrix(V, 1, n_b3, 1, n_b3);
   free_dvector(w, 1, n_b3); free_dvector(b, 1, m); free_dvector(dbn, 1, n_b3);
-  free_dvector(bn, 1, n_b3); free_dvector(bn_lim, 1, n_b3);
+}
+
+
+void Bubble_Sort2(const int ind, perf_vec &w)
+{
+  bool   swapped;
+  int    j, k, n;
+  double val;
+
+  do {
+    swapped = false;
+    n = w[0].size();
+    for (k = 0; k < (int)w.size()-1; k++) {
+      if (fabs(w[k][ind-1]) < fabs(w[k+1][ind-1])) {
+	for (j = 0; j < n; j++) {
+	  val = w[k][j]; w[k][j] = w[k+1][j]; w[k+1][j] = val;
+	}
+	swapped = true;
+      }
+    }
+  } while (swapped);
 }
 
 
 double rnd(const double x_min, const double x_max)
 {
   return (x_max-x_min)*(double)rand()/(double)RAND_MAX + x_min;
+}
+
+
+void ini_bn(const std::string &name, const double bn_min, const double bn_max,
+	    std::vector<int> &Fnum, std::vector<double> &bns_min,
+	    std::vector<double> &bns_max)
+{
+  Fnum.push_back(get_Fnum(name.c_str()));
+  bns_min.push_back(bn_min);
+  bns_max.push_back(bn_max);
 }
 
 
@@ -1190,58 +1215,133 @@ void get_perf(int &n_good, double &chi2)
 }
 
 
-void bn_ini(const int n_stats, const std::vector<int> &Fnum,
-	    const double bn_min, const double bn_max)
+void prt_perf(std::vector<double> p)
 {
-  int              j, k, n_good;
-  double           chi2;
-  std::vector<int> Fnum_ksi1;
+  int k, n;
 
-  const int
-    rand_seed = 100001,
-    n_bn      = Fnum.size();
+  n = p.size();
+  for (k = 0; k < n; k++) {
+    if (k < n-2)
+      printf(" %8.3f", p[k]);
+    else if (k < n-1)
+      printf(" %1d", (int)(p[k]+0.5));
+    else
+      printf(" %9.3e", p[k]);
+  }
+  printf("\n");
+}
 
-  srand(rand_seed);
+
+void bn_ini1(const int n_stats, const int ind, const std::vector<int> &Fnum,
+	     const std::vector<double> &bn_min,
+	     const std::vector<double> &bn_max, perf_vec &perf)
+{
+  int                 j, k, n_good;
+  double              chi2;
+  std::vector<int>    Fnum_ksi1;
+  std::vector<double> p;
+
+  const int n_bn = Fnum.size();
 
   Fnum_ksi1.push_back(Fnum[0]);
   Fnum_ksi1.push_back(Fnum[1]);
   Fnum_ksi1.push_back(Fnum[2]);
-  no_mpoles(3);
-  fit_ksi1(0e0, 0e0, Fnum_ksi1);
-  prt_mfile("flat_file.fit");
-  exit(0);
 
-  printf("\nbn_ini:\n");
+  printf("\nbn_ini1:\n");
   for (j = 1; j <= n_stats; j++) {
     for (k = 2; k < n_bn; k++)
-      set_bn(Fnum[k], Sext, rnd(bn_min, bn_max));
+      set_bn(Fnum[k], Sext, rnd(bn_min[k], bn_max[k]));
     fit_ksi1(0e0, 0e0, Fnum_ksi1);
 
     get_perf(n_good, chi2);
 
+    p.clear();
     for (k = 0; k < n_bn; k++)
-      printf(" %8.3f", get_bn(Fnum[k], 1, Sext));
-    printf(" %1d %10.3e", n_good, chi2);
-    printf("\n");
+      p.push_back(get_bn(Fnum[k], 1, Sext));
+    p.push_back(n_good);
+    p.push_back(chi2);
+    perf.push_back(p);
 
-    prt_mfile("flat_file.fit");
+    prt_perf(p);
   }
+
+  Bubble_Sort2(ind, perf);
+
+  printf("\n");
+  for (j = 0; j < (int)perf.size(); j++)
+    prt_perf(perf[j]);
 }
 
 
-void m_c(const int n)
+void m_c1(const int n)
 {
-  int              j;
-  std::vector<int> Fnum;
+  std::vector<int>    Fnum;
+  std::vector<double> bn_min, bn_max;
+  perf_vec            perf;
 
-  const int n_ini = 1;
+  const int rand_seed = 100001;
 
-  Fnum.push_back(get_Fnum("sf1"));
-  Fnum.push_back(get_Fnum("sd1"));
-  Fnum.push_back(get_Fnum("sd2"));
+  srand(rand_seed);
 
-  for (j = 0; j < (int)Fnum.size()-2; j++)
-    bn_ini(n_ini, Fnum, -350e0, -250e0);
+  ini_bn("sf1", -400e0,  400e0, Fnum, bn_min, bn_max);
+  ini_bn("sd1", -400e0,  400e0, Fnum, bn_min, bn_max);
+  ini_bn("sd2", -300e0, -100e0, Fnum, bn_min, bn_max);
+  ini_bn("s",   -100e0,  100e0, Fnum, bn_min, bn_max);
+  ini_bn("sh2", -100e0,  100e0, Fnum, bn_min, bn_max);
+
+  bn_ini1(n, Fnum.size()+2, Fnum, bn_min, bn_max, perf);
+}
+
+
+void bn_ini2(const int n_stats, const int ind, const std::vector<int> &Fnum,
+	     const std::vector<double> &bn_min,
+	     const std::vector<double> &bn_max, perf_vec &perf)
+{
+  int                 j, k, n_good;
+  double              chi2;
+  std::vector<double> p;
+
+  const int n_bn = Fnum.size();
+
+  printf("\nbn_ini2:\n");
+  for (j = 1; j <= n_stats; j++) {
+    for (k = 0; k < n_bn; k++)
+      set_bn(Fnum[k], Sext, rnd(bn_min[k], bn_max[k]));
+
+    get_perf(n_good, chi2);
+
+    p.clear();
+    for (k = 0; k < n_bn; k++)
+      p.push_back(get_bn(Fnum[k], 1, Sext));
+    p.push_back(n_good);
+    p.push_back(chi2);
+    perf.push_back(p);
+
+    prt_perf(p);
+  }
+
+  Bubble_Sort2(ind, perf);
+
+  printf("\n");
+  for (j = 0; j < (int)perf.size(); j++)
+    prt_perf(perf[j]);
+}
+
+
+void m_c2(const int n)
+{
+  std::vector<int>    Fnum;
+  std::vector<double> bn_min, bn_max;
+  perf_vec            perf;
+
+  const int rand_seed = 100001;
+
+  srand(rand_seed);
+
+  ini_bn("s",   -100e0, 100e0, Fnum, bn_min, bn_max);
+  ini_bn("sh2", -100e0, 100e0, Fnum, bn_min, bn_max);
+
+  bn_ini2(n, Fnum.size()+2, Fnum, bn_min, bn_max, perf);
 }
 
 
@@ -1278,8 +1378,11 @@ int main(int argc, char *argv[])
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max;
 
-  if (!false) {
-    m_c(100);
+  if (false) {
+    if (true)
+      m_c1(100);
+    else
+      m_c2(100);
     exit(0);
   }
 
