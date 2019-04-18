@@ -751,9 +751,6 @@ tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
 template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 {
-  const double
-    eps  = 1e-3,
-    scl2 = 1e1;
 
   if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
@@ -1028,68 +1025,6 @@ void powell(param_type &bn_prms, double (*f)(double *))
 }
 
 
-void lat_select(void)
-{
-
-  const double
-    //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e3, 0e0, 1e11},
-    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e2};
-
-  if (true) {
-    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
-
-    bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
-
-    // bn_prms.add_prm("sh1a", 3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("sh1b", 3, -bn_max[3], bn_max[3], dbn[3]);
-
-    // bn_prms.add_prm("of1",  3, -bn_max[3], bn_max[3], dbn[3]);
-  }
-
-  if (!false) {
-    // Sextupole Length is 0.1 m.
-
-    if (!false) {
-      // bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
-      // bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
-
-      // bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
-      // bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
-      // bn_prms.add_prm("of1",  4, -bn_max[4],     bn_max[4],     dbn[4]);
-    }
-
-    if (false) {
-      bn_prms.add_prm("sh1a", 6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
-      bn_prms.add_prm("sh1b", 6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
-
-      bn_prms.add_prm("sh2",  6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
-      bn_prms.add_prm("s",    6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
-      bn_prms.add_prm("of1",  6, -bn_max[6],     bn_max[6],     dbn[6]);
-    }
-  }
-
-  if (false) {
-    bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
-  }
-
-  if (false) {
-    bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], 1e1);
-    bn_prms.add_prm("sd1", 5, -bn_max[5], bn_max[5], 1e1);
-    bn_prms.add_prm("sd2", 5, -bn_max[5], bn_max[5], 1e1);
-  }
-
-  // bn_prms.add_prm("sf1", 6, -bn_max[6], bn_max[6], dbn[6]);
-  // bn_prms.add_prm("sd1", 6, -bn_max[6], bn_max[6], dbn[6]);
-  // bn_prms.add_prm("sd2", 6, -bn_max[6], bn_max[6], dbn[6]);
-}
-
-
 void fit_ksi1(const double ksi_x, const double ksi_y,
 	      const std::vector<int> &Fnum)
 {
@@ -1188,16 +1123,6 @@ double rnd(const double x_min, const double x_max)
 }
 
 
-void ini_bn(const std::string &name, const double bn_min, const double bn_max,
-	    std::vector<int> &Fnum, std::vector<double> &bns_min,
-	    std::vector<double> &bns_max)
-{
-  Fnum.push_back(get_Fnum(name.c_str()));
-  bns_min.push_back(bn_min);
-  bns_max.push_back(bn_max);
-}
-
-
 void get_perf(int &n_good, double &chi2)
 {
     danot_(NO-1);
@@ -1239,42 +1164,40 @@ void prt_perf(std::vector<double> p)
   n = p.size();
   for (k = 0; k < n; k++) {
     if (k < n-2)
-      printf(" %8.3f", p[k]);
+      printf(" %10.3e", p[k]);
     else if (k < n-1)
       printf(" %1d", (int)(p[k]+0.5));
     else
-      printf(" %9.3e", p[k]);
+      printf(" %10.3e", p[k]);
   }
   printf("\n");
+  fflush(stdout);
 }
 
 
-void bn_ini1(const int n_stats, const int ind, const std::vector<int> &Fnum,
-	     const std::vector<double> &bn_min,
-	     const std::vector<double> &bn_max, perf_vec &perf)
+void bn_mc(const int n_stats, const int ind)
 {
   int                 j, k, n_good;
   double              chi2;
   std::vector<int>    Fnum_ksi1;
   std::vector<double> p;
+  perf_vec            perf;
 
-  const int n_bn = Fnum.size();
+  for (k = 0; k < 2; k++)
+    Fnum_ksi1.push_back(bn_prms.Fnum[k]);
 
-  Fnum_ksi1.push_back(Fnum[0]);
-  Fnum_ksi1.push_back(Fnum[1]);
-  Fnum_ksi1.push_back(Fnum[2]);
-
-  printf("\nbn_ini1:\n");
+  printf("\nbn_mc1:\n");
   for (j = 1; j <= n_stats; j++) {
-    for (k = 2; k < n_bn; k++)
-      set_bn(Fnum[k], Sext, rnd(bn_min[k], bn_max[k]));
+    for (k = 2; k < bn_prms.n_bn; k++)
+      set_bn(bn_prms.Fnum[k], bn_prms.n[k],
+	     rnd(bn_prms.bn_min[k], bn_prms.bn_max[k]));
     fit_ksi1(0e0, 0e0, Fnum_ksi1);
 
     get_perf(n_good, chi2);
 
     p.clear();
-    for (k = 0; k < n_bn; k++)
-      p.push_back(get_bn(Fnum[k], 1, Sext));
+    for (k = 0; k < bn_prms.n_bn; k++)
+      p.push_back(get_bn(bn_prms.Fnum[k], 1, bn_prms.n[k]));
     p.push_back(n_good);
     p.push_back(chi2);
     perf.push_back(p);
@@ -1290,75 +1213,86 @@ void bn_ini1(const int n_stats, const int ind, const std::vector<int> &Fnum,
 }
 
 
-void m_c1(const int n)
+void m_c(const int n)
 {
-  std::vector<int>    Fnum;
-  std::vector<double> bn_min, bn_max;
-  perf_vec            perf;
 
   const int rand_seed = 100001;
 
   srand(rand_seed);
 
-  ini_bn("sf1", -400e0,  400e0, Fnum, bn_min, bn_max);
-  ini_bn("sd1", -400e0,  400e0, Fnum, bn_min, bn_max);
-  ini_bn("sd2", -300e0, -100e0, Fnum, bn_min, bn_max);
-  ini_bn("s",   -100e0,  100e0, Fnum, bn_min, bn_max);
-  ini_bn("sh2", -100e0,  100e0, Fnum, bn_min, bn_max);
+  bn_prms.add_prm("sf1", 3, -4e2,  4e2, 1e-2);
+  bn_prms.add_prm("sd1", 3, -4e2,  4e2, 1e-2);
+  bn_prms.add_prm("sd2", 3, -3e2, -1e2, 1e-2);
 
-  bn_ini1(n, Fnum.size()+2, Fnum, bn_min, bn_max, perf);
+  bn_prms.add_prm("s",   3, -1e2, 1e2, 1e-2);
+  bn_prms.add_prm("sh2", 3, -1e2, 1e2, 1e-2);
+
+  // bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
+  // bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
+
+  bn_mc(n, bn_prms.n_bn+2);
 }
 
 
-void bn_ini2(const int n_stats, const int ind, const std::vector<int> &Fnum,
-	     const std::vector<double> &bn_min,
-	     const std::vector<double> &bn_max, perf_vec &perf)
+void lat_select(void)
 {
-  int                 j, k, n_good;
-  double              chi2;
-  std::vector<double> p;
 
-  const int n_bn = Fnum.size();
+  const double
+    //                         b_3   b_4  b_5  b_6
+    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e3, 0e0, 1e11},
+    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e2};
 
-  printf("\nbn_ini2:\n");
-  for (j = 1; j <= n_stats; j++) {
-    for (k = 0; k < n_bn; k++)
-      set_bn(Fnum[k], Sext, rnd(bn_min[k], bn_max[k]));
+  if (true) {
+    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
-    get_perf(n_good, chi2);
+    bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
-    p.clear();
-    for (k = 0; k < n_bn; k++)
-      p.push_back(get_bn(Fnum[k], 1, Sext));
-    p.push_back(n_good);
-    p.push_back(chi2);
-    perf.push_back(p);
+    // bn_prms.add_prm("sh1a", 3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sh1b", 3, -bn_max[3], bn_max[3], dbn[3]);
 
-    prt_perf(p);
+    // bn_prms.add_prm("of1",  3, -bn_max[3], bn_max[3], dbn[3]);
   }
 
-  Bubble_Sort2(ind, perf);
+  if (!false) {
+    // Sextupole Length is 0.1 m.
 
-  printf("\n");
-  for (j = 0; j < (int)perf.size(); j++)
-    prt_perf(perf[j]);
-}
+    if (!false) {
+      // bn_prms.add_prm("sh1a", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      // bn_prms.add_prm("sh1b", 4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
 
+      // bn_prms.add_prm("sh2",  4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      // bn_prms.add_prm("s",    4, -bn_max[4]/0.1, bn_max[4]/0.1, dbn[4]);
+      // bn_prms.add_prm("of1",  4, -bn_max[4],     bn_max[4],     dbn[4]);
+    }
 
-void m_c2(const int n)
-{
-  std::vector<int>    Fnum;
-  std::vector<double> bn_min, bn_max;
-  perf_vec            perf;
+    if (false) {
+      bn_prms.add_prm("sh1a", 6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
+      bn_prms.add_prm("sh1b", 6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
 
-  const int rand_seed = 100001;
+      bn_prms.add_prm("sh2",  6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
+      bn_prms.add_prm("s",    6, -bn_max[6]/0.1, bn_max[6]/0.1, dbn[6]);
+      bn_prms.add_prm("of1",  6, -bn_max[6],     bn_max[6],     dbn[6]);
+    }
+  }
 
-  srand(rand_seed);
+  if (false) {
+    bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
+  }
 
-  ini_bn("s",   -100e0, 100e0, Fnum, bn_min, bn_max);
-  ini_bn("sh2", -100e0, 100e0, Fnum, bn_min, bn_max);
+  if (false) {
+    bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], 1e1);
+    bn_prms.add_prm("sd1", 5, -bn_max[5], bn_max[5], 1e1);
+    bn_prms.add_prm("sd2", 5, -bn_max[5], bn_max[5], 1e1);
+  }
 
-  bn_ini2(n, Fnum.size()+2, Fnum, bn_min, bn_max, perf);
+  // bn_prms.add_prm("sf1", 6, -bn_max[6], bn_max[6], dbn[6]);
+  // bn_prms.add_prm("sd1", 6, -bn_max[6], bn_max[6], dbn[6]);
+  // bn_prms.add_prm("sd2", 6, -bn_max[6], bn_max[6], dbn[6]);
 }
 
 
@@ -1396,10 +1330,7 @@ int main(int argc, char *argv[])
   Id_delta_scl[delta_] *= delta_max;
 
   if (false) {
-    if (true)
-      m_c1(100);
-    else
-      m_c2(100);
+    m_c(1000);
     exit(0);
   }
 
