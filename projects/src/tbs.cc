@@ -48,7 +48,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e4, 1e4, 1e4, 1e4},
+  scl_dnu_conf[] = {1e5, 1e5, 1e5, 1e5},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -752,11 +752,26 @@ template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 {
   const double
-    eps  = 5e-3,
+    eps  = 1e-3,
     scl2 = 1e1;
 
   if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
+  else
+    b.push_back(1e30);
+}
+
+
+template<typename T>
+void dK_shift2(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
+{
+  const double
+    eps  = 1e-3,
+    scl2 = 1e1;
+
+  if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
+    b.push_back(scl*sqr((dnu1+2e0*dnu2)
+			/(fabs(dnu1.cst())+fabs(2e0*dnu2.cst()))));
   else {
     if (fabs(dnu1.cst()) > fabs(dnu2.cst())) {
       if (dnu1.cst() > 0e0)
@@ -786,7 +801,7 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
-  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b); k += 8;
+  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b); k += 2;
   dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b); k += 2;
   dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b); k += 2;
   dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b); k += 2;
