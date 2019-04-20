@@ -48,7 +48,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3, 1e3, 1e3},
+  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3, 0e3, 0e3},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -816,6 +816,7 @@ double get_chi2(const bool prt)
   int              n, k;
   double           chi2;
   std::vector<tps> dK, b;
+  bool             first = true;
 
   get_dK(dK);
   get_b(dK, b);
@@ -825,7 +826,8 @@ double get_chi2(const bool prt)
   for (k = 0; k < n; k++)
     chi2 += b[k].cst();
 
-  if (prt && (chi2 < chi2_ref)) {
+  if (prt && ((first) || (chi2 < chi2_ref))) {
+    first = false;
     printf("\nget_chi2(%1d):\n", n);
     prt_dnu();
 
@@ -1170,7 +1172,9 @@ void bn_mc(const int n_stats, const int ind)
   std::vector<double> p;
   perf_vec            perf;
 
-  for (k = 0; k < 2; k++)
+  no_mpoles(3); no_mpoles(4);
+
+ for (k = 0; k < 2; k++)
     Fnum_ksi1.push_back(bn_prms.Fnum[k]);
 
   printf("\nbn_mc1:\n");
@@ -1262,11 +1266,12 @@ void lat_select(void)
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
   if (true) {
-    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
-    // bn_prms.add_prm("s",    6, -bn_max[6], bn_max[6], dbn[6]);
-    // bn_prms.add_prm("sh2",  6, -bn_max[6], bn_max[6], dbn[6]);
+    bn_prms.add_prm("s",    4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh2",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("of1",  4, -bn_max[4], bn_max[4], dbn[4]);
 
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1351,7 +1356,7 @@ int main(int argc, char *argv[])
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max;
 
-  if (!false) {
+  if (false) {
     m_c(10000);
     exit(0);
   }
