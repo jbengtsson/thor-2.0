@@ -1232,6 +1232,10 @@ void m_c(const int n)
   bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
   bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
 
+  bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
+  bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
+  bn_prms.add_prm("of1", 3, -2e2, 2e2, 1e-2);
+
   bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
   bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
   bn_prms.add_prm("of1", 4, -1e3, 1e3, 1e-2);
