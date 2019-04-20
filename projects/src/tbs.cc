@@ -1228,14 +1228,17 @@ void m_c(const int n)
   bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
   bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
 
+  // 3, 4, 5.
   bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
   bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
   bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
 
+  // 1, 3, 5.
   bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
   bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
   bn_prms.add_prm("of1", 3, -2e2, 2e2, 1e-2);
 
+  // 2, 4, 5.
   bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
   bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
   bn_prms.add_prm("of1", 4, -1e3, 1e3, 1e-2);
@@ -1349,7 +1352,7 @@ int main(int argc, char *argv[])
   Id_delta_scl[delta_] *= delta_max;
 
   if (!false) {
-    m_c(1000);
+    m_c(10000);
     exit(0);
   }
 
