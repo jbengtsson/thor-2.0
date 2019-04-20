@@ -48,7 +48,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3, 0e3, 0e3},
+  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3, 0e3, 1e3},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -753,7 +753,7 @@ void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
   if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
   else
-    b.push_back(1e30);
+    b.push_back(scl*1e30);
 }
 
 
@@ -815,16 +815,25 @@ double get_chi2(const bool prt)
 {
   int              n, k;
   double           chi2;
-  std::vector<tps> dK, b;
-  bool             first = true;
+  std::vector<tps> dK, b, b_extra;
+  static bool      first = true;
+
+  const double
+    eps = 1e-3,
+    scl = 1e3;
 
   get_dK(dK);
   get_b(dK, b);
+
+  b_extra.clear();
+  b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)
+			    +2e0*h_ijklm(nus_scl[3], 0, 0, 0, 0, 4)+eps));
 
   chi2 = 0e0;
   n = b.size();
   for (k = 0; k < n; k++)
     chi2 += b[k].cst();
+  chi2 += b_extra[0].cst();
 
   if (prt && ((first) || (chi2 < chi2_ref))) {
     first = false;
@@ -840,6 +849,7 @@ double get_chi2(const bool prt)
     	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
     printf("                %10.3e %10.3e\n", b[k+4].cst(), b[k+5].cst());
     k += 6;
+    printf("\n  b extra:      %10.3e\n", b_extra[0].cst());
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
     k += 2;
@@ -1240,12 +1250,10 @@ void m_c(const int n)
   // 1, 3, 5.
   bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
   bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
-  bn_prms.add_prm("of1", 3, -2e2, 2e2, 1e-2);
 
   // 2, 4, 5.
   bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
   bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
-  bn_prms.add_prm("of1", 4, -1e3, 1e3, 1e-2);
 
   // bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
   // bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
@@ -1262,16 +1270,19 @@ void lat_select(void)
 
   const double
     //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e3, 0e0, 1e5},
+    bn_max[] = {0e0, 0e0, 0e0, 5e2,  2e3, 0e0, 1e5},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
   if (true) {
     // bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
     // bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
+    bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
+
     bn_prms.add_prm("s",    4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sh2",  4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("of1",  4, -bn_max[4], bn_max[4], dbn[4]);
 
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1356,7 +1367,7 @@ int main(int argc, char *argv[])
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max;
 
-  if (false) {
+  if (!false) {
     m_c(10000);
     exit(0);
   }
