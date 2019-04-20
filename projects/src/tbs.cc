@@ -48,7 +48,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3},
+  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3, 1e3, 1e3},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -655,12 +655,6 @@ void prt_dnu(void)
   }
 
   printf("\nTune confinement:\n");
-  // printf(" %11.3e %11.3e\n",
-  // 	 h_ijklm(K_re/(3e0*twoJ[X_]), 2, 2, 0, 0, 0),
-  // 	 h_ijklm(K_re, 3, 3, 0, 0, 0));
-  // printf(" %11.3e %11.3e\n",
-  // 	 h_ijklm(K_re/(3e0*twoJ[Y_]), 0, 0, 2, 2, 0),
-  // 	 h_ijklm(K_re, 0, 0, 3, 3, 0));
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 0),
 	 2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
@@ -674,10 +668,12 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
 	 2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
 
-  printf("\n %11.3e %11.3e %11.3e\n",
-	 h_ijklm(K_re*Id_scl, 1, 1, 1, 1, 0),
-	 h_ijklm(K_re*Id_scl, 2, 2, 1, 1, 0),
-	 h_ijklm(K_re*Id_scl, 1, 1, 2, 2, 0));
+  printf("\n %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
+	 2e0*h_ijklm(nus_scl[3], 0, 0, 0, 0, 4));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 2),
+	 2e0*h_ijklm(nus_scl[4], 0, 0, 0, 0, 4));
 }
 
 
@@ -706,15 +702,17 @@ void get_dK(std::vector<tps> &dK)
 
   dK.push_back(get_a(nus_scl[3], 1, 1, 0, 0, 0));
   dK.push_back(get_a(nus_scl[3], 2, 2, 0, 0, 0));
-
   dK.push_back(get_a(nus_scl[3], 0, 0, 1, 1, 0));
   dK.push_back(get_a(nus_scl[3], 0, 0, 2, 2, 0));
-
   dK.push_back(get_a(nus_scl[4], 0, 0, 1, 1, 0));
   dK.push_back(get_a(nus_scl[4], 0, 0, 2, 2, 0));
-
   dK.push_back(get_a(nus_scl[4], 1, 1, 0, 0, 0));
   dK.push_back(get_a(nus_scl[4], 2, 2, 0, 0, 0));
+
+  dK.push_back(get_a(nus_scl[3], 0, 0, 0, 0, 2));
+  dK.push_back(get_a(nus_scl[3], 0, 0, 0, 0, 4));
+  dK.push_back(get_a(nus_scl[4], 0, 0, 0, 0, 2));
+  dK.push_back(get_a(nus_scl[4], 0, 0, 0, 0, 4));
 
   dK.push_back(dnu);
   dK.push_back(dnu_delta);
@@ -760,32 +758,6 @@ void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 
 
 template<typename T>
-void dK_shift2(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
-{
-  const double
-    eps  = 1e-3,
-    scl2 = 1e1;
-
-  if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
-    b.push_back(scl*sqr((dnu1+2e0*dnu2)
-			/(fabs(dnu1.cst())+fabs(2e0*dnu2.cst()))));
-  else {
-    if (fabs(dnu1.cst()) > fabs(dnu2.cst())) {
-      if (dnu1.cst() > 0e0)
-	b.push_back(scl2*scl*sqr(2e0*dnu2+eps));
-      else
-	b.push_back(scl2*scl*sqr(2e0*dnu2-eps));
-    } else {
-      if (dnu2.cst() > 0e0)
-	b.push_back(scl2*scl*sqr(dnu1+eps));
-      else
-	b.push_back(scl2*scl*sqr(dnu1-eps));
-    }
-  }
-}
-
-
-template<typename T>
 void get_b(std::vector<T> &dK, std::vector<T> &b)
 {
   int k;
@@ -802,6 +774,9 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
   dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b); k += 2;
   dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b); k += 2;
   dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b); k += 2;
+
+  dK_shift(scl_dnu_conf[4], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[5], dK[k], dK[k+1], b); k += 2;
 
   b.push_back(scl_dnu_2d*sqr(dK[k])); k++;
   b.push_back(scl_dnu_3d*sqr(dK[k])); k++;
@@ -861,7 +836,8 @@ double get_chi2(const bool prt)
     k += 2;
     printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
     	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
-    k += 4;
+    printf("                %10.3e %10.3e\n", b[k+4].cst(), b[k+5].cst());
+    k += 6;
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
     k += 2;
@@ -947,6 +923,7 @@ double f_nl(double *bn)
 
     printf("\n  bn:\n  ");
     bn_prms.prt_bn(bn);
+    fflush(stdout);
     bn_prms.prt_bn_lat();
     prt_mfile("flat_file.fit");
 
@@ -1145,11 +1122,19 @@ void get_perf(int &n_good, double &chi2)
 	!= sgn(h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)))
       n_good++;
 
+    if (sgn(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2))
+	!= sgn(h_ijklm(nus_scl[3], 0, 0, 0, 0, 4)))
+      n_good++;
+    if (sgn(h_ijklm(nus_scl[4], 0, 0, 0, 0, 2))
+	!= sgn(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)))
+      n_good++;
+
     chi2 = 0e0;
     chi2 += sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0));
     chi2 += sqr(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
     chi2 += sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
     chi2 += sqr(h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
+
     chi2 += sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0));
     chi2 += sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
     chi2 += sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0));
@@ -1161,14 +1146,16 @@ void prt_perf(std::vector<double> p)
 {
   int k, n;
 
+  const int ind = 14;
+
+  printf("\n");
   n = p.size();
   for (k = 0; k < n; k++) {
-    if (k < n-2)
-      printf(" %10.3e", p[k]);
-    else if (k < n-1)
-      printf(" %1d", (int)(p[k]+0.5));
+    if (k == n-ind)
+      printf(" %10d", (int)(p[k]+0.5));
     else
       printf(" %10.3e", p[k]);
+    if (k == n-ind+1) printf("\n");
   }
   printf("\n");
   fflush(stdout);
@@ -1198,8 +1185,25 @@ void bn_mc(const int n_stats, const int ind)
     p.clear();
     for (k = 0; k < bn_prms.n_bn; k++)
       p.push_back(get_bn(bn_prms.Fnum[k], 1, bn_prms.n[k]));
+
     p.push_back(n_good);
+
     p.push_back(chi2);
+
+    p.push_back(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0));
+    p.push_back(h_ijklm(2e0*nus_scl[3], 2, 2, 0, 0, 0));
+    p.push_back(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
+    p.push_back(h_ijklm(2e0*nus_scl[3], 0, 0, 2, 2, 0));
+    p.push_back(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0));
+    p.push_back(h_ijklm(2e0*nus_scl[4], 0, 0, 2, 2, 0));
+    p.push_back(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0));
+    p.push_back(h_ijklm(2e0*nus_scl[4], 2, 2, 0, 0, 0));
+
+    p.push_back(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2));
+    p.push_back(h_ijklm(2e0*nus_scl[3], 0, 0, 0, 0, 4));
+    p.push_back(h_ijklm(nus_scl[4], 0, 0, 0, 0, 2));
+    p.push_back(h_ijklm(2e0*nus_scl[4], 0, 0, 0, 0, 4));
+
     perf.push_back(p);
 
     prt_perf(p);
@@ -1220,15 +1224,23 @@ void m_c(const int n)
 
   srand(rand_seed);
 
-  bn_prms.add_prm("sf1", 3, -4e2,  4e2, 1e-2);
-  bn_prms.add_prm("sd1", 3, -4e2,  4e2, 1e-2);
-  bn_prms.add_prm("sd2", 3, -3e2, -1e2, 1e-2);
+  bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+  bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+  bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
 
-  bn_prms.add_prm("s",   3, -1e2, 1e2, 1e-2);
-  bn_prms.add_prm("sh2", 3, -1e2, 1e2, 1e-2);
+  bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
+  bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
+  bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
+
+  bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
+  bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
+  bn_prms.add_prm("of1", 4, -1e3, 1e3, 1e-2);
 
   // bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
   // bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
+
+  // bn_prms.add_prm("s",   6, -1e4, 1e4, 1e-2);
+  // bn_prms.add_prm("sh2", 6, -1e4, 1e4, 1e-2);
 
   bn_mc(n, bn_prms.n_bn+2);
 }
@@ -1239,12 +1251,15 @@ void lat_select(void)
 
   const double
     //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e3, 0e0, 1e11},
-    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e2};
+    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e3, 0e0, 1e5},
+    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
   if (true) {
     bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+
+    // bn_prms.add_prm("s",    6, -bn_max[6], bn_max[6], dbn[6]);
+    // bn_prms.add_prm("sh2",  6, -bn_max[6], bn_max[6], dbn[6]);
 
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1329,7 +1344,7 @@ int main(int argc, char *argv[])
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max;
 
-  if (false) {
+  if (!false) {
     m_c(1000);
     exit(0);
   }
