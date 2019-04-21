@@ -1253,7 +1253,7 @@ void m_c(const int n)
   bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
   bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
 
-  switch (1) {
+  switch (3) {
   case 1:
     bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
     bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
@@ -1383,7 +1383,7 @@ int main(int argc, char *argv[])
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max;
 
-  if (false) {
+  if (!false) {
     m_c(10000);
     exit(0);
   }
