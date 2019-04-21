@@ -1152,16 +1152,7 @@ void get_perf(int &n_good, double &chi2)
 	!= sgn(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)))
       n_good++;
 
-    chi2 = 0e0;
-    chi2 += sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0));
-    chi2 += sqr(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0));
-    chi2 += sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0));
-    chi2 += sqr(h_ijklm(nus_scl[3], 0, 0, 2, 2, 0));
-
-    chi2 += sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0));
-    chi2 += sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0));
-    chi2 += sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0));
-    chi2 += sqr(h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
+    chi2 = get_chi2(false);
 }
 
 
@@ -1249,18 +1240,22 @@ void m_c(const int n)
 
   srand(rand_seed);
 
-  bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
-  bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
-  bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
-
-  switch (3) {
+  switch (6) {
   case 1:
     bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
     bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
+
+    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
     break;
   case 2:
     bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
+
+    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
     break;
   case 3:
     bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
@@ -1269,6 +1264,10 @@ void m_c(const int n)
     bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
+
+    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
     break;
   case 4:
     bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
@@ -1277,6 +1276,10 @@ void m_c(const int n)
     bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
+
+    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
     break;
   case 5:
     bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
@@ -1288,6 +1291,15 @@ void m_c(const int n)
 
     bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
+
+    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+    break;
+  case 6:
+    bn_prms.add_prm("sf1", 5, -1e4, 1e4, 1e-2);
+    bn_prms.add_prm("sd1", 5, -1e4, 1e4, 1e-2);
+    bn_prms.add_prm("sd2", 5, -1e4, 1e4, 1e-2);
     break;
   default:
     printf("\nm_c: unknown case\n");
