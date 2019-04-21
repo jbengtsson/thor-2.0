@@ -1303,7 +1303,7 @@ void lat_select(void)
 
   const double
     //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e4, 1e6, 1e9},
+    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e4, 1e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
   switch (3) {
