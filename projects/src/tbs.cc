@@ -1184,8 +1184,8 @@ void bn_mc(const int n_stats, const int ind)
   std::vector<double> p;
   perf_vec            perf;
 
-  no_mpoles(3); no_mpoles(4);
-
+  // no_mpoles(3); no_mpoles(4);
+       
  for (k = 0; k < 2; k++)
     Fnum_ksi1.push_back(bn_prms.Fnum[k]);
 
