@@ -1242,7 +1242,7 @@ void m_c(const int n)
 
   srand(rand_seed);
 
-  switch (7) {
+  switch (8) {
   case 1:
     bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
@@ -1307,6 +1307,20 @@ void m_c(const int n)
     bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
 
     bn_mc(n, bn_prms.n_bn+2, 0);
+    break;
+  case 8:
+    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+
+    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
+    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
+    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
+
+    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
+    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
+
+    bn_mc(n, bn_prms.n_bn+2, 2);
     break;
   default:
     printf("\nm_c: unknown case\n");
