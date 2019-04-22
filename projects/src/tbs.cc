@@ -48,7 +48,8 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3, 1e3, 1e3},
+  scl_dnu_conf[] = {0e3, 0e3, 0e3, 0e3, 0e3, 0e3,
+                    1e4, 1e4},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -725,6 +726,9 @@ void get_dK(std::vector<tps> &dK)
   dK.push_back(get_a(nus_scl[4], 0, 0, 0, 0, 2));
   dK.push_back(get_a(nus_scl[4], 0, 0, 0, 0, 4));
 
+  dK.push_back(get_a(nus_scl[3], 0, 0, 0, 0, 3));
+  dK.push_back(get_a(nus_scl[4], 0, 0, 0, 0, 3));
+
   dK.push_back(dnu);
   dK.push_back(dnu_delta);
 
@@ -790,6 +794,9 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, const bool all)
   dK_shift(scl_dnu_conf[4], dK[k], dK[k+1], b, all); k += 2;
   dK_shift(scl_dnu_conf[5], dK[k], dK[k+1], b, all); k += 2;
 
+  b.push_back(scl_dnu_conf[6]*sqr(dK[k])); k++;
+  b.push_back(scl_dnu_conf[7]*sqr(dK[k])); k++;
+
   b.push_back(scl_dnu_2d*sqr(dK[k])); k++;
   b.push_back(scl_dnu_3d*sqr(dK[k])); k++;
 
@@ -830,21 +837,13 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const double scl[] = {1e4, 1e4};
-
   get_dK(dK);
   get_b(dK, b, all);
-
-  b_extra.clear();
-  b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
-  b_extra.push_back(scl[1]*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
 
   chi2 = 0e0;
   n = (int)b.size();
   for (k = 0; k < n; k++)
     chi2 += b[k].cst();
-  for (k = 0; k < (int)b_extra.size(); k++)
-    chi2 += b_extra[k].cst();
 
   if (prt && ((first) || (chi2 < chi2_ref))) {
     first = false;
@@ -859,9 +858,8 @@ double get_chi2(const bool prt, const bool all)
     printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
     	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
     printf("                %10.3e %10.3e\n", b[k+4].cst(), b[k+5].cst());
-    k += 6;
-    printf("\n  b extra:      %10.3e %10.3e\n",
-	   b_extra[0].cst(), b_extra[1].cst());
+    printf("                %10.3e %10.3e\n", b[k+6].cst(), b[k+7].cst());
+    k += 8;
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
     k += 2;
@@ -895,7 +893,7 @@ void df_nl2(double *bn, double *df)
     bn_prms.set_prm_dep(i);
 
     get_dK(dK);
-    get_b(dK, b);
+    get_b(dK, b, false);
 
     chi2 = 0e0;
     for (k = 0; k < (int)b.size(); k++)
@@ -1244,7 +1242,7 @@ void m_c(const int n)
 
   srand(rand_seed);
 
-  switch (6) {
+  switch (7) {
   case 1:
     bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
@@ -1293,27 +1291,20 @@ void m_c(const int n)
 
     bn_mc(n, bn_prms.n_bn+2, 2);
     break;
-  case 5:
-    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+  case 6:
+    bn_prms.add_prm("sf1", 5, -1e7, 1e7, 1e-2);
+    bn_prms.add_prm("sd1", 5, -1e7, 1e7, 1e-2);
+    bn_prms.add_prm("sd2", 5, -1e7, 1e7, 1e-2);
 
+    bn_mc(n, bn_prms.n_bn+2, 0);
+    break;
+  case 7:
     bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
 
     bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
     bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
-
-    bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
-
-    bn_mc(n, bn_prms.n_bn+2, 2);
-    break;
-  case 6:
-    bn_prms.add_prm("sf1", 5, -1e4, 1e4, 1e-2);
-    bn_prms.add_prm("sd1", 5, -1e4, 1e4, 1e-2);
-    bn_prms.add_prm("sd2", 5, -1e4, 1e4, 1e-2);
 
     bn_mc(n, bn_prms.n_bn+2, 0);
     break;
@@ -1350,6 +1341,11 @@ void lat_select(void)
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 3:
+    bn_prms.add_prm("sf1",  5, -bn_max[5], bn_max[5], dbn[5]);
+    bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
+    bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
+    break;
+  case 4:
     bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
@@ -1364,8 +1360,6 @@ void lat_select(void)
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
-    break;
-  case 4:
     break;
   case 5:
     break;
