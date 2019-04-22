@@ -1179,7 +1179,7 @@ void bn_mc(const int n_stats, const int ind, const int n_ksi)
 {
   int                 j, k, n_good;
   double              chi2, r;
-  std::vector<int>    Fnum_ksi1;
+  std::vector<int>    Fnum_ksi1, sgns;
   std::vector<double> p;
   perf_vec            perf;
 
@@ -1190,15 +1190,17 @@ void bn_mc(const int n_stats, const int ind, const int n_ksi)
 
   printf("\nbn_mc1:\n");
   for (j = 1; j <= n_stats; j++) {
-    for (k = n_ksi; k < bn_prms.n_bn; k++)
-      if (k == 4) {
-	r = rnd(bn_prms.bn_min[k], bn_prms.bn_max[k]);
-	set_bn(bn_prms.Fnum[k], bn_prms.n[k], r);
-      } else if (k == 5)
-	set_bn(bn_prms.Fnum[k], bn_prms.n[k], r);
+    sgns.clear();
+    for (k = n_ksi; k < bn_prms.n_bn; k++) {
+      if ((k != 5) && (k != 8)) r = rnd(bn_prms.bn_min[k], bn_prms.bn_max[k]);
+      if ((k == 3) || (k == 6)) sgns.push_back(sgn(r));
+      if ((k == 4) || (k == 5))
+	set_bn(bn_prms.Fnum[k], bn_prms.n[k], -sgns[0]*fabs(r));
+      else if ((k == 7) || (k == 8))
+	set_bn(bn_prms.Fnum[k], bn_prms.n[k], -sgns[1]*fabs(r));
       else
-	set_bn(bn_prms.Fnum[k], bn_prms.n[k],
-	       rnd(bn_prms.bn_min[k], bn_prms.bn_max[k]));
+	set_bn(bn_prms.Fnum[k], bn_prms.n[k], r);
+    }
     if (n_ksi != 0) fit_ksi1(0e0, 0e0, Fnum_ksi1);
 
     get_perf(n_good, chi2);
@@ -1248,7 +1250,7 @@ void m_c(const int n)
 
   srand(rand_seed);
 
-  switch (9) {
+  switch (10) {
   case 1:
     bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
@@ -1336,6 +1338,24 @@ void m_c(const int n)
     bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
+
+    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
+    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
+
+    bn_mc(n, bn_prms.n_bn+2, 2);
+    break;
+  case 10:
+    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+
+    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
+    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
+    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
+
+    bn_prms.add_prm("sf1", 5, -1e7, 1e7, 1e-2);
+    bn_prms.add_prm("sd1", 5, -1e7, 1e7, 1e-2);
+    bn_prms.add_prm("sd2", 5, -1e7, 1e7, 1e-2);
 
     bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
     bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
