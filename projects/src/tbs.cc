@@ -48,7 +48,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {0e3, 0e3, 0e3, 0e3, 0e3, 0e3,
+  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3, 0e3, 1e3,
                     1e4, 1e4},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -1183,7 +1183,7 @@ void bn_mc(const int n_stats, const int ind, const int n_ksi)
   std::vector<double> p;
   perf_vec            perf;
 
-  // no_mpoles(3); no_mpoles(4);
+  no_mpoles(3); no_mpoles(4);
        
  for (k = 0; k < n_ksi; k++)
     Fnum_ksi1.push_back(bn_prms.Fnum[k]);
@@ -1242,7 +1242,7 @@ void m_c(const int n)
 
   srand(rand_seed);
 
-  switch (8) {
+  switch (9) {
   case 1:
     bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
@@ -1322,6 +1322,20 @@ void m_c(const int n)
 
     bn_mc(n, bn_prms.n_bn+2, 2);
     break;
+  case 9:
+    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+
+    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
+    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
+    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
+
+    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
+    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
+
+    bn_mc(n, bn_prms.n_bn+2, 2);
+    break;
   default:
     printf("\nm_c: unknown case\n");
     break;
@@ -1337,7 +1351,7 @@ void lat_select(void)
     bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e4, 1e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
-  switch (3) {
+  switch (4) {
   case 1:
     bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1364,9 +1378,9 @@ void lat_select(void)
     bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
 
-    bn_prms.add_prm("sf1",  5, -bn_max[5], bn_max[5], dbn[5]);
-    bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
-    bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
+    // bn_prms.add_prm("sf1",  5, -bn_max[5], bn_max[5], dbn[5]);
+    // bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
+    // bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
 
     bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
