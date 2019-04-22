@@ -758,10 +758,11 @@ tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
 
 
 template<typename T>
-void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
+void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
+	      const bool all)
 {
 
-  if (sgn(dnu1.cst()) != sgn(dnu2.cst()))
+  if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || all)
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
   else
     b.push_back(scl*1e30);
@@ -769,7 +770,7 @@ void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 
 
 template<typename T>
-void get_b(std::vector<T> &dK, std::vector<T> &b)
+void get_b(std::vector<T> &dK, std::vector<T> &b, const bool all)
 {
   int k;
 
@@ -781,13 +782,13 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
-  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b); k += 2;
-  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b); k += 2;
-  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b); k += 2;
-  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b, all); k += 2;
+  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b, all); k += 2;
+  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b, all); k += 2;
+  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b, all); k += 2;
 
-  dK_shift(scl_dnu_conf[4], dK[k], dK[k+1], b); k += 2;
-  dK_shift(scl_dnu_conf[5], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[4], dK[k], dK[k+1], b, all); k += 2;
+  dK_shift(scl_dnu_conf[5], dK[k], dK[k+1], b, all); k += 2;
 
   b.push_back(scl_dnu_2d*sqr(dK[k])); k++;
   b.push_back(scl_dnu_3d*sqr(dK[k])); k++;
@@ -822,7 +823,7 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
 }
 
 
-double get_chi2(const bool prt)
+double get_chi2(const bool prt, const bool all)
 {
   int              n, k;
   double           chi2;
@@ -832,7 +833,7 @@ double get_chi2(const bool prt)
   const double scl[] = {1e4, 1e4};
 
   get_dK(dK);
-  get_b(dK, b);
+  get_b(dK, b, all);
 
   b_extra.clear();
   b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
@@ -920,9 +921,9 @@ void df_nl(double *bn, double *df)
   for (k = 0; k < bn_prms.n_bn; k++) {
     eps = bn_prms.dbn[k];
     bn_prms.set_dprm(k, eps);
-    df[k+1] = get_chi2(false);
+    df[k+1] = get_chi2(false, false);
     bn_prms.set_dprm(k, -2e0*eps);
-    df[k+1] -= get_chi2(false);
+    df[k+1] -= get_chi2(false, false);
     df[k+1] /= 2e0*eps;
     bn_prms.set_dprm(k, eps);
   }
@@ -940,7 +941,7 @@ double f_nl(double *bn)
 
    bn_prms.set_prm(bn);
 
-   chi2 = get_chi2(true);
+   chi2 = get_chi2(true, false);
    if (chi2 < chi2_ref) {
     n_iter++;
 
@@ -1152,7 +1153,7 @@ void get_perf(int &n_good, double &chi2)
 	!= sgn(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)))
       n_good++;
 
-    chi2 = get_chi2(false);
+    chi2 = get_chi2(false, true);
 }
 
 
@@ -1160,7 +1161,7 @@ void prt_perf(std::vector<double> p)
 {
   int k, n;
 
-  const int ind = 14;
+  const int ind = 16;
 
   printf("\n");
   n = p.size();
@@ -1169,14 +1170,14 @@ void prt_perf(std::vector<double> p)
       printf(" %10d", (int)(p[k]+0.5));
     else
       printf(" %10.3e", p[k]);
-    if (k == n-ind+1) printf("\n");
+    if ((k == n-ind+1) || (k == n-3)) printf("\n");
   }
   printf("\n");
   fflush(stdout);
 }
 
 
-void bn_mc(const int n_stats, const int ind)
+void bn_mc(const int n_stats, const int ind, const int n_ksi)
 {
   int                 j, k, n_good;
   double              chi2;
@@ -1186,15 +1187,15 @@ void bn_mc(const int n_stats, const int ind)
 
   // no_mpoles(3); no_mpoles(4);
        
- for (k = 0; k < 2; k++)
+ for (k = 0; k < n_ksi; k++)
     Fnum_ksi1.push_back(bn_prms.Fnum[k]);
 
   printf("\nbn_mc1:\n");
   for (j = 1; j <= n_stats; j++) {
-    for (k = 2; k < bn_prms.n_bn; k++)
+    for (k = n_ksi; k < bn_prms.n_bn; k++)
       set_bn(bn_prms.Fnum[k], bn_prms.n[k],
 	     rnd(bn_prms.bn_min[k], bn_prms.bn_max[k]));
-    fit_ksi1(0e0, 0e0, Fnum_ksi1);
+    if (n_ksi != 0) fit_ksi1(0e0, 0e0, Fnum_ksi1);
 
     get_perf(n_good, chi2);
 
@@ -1220,6 +1221,9 @@ void bn_mc(const int n_stats, const int ind)
     p.push_back(h_ijklm(nus_scl[4], 0, 0, 0, 0, 2));
     p.push_back(h_ijklm(2e0*nus_scl[4], 0, 0, 0, 0, 4));
 
+    p.push_back(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3));
+    p.push_back(h_ijklm(nus_scl[4], 0, 0, 0, 0, 3));
+
     perf.push_back(p);
 
     prt_perf(p);
@@ -1242,22 +1246,30 @@ void m_c(const int n)
 
   switch (6) {
   case 1:
-    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
-    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
-
     bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+
+    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
+    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
+
+    bn_mc(n, bn_prms.n_bn+2, 2);
     break;
   case 2:
-    bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
-
     bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+
+    bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
+    bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
+
+    bn_mc(n, bn_prms.n_bn+2, 2);
     break;
   case 3:
+    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+
     bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
     bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
 
@@ -1265,11 +1277,13 @@ void m_c(const int n)
     bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
 
-    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+    bn_mc(n, bn_prms.n_bn+2, 2);
     break;
   case 4:
+    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+
     bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
 
@@ -1277,11 +1291,13 @@ void m_c(const int n)
     bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
 
+    bn_mc(n, bn_prms.n_bn+2, 2);
+    break;
+  case 5:
     bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
-    break;
-  case 5:
+
     bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
@@ -1292,21 +1308,19 @@ void m_c(const int n)
     bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
 
-    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+    bn_mc(n, bn_prms.n_bn+2, 2);
     break;
   case 6:
     bn_prms.add_prm("sf1", 5, -1e4, 1e4, 1e-2);
     bn_prms.add_prm("sd1", 5, -1e4, 1e4, 1e-2);
     bn_prms.add_prm("sd2", 5, -1e4, 1e4, 1e-2);
+
+    bn_mc(n, bn_prms.n_bn+2, 0);
     break;
   default:
     printf("\nm_c: unknown case\n");
     break;
   }
-
-  bn_mc(n, bn_prms.n_bn+2);
 }
 
 
