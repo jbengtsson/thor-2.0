@@ -1178,7 +1178,7 @@ void prt_perf(std::vector<double> p)
 void bn_mc(const int n_stats, const int ind, const int n_ksi)
 {
   int                 j, k, n_good;
-  double              chi2;
+  double              chi2, r;
   std::vector<int>    Fnum_ksi1;
   std::vector<double> p;
   perf_vec            perf;
@@ -1191,8 +1191,14 @@ void bn_mc(const int n_stats, const int ind, const int n_ksi)
   printf("\nbn_mc1:\n");
   for (j = 1; j <= n_stats; j++) {
     for (k = n_ksi; k < bn_prms.n_bn; k++)
-      set_bn(bn_prms.Fnum[k], bn_prms.n[k],
-	     rnd(bn_prms.bn_min[k], bn_prms.bn_max[k]));
+      if (k == 4) {
+	r = rnd(bn_prms.bn_min[k], bn_prms.bn_max[k]);
+	set_bn(bn_prms.Fnum[k], bn_prms.n[k], r);
+      } else if (k == 5)
+	set_bn(bn_prms.Fnum[k], bn_prms.n[k], r);
+      else
+	set_bn(bn_prms.Fnum[k], bn_prms.n[k],
+	       rnd(bn_prms.bn_min[k], bn_prms.bn_max[k]));
     if (n_ksi != 0) fit_ksi1(0e0, 0e0, Fnum_ksi1);
 
     get_perf(n_good, chi2);
