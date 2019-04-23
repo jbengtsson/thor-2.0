@@ -48,7 +48,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e3, 1e3, 0e3, 1e3, 1e3, 1e3,
+  scl_dnu_conf[] = {1e2, 1e2, 1e2, 1e2, 1e3, 1e3,
                     1e4, 1e4},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -79,7 +79,7 @@ public:
   void clr_prm_dep(const int k) const;
   void set_dprm(const int k, const double eps) const;
   void prt_bn(double *bn) const;
-  void prt_bn_lat(void) const;
+  void prt_bn_lat(const std::string &fnam) const;
 };
 
 
@@ -206,7 +206,7 @@ void param_type::prt_bn(double *bn) const
 }
 
 
-void param_type::prt_bn_lat(void) const
+void param_type::prt_bn_lat(const std::string &fnam) const
 {
   bool     first = true;
   long int loc;
@@ -214,9 +214,7 @@ void param_type::prt_bn_lat(void) const
   double   bn;
   FILE     *outf;
 
-  const std::string file_name = "dnu.out";
-
-  outf = file_write(file_name.c_str());
+  outf = file_write(fnam.c_str());
 
   fprintf(outf, "\n");
   for (k = 0; k < n_bn; k++) {
@@ -716,6 +714,7 @@ void get_dK(std::vector<tps> &dK)
   dK.push_back(get_a(nus_scl[3], 2, 2, 0, 0, 0));
   dK.push_back(get_a(nus_scl[3], 0, 0, 1, 1, 0));
   dK.push_back(get_a(nus_scl[3], 0, 0, 2, 2, 0));
+
   dK.push_back(get_a(nus_scl[4], 0, 0, 1, 1, 0));
   dK.push_back(get_a(nus_scl[4], 0, 0, 2, 2, 0));
   dK.push_back(get_a(nus_scl[4], 1, 1, 0, 0, 0));
@@ -723,6 +722,7 @@ void get_dK(std::vector<tps> &dK)
 
   dK.push_back(get_a(nus_scl[3], 0, 0, 0, 0, 2));
   dK.push_back(get_a(nus_scl[3], 0, 0, 0, 0, 4));
+
   dK.push_back(get_a(nus_scl[4], 0, 0, 0, 0, 2));
   dK.push_back(get_a(nus_scl[4], 0, 0, 0, 0, 4));
 
@@ -837,19 +837,26 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const double scl = 1e5, eps = 1e-3;
+  const bool   chi2_extra = false;
+  const double
+    scl = 1e5,
+    eps = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
-  // b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)
-  // 			    +2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
-  b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
 
   chi2 = 0e0;
   n = (int)b.size();
   for (k = 0; k < n; k++)
     chi2 += b[k].cst();
-  chi2 += b_extra[0].cst();
+
+  if (chi2_extra) {
+    // b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)
+    // 			    +2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
+    b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
+
+    chi2 += b_extra[0].cst();
+  }
 
   if (prt && ((first) || (chi2 < chi2_ref))) {
     first = false;
@@ -866,7 +873,7 @@ double get_chi2(const bool prt, const bool all)
     printf("                %10.3e %10.3e\n", b[k+4].cst(), b[k+5].cst());
     printf("                %10.3e %10.3e\n", b[k+6].cst(), b[k+7].cst());
     k += 8;
-    printf("\n  b_extra     = %10.3e\n", b_extra[0].cst());
+    if (chi2_extra) printf("\n  b_extra     = %10.3e\n", b_extra[0].cst());
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
     k += 2;
@@ -953,7 +960,7 @@ double f_nl(double *bn)
     printf("\n  bn:\n");
     bn_prms.prt_bn(bn);
     fflush(stdout);
-    bn_prms.prt_bn_lat();
+    bn_prms.prt_bn_lat("dnu.out");
     prt_mfile("flat_file.fit");
 
     chi2_ref = chi2;
@@ -981,7 +988,7 @@ void conj_grad(param_type &bn_prms, double (*f)(double *),
   dfrprmn(bn, bn_prms.n_bn, ftol, &iter, &fret, f, df);
 
   prt_mfile("flat_file.fit");
-  bn_prms.prt_bn_lat();
+  bn_prms.prt_bn_lat("dnu.out");
 
  free_dvector(bn, 1, bn_prms.n_bn);
 }
@@ -1025,7 +1032,7 @@ void powell(param_type &bn_prms, double (*f)(double *))
   }
 
   prt_mfile("flat_file.fit");
-  bn_prms.prt_bn_lat();
+  bn_prms.prt_bn_lat("dnu.out");
 
   free_dvector(bn, 1, bn_prms.n_bn); free_dmatrix(xi, 1, n_bn, 1, n_bn);
 }
@@ -1185,7 +1192,7 @@ void prt_perf(std::vector<double> p)
 void bn_mc(const int n_stats, const int ind, const int n_ksi)
 {
   int                 j, k, n_good;
-  double              chi2, r;
+  double              chi2, r = 0e0;
   std::vector<int>    Fnum_ksi1, sgns;
   std::vector<double> p;
   perf_vec            perf;
@@ -1470,6 +1477,45 @@ int main(int argc, char *argv[])
   }
 
   lat_select();
+
+  if (false) {
+#if 0
+    const double bn[] =
+      { 9.069e+02, -6.540e+02, -6.540e+02,
+       -1.282e+06,  8.213e+06,  8.213e+06,
+       -3.896e+01, -5.835e+01,
+        4.058e+02, -3.362e+02, -2.851e+02};
+#elif 0
+    const double bn[] =
+      {-3.734e+02,  2.806e+02,  2.806e+02,
+       -1.969e+06,  8.210e+06,  8.210e+06,
+       -8.063e+01, -3.401e+01,
+        3.979e+02, -3.427e+02, -2.654e+02};
+#elif 0
+    const double bn[] =
+      {	3.882e+02, -9.462e+02, -9.462e+02,
+	2.679e+05, -4.955e+06, -4.955e+06,
+       -1.704e+02, -7.174e+01,
+	4.010e+02, -3.586e+02, -2.221e+02};
+#elif 0
+    const double bn[] =
+      {-6.900e+02,  6.933e+01,  6.933e+01,
+        4.560e+05, -9.187e+06, -9.187e+06,
+       -1.884e+02, -7.900e+01,
+       3.979e+02, -3.758e+02, -1.889e+02};
+#elif 1
+    const double bn[] =
+      { -7.907e+02,  1.514e+02,  1.514e+02,
+	-3.375e+06,  2.928e+06,  2.928e+06,
+	-1.937e+02, -6.344e+01,
+	 4.091e+02, -3.195e+02, -2.856e+02};
+#endif
+    for (j = 0; j < 11; j++)
+      set_bn(bn_prms.Fnum[j], bn_prms.n[j], bn[j]);
+
+    bn_prms.prt_bn_lat("bn_ini.out");
+    exit(0);
+  }
 
   if (false) no_mpoles(3);
 
