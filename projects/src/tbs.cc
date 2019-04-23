@@ -48,7 +48,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e3, 1e3, 1e3, 1e3, 0e3, 1e3,
+  scl_dnu_conf[] = {1e3, 1e3, 0e3, 1e3, 1e3, 1e3,
                     1e4, 1e4},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -837,13 +837,19 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
+  const double scl = 1e5, eps = 1e-3;
+
   get_dK(dK);
   get_b(dK, b, all);
+  // b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)
+  // 			    +2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
+  b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
 
   chi2 = 0e0;
   n = (int)b.size();
   for (k = 0; k < n; k++)
     chi2 += b[k].cst();
+  chi2 += b_extra[0].cst();
 
   if (prt && ((first) || (chi2 < chi2_ref))) {
     first = false;
@@ -860,6 +866,7 @@ double get_chi2(const bool prt, const bool all)
     printf("                %10.3e %10.3e\n", b[k+4].cst(), b[k+5].cst());
     printf("                %10.3e %10.3e\n", b[k+6].cst(), b[k+7].cst());
     k += 8;
+    printf("\n  b_extra     = %10.3e\n", b_extra[0].cst());
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
     k += 2;
@@ -1404,9 +1411,9 @@ void lat_select(void)
     bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
 
-    // bn_prms.add_prm("sf1",  5, -bn_max[5], bn_max[5], dbn[5]);
-    // bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
-    // bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
+    bn_prms.add_prm("sf1",  5, -bn_max[5], bn_max[5], dbn[5]);
+    bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
+    bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
 
     bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1457,7 +1464,7 @@ int main(int argc, char *argv[])
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max;
 
-  if (!false) {
+  if (false) {
     m_c(10000);
     exit(0);
   }
