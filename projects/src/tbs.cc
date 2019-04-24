@@ -48,7 +48,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {0e0, 0e0, 0e0, 0e0, 1e0, 0e0,
+  scl_dnu_conf[] = {0e0, 0e0, 0e0, 0e0, 1e0, 1e0,
                     1e0, 1e0},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -836,7 +836,7 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const bool   chi2_extra = !false;
+  const bool   chi2_extra = false;
   const double
     scl = 1e8,
     eps = 1e-5;
