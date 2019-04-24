@@ -48,8 +48,8 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {0e0, 0e0, 0e0, 0e0, 1e3, 1e3,
-                    1e4, 1e4},
+  scl_dnu_conf[] = {0e0, 0e0, 0e0, 0e0, 0e3, 0e3,
+                    0e4, 0e4},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -835,7 +835,7 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, const bool all)
 
 double get_chi2(const bool prt, const bool all)
 {
-  int              n, k;
+  int              n, j, k;
   double           chi2;
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
@@ -859,6 +859,7 @@ double get_chi2(const bool prt, const bool all)
     // 			    +2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
     // b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
     b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
+    b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)));
 
     chi2 += b_extra[0].cst();
   }
@@ -878,7 +879,12 @@ double get_chi2(const bool prt, const bool all)
     printf("                %10.3e %10.3e\n", b[k+4].cst(), b[k+5].cst());
     printf("                %10.3e %10.3e\n", b[k+6].cst(), b[k+7].cst());
     k += 8;
-    if (chi2_extra) printf("\n  b_extra     = %10.3e\n", b_extra[0].cst());
+    if (chi2_extra) {
+      printf("\n  b_extra     = ");
+      for (j = 0; j < (int)b_extra.size(); j++)
+	printf("\n  b_extra     = %10.3e\n", b_extra[0].cst());
+      printf("\n");
+    }
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
     k += 2;
@@ -1423,9 +1429,9 @@ void lat_select(void)
     bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
 
-    bn_prms.add_prm("sf1",  5, -bn_max[5], bn_max[5], dbn[5]);
-    bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
-    bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
+    // bn_prms.add_prm("sf1",  5, -bn_max[5], bn_max[5], dbn[5]);
+    // bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
+    // bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
 
     // bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
     // bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
