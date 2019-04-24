@@ -48,7 +48,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e2, 1e2, 1e2, 1e2, 1e3, 1e3,
+  scl_dnu_conf[] = {0e0, 0e0, 0e0, 0e0, 1e3, 1e3,
                     1e4, 1e4},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -765,7 +765,6 @@ template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
 	      const bool all)
 {
-
   if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || all)
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
   else
@@ -786,10 +785,14 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, const bool all)
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
-  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b, all); k += 2;
-  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b, all); k += 2;
-  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b, all); k += 2;
-  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b, all); k += 2;
+  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b, true); k += 2;
+  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b, true); k += 2;
+  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b, true); k += 2;
+  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b, true); k += 2;
+  // dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b, all); k += 2;
+  // dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b, all); k += 2;
+  // dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b, all); k += 2;
+  // dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b, all); k += 2;
 
   dK_shift(scl_dnu_conf[4], dK[k], dK[k+1], b, all); k += 2;
   dK_shift(scl_dnu_conf[5], dK[k], dK[k+1], b, all); k += 2;
@@ -837,7 +840,7 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const bool   chi2_extra = false;
+  const bool   chi2_extra = !false;
   const double
     scl = 1e5,
     eps = 1e-3;
@@ -851,9 +854,11 @@ double get_chi2(const bool prt, const bool all)
     chi2 += b[k].cst();
 
   if (chi2_extra) {
+    b_extra.clear();
     // b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)
     // 			    +2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
-    b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
+    // b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
+    b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
 
     chi2 += b_extra[0].cst();
   }
@@ -1388,7 +1393,7 @@ void lat_select(void)
 
   const double
     //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 5e2,  1e4, 1e7, 1e9},
+    bn_max[] = {0e0, 0e0, 0e0, 5e2,  5e4, 1e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
   switch (4) {
@@ -1422,12 +1427,12 @@ void lat_select(void)
     bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
     bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
 
-    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
-    bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 5:
     break;
