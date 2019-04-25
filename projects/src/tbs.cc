@@ -1402,8 +1402,8 @@ void lat_select(void)
 
   switch (1) {
   case 1:
-    // bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1488,37 +1488,16 @@ int main(int argc, char *argv[])
   lat_select();
 
   if (false) {
-#if 0
+    fit_ksi1(0e0, 0e0, bn_prms.Fnum);
+    bn_prms.prt_bn_lat("ksi1.out");
+    exit(0);
+  }
+
+  if (false) {
     const double bn[] =
-      { 9.069e+02, -6.540e+02, -6.540e+02,
-       -1.282e+06,  8.213e+06,  8.213e+06,
-       -3.896e+01, -5.835e+01,
-        4.058e+02, -3.362e+02, -2.851e+02};
-#elif 0
-    const double bn[] =
-      {-3.734e+02,  2.806e+02,  2.806e+02,
-       -1.969e+06,  8.210e+06,  8.210e+06,
-       -8.063e+01, -3.401e+01,
-        3.979e+02, -3.427e+02, -2.654e+02};
-#elif 0
-    const double bn[] =
-      {	3.882e+02, -9.462e+02, -9.462e+02,
-	2.679e+05, -4.955e+06, -4.955e+06,
-       -1.704e+02, -7.174e+01,
-	4.010e+02, -3.586e+02, -2.221e+02};
-#elif 0
-    const double bn[] =
-      {-6.900e+02,  6.933e+01,  6.933e+01,
-        4.560e+05, -9.187e+06, -9.187e+06,
-       -1.884e+02, -7.900e+01,
-       3.979e+02, -3.758e+02, -1.889e+02};
-#elif 1
-    const double bn[] =
-      { -7.907e+02,  1.514e+02,  1.514e+02,
-	-3.375e+06,  2.928e+06,  2.928e+06,
-	-1.937e+02, -6.344e+01,
-	 4.091e+02, -3.195e+02, -2.856e+02};
-#endif
+      { 1.355e+01, -5.184e+01,
+	3.043e+02, -2.380e+02, -2.854e+02};
+
     for (j = 0; j < 11; j++)
       set_bn(bn_prms.Fnum[j], bn_prms.n[j], bn[j]);
 
