@@ -1273,7 +1273,7 @@ void m_c(const int n)
 
   srand(rand_seed);
 
-  switch (10) {
+  switch (1) {
   case 1:
     bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
@@ -1400,10 +1400,10 @@ void lat_select(void)
     bn_max[] = {0e0, 0e0, 0e0, 5e2,  5e4, 5e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
-  switch (4) {
+  switch (1) {
   case 1:
-    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1480,7 +1480,7 @@ int main(int argc, char *argv[])
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max;
 
-  if (false) {
+  if (!false) {
     m_c(10000);
     exit(0);
   }
