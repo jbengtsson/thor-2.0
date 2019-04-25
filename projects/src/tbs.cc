@@ -48,8 +48,8 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {0e0, 0e0, 0e0, 0e0, 1e0, 1e0,
-                    1e0, 1e0},
+  scl_dnu_conf[] = {1e2, 1e2, 1e2, 1e2, 0e0, 1e2,
+                    1e2, 1e2},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -1480,7 +1480,7 @@ int main(int argc, char *argv[])
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max;
 
-  if (!false) {
+  if (false) {
     m_c(10000);
     exit(0);
   }
@@ -1493,16 +1493,15 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (false) {
+  if (!false) {
     const double bn[] =
-      { 1.355e+01, -5.184e+01,
-	3.043e+02, -2.380e+02, -2.854e+02};
+      {2.023e+01, -8.931e+01, 3.101e+02, -2.322e+02, -2.930e+02};
 
-    for (j = 0; j < 11; j++)
+    for (j = 0; j < 5; j++)
       set_bn(bn_prms.Fnum[j], bn_prms.n[j], bn[j]);
 
     bn_prms.prt_bn_lat("bn_ini.out");
-    exit(0);
+    // exit(0);
   }
 
   if (false) no_mpoles(3);
