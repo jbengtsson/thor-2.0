@@ -37,19 +37,22 @@ ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
 // Center of straight.
 const double
-  beta_inj[]     = {8.7, 2.1},
-  A_max[]        = {5e-3, 1e-3},
+  // beta_inj[]     = {8.7, 2.1},
+  // A_max[]        = {5e-3, 1e-3},
+  // delta_max      = 2e-2,
+  beta_inj[]     = {2.1, 2.3},
+  A_max[]        = {3e-3, 1.5e-3},
+  delta_max      = 2e-2,
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
-  twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]},
-  delta_max      = 2e-2;
+  twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
 const double
   scl_h[]        = {0e0, 0e0, 0e0},
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e2, 1e2, 1e2, 1e2, 0e0, 1e2,
-                    1e2, 1e2},
+  scl_dnu_conf[] = {1e2, 1e2, 1e2, 1e2, 0e2, 0e2,
+                    0e2, 0e2},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -765,10 +768,16 @@ template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
 	      const bool all)
 {
+  const double eps = 1e-3;
+
   if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || all)
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
   else
-    b.push_back(scl*1e30);
+    if (dnu1+2e0*dnu2 > 0e0)
+      b.push_back(scl*sqr(dnu1+2e0*dnu2+eps));
+    else
+      b.push_back(scl*sqr(dnu1+2e0*dnu2-eps));
+    // b.push_back(scl*1e30);
 }
 
 
@@ -834,12 +843,12 @@ double get_chi2(const bool prt, const bool all)
   int              n, j, k;
   double           chi2;
   std::vector<tps> dK, b, b_extra;
-  static bool      first = true;
+  static bool      first = !true;
 
   const bool   chi2_extra = false;
   const double
-    scl = 1e8,
-    eps = 1e-5;
+    scl[] = {1e0, 1e0, 1e0, 1e0},
+    eps   = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
@@ -851,15 +860,18 @@ double get_chi2(const bool prt, const bool all)
 
   if (chi2_extra) {
     b_extra.clear();
-    // b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)
-    // 			    +2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
-    // b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)+eps));
-    // b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)+eps));
-    b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)+eps));
-    b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)-eps));
 
-  for (k = 0; k < (int)b_extra.size(); k++)
-    chi2 += b_extra[k].cst();
+    b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)
+				 +2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
+    b_extra.push_back(scl[1]*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)
+				 +2e0*h_ijklm(nus_scl[3], 0, 0, 2, 2, 0)-eps));
+    b_extra.push_back(scl[2]*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)
+				 +2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)-eps));
+    b_extra.push_back(scl[3]*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)
+				 +2e0*h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)-eps));
+
+    for (k = 0; k < (int)b_extra.size(); k++)
+      chi2 += b_extra[k].cst();
   }
 
   if (prt && ((first) || (chi2 < chi2_ref))) {
@@ -1206,7 +1218,8 @@ void bn_mc(const int n_stats, const int ind, const int n_ksi)
   std::vector<double> p;
   perf_vec            perf;
 
-  no_mpoles(3); no_mpoles(4);
+  // no_mpoles(3);
+  no_mpoles(4);
        
  for (k = 0; k < n_ksi; k++)
     Fnum_ksi1.push_back(bn_prms.Fnum[k]);
@@ -1273,7 +1286,7 @@ void m_c(const int n)
 
   srand(rand_seed);
 
-  switch (1) {
+  switch (4) {
   case 1:
     bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
@@ -1308,82 +1321,19 @@ void m_c(const int n)
 
     bn_mc(n, bn_prms.n_bn+2, 2);
     break;
+
+    bn_mc(n, bn_prms.n_bn+2, 2);
+    break;
   case 4:
-    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+    bn_prms.add_prm("sh1", 3, -5e2, 5e2, 1e-2);
+    bn_prms.add_prm("sh2", 3, -5e2, 5e2, 1e-2);
+    bn_prms.add_prm("sh3", 3, -5e2, 5e2, 1e-2);
 
-    bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
+    // bn_prms.add_prm("sh1", 4, -1e3, 1e3, 1e-2);
+    // bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
+    // bn_prms.add_prm("sh3", 4, -1e3, 1e3, 1e-2);
 
-    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
-
-    bn_mc(n, bn_prms.n_bn+2, 2);
-    break;
-  case 6:
-    bn_prms.add_prm("sf1", 5, -1e7, 1e7, 1e-2);
-    bn_prms.add_prm("sd1", 5, -1e7, 1e7, 1e-2);
-    bn_prms.add_prm("sd2", 5, -1e7, 1e7, 1e-2);
-
-    bn_mc(n, bn_prms.n_bn+2, 0);
-    break;
-  case 7:
-    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
-
-    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
-    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
-
-    bn_mc(n, bn_prms.n_bn+2, 0);
-    break;
-  case 8:
-    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
-
-    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
-
-    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
-    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
-
-    bn_mc(n, bn_prms.n_bn+2, 2);
-    break;
-  case 9:
-    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
-
-    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
-
-    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
-    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
-
-    bn_mc(n, bn_prms.n_bn+2, 2);
-    break;
-  case 10:
-    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
-
-    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
-
-    bn_prms.add_prm("sf1", 5, -1e7, 1e7, 1e-2);
-    bn_prms.add_prm("sd1", 5, -1e7, 1e7, 1e-2);
-    bn_prms.add_prm("sd2", 5, -1e7, 1e7, 1e-2);
-
-    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
-    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
-
-    bn_mc(n, bn_prms.n_bn+2, 2);
+    bn_mc(n, bn_prms.n_bn, 0);
     break;
   default:
     printf("\nm_c: unknown case\n");
@@ -1396,11 +1346,11 @@ void lat_select(void)
 {
 
   const double
-    //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 5e2,  5e4, 5e7, 1e9},
-    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
+    //                         b_3    b_4  b_5  b_6
+    bn_max[] = {0e0, 0e0, 0e0, 1.5e3, 5e4, 5e7, 1e9},
+    dbn[]    = {0e0, 0e0, 0e0, 1e-2,  1e0, 1e1, 1e0};
 
-  switch (1) {
+  switch (5) {
   case 1:
     bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1439,6 +1389,13 @@ void lat_select(void)
     // bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 5:
+    // ALS-U.
+    // bn_prms.add_prm("sf", 3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sd", 3, -bn_max[3], bn_max[3], dbn[3]);
+
+    bn_prms.add_prm("sh1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh3", 3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   default:
     printf("\nlat_select: unknown case\n");
@@ -1481,6 +1438,7 @@ int main(int argc, char *argv[])
   Id_delta_scl[delta_] *= delta_max;
 
   if (false) {
+    no_mpoles(4);
     m_c(10000);
     exit(0);
   }
@@ -1488,12 +1446,13 @@ int main(int argc, char *argv[])
   lat_select();
 
   if (false) {
+    no_mpoles(3);
     fit_ksi1(0e0, 0e0, bn_prms.Fnum);
     bn_prms.prt_bn_lat("ksi1.out");
     exit(0);
   }
 
-  if (!false) {
+  if (false) {
     const double bn[] =
       {2.023e+01, -8.931e+01, 3.101e+02, -2.322e+02, -2.930e+02};
 
