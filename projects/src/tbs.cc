@@ -845,10 +845,8 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = !true;
 
-  const bool   chi2_extra = false;
-  const double
-    scl[] = {1e0, 1e0, 1e0, 1e0},
-    eps   = 1e-3;
+  const bool   chi2_extra = !false;
+  const double scl[] = {1e3, 1e3};
 
   get_dK(dK);
   get_b(dK, b, all);
@@ -861,14 +859,8 @@ double get_chi2(const bool prt, const bool all)
   if (chi2_extra) {
     b_extra.clear();
 
-    b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)
-				 +2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
-    b_extra.push_back(scl[1]*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)
-				 +2e0*h_ijklm(nus_scl[3], 0, 0, 2, 2, 0)-eps));
-    b_extra.push_back(scl[2]*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)
-				 +2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)-eps));
-    b_extra.push_back(scl[3]*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)
-				 +2e0*h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)-eps));
+    b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)));
+    b_extra.push_back(scl[1]*sqr(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
 
     for (k = 0; k < (int)b_extra.size(); k++)
       chi2 += b_extra[k].cst();
