@@ -845,7 +845,7 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = !true;
 
-  const bool   chi2_extra = !false;
+  const bool   chi2_extra = false;
   const double scl[] = {1e3, 1e3};
 
   get_dK(dK);
@@ -860,7 +860,7 @@ double get_chi2(const bool prt, const bool all)
     b_extra.clear();
 
     b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)));
-    b_extra.push_back(scl[1]*sqr(h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
+    b_extra.push_back(scl[1]*sqr(2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
 
     for (k = 0; k < (int)b_extra.size(); k++)
       chi2 += b_extra[k].cst();
@@ -1439,9 +1439,9 @@ int main(int argc, char *argv[])
 
   if (false) {
     no_mpoles(3);
-    fit_ksi1(0e0, 0e0, bn_prms.Fnum);
+    fit_ksi1(0.0, 0.0, bn_prms.Fnum);
     bn_prms.prt_bn_lat("ksi1.out");
-    exit(0);
+    // exit(0);
   }
 
   if (false) {
