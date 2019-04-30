@@ -40,7 +40,7 @@ const double
   // beta_inj[]     = {8.7, 2.1},
   // A_max[]        = {5e-3, 1e-3},
   // delta_max      = 2e-2,
-  beta_inj[]     = {2.1, 2.3},
+  beta_inj[]     = {4.1, 1.8},
   A_max[]        = {3e-3, 1.5e-3},
   delta_max      = 2e-2,
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
@@ -51,7 +51,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e2, 1e2, 1e2, 1e2, 0e2, 0e2,
+  scl_dnu_conf[] = {0e2, 0e2, 0e2, 0e2, 0e2, 0e2,
                     0e2, 0e2},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -768,16 +768,21 @@ template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
 	      const bool all)
 {
-  const double eps = 1e-3;
+  const bool   fixed = !true;
+  const double eps   = 1e-3;
 
   if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || all)
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
-  else
-    if (dnu1+2e0*dnu2 > 0e0)
-      b.push_back(scl*sqr(dnu1+2e0*dnu2+eps));
-    else
-      b.push_back(scl*sqr(dnu1+2e0*dnu2-eps));
-    // b.push_back(scl*1e30);
+  else {
+    if (fixed)
+      b.push_back(scl*1e30);
+    else {
+      if (dnu1+2e0*dnu2 > 0e0)
+	b.push_back(scl*sqr(dnu1+2e0*dnu2+eps));
+      else
+	b.push_back(scl*sqr(dnu1+2e0*dnu2-eps));
+    }
+  }
 }
 
 
@@ -840,13 +845,14 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, const bool all)
 
 double get_chi2(const bool prt, const bool all)
 {
-  int              n, j, k;
+  int              n, j, k, n_extra;
   double           chi2;
   std::vector<tps> dK, b, b_extra;
-  static bool      first = !true;
+  static bool      first = true;
 
-  const bool   chi2_extra = false;
-  const double scl[] = {1e3, 1e3};
+  const bool   chi2_extra = !false;
+  const int    n_prt      = 4;
+  const double scl[]      = {1e4, 1e3}, eps = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
@@ -859,8 +865,16 @@ double get_chi2(const bool prt, const bool all)
   if (chi2_extra) {
     b_extra.clear();
 
-    b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)));
-    b_extra.push_back(scl[1]*sqr(2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
+    if (!false) {
+      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)));
+      b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
+      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)));
+      b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[3], 0, 0, 2, 2, 0)));
+      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)));
+      b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)));
+      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)));
+      b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)));
+    }
 
     for (k = 0; k < (int)b_extra.size(); k++)
       chi2 += b_extra[k].cst();
@@ -883,9 +897,12 @@ double get_chi2(const bool prt, const bool all)
     k += 8;
     if (chi2_extra) {
       printf("\n  b_extra     =");
-      for (j = 0; j < (int)b_extra.size(); j++)
+      n_extra = b_extra.size();
+      for (j = 0; j < n_extra; j++) {
 	printf(" %10.3e", b_extra[j].cst());
-      printf("\n");
+	if ((j+1) % n_prt == 0) printf("\n               ");
+      }
+      if (n_extra % n_prt != 0) printf("\n");
     }
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
@@ -1338,9 +1355,9 @@ void lat_select(void)
 {
 
   const double
-    //                         b_3    b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 1.5e3, 5e4, 5e7, 1e9},
-    dbn[]    = {0e0, 0e0, 0e0, 1e-2,  1e0, 1e1, 1e0};
+    //                         b_3   b_4  b_5  b_6
+    bn_max[] = {0e0, 0e0, 0e0, 2e3,  5e6, 5e7, 1e9},
+    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
   switch (5) {
   case 1:
@@ -1388,6 +1405,12 @@ void lat_select(void)
     bn_prms.add_prm("sh1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh3", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh4", 3, -bn_max[3], bn_max[3], dbn[3]);
+
+    bn_prms.add_prm("sh1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh2", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh4", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh4", 4, -bn_max[4], bn_max[4], dbn[4]);
     break;
   default:
     printf("\nlat_select: unknown case\n");
@@ -1441,7 +1464,7 @@ int main(int argc, char *argv[])
     no_mpoles(3);
     fit_ksi1(0.0, 0.0, bn_prms.Fnum);
     bn_prms.prt_bn_lat("ksi1.out");
-    // exit(0);
+    exit(0);
   }
 
   if (false) {
