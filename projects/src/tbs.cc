@@ -51,7 +51,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {0e2, 0e2, 0e2, 0e2, 0e2, 0e2,
+  scl_dnu_conf[] = {1e2, 1e2, 1e2, 1e2, 0e2, 0e2,
                     0e2, 0e2},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -768,8 +768,8 @@ template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
 	      const bool all)
 {
-  const bool   fixed = !true;
-  const double eps   = 1e-3;
+  const bool   fixed = true;
+  const double eps   = 5e-3;
 
   if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || all)
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
@@ -846,13 +846,14 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, const bool all)
 double get_chi2(const bool prt, const bool all)
 {
   int              n, j, k, n_extra;
-  double           chi2;
+  double           chi2, bn;
+  std::vector<int> Fnum_extra;
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
   const bool   chi2_extra = !false;
   const int    n_prt      = 4;
-  const double scl[]      = {1e4, 1e3}, eps = 1e-3;
+  const double scl[]      = {1e4, 1e-6}, eps = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
@@ -865,7 +866,7 @@ double get_chi2(const bool prt, const bool all)
   if (chi2_extra) {
     b_extra.clear();
 
-    if (!false) {
+    if (false) {
       b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)));
       b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
       b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)));
@@ -875,6 +876,13 @@ double get_chi2(const bool prt, const bool all)
       b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)));
       b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)));
     }
+
+    Fnum_extra.push_back(bn_prms.Fnum[0]);
+    Fnum_extra.push_back(bn_prms.Fnum[1]);
+    Fnum_extra.push_back(bn_prms.Fnum[2]);
+    Fnum_extra.push_back(bn_prms.Fnum[3]);
+    for (k = 0; k < (int)Fnum_extra.size(); k++)
+      b_extra.push_back(scl[1]*sqr(get_bn(Fnum_extra[k], 1, Sext)));
 
     for (k = 0; k < (int)b_extra.size(); k++)
       chi2 += b_extra[k].cst();
@@ -900,9 +908,14 @@ double get_chi2(const bool prt, const bool all)
       n_extra = b_extra.size();
       for (j = 0; j < n_extra; j++) {
 	printf(" %10.3e", b_extra[j].cst());
-	if ((j+1) % n_prt == 0) printf("\n               ");
+	if ((j != n_extra-1) && ((j+1) % n_prt == 0))
+	  printf("\n               ");
       }
-      if (n_extra % n_prt != 0) printf("\n");
+      printf("\n");
+      for (j = 0; j < n_extra; j++) {
+	printf("                 %-10s %10.3e\n",
+	       get_Name(Fnum_extra[j]), get_bn(Fnum_extra[j], 1, Sext));
+      }
     }
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
@@ -1356,7 +1369,7 @@ void lat_select(void)
 
   const double
     //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 2e3,  5e6, 5e7, 1e9},
+    bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
   switch (5) {
@@ -1409,7 +1422,7 @@ void lat_select(void)
 
     bn_prms.add_prm("sh1", 4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sh2", 4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sh4", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh3", 4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sh4", 4, -bn_max[4], bn_max[4], dbn[4]);
     break;
   default:
