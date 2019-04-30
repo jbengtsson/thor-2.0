@@ -40,8 +40,8 @@ const double
   // beta_inj[]     = {8.7, 2.1},
   // A_max[]        = {5e-3, 1e-3},
   // delta_max      = 2e-2,
-  beta_inj[]     = {4.1, 1.8},
-  A_max[]        = {3e-3, 1.5e-3},
+  beta_inj[]     = {3.4, 2.0},
+  A_max[]        = {3.5e-3, 2e-3},
   delta_max      = 2e-2,
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
@@ -56,7 +56,7 @@ const double
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 0e8,
+  scl_dnu_2d     = 1e19,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -769,7 +769,7 @@ void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
 	      const bool all)
 {
   const bool   fixed = true;
-  const double eps   = 5e-3;
+  const double eps   = 1e-3;
 
   if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || all)
     b.push_back(scl*sqr(dnu1+2e0*dnu2));
@@ -851,9 +851,9 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const bool   chi2_extra = !false;
+  const bool   chi2_extra = false;
   const int    n_prt      = 4;
-  const double scl[]      = {1e4, 1e-6}, eps = 1e-3;
+  const double scl[]      = {1e4, 1e-9}, eps = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
@@ -866,7 +866,7 @@ double get_chi2(const bool prt, const bool all)
   if (chi2_extra) {
     b_extra.clear();
 
-    if (false) {
+    if (!false) {
       b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)));
       b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
       b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)));
@@ -877,16 +877,9 @@ double get_chi2(const bool prt, const bool all)
       b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)));
     }
 
-    Fnum_extra.push_back(bn_prms.Fnum[0]);
-    Fnum_extra.push_back(bn_prms.Fnum[1]);
-    Fnum_extra.push_back(bn_prms.Fnum[2]);
-    Fnum_extra.push_back(bn_prms.Fnum[3]);
-    for (k = 0; k < (int)Fnum_extra.size(); k++)
-      b_extra.push_back(scl[1]*sqr(get_bn(Fnum_extra[k], 1, Sext)));
-
     for (k = 0; k < (int)b_extra.size(); k++)
       chi2 += b_extra[k].cst();
-  }
+   }
 
   if (prt && ((first) || (chi2 < chi2_ref))) {
     first = false;
@@ -912,10 +905,6 @@ double get_chi2(const bool prt, const bool all)
 	  printf("\n               ");
       }
       printf("\n");
-      for (j = 0; j < n_extra; j++) {
-	printf("                 %-10s %10.3e\n",
-	       get_Name(Fnum_extra[j]), get_bn(Fnum_extra[j], 1, Sext));
-      }
     }
     printf("\n  |dnu|       = %10.3e\n", b[k].cst());
     printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
@@ -1419,11 +1408,6 @@ void lat_select(void)
     bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh3", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh4", 3, -bn_max[3], bn_max[3], dbn[3]);
-
-    bn_prms.add_prm("sh1", 4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sh2", 4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sh3", 4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sh4", 4, -bn_max[4], bn_max[4], dbn[4]);
     break;
   default:
     printf("\nlat_select: unknown case\n");
@@ -1471,14 +1455,16 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  lat_select();
-
   if (false) {
     no_mpoles(3);
+    bn_prms.add_prm("sf", 3, -5e3, 5e3, 1e-2);
+    bn_prms.add_prm("sd", 3, -5e3, 5e3, 1e-2);
     fit_ksi1(0.0, 0.0, bn_prms.Fnum);
     bn_prms.prt_bn_lat("ksi1.out");
     exit(0);
   }
+
+  lat_select();
 
   if (false) {
     const double bn[] =
