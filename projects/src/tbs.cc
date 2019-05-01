@@ -41,7 +41,7 @@ const double
   // A_max[]        = {5e-3, 1e-3},
   // delta_max      = 2e-2,
   beta_inj[]     = {3.4, 2.0},
-  A_max[]        = {3.5e-3, 2e-3},
+  A_max[]        = {3e-3, 1.5e-3},
   delta_max      = 2e-2,
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
@@ -56,7 +56,7 @@ const double
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 0e18,
+  scl_dnu_2d     = 0e14,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -768,12 +768,18 @@ template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
 	      const bool all)
 {
-  const bool   fixed = true;
-  const double eps   = 1e-3;
+  double m;
 
-  if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || all)
-    b.push_back(scl*sqr(dnu1+2e0*dnu2));
-  else {
+  const bool   fixed = true;
+  const double
+    eps   = 1e-3,
+    scl_m = 1e2;
+
+  if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || true) {
+    // b.push_back(scl*sqr(dnu1+2e0*dnu2));
+    m = (dnu1.cst()+2e0*dnu2.cst())/2e0;
+    b.push_back(scl*(scl_m*sqr(m)+sqr(dnu1)+sqr(2e0*dnu2)));
+  } else {
     if (fixed)
       b.push_back(scl*1e30);
     else {
@@ -851,9 +857,10 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const bool   chi2_extra = !false;
+  const bool   chi2_extra = false;
   const int    n_prt      = 4;
-  const double scl[]      = {1e5, 1e-9}, eps = 1e-3;
+  // const double scl[]      = {1e5, 1e-9}, eps = 1e-3;
+  const double scl[]      = {1e2, 1e-9}, eps = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
@@ -1361,7 +1368,7 @@ void lat_select(void)
     bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
-  switch (5) {
+  switch (1) {
   case 1:
     bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
