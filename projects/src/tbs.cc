@@ -37,12 +37,13 @@ ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
 // Center of straight.
 const double
-  // beta_inj[]     = {8.7, 2.1},
-  // A_max[]        = {5e-3, 1e-3},
-  // delta_max      = 2e-2,
-  beta_inj[]     = {3.4, 2.0},
-  A_max[]        = {3e-3, 1.5e-3},
+  beta_inj[]     = {9.0, 2.0},
+  A_max[]        = {5e-3, 1e-3},
   delta_max      = 2e-2,
+  // ALS-U.
+  // beta_inj[]     = {3.4, 2.0},
+  // A_max[]        = {3e-3, 1.5e-3},
+  // delta_max      = 2e-2,
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
@@ -51,8 +52,8 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e2, 1e2, 1e2, 1e2, 0e2, 0e2,
-                    0e2, 0e2},
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1,
+                    1e1, 1e1},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -1376,6 +1377,10 @@ void lat_select(void)
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
+
+    bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
     break;
   case 2:
     bn_prms.add_prm("s",    4, -bn_max[4], bn_max[4], dbn[4]);
