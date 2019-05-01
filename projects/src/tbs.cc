@@ -56,7 +56,7 @@ const double
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
-  scl_dnu_2d     = 1e19,
+  scl_dnu_2d     = 0e18,
 #endif
   scl_dnu_3d     = 0e0;
 
@@ -851,9 +851,9 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const bool   chi2_extra = false;
+  const bool   chi2_extra = !false;
   const int    n_prt      = 4;
-  const double scl[]      = {1e4, 1e-9}, eps = 1e-3;
+  const double scl[]      = {1e5, 1e-9}, eps = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
@@ -906,8 +906,8 @@ double get_chi2(const bool prt, const bool all)
       }
       printf("\n");
     }
-    printf("\n  |dnu|       = %10.3e\n", b[k].cst());
-    printf("  |dnu_delta| = %10.3e\n", b[k+1].cst());
+    printf("\n  |dnu|       = %15.8e\n", b[k].cst());
+    printf("  |dnu_delta| = %15.8e\n", b[k+1].cst());
     k += 2;
     printf("\n  K:            %10.3e %10.3e %10.3e\n",
     	   b[k].cst(), b[k+1].cst(), b[k+2].cst());
