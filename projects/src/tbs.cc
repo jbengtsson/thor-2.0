@@ -37,7 +37,7 @@ ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
 // Center of straight.
 const double
-  beta_inj[]     = {9.0, 2.0},
+  beta_inj[]     = {13.8, 4.4},
   A_max[]        = {5e-3, 1e-3},
   delta_max      = 2e-2,
   // ALS-U.
@@ -858,10 +858,10 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const bool   chi2_extra = false;
+  const bool   chi2_extra = !false;
   const int    n_prt      = 4;
   // const double scl[]      = {1e5, 1e-9}, eps = 1e-3;
-  const double scl[]      = {1e2, 1e-9}, eps = 1e-3;
+  const double scl[]      = {1e3, 1e-9}, eps = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
@@ -879,17 +879,26 @@ double get_chi2(const bool prt, const bool all)
       b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
       b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)));
       b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[3], 0, 0, 2, 2, 0)));
+
       b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)));
       b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)));
       b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)));
       b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)));
+
+      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)));
+      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
+      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 4)));
+
+      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)));
+      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
+      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)));
     }
 
     for (k = 0; k < (int)b_extra.size(); k++)
       chi2 += b_extra[k].cst();
    }
 
-  if (prt && ((first) || (chi2 < chi2_ref))) {
+  if (prt && (first || (chi2 < chi2_ref))) {
     first = false;
     printf("\nget_chi2(%1d):\n", n);
     prt_dnu();
@@ -1378,9 +1387,9 @@ void lat_select(void)
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
-    bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
+    // bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    // bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    // bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
     break;
   case 2:
     bn_prms.add_prm("s",    4, -bn_max[4], bn_max[4], dbn[4]);
