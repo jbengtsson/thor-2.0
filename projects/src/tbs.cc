@@ -861,7 +861,7 @@ double get_chi2(const bool prt, const bool all)
   const bool   chi2_extra = !false;
   const int    n_prt      = 4;
   // const double scl[]      = {1e5, 1e-9}, eps = 1e-3;
-  const double scl[]      = {1e3, 1e-9}, eps = 1e-3;
+  const double scl[]      = {1e4, 1e-9}, eps = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
@@ -1380,26 +1380,23 @@ void lat_select(void)
 
   switch (1) {
   case 1:
-    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
-
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
-
-    // bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
-    // bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
-    // bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
     break;
   case 2:
-    bn_prms.add_prm("s",    4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sh2",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("s",    3, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh2",  3, -bn_max[4], bn_max[4], dbn[4]);
 
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 3:
+    // bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    // bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    // bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
+
     bn_prms.add_prm("sf1",  5, -bn_max[5], bn_max[5], dbn[5]);
     bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
     bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
