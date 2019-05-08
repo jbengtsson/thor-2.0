@@ -38,7 +38,7 @@ ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 // Center of straight.
 const double
   beta_inj[]     = {13.8, 4.4},
-  A_max[]        = {5e-3, 2e-3},
+  A_max[]        = {4e-3, 1.5e-3},
   delta_max      = 2.5e-2,
   // ALS-U.
   // beta_inj[]     = {3.4, 2.0},
@@ -858,7 +858,8 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const bool   chi2_extra = false;
+  // First minimize, then balance.
+  const bool   chi2_extra = !false;
   const int    n_prt      = 4;
   // const double scl[]      = {1e5, 1e-9}, eps = 1e-3;
   const double scl[]      = {1e3, 1e-9}, eps = 1e-3;
@@ -1309,7 +1310,7 @@ void m_c(const int n)
 
   srand(rand_seed);
 
-  switch (1) {
+  switch (3) {
   case 1:
     bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
@@ -1317,7 +1318,6 @@ void m_c(const int n)
 
     bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
     bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
-    bn_prms.add_prm("of1", 4, -1e3, 1e3, 1e-2);
  
     bn_mc(n, bn_prms.n_bn+2, 2);
     break;
@@ -1326,8 +1326,12 @@ void m_c(const int n)
     bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
     bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
 
-    bn_prms.add_prm("s",   4, -1e3, 1e3, 1e-2);
-    bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
+    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
+    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
+
+    bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
+    bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
+    bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
 
     bn_mc(n, bn_prms.n_bn+2, 2);
     break;
@@ -1343,21 +1347,9 @@ void m_c(const int n)
     bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd2", 4, -1e3, 1e3, 1e-2);
 
-    bn_mc(n, bn_prms.n_bn+2, 2);
-    break;
+    bn_prms.add_prm("of1", 4, -1e3, 1e3, 1e-2);
 
     bn_mc(n, bn_prms.n_bn+2, 2);
-    break;
-  case 4:
-    bn_prms.add_prm("sh1", 3, -5e2, 5e2, 1e-2);
-    bn_prms.add_prm("sh2", 3, -5e2, 5e2, 1e-2);
-    bn_prms.add_prm("sh3", 3, -5e2, 5e2, 1e-2);
-
-    // bn_prms.add_prm("sh1", 4, -1e3, 1e3, 1e-2);
-    // bn_prms.add_prm("sh2", 4, -1e3, 1e3, 1e-2);
-    // bn_prms.add_prm("sh3", 4, -1e3, 1e3, 1e-2);
-
-    bn_mc(n, bn_prms.n_bn, 0);
     break;
   default:
     printf("\nm_c: unknown case\n");
@@ -1374,7 +1366,7 @@ void lat_select(void)
     bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
-  switch (2) {
+  switch (4) {
   case 1:
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1383,20 +1375,22 @@ void lat_select(void)
   case 2:
     bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("of1",  4, -bn_max[4], bn_max[4], dbn[4]);
 
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 3:
-    // bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
-    // bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
-    // bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
 
-    bn_prms.add_prm("sf1",  5, -bn_max[5], bn_max[5], dbn[5]);
-    bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
-    bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
+    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+
+    bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 4:
     bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
@@ -1407,14 +1401,30 @@ void lat_select(void)
     bn_prms.add_prm("sd1",  5, -bn_max[5], bn_max[5], dbn[5]);
     bn_prms.add_prm("sd2",  5, -bn_max[5], bn_max[5], dbn[5]);
 
-    // bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
-    // bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 5:
+    bn_prms.add_prm("s",    4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh2",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("of1",  4, -bn_max[4], bn_max[4], dbn[4]);
+
+    bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
+
+    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+
+    bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
+    break;
+  case 6:
     // ALS-U.
     // bn_prms.add_prm("sf", 3, -bn_max[3], bn_max[3], dbn[3]);
     // bn_prms.add_prm("sd", 3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1472,8 +1482,9 @@ int main(int argc, char *argv[])
 
   if (false) {
     no_mpoles(3);
-    bn_prms.add_prm("sf", 3, -5e3, 5e3, 1e-2);
-    bn_prms.add_prm("sd", 3, -5e3, 5e3, 1e-2);
+    bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e-2);
+    bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e-2);
+    bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e-2);
     fit_ksi1(0.0, 0.0, bn_prms.Fnum);
     bn_prms.prt_bn_lat("ksi1.out");
     exit(0);
