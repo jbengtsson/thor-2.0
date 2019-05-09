@@ -859,7 +859,7 @@ double get_chi2(const bool prt, const bool all)
   static bool      first = true;
 
   // First minimize, then balance.
-  const bool   chi2_extra = !false;
+  const bool   chi2_extra = false;
   const int    n_prt      = 4;
   // const double scl[]      = {1e5, 1e-9}, eps = 1e-3;
   const double scl[]      = {1e3, 1e-9}, eps = 1e-3;
