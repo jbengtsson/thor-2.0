@@ -52,8 +52,8 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1,
-                    1e1, 1e1},
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
+                    0e1, 0e1},
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -771,7 +771,7 @@ void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
 {
   double m;
 
-  const bool   fixed = true;
+  const bool   fixed = true; // Maintain tune confinement.
   const double
     eps   = 1e-3,
     scl_m = 1e2;
@@ -859,7 +859,7 @@ double get_chi2(const bool prt, const bool all)
   static bool      first = true;
 
   // First minimize, then balance.
-  const bool   chi2_extra = false;
+  const bool   chi2_extra = !false;
   const int    n_prt      = 4;
   // const double scl[]      = {1e5, 1e-9}, eps = 1e-3;
   const double scl[]      = {1e3, 1e-9}, eps = 1e-3;
@@ -1247,9 +1247,6 @@ void bn_mc(const int n_stats, const int ind, const int n_ksi)
   std::vector<double> p;
   perf_vec            perf;
 
-  // no_mpoles(3);
-  no_mpoles(4);
-       
  for (k = 0; k < n_ksi; k++)
     Fnum_ksi1.push_back(bn_prms.Fnum[k]);
 
@@ -1310,14 +1307,14 @@ void m_c(const int n)
 
   srand(rand_seed);
 
-  switch (3) {
+  switch (1) {
   case 1:
-    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+    bn_prms.add_prm("sf1", 3, -2e2,   2e2, 1e-2);
+    bn_prms.add_prm("sd1", 3, -2.5e2, 2.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -2e2,   0e2,   1e-2);
 
-    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
-    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
+    bn_prms.add_prm("s",   3, -1.5e2, 1.5e2, 1e-2);
+    bn_prms.add_prm("sh2", 3, -1.5e2, 1.5e2, 1e-2);
  
     bn_mc(n, bn_prms.n_bn+2, 2);
     break;
@@ -1366,7 +1363,7 @@ void lat_select(void)
     bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
-  switch (4) {
+  switch (2) {
   case 1:
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1475,6 +1472,7 @@ int main(int argc, char *argv[])
   Id_delta_scl[delta_] *= delta_max;
 
   if (false) {
+    no_mpoles(3);
     no_mpoles(4);
     m_c(1000);
     exit(0);
