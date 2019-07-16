@@ -52,7 +52,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
+  scl_dnu_conf[] = {0e1, 0e1, 0e1, 0e1, 0e1, 0e1,
                     0e1, 0e1},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -862,7 +862,7 @@ double get_chi2(const bool prt, const bool all)
   const bool   chi2_extra = !false;
   const int    n_prt      = 4;
   // const double scl[]      = {1e5, 1e-9}, eps = 1e-3;
-  const double scl[]      = {1e3, 1e-9}, eps = 1e-3;
+  const double scl[]      = {1e2, 1e-9}, eps = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
@@ -1371,6 +1371,7 @@ void lat_select(void)
     break;
   case 2:
     bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
 
     bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
