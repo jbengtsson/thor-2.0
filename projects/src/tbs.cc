@@ -52,7 +52,9 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  scl_dnu_conf[] = {0e1, 0e1, 0e1, 0e1, 0e1, 0e1,
+  // Turn on terms with opposite signs;
+  // increase weight on remaining until opposite signs are obtained.
+  scl_dnu_conf[] = {1e1, 1e1, 0e1, 1e1, 0e1, 0e1,
                     0e1, 0e1},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -776,10 +778,13 @@ void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
     eps   = 1e-3,
     scl_m = 1e2;
 
-  if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || true) {
-    // b.push_back(scl*sqr(dnu1+2e0*dnu2));
-    m = (dnu1.cst()+2e0*dnu2.cst())/2e0;
-    b.push_back(scl*(scl_m*sqr(m)+sqr(dnu1)+sqr(2e0*dnu2)));
+  if (sgn(dnu1.cst()) != sgn(dnu2.cst())) {
+    if (fixed)
+      b.push_back(scl*sqr(dnu1+2e0*dnu2));
+    else {
+      m = (dnu1.cst()+2e0*dnu2.cst())/2e0;
+      b.push_back(scl*(scl_m*sqr(m)+sqr(dnu1)+sqr(2e0*dnu2)));
+    }
   } else {
     if (fixed)
       b.push_back(scl*1e30);
@@ -859,10 +864,14 @@ double get_chi2(const bool prt, const bool all)
   static bool      first = true;
 
   // First minimize, then balance.
-  const bool   chi2_extra = !false;
+#if 0
+  const bool   chi2_extra = true;
+  const double scl[]      = {1e5};
+#else
+  const bool   chi2_extra = true;
+  const double scl[]      = {1e2};
+#endif
   const int    n_prt      = 4;
-  // const double scl[]      = {1e5, 1e-9}, eps = 1e-3;
-  const double scl[]      = {1e2, 1e-9}, eps = 1e-3;
 
   get_dK(dK);
   get_b(dK, b, all);
