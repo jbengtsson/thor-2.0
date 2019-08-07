@@ -54,7 +54,7 @@ const double
   delta_scl      = 0e0,
   // Turn on terms with opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-  scl_dnu_conf[] = {1e1, 1e1, 0e1, 1e1, 0e1, 0e1,
+  scl_dnu_conf[] = {1e1, 0e1, 0e1, 1e1, 0e1, 0e1,
                     0e1, 0e1},
 #if DNU
   scl_dnu_2d     = 1e6,
