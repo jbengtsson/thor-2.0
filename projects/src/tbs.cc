@@ -54,7 +54,7 @@ const double
   delta_scl      = 0e0,
   // Turn on terms with opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-  scl_dnu_conf[] = {1e1, 0e1, 0e1, 1e1, 0e1, 0e1,
+  scl_dnu_conf[] = {1e1, 0e1, 0e1, 0e1, 0e1, 0e1,
                     0e1, 0e1},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -863,15 +863,15 @@ double get_chi2(const bool prt, const bool all)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
+  const int    n_prt      = 4;
   // First minimize, then balance.
-#if 0
-  const bool   chi2_extra = true;
-  const double scl[]      = {1e5};
-#else
+#if 1
   const bool   chi2_extra = true;
   const double scl[]      = {1e2};
+#else
+  const bool   chi2_extra = true;
+  const double scl[]      = {1e0};
 #endif
-  const int    n_prt      = 4;
 
   get_dK(dK);
   get_b(dK, b, all);
