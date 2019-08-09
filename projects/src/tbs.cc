@@ -37,9 +37,9 @@ ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
 // Center of straight.
 const double
-  beta_inj[]     = {7.95, 3.22},
-  A_max[]        = {4e-3, 1.5e-3},
-  delta_max      = 2.5e-2,
+  beta_inj[]     = {7.9, 3.1},
+  A_max[]        = {3e-3, 1.5e-3},
+  delta_max      = 2e-2,
   // ALS-U.
   // beta_inj[]     = {3.4, 2.0},
   // A_max[]        = {3e-3, 1.5e-3},
@@ -54,7 +54,7 @@ const double
   delta_scl      = 0e0,
   // Turn on terms with opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-  scl_dnu_conf[] = {1e1, 0e1, 0e1, 0e1, 0e1, 0e1,
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
                     0e1, 0e1},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -769,11 +769,11 @@ tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
 
 template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
-	      const bool all)
+	      const bool fixed)
 {
+  // To maintain tune confinement: fixed = true; 
   double m;
 
-  const bool   fixed = true; // Maintain tune confinement.
   const double
     eps   = 1e-3,
     scl_m = 1e2;
@@ -799,7 +799,7 @@ void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
 
 
 template<typename T>
-void get_b(std::vector<T> &dK, std::vector<T> &b, const bool all)
+void get_b(std::vector<T> &dK, std::vector<T> &b, const bool fixed)
 {
   int k;
 
@@ -811,13 +811,13 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, const bool all)
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
-  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b, all); k += 2;
-  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b, all); k += 2;
-  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b, all); k += 2;
-  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b, all); k += 2;
+  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b, fixed); k += 2;
+  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b, fixed); k += 2;
+  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b, fixed); k += 2;
+  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b, fixed); k += 2;
 
-  dK_shift(scl_dnu_conf[4], dK[k], dK[k+1], b, all); k += 2;
-  dK_shift(scl_dnu_conf[5], dK[k], dK[k+1], b, all); k += 2;
+  dK_shift(scl_dnu_conf[4], dK[k], dK[k+1], b, fixed); k += 2;
+  dK_shift(scl_dnu_conf[5], dK[k], dK[k+1], b, fixed); k += 2;
 
   b.push_back(scl_dnu_conf[6]*sqr(dK[k])); k++;
   b.push_back(scl_dnu_conf[7]*sqr(dK[k])); k++;
@@ -855,7 +855,7 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, const bool all)
 }
 
 
-double get_chi2(const bool prt, const bool all)
+double get_chi2(const bool prt)
 {
   int              n, j, k, n_extra;
   double           chi2, bn;
@@ -865,16 +865,26 @@ double get_chi2(const bool prt, const bool all)
 
   const int    n_prt      = 4;
   // First minimize, then balance.
-#if 1
-  const bool   chi2_extra = true;
+#define CASE 3
+#if CASE == 1
+  const bool
+    chi2_extra = true,
+    fixed      = false;
   const double scl[]      = {1e2};
-#else
-  const bool   chi2_extra = true;
+#elif CASE == 2
+  const bool
+    chi2_extra = true,
+    fixed      = false;
   const double scl[]      = {1e0};
+#elif CASE == 3
+  const bool
+    chi2_extra = true,
+    fixed      = false;
+  const double scl[]      = {1e-2};
 #endif
 
   get_dK(dK);
-  get_b(dK, b, all);
+  get_b(dK, b, fixed);
 
   chi2 = 0e0;
   n = (int)b.size();
@@ -992,9 +1002,9 @@ void df_nl(double *bn, double *df)
   for (k = 0; k < bn_prms.n_bn; k++) {
     eps = bn_prms.dbn[k];
     bn_prms.set_dprm(k, eps);
-    df[k+1] = get_chi2(false, false);
+    df[k+1] = get_chi2(false);
     bn_prms.set_dprm(k, -2e0*eps);
-    df[k+1] -= get_chi2(false, false);
+    df[k+1] -= get_chi2(false);
     df[k+1] /= 2e0*eps;
     bn_prms.set_dprm(k, eps);
   }
@@ -1012,7 +1022,7 @@ double f_nl(double *bn)
 
    bn_prms.set_prm(bn);
 
-   chi2 = get_chi2(true, false);
+   chi2 = get_chi2(true);
    if (chi2 < chi2_ref) {
     n_iter++;
 
@@ -1224,7 +1234,7 @@ void get_perf(int &n_good, double &chi2)
 	!= sgn(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)))
       n_good++;
 
-    chi2 = get_chi2(false, true);
+    chi2 = get_chi2(false);
 }
 
 
