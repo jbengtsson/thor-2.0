@@ -865,7 +865,7 @@ double get_chi2(const bool prt)
 
   const int    n_prt      = 4;
   // First minimize, then balance.
-#define CASE 3
+#define CASE 1
 #if CASE == 1
   const bool
     chi2_extra = true,
@@ -879,7 +879,7 @@ double get_chi2(const bool prt)
 #elif CASE == 3
   const bool
     chi2_extra = true,
-    fixed      = false;
+    fixed      = !false;
   const double scl[]      = {1e-2};
 #endif
 
@@ -1382,7 +1382,7 @@ void lat_select(void)
     bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
-  switch (2) {
+  switch (3) {
   case 1:
     // First minimize magnitude of tune footprint.
     bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1399,14 +1399,15 @@ void lat_select(void)
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 3:
-    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh1a", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh1b", 3, -bn_max[3], bn_max[3], dbn[3]);
 
-    bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
+
+    bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 4:
     bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
