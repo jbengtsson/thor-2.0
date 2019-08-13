@@ -52,9 +52,9 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  // Turn on terms with opposite signs;
+  // Negative: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
+  scl_dnu_conf[] = {1e1, 1e1, -1e1, -1e1, 0e1, 0e1,
                     0e1, 0e1},
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -768,38 +768,36 @@ tps tps_abs(const tps &a) { return (a.cst() > 0e0)? a : -a; }
 
 
 template<typename T>
-void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b,
-	      const bool fixed)
+void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 {
-  // To maintain tune confinement: fixed = true; 
+  // scl > 0: maintain tune confinement; 
   double m;
+  T      val;
 
   const double
     eps   = 1e-3,
     scl_m = 1e2;
 
-  if (sgn(dnu1.cst()) != sgn(dnu2.cst())) {
-    if (fixed)
-      b.push_back(scl*sqr(dnu1+2e0*dnu2));
-    else {
+  if (scl > 0)
+    val =
+      (sgn(dnu1.cst()) != sgn(dnu2.cst()))?
+      scl*sqr(dnu1+2e0*dnu2) : scl*1e30;
+  else {
+    if (sgn(dnu1.cst()) != sgn(dnu2.cst())) {
       m = (dnu1.cst()+2e0*dnu2.cst())/2e0;
-      b.push_back(scl*(scl_m*sqr(m)+sqr(dnu1)+sqr(2e0*dnu2)));
-    }
-  } else {
-    if (fixed)
-      b.push_back(scl*1e30);
-    else {
-      if (dnu1+2e0*dnu2 > 0e0)
-	b.push_back(scl*sqr(dnu1+2e0*dnu2+eps));
-      else
-	b.push_back(scl*sqr(dnu1+2e0*dnu2-eps));
-    }
+      val = fabs(scl)*(scl_m*sqr(m)+sqr(dnu1)+sqr(2e0*dnu2));
+    } else
+      val =
+	(dnu1+2e0*dnu2 > 0e0)?
+	fabs(scl)*sqr(dnu1+2e0*dnu2+eps) : fabs(scl)*sqr(dnu1+2e0*dnu2-eps);
   }
+
+  b.push_back(val);
 }
 
 
 template<typename T>
-void get_b(std::vector<T> &dK, std::vector<T> &b, const bool fixed)
+void get_b(std::vector<T> &dK, std::vector<T> &b)
 {
   int k;
 
@@ -811,13 +809,13 @@ void get_b(std::vector<T> &dK, std::vector<T> &b, const bool fixed)
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
   b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
 
-  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b, fixed); k += 2;
-  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b, fixed); k += 2;
-  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b, fixed); k += 2;
-  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b, fixed); k += 2;
+  dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[2], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[3], dK[k], dK[k+1], b); k += 2;
 
-  dK_shift(scl_dnu_conf[4], dK[k], dK[k+1], b, fixed); k += 2;
-  dK_shift(scl_dnu_conf[5], dK[k], dK[k+1], b, fixed); k += 2;
+  dK_shift(scl_dnu_conf[4], dK[k], dK[k+1], b); k += 2;
+  dK_shift(scl_dnu_conf[5], dK[k], dK[k+1], b); k += 2;
 
   b.push_back(scl_dnu_conf[6]*sqr(dK[k])); k++;
   b.push_back(scl_dnu_conf[7]*sqr(dK[k])); k++;
@@ -863,28 +861,28 @@ double get_chi2(const bool prt)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const int    n_prt      = 4;
+  const int    n_prt      = 1;
   // First minimize, then balance.
-#define CASE 1
+#define CASE 4
 #if CASE == 1
-  const bool
-    chi2_extra = true,
-    fixed      = false;
-  const double scl[]      = {1e2};
+  const bool   chi2_extra = true;
+  const double scl        = 1e2;
 #elif CASE == 2
-  const bool
-    chi2_extra = true,
-    fixed      = false;
-  const double scl[]      = {1e0};
+  const bool   chi2_extra = true;
+  const double scl        = 1e1;
 #elif CASE == 3
-  const bool
-    chi2_extra = true,
-    fixed      = !false;
-  const double scl[]      = {1e-2};
+  const bool   chi2_extra = true;
+  const double scl        = 1e0;
+#elif CASE == 4
+  const bool   chi2_extra = true;
+  const double scl        = 1e-2;
 #endif
 
+  if (first)
+    printf("\nget_chi2: scl = %9.3e", scl);
+
   get_dK(dK);
-  get_b(dK, b, fixed);
+  get_b(dK, b);
 
   chi2 = 0e0;
   n = (int)b.size();
@@ -895,23 +893,23 @@ double get_chi2(const bool prt)
     b_extra.clear();
 
     if (!false) {
-      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)));
-      b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
-      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)));
-      b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[3], 0, 0, 2, 2, 0)));
+      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 0)));
+      b_extra.push_back(scl*sqr(2e0*h_ijklm(nus_scl[3], 2, 2, 0, 0, 0)));
+      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 0)));
+      b_extra.push_back(scl*sqr(2e0*h_ijklm(nus_scl[3], 0, 0, 2, 2, 0)));
 
-      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)));
-      b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)));
-      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)));
-      b_extra.push_back(scl[0]*sqr(2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)));
+      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 0)));
+      b_extra.push_back(scl*sqr(2e0*h_ijklm(nus_scl[4], 0, 0, 2, 2, 0)));
+      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)));
+      b_extra.push_back(scl*sqr(2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)));
 
-      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)));
-      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
-      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 4)));
+      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)));
+      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
+      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 4)));
 
-      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)));
-      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
-      b_extra.push_back(scl[0]*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)));
+      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)));
+      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
+      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)));
     }
 
     for (k = 0; k < (int)b_extra.size(); k++)
@@ -976,7 +974,7 @@ void df_nl2(double *bn, double *df)
     bn_prms.set_prm_dep(i);
 
     get_dK(dK);
-    get_b(dK, b, false);
+    get_b(dK, b);
 
     chi2 = 0e0;
     for (k = 0; k < (int)b.size(); k++)
