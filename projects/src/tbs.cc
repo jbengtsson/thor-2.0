@@ -54,8 +54,17 @@ const double
   delta_scl      = 0e0,
   // Negative: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-  scl_dnu_conf[] = {1e1, 1e1, -1e1, -1e1, 0e1, 0e1,
+#define CASE_DNU 3
+#if CASE_DNU == 1
+  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
+                     0e1,  0e1},
+#elif CASE_DNU == 2
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1,
                     0e1, 0e1},
+#elif CASE_DNU == 3
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
+                    0e1, 0e1},
+#endif
 #if DNU
   scl_dnu_2d     = 1e6,
 #else
@@ -774,23 +783,10 @@ void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
   double m;
   T      val;
 
-  const double
-    eps   = 1e-3,
-    scl_m = 1e2;
-
-  if (scl > 0)
-    val =
-      (sgn(dnu1.cst()) != sgn(dnu2.cst()))?
-      scl*sqr(dnu1+2e0*dnu2) : scl*1e30;
-  else {
-    if (sgn(dnu1.cst()) != sgn(dnu2.cst())) {
-      m = (dnu1.cst()+2e0*dnu2.cst())/2e0;
-      val = fabs(scl)*(scl_m*sqr(m)+sqr(dnu1)+sqr(2e0*dnu2));
-    } else
-      val =
-	(dnu1+2e0*dnu2 > 0e0)?
-	fabs(scl)*sqr(dnu1+2e0*dnu2+eps) : fabs(scl)*sqr(dnu1+2e0*dnu2-eps);
-  }
+  if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || (scl < 0e0))
+    val = fabs(scl)*sqr(dnu1+2e0*dnu2);
+  else
+    val = scl*1e30;
 
   b.push_back(val);
 }
@@ -861,25 +857,26 @@ double get_chi2(const bool prt)
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
 
-  const int    n_prt      = 1;
+  const int n_prt = 4;
   // First minimize, then balance.
-#define CASE 4
-#if CASE == 1
+#define CASE_SCL 1
+#if CASE_SCL == 1
+  // Equalize.
+  const bool   chi2_extra = true;
+  const double scl        = 1e3;
+#elif CASE_SCL == 2
   const bool   chi2_extra = true;
   const double scl        = 1e2;
-#elif CASE == 2
+#elif CASE_SCL == 3
   const bool   chi2_extra = true;
   const double scl        = 1e1;
-#elif CASE == 3
+#elif CASE_SCL == 4
   const bool   chi2_extra = true;
   const double scl        = 1e0;
-#elif CASE == 4
+#elif CASE_SCL == 5
   const bool   chi2_extra = true;
   const double scl        = 1e-2;
 #endif
-
-  if (first)
-    printf("\nget_chi2: scl = %9.3e", scl);
 
   get_dK(dK);
   get_b(dK, b);
@@ -918,7 +915,8 @@ double get_chi2(const bool prt)
 
   if (prt && (first || (chi2 < chi2_ref))) {
     first = false;
-    printf("\nget_chi2(%1d):\n", n);
+    printf("\nget_chi2(%1d): scl = %9.3e\n", n, scl);
+
     prt_dnu();
 
     k = 0;
@@ -1408,18 +1406,15 @@ void lat_select(void)
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 4:
-    bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
-    bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh1a", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh1b", 4, -bn_max[4], bn_max[4], dbn[4]);
 
-    bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh1a", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh1b", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",    4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh2",  4, -bn_max[4], bn_max[4], dbn[4]);
 
-    bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sf1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 5:
     bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
