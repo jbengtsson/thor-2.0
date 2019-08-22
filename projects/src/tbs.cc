@@ -1378,14 +1378,16 @@ void lat_select(void)
     bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
-  switch (4) {
+  switch (5) {
   case 1:
     // First minimize magnitude of tune footprint.
+    // 3+0 b_3.
     bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 2:
+    // 3+0 b_3, 3+0 b_4.
     bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
@@ -1396,6 +1398,7 @@ void lat_select(void)
     break;
   case 3:
     // Then balance terms.
+    // 3+2 b_3+0.
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
@@ -1404,6 +1407,7 @@ void lat_select(void)
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 4:
+    // 3+2 b_3, 3+0 b_4.
     bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
@@ -1416,6 +1420,23 @@ void lat_select(void)
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 5:
+    // 3+2 b_3, 3+2 b_4.
+    bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
+
+    bn_prms.add_prm("s",   4, -bn_max[4], bn_max[4], dbn[4]);
+    bn_prms.add_prm("sh2", 4, -bn_max[4], bn_max[4], dbn[4]);
+
+    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
+
+    bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
+    break;
+  case 6:
+    // 3+4 b_3.
     bn_prms.add_prm("sh1a", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh1b", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1425,7 +1446,8 @@ void lat_select(void)
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
-  case 6:
+  case 7:
+    // 3+4 b_3, 3+0 b_4.
     bn_prms.add_prm("sf1",  4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd1",  4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd2",  4, -bn_max[4], bn_max[4], dbn[4]);
@@ -1439,7 +1461,7 @@ void lat_select(void)
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
-  case 7:
+  case 8:
     bn_prms.add_prm("sh1a", 4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sh1b", 4, -bn_max[4], bn_max[4], dbn[4]);
 
@@ -1450,7 +1472,7 @@ void lat_select(void)
     bn_prms.add_prm("sd1",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2",  3, -bn_max[3], bn_max[3], dbn[3]);
     break;
-  case 8:
+  case 9:
     bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
@@ -1466,7 +1488,7 @@ void lat_select(void)
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
     break;
-  case 9:
+  case 10:
     bn_prms.add_prm("s",   4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("sh2", 4, -bn_max[4], bn_max[4], dbn[4]);
     bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
@@ -1482,7 +1504,7 @@ void lat_select(void)
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
     break;
-  case 10:
+  case 11:
     // ALS-U.
     // bn_prms.add_prm("sf", 3, -bn_max[3], bn_max[3], dbn[3]);
     // bn_prms.add_prm("sd", 3, -bn_max[3], bn_max[3], dbn[3]);
