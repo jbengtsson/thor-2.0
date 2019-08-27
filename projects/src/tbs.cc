@@ -35,9 +35,17 @@ tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 tps          K_re_delta_scl;
 ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
+#define LAT_CASE 2
+
 // Center of straight.
 const double
+#if LAT_CASE == 1
+// M-H6BA-17E-79pm-01.03-01.
   beta_inj[]     = {7.9, 3.1},
+#elif LAT_CASE == 2
+// M-H6BA-17E-69pm-04.02-01
+  beta_inj[]     = {11.1, 5.5},
+#endif
   A_max[]        = {3e-3, 1.5e-3},
   delta_max      = 2e-2,
   // ALS-U.
@@ -52,7 +60,8 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  // Negative: maintain opposite signs;
+  // Negative: minimize,
+  // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
 #define CASE_DNU 1
 #if CASE_DNU == 1
@@ -858,8 +867,10 @@ double get_chi2(const bool prt)
   static bool      first = true;
 
   const int n_prt = 4;
-  // First minimize, then balance.
+
 #define CASE_SCL 5
+
+  // First minimize, then balance.
 #if CASE_SCL == 1
   // Equalize.
   const bool   chi2_extra = true;
@@ -1378,7 +1389,7 @@ void lat_select(void)
     bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
-  switch (5) {
+  switch (4) {
   case 1:
     // First minimize magnitude of tune footprint.
     // 3+0 b_3.
