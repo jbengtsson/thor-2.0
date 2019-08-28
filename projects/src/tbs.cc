@@ -515,6 +515,38 @@ tps get_a(const tps &t,
 }
 
 
+void get_ampl_orb(const double twoJ[], double dx[])
+{
+  int             j, k;
+  ss_vect<tps>    Id, Id_scl, map, x, dx_loc;
+
+  Id.identity();
+
+  Id_scl.identity();
+  for (k = 0; k < 4; k++)
+    Id_scl[k] *= sqrt(twoJ[k/2]);
+  Id_scl[delta_] = 0e0;
+
+  danot_(no_tps-1);
+  map.identity(); map.propagate(1, n_elem);
+  danot_(no_tps);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+
+  for (k = 0; k < 4; k++)
+    dx_loc[k] = PB(g, Id[k]);
+
+  for (k = 0; k < 2; k++)
+    dx[k] = 0e0;
+  for (j = 1; j <= n_elem; j++) {
+    dx_loc.propagate(j, j);
+    if ((elem[j].kind == Mpole) &&
+    	(elem[j].mpole->bn[Sext-1] != 0e0))
+    for (k = 0; k < 2; k++)
+      dx[k] += abs2(dx_loc[k]*Id_scl);
+  }
+}
+
+
 void prt_dnu(void)
 {
 
@@ -861,7 +893,7 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
 double get_chi2(const bool prt)
 {
   int              n, j, k, n_extra;
-  double           chi2, bn;
+  double           chi2, bn, dx;
   std::vector<int> Fnum_extra;
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
@@ -891,6 +923,7 @@ double get_chi2(const bool prt)
 
   get_dK(dK);
   get_b(dK, b);
+  get_ampl_orb(twoJ, dx)
 
   chi2 = 0e0;
   n = (int)b.size();
