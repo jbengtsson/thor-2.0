@@ -518,7 +518,7 @@ tps get_a(const tps &t,
 void get_ampl_orb(const double twoJ[], double dx[])
 {
   int             j, k;
-  ss_vect<tps>    Id, Id_scl, map, x, dx_loc;
+  ss_vect<tps>    Id, Id_scl, map, dx_fl, dx_fl_lin, M;
 
   Id.identity();
 
@@ -532,17 +532,20 @@ void get_ampl_orb(const double twoJ[], double dx[])
   danot_(no_tps);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
 
-  for (k = 0; k < 4; k++)
-    dx_loc[k] = PB(g, Id[k]);
-
   for (k = 0; k < 2; k++)
     dx[k] = 0e0;
+  M.identity();
   for (j = 1; j <= n_elem; j++) {
-    dx_loc.propagate(j, j);
+    M.propagate(j, j);
+    // Remove linear terms.
+    danot_(1);
+    dx_fl_lin = dx_fl;
+    danot_(no_tps);
+    dx_fl = dx_fl - dx_fl_lin;
     if ((elem[j].kind == Mpole) &&
     	(elem[j].mpole->bn[Sext-1] != 0e0))
     for (k = 0; k < 2; k++)
-      dx[k] += abs2(dx_loc[k]*Id_scl);
+      dx[k] += abs2(dx_fl[2*k]*Id_scl);
   }
 }
 
@@ -893,7 +896,7 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
 double get_chi2(const bool prt)
 {
   int              n, j, k, n_extra;
-  double           chi2, bn, dx;
+  double           chi2, bn, dx[2];
   std::vector<int> Fnum_extra;
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
@@ -923,7 +926,7 @@ double get_chi2(const bool prt)
 
   get_dK(dK);
   get_b(dK, b);
-  get_ampl_orb(twoJ, dx)
+  get_ampl_orb(twoJ, dx);
 
   chi2 = 0e0;
   n = (int)b.size();

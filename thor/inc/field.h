@@ -169,12 +169,29 @@ template<typename T> class ss_vect {
   ss_vect<T>& operator+=(const ss_vect<T> &);
   ss_vect<T>& operator-=(const ss_vect<T> &);
 
+  /* friend ss_vect<T> operator+<>(const ss_vect<T> &); */
+  /* friend ss_vect<T> operator-<>(const ss_vect<T> &); */
+
+  friend ss_vect<double> operator+(const ss_vect<double> &,
+				   const ss_vect<double> &);
+  friend ss_vect<tps> operator+(const ss_vect<tps> &, const ss_vect<double> &);
+  friend ss_vect<tps> operator+(const ss_vect<double> &, const ss_vect<tps> &);
   friend ss_vect<tps> operator+(const ss_vect<tps> &, const ss_vect<tps> &);
+
+  friend ss_vect<double> operator-(const ss_vect<double> &,
+				   const ss_vect<double> &);
+  friend ss_vect<tps> operator-(const ss_vect<tps> &, const ss_vect<double> &);
+  friend ss_vect<tps> operator-(const ss_vect<double> &, const ss_vect<tps> &);
+  friend ss_vect<tps> operator-(const ss_vect<tps> &, const ss_vect<tps> &);
 
 //  friend ss_vect<double> operator*(const ss_vect<tps> &,
 //				   const ss_vect<double> &);
   // R(nd2, nv) = P(nd2, nd2)*Q(nd2, nv)
+  friend ss_vect<double> operator*(const double, const ss_vect<double> &);
+  friend ss_vect<double> operator*(const ss_vect<double> &, const double);
   friend ss_vect<tps> operator*(const ss_vect<tps> &, const ss_vect<tps> &);
+  friend ss_vect<tps> operator*(const double, const ss_vect<tps> &);
+  friend ss_vect<tps> operator*(const ss_vect<tps> &, const double);
   // R(nv, nv) = P(nv, nv)*Q(nv, nv)
   friend ss_vect<tps> CCT(const ss_vect<tps> &, const ss_vect<tps> &);
   friend ss_vect<tps> MTREE(const ss_vect<tps> &);
