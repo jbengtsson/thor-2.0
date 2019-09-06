@@ -539,16 +539,16 @@ void get_ampl_orb(double dx[], const bool prt)
   M.identity();
   for (j = 1; j <= n_elem; j++) {
     M.propagate(j, j);
-    map = M*Map*Inv(M);
-    K = MapNorm(map, g, A1, A0, Map_res, 1);
-    dx_fl = LieExp(g, Id);
-    dx_fl = tp_S(3, dx_fl);
-    // Remove linear terms.
-    danot_(1);
-    dx_fl_lin = dx_fl;
-    danot_(no_b3);
-    dx_fl = (dx_fl-dx_fl_lin)*Id_scl1;
     if ((elem[j].kind == Mpole) && (elem[j].mpole->bn[Sext-1] != 0e0)) {
+      map = M*Map*Inv(M);
+      K = MapNorm(map, g, A1, A0, Map_res, 1);
+      dx_fl = LieExp(g, Id);
+      dx_fl = tp_S(3, dx_fl);
+      // Remove linear terms.
+      danot_(1);
+      dx_fl_lin = dx_fl;
+      danot_(no_b3);
+      dx_fl = (dx_fl-dx_fl_lin)*Id_scl1;
       for (k = 0; k < 2; k++)
     	dx[k] += abs2(dx_fl[2*k]);
       if (prt) {
