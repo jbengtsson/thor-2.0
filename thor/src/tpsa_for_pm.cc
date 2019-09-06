@@ -664,6 +664,8 @@ ss_vect<tps> LieExp(const tps &H, const ss_vect<tps> &x)
     xintptrs[i] = x[i].intptr; mapintptrs[i] = map[i].intptr;
   }
   expnd2_(H.intptr, xintptrs, mapintptrs, eps_tps, n_max);
+  for (i = 2*nd_tps; i < ss_dim; i++)
+    map[i] = tps(0.0, i+1);
   return map;
 }
 

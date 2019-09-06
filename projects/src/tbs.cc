@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 6
+#define NO 3
 
 #include "thor_lib.h"
 
@@ -60,6 +60,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
+  dx_dJ_scl      = 1e-2,
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
@@ -515,38 +516,55 @@ tps get_a(const tps &t,
 }
 
 
-void get_ampl_orb(const double twoJ[], double dx[])
+void get_ampl_orb(double dx[], const bool prt)
 {
-  int             j, k;
-  ss_vect<tps>    Id, Id_scl, map, dx_fl, dx_fl_lin, M;
+  int           j, k;
+  ss_vect<tps>  Id, Id_scl1, map, dx_fl, dx_fl_lin, M;
+  std::ofstream outf;
+
+  const int no_b3 = 3;
+
+  if (prt) outf.open("ampl_orb.out", std::ios::out);
 
   Id.identity();
 
-  Id_scl.identity();
-  for (k = 0; k < 4; k++)
-    Id_scl[k] *= sqrt(twoJ[k/2]);
-  Id_scl[delta_] = 0e0;
+  Id_scl1 = Id_scl; Id_scl1[delta_] = 0e0;
 
-  danot_(no_tps-1);
-  map.identity(); map.propagate(1, n_elem);
-  danot_(no_tps);
-  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  danot_(no_b3-1);
+  Map.identity(); Map.propagate(1, n_elem);
+  danot_(no_b3);
 
   for (k = 0; k < 2; k++)
     dx[k] = 0e0;
   M.identity();
   for (j = 1; j <= n_elem; j++) {
     M.propagate(j, j);
+    map = M*Map*Inv(M);
+    K = MapNorm(map, g, A1, A0, Map_res, 1);
+    dx_fl = LieExp(g, Id);
+    dx_fl = tp_S(3, dx_fl);
     // Remove linear terms.
     danot_(1);
     dx_fl_lin = dx_fl;
-    danot_(no_tps);
-    dx_fl = dx_fl - dx_fl_lin;
-    if ((elem[j].kind == Mpole) &&
-    	(elem[j].mpole->bn[Sext-1] != 0e0))
-    for (k = 0; k < 2; k++)
-      dx[k] += abs2(dx_fl[2*k]*Id_scl);
+    danot_(no_b3);
+    dx_fl = (dx_fl-dx_fl_lin)*Id_scl1;
+    if ((elem[j].kind == Mpole) && (elem[j].mpole->bn[Sext-1] != 0e0)) {
+      for (k = 0; k < 2; k++)
+    	dx[k] += abs2(dx_fl[2*k]);
+      if (prt) {
+	outf << std::setw(4) << j << std::fixed << std::setprecision(3)
+	     << std::setw(8) << elem[j-1].S
+	     << " " << std::setw(8) << elem[j-1].Name;
+	for (k = 0; k < 4; k++)
+	  outf << std::scientific << std::setprecision(5) << std::setw(13)
+	       << sqrt(abs2(dx_fl[k]));
+	outf << "\n";
+      }
+    }
   }
+
+  printf("  dx(J) = [%9.3e %9.3e]\n", dx[X_], dx[Y_]);
+  if (prt) outf.close();
 }
 
 
@@ -824,8 +842,7 @@ template<typename T>
 void dK_shift(const double scl, const T dnu1, const T dnu2, std::vector<T> &b)
 {
   // scl > 0: maintain tune confinement; 
-  double m;
-  T      val;
+  T val;
 
   if ((sgn(dnu1.cst()) != sgn(dnu2.cst())) || (scl < 0e0))
     val = fabs(scl)*sqr(dnu1+2e0*dnu2);
@@ -920,18 +937,22 @@ double get_chi2(const bool prt)
   const bool   chi2_extra = true;
   const double scl        = 1e0;
 #elif CASE_SCL == 5
-  const bool   chi2_extra = true;
-  const double scl        = 1e-2;
+  const bool   chi2_extra = !true;
+  const double scl        = 0e-2;
 #endif
 
   get_dK(dK);
   get_b(dK, b);
-  get_ampl_orb(twoJ, dx);
+  get_ampl_orb(dx, first);
 
   chi2 = 0e0;
   n = (int)b.size();
   for (k = 0; k < n; k++)
     chi2 += b[k].cst();
+
+  for (k = 0; k < 2; k++)
+    chi2 += sqr(dx_dJ_scl*dx[k]);
+
 
   if (chi2_extra) {
     b_extra.clear();
@@ -964,6 +985,7 @@ double get_chi2(const bool prt)
     first = false;
     printf("\nget_chi2(%1d): scl = %9.3e\n", n, scl);
 
+    get_ampl_orb(dx, true);
     prt_dnu();
 
     k = 0;
@@ -1425,7 +1447,7 @@ void lat_select(void)
     bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
-  switch (4) {
+  switch (3) {
   case 1:
     // First minimize magnitude of tune footprint.
     // 3+0 b_3.
