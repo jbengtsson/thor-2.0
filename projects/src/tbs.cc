@@ -60,7 +60,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  dx_dJ_scl      = 1e-2,
+  dx_dJ_scl      = 1e-3,
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
@@ -75,7 +75,7 @@ const double
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
                     0e1, 0e1},
 #elif CASE_DNU == 4
-  scl_dnu_conf[] = {-1e-2, -1e-2, -1e-2, -1e-2, -1e-2, -1e-2,
+  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
                     0e1, 0e1},
 #endif
 #if DNU
@@ -545,9 +545,9 @@ void get_ampl_orb(double dx[], const bool prt)
     if ((elem[j].kind == Mpole) && (elem[j].mpole->bn[Sext-1] != 0e0)) {
       map = M*Map*Inv(M);
       K = MapNorm(map, g, A1, A0, Map_res, 1);
-      // dx_fl = LieExp(g, Id);
-      for (k = 0; k < 4; k++)
-	dx_fl[k] = Id[k] + PB(g, Id[k]);
+      dx_fl = LieExp(g, Id);
+      // for (k = 0; k < 4; k++)
+      // 	dx_fl[k] = Id[k] + PB(g, Id[k]);
       dx_fl[ct_] = Id[ct_]; dx_fl[delta_] = Id[delta_];
       dx_fl = tp_S(3, dx_fl);
       // Remove linear terms.
