@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 3
+#define NO 4
 
 #include "thor_lib.h"
 
@@ -64,7 +64,7 @@ const double
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-#define CASE_DNU 1
+#define CASE_DNU 4
 #if CASE_DNU == 1
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
                      0e1,  0e1},
@@ -73,6 +73,9 @@ const double
                     0e1, 0e1},
 #elif CASE_DNU == 3
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
+                    0e1, 0e1},
+#elif CASE_DNU == 4
+  scl_dnu_conf[] = {-1e-2, -1e-2, -1e-2, -1e-2, -1e-2, -1e-2,
                     0e1, 0e1},
 #endif
 #if DNU
@@ -542,7 +545,10 @@ void get_ampl_orb(double dx[], const bool prt)
     if ((elem[j].kind == Mpole) && (elem[j].mpole->bn[Sext-1] != 0e0)) {
       map = M*Map*Inv(M);
       K = MapNorm(map, g, A1, A0, Map_res, 1);
-      dx_fl = LieExp(g, Id);
+      // dx_fl = LieExp(g, Id);
+      for (k = 0; k < 4; k++)
+	dx_fl[k] = Id[k] + PB(g, Id[k]);
+      dx_fl[ct_] = Id[ct_]; dx_fl[delta_] = Id[delta_];
       dx_fl = tp_S(3, dx_fl);
       // Remove linear terms.
       danot_(1);
@@ -557,7 +563,7 @@ void get_ampl_orb(double dx[], const bool prt)
 	     << " " << std::setw(8) << elem[j-1].Name;
 	for (k = 0; k < 4; k++)
 	  outf << std::scientific << std::setprecision(5) << std::setw(13)
-	       << sqrt(abs2(dx_fl[k]));
+	       << sqrt(abs2(elem[j].mpole->bn[Sext-1]*elem[j].L*dx_fl[k]));
 	outf << "\n";
       }
     }
@@ -920,7 +926,7 @@ double get_chi2(const bool prt)
 
   const int n_prt = 4;
 
-#define CASE_SCL 5
+#define CASE_SCL 6
 
   // First minimize, then balance.
 #if CASE_SCL == 1
@@ -937,8 +943,11 @@ double get_chi2(const bool prt)
   const bool   chi2_extra = true;
   const double scl        = 1e0;
 #elif CASE_SCL == 5
-  const bool   chi2_extra = !true;
-  const double scl        = 0e-2;
+  const bool   chi2_extra = true;
+  const double scl        = 1e-2;
+#elif CASE_SCL == 6
+  const bool   chi2_extra = false;
+  const double scl        = 0e0;
 #endif
 
   get_dK(dK);
@@ -1447,7 +1456,7 @@ void lat_select(void)
     bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9},
     dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
 
-  switch (3) {
+  switch (6) {
   case 1:
     // First minimize magnitude of tune footprint.
     // 3+0 b_3.
