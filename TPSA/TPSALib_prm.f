@@ -19,11 +19,11 @@
 !     &           lno=11, lnv=7)
 
 !     For Laptop, NO = 7.
-!      parameter (lda=100000, lst=400000000, lea=500000, lia=80000,         &
-!     &           lno=10, lnv=7)
-!     For Laptop, NO = 9.
-      parameter (lda=100000, lst=700000000, lea=500000, lia=80000,         &
+      parameter (lda=100000, lst=400000000, lea=500000, lia=80000,         &
      &           lno=10, lnv=7)
+!     For Laptop, NO = 9.
+!      parameter (lda=100000, lst=700000000, lea=500000, lia=80000,         &
+!     &           lno=10, lnv=7)
 !     For Workstation.
 !      parameter (lda=100000, lst=900000000, lea=500000, lia=80000,         &
 !     &           lno=10, lnv=7)
