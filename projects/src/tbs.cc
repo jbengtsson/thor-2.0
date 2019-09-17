@@ -519,15 +519,48 @@ tps get_a(const tps &t,
 }
 
 
+tps dacfu1(const tps &a, double (*func)(const long int []))
+{
+  char    name[11];
+  int     j, n;
+  long int jj[ss_dim], ibuf1[bufsize], ibuf2[bufsize];
+  double  rbuf[bufsize];
+  tps     b;
+
+  a.exprt(rbuf, ibuf1, ibuf2, name); n = (int)rbuf[0];
+
+  for (j = 0; j < n; j++) {
+    dehash_(no_tps, ss_dim, ibuf1[j], ibuf2[j], jj);
+
+    rbuf[j+1] *= (*func)(jj);
+  }
+
+  b.imprt(n, rbuf, ibuf1, ibuf2);
+
+  // Remove zeroes.
+  return 1e0*b;
+}
+
+
+double f_kernel(const long int jj[])
+{
+
+  return
+    (((jj[x_] != 0) || (jj[y_] != 0)) &&
+     (jj[x_] == jj[px_]) && (jj[y_] == jj[py_]))?
+    1e0 : 0e0;
+}
+
+
 void get_ampl_orb(double dx[], const bool prt)
 {
   int           j, k;
-  ss_vect<tps>  Id, Id_scl1, map, dx_fl, dx_fl_lin, M;
+  ss_vect<tps>  Id, Id_scl1, dx_fl, dx_re, dx_im, M;
   std::ofstream outf;
 
   const int no_b3 = 3;
 
-  if (prt) outf.open("ampl_orb.out", std::ios::out);
+  if (prt) outf.open("dx_dJ.out", std::ios::out);
 
   Id.identity();
 
@@ -537,33 +570,31 @@ void get_ampl_orb(double dx[], const bool prt)
   Map.identity(); Map.propagate(1, n_elem);
   danot_(no_b3);
 
-  for (k = 0; k < 2; k++)
-    dx[k] = 0e0;
   M.identity();
   for (j = 1; j <= n_elem; j++) {
     M.propagate(j, j);
     if ((elem[j].kind == Mpole) && (elem[j].mpole->bn[Sext-1] != 0e0)) {
-      map = M*Map*Inv(M);
-      K = MapNorm(map, g, A1, A0, Map_res, 1);
+      K = MapNorm(M*Map*Inv(M), g, A1, A0, Map_res, 1);
+#if 0
       dx_fl = LieExp(g, Id);
-      // for (k = 0; k < 4; k++)
-      // 	dx_fl[k] = Id[k] + PB(g, Id[k]);
-      dx_fl[ct_] = Id[ct_]; dx_fl[delta_] = Id[delta_];
-      dx_fl = tp_S(3, dx_fl);
-      // Remove linear terms.
-      danot_(1);
-      dx_fl_lin = dx_fl;
-      danot_(no_b3);
-      dx_fl = (dx_fl-dx_fl_lin)*Id_scl1;
-      for (k = 0; k < 2; k++)
-    	dx[k] += abs2(dx_fl[2*k]);
+#else
+      for (k = 0; k < 4; k++)
+	dx_fl[k] = PB(g, Id[k]);
+#endif
+      for (k = 0; k < 4; k++) {
+	CtoR(dx_fl[k], dx_re[k], dx_im[k]);
+	dx_re[k] = dacfu1(dx_re[k], f_kernel);
+      }
+      dx_re = A1*dx_re; dx_im = A1*dx_im;
+      for (k = 0; k < 4; k++)
+	dx[k] = (dx_re[k]*Id_scl1).cst();
       if (prt) {
 	outf << std::setw(4) << j << std::fixed << std::setprecision(3)
 	     << std::setw(8) << elem[j-1].S
 	     << " " << std::setw(8) << elem[j-1].Name;
 	for (k = 0; k < 4; k++)
 	  outf << std::scientific << std::setprecision(5) << std::setw(13)
-	       << sqrt(abs2(elem[j].mpole->bn[Sext-1]*elem[j].L*dx_fl[k]));
+	       << sqrt(abs2(elem[j].mpole->bn[Sext-1]*elem[j].L*dx_re[k]));
 	outf << "\n";
       }
     }
