@@ -60,7 +60,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  dx_dJ_scl      = 1e-3,
+  dx_dJ_scl      = 1e7,
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
@@ -75,8 +75,8 @@ const double
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
                     0e1, 0e1},
 #elif CASE_DNU == 4
-  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
-                    0e1, 0e1},
+  scl_dnu_conf[] = {-1e-1, -1e-1, -1e-1, -1e-1, -1e-1, -1e-1,
+                    0e-1, 0e-1},
 #endif
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -552,30 +552,39 @@ double f_kernel(const long int jj[])
 }
 
 
-void get_ampl_orb(double dx[], const bool prt)
+void get_dx_dJ(double dx2[], const bool prt)
 {
-  int           j, k;
-  ss_vect<tps>  Id, Id_scl1, dx_fl, dx_re, dx_im, M;
-  std::ofstream outf;
+  int             j, k;
+  ss_vect<double> Id_scl1;
+  ss_vect<tps>    Id, dx_fl, dx, dx_re, dx_im, M;
+  std::ofstream   outf;
 
-  const int no_b3 = 3;
+  const int    no_b3 = 3;
+  const double
+    A_max[] = {1e-3, 0e-3},
+    twoJ[]  = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]};
 
   if (prt) outf.open("dx_dJ.out", std::ios::out);
 
   Id.identity();
 
-  Id_scl1 = Id_scl; Id_scl1[delta_] = 0e0;
+  Id_scl1.zero();
+  for (j = 0; j < 4; j++)
+    Id_scl1[j] = sqrt(twoJ[j/2]);
+  Id_scl1[delta_] = 0e0;
 
   danot_(no_b3-1);
   Map.identity(); Map.propagate(1, n_elem);
   danot_(no_b3);
 
   M.identity();
+  for (k = 0; k < 2; k++)
+    dx2[k] = 0e0;
   for (j = 1; j <= n_elem; j++) {
     M.propagate(j, j);
     if ((elem[j].kind == Mpole) && (elem[j].mpole->bn[Sext-1] != 0e0)) {
       K = MapNorm(M*Map*Inv(M), g, A1, A0, Map_res, 1);
-#if 0
+#if 1
       dx_fl = LieExp(g, Id);
 #else
       for (k = 0; k < 4; k++)
@@ -586,21 +595,22 @@ void get_ampl_orb(double dx[], const bool prt)
 	dx_re[k] = dacfu1(dx_re[k], f_kernel);
       }
       dx_re = A1*dx_re; dx_im = A1*dx_im;
-      for (k = 0; k < 4; k++)
-	dx[k] = (dx_re[k]*Id_scl1).cst();
+      for (k = 0; k < 2; k++)
+	dx2[k] +=
+	  sqr(elem[j].mpole->bn[Sext-1]*elem[j].L*(dx_re[2*k]*Id_scl1).cst());
       if (prt) {
 	outf << std::setw(4) << j << std::fixed << std::setprecision(3)
 	     << std::setw(8) << elem[j-1].S
 	     << " " << std::setw(8) << elem[j-1].Name;
-	for (k = 0; k < 4; k++)
+	for (k = 0; k < 2; k++)
 	  outf << std::scientific << std::setprecision(5) << std::setw(13)
-	       << sqrt(abs2(elem[j].mpole->bn[Sext-1]*elem[j].L*dx_re[k]));
+	       << fabs((dx_re[2*k]*Id_scl1).cst());
 	outf << "\n";
       }
     }
   }
 
-  printf("  dx(J) = [%9.3e %9.3e]\n", dx[X_], dx[Y_]);
+  printf("  dx(J) = [%10.3e, %10.3e]\n", dx2[X_], dx2[Y_]);
   if (prt) outf.close();
 }
 
@@ -950,7 +960,7 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
 double get_chi2(const bool prt)
 {
   int              n, j, k, n_extra;
-  double           chi2, bn, dx[2];
+  double           chi2, bn, dx2[2];
   std::vector<int> Fnum_extra;
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
@@ -983,7 +993,7 @@ double get_chi2(const bool prt)
 
   get_dK(dK);
   get_b(dK, b);
-  get_ampl_orb(dx, first);
+  get_dx_dJ(dx2, first);
 
   chi2 = 0e0;
   n = (int)b.size();
@@ -991,7 +1001,7 @@ double get_chi2(const bool prt)
     chi2 += b[k].cst();
 
   for (k = 0; k < 2; k++)
-    chi2 += sqr(dx_dJ_scl*dx[k]);
+    chi2 += dx_dJ_scl*dx2[k];
 
 
   if (chi2_extra) {
@@ -1025,7 +1035,7 @@ double get_chi2(const bool prt)
     first = false;
     printf("\nget_chi2(%1d): scl = %9.3e\n", n, scl);
 
-    get_ampl_orb(dx, true);
+    get_dx_dJ(dx2, true);
     prt_dnu();
 
     k = 0;
