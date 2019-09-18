@@ -56,7 +56,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  dx_dJ_scl      = 1e12,
+  dx_dJ_scl      = 1e4,
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
@@ -71,7 +71,7 @@ const double
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
                     0e1, 0e1},
 #elif CASE_DNU == 4
-  scl_dnu_conf[] = {-0e-1, -0e-1, -0e-1, -0e-1, -0e-1, -0e-1,
+  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
                     0e-1, 0e-1},
 #endif
 #if DNU
@@ -590,7 +590,8 @@ void get_dx_dJ(double dx2[], const bool prt)
       dx[Y_] = h_ijklm(dx_re[x_]*Id_scl, 0, 0, 1, 1, 0);
       for (k = 0; k < 2; k++)
 	// dx2[k] += sqr(dx[k]);
-	dx2[k] += elem[j-1].mpole->bn[Sext-1]*elem[j-1].L*dx[k];
+	dx2[k] +=
+	  elem[j-1].mpole->bn[Sext-1]*elem[j-1].L*elem[j-1].Beta[k]*dx[k];
       if (prt) {
 	outf << std::setw(4) << j << std::fixed << std::setprecision(3)
 	     << std::setw(8) << elem[j-1].S
