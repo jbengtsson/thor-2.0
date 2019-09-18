@@ -35,7 +35,7 @@ tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 tps          K_re_delta_scl;
 ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
-#define LAT_CASE 2
+#define LAT_CASE 1
 
 // Center of straight.
 const double
@@ -48,10 +48,6 @@ const double
 #endif
   A_max[]        = {3e-3, 1.5e-3},
   delta_max      = 2e-2,
-  // ALS-U.
-  // beta_inj[]     = {3.4, 2.0},
-  // A_max[]        = {3e-3, 1.5e-3},
-  // delta_max      = 2e-2,
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
@@ -60,7 +56,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  dx_dJ_scl      = 1e7,
+  dx_dJ_scl      = 1e12,
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
@@ -75,7 +71,7 @@ const double
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
                     0e1, 0e1},
 #elif CASE_DNU == 4
-  scl_dnu_conf[] = {-1e-1, -1e-1, -1e-1, -1e-1, -1e-1, -1e-1,
+  scl_dnu_conf[] = {-0e-1, -0e-1, -0e-1, -0e-1, -0e-1, -0e-1,
                     0e-1, 0e-1},
 #endif
 #if DNU
@@ -554,23 +550,20 @@ double f_kernel(const long int jj[])
 
 void get_dx_dJ(double dx2[], const bool prt)
 {
-  int             j, k;
-  ss_vect<double> Id_scl1;
-  ss_vect<tps>    Id, dx_fl, dx, dx_re, dx_im, M;
-  std::ofstream   outf;
+  int           j, k;
+  double        dx[2];
+  ss_vect<tps>  Id, Id_scl1, dx_fl, dx_re, dx_im, M;
+  std::ofstream outf;
 
-  const int    no_b3 = 3;
-  const double
-    A_max[] = {1e-3, 0e-3},
-    twoJ[]  = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]};
+  const int no_b3 = 3;
 
   if (prt) outf.open("dx_dJ.out", std::ios::out);
 
   Id.identity();
 
-  Id_scl1.zero();
+  Id_scl1.identity();
   for (j = 0; j < 4; j++)
-    Id_scl1[j] = sqrt(twoJ[j/2]);
+    Id_scl1[j] *= sqrt(twoJ[j/2]);
   Id_scl1[delta_] = 0e0;
 
   danot_(no_b3-1);
@@ -582,35 +575,39 @@ void get_dx_dJ(double dx2[], const bool prt)
     dx2[k] = 0e0;
   for (j = 1; j <= n_elem; j++) {
     M.propagate(j, j);
-    if ((elem[j].kind == Mpole) && (elem[j].mpole->bn[Sext-1] != 0e0)) {
+    if ((elem[j-1].kind == Mpole) && (elem[j-1].mpole->bn[Sext-1] != 0e0)) {
       K = MapNorm(M*Map*Inv(M), g, A1, A0, Map_res, 1);
-#if 1
+#if 0
       dx_fl = LieExp(g, Id);
 #else
       for (k = 0; k < 4; k++)
-	dx_fl[k] = PB(g, Id[k]);
+      	dx_fl[k] = PB(g, Id[k]);
 #endif
-      for (k = 0; k < 4; k++) {
+      for (k = 0; k < 4; k++)
 	CtoR(dx_fl[k], dx_re[k], dx_im[k]);
-	dx_re[k] = dacfu1(dx_re[k], f_kernel);
-      }
       dx_re = A1*dx_re; dx_im = A1*dx_im;
+      dx[X_] = h_ijklm(dx_re[x_]*Id_scl, 1, 1, 0, 0, 0);
+      dx[Y_] = h_ijklm(dx_re[x_]*Id_scl, 0, 0, 1, 1, 0);
       for (k = 0; k < 2; k++)
-	dx2[k] +=
-	  sqr(elem[j].mpole->bn[Sext-1]*elem[j].L*(dx_re[2*k]*Id_scl1).cst());
+	// dx2[k] += sqr(dx[k]);
+	dx2[k] += elem[j-1].mpole->bn[Sext-1]*elem[j-1].L*dx[k];
       if (prt) {
 	outf << std::setw(4) << j << std::fixed << std::setprecision(3)
 	     << std::setw(8) << elem[j-1].S
 	     << " " << std::setw(8) << elem[j-1].Name;
 	for (k = 0; k < 2; k++)
-	  outf << std::scientific << std::setprecision(5) << std::setw(13)
-	       << fabs((dx_re[2*k]*Id_scl1).cst());
+	  outf << std::scientific << std::setprecision(5)
+	       << std::setw(13)
+	       << elem[j-1].mpole->bn[Sext-1]*elem[j-1].L*dx[k];
 	outf << "\n";
       }
     }
   }
 
-  printf("  dx(J) = [%10.3e, %10.3e]\n", dx2[X_], dx2[Y_]);
+  for (k = 0; k < 2; k++)
+    dx2[k] = sqr(dx2[k]);
+
+  printf("  dx(J) = [%9.3e, %9.3e]\n", dx2[X_], dx2[Y_]);
   if (prt) outf.close();
 }
 
