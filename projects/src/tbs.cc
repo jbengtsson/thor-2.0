@@ -56,7 +56,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  dx_dJ_scl      = 1e6,
+  dx_dJ_scl      = 1e2,
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
@@ -625,7 +625,7 @@ void get_dx_dJ(double dx2[], const bool prt)
     M.propagate(j, j);
     if ((elem[j-1].kind == Mpole) && (elem[j-1].mpole->bn[Sext-1] != 0e0)) {
       K = MapNorm(M*Map*Inv(M), g, A1, A0, Map_res, 1);
-#if 1
+#if 0
       dx_fl = LieExp(g, Id);
 #else
       for (k = 0; k < 4; k++)
@@ -634,8 +634,10 @@ void get_dx_dJ(double dx2[], const bool prt)
       for (k = 0; k < 4; k++)
 	CtoR(dx_fl[k], dx_re[k], dx_im[k]);
       dx_re = A1*dx_re; dx_im = A1*dx_im;
-      dx[X_] = h_ijklm(dx_re[x_]*Id_scl, 1, 1, 0, 0, 0);
-      dx[Y_] = h_ijklm(dx_re[x_]*Id_scl, 0, 0, 1, 1, 0);
+      dx[X_] =
+	elem[j-1].mpole->bn[Sext-1]*h_ijklm(dx_re[x_]*Id_scl, 1, 1, 0, 0, 0);
+      dx[Y_] =
+	elem[j-1].mpole->bn[Sext-1]*h_ijklm(dx_re[x_]*Id_scl, 0, 0, 1, 1, 0);
       for (k = 0; k < 2; k++)
 	dx2[k] += sqr(dx[k]);
       if (prt) {
@@ -1595,7 +1597,7 @@ void lat_select(void)
     break;
   case 6:
     // 3+4 b_3.
-    bn_prms.add_prm("sh1a", 3, -bn_max[3], bn_max[3], dbn[3]);
+    // bn_prms.add_prm("sh1a", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh1b", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("s",    3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2",  3, -bn_max[3], bn_max[3], dbn[3]);
