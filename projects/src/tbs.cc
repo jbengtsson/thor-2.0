@@ -56,7 +56,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  dx_dJ_scl      = 1e4,
+  dx_dJ_scl      = 1e6,
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
@@ -71,7 +71,7 @@ const double
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
                     0e1, 0e1},
 #elif CASE_DNU == 4
-  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
+  scl_dnu_conf[] = {-0e0, -0e0, -0e0, -0e0, -0e0, -0e0,
                     0e-1, 0e-1},
 #endif
 #if DNU
@@ -548,6 +548,54 @@ double f_kernel(const long int jj[])
 }
 
 
+void get_twiss(const double alpha[], const double beta[],
+	       const double eta[], const double etap[])
+{
+  int           j, k;
+  double        alpha1[2], beta1[2], eta1[2], etap1[2], dnu1[2], dnu2[2];
+
+  // Only store linear part of A.
+  danot_(1);
+
+  for (k = 0; k < 2; k++) dnu1[k] = 0e0;
+  A1 = get_A(alpha, beta, eta, etap);
+  for (j = 1; j <= n_elem; j++) {
+    A1.propagate(j, j);
+    elem_tps[j-1].A1 = get_A_CS(2, A1, dnu2);
+    get_ab(A1, alpha1, beta1, dnu2, eta1, etap1);
+    for (k = 0; k < 2; k++) {
+      elem[j-1].Alpha[k] = alpha1[k]; elem[j-1].Beta[k] = beta1[k];
+      elem[j-1].Eta[k] = eta1[k]; elem[j-1].Etap[k] = etap1[k];
+    }
+
+    // Assumes dnu < 360 degrees.
+    for (k = 0; k < 2; k++) {
+      elem[j-1].Nu[k] = floor(elem[j-2].Nu[k]) + dnu2[k];
+      if ((dnu2[k] < dnu1[k]) && (elem[j-1].L >= 0e0)) elem[j-1].Nu[k] += 1e0;
+    }
+    for (k = 0; k < 2; k++) dnu1[k] = dnu2[k];
+
+  }
+}
+
+
+void get_twiss(void)
+{
+  double alpha[2], beta[2], dnu[2], eta[2], etap[2];
+
+  danot_(1);
+  get_Map();
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  get_ab(A1, alpha, beta, dnu, eta, etap);
+  get_twiss(alpha, beta, eta, etap);
+
+  prt_lin_map(3, Map);
+
+  prt_lat("linlat.out", 10);
+  prt_lat("linlat1.out");
+}
+
+
 void get_dx_dJ(double dx2[], const bool prt)
 {
   int           j, k;
@@ -577,7 +625,7 @@ void get_dx_dJ(double dx2[], const bool prt)
     M.propagate(j, j);
     if ((elem[j-1].kind == Mpole) && (elem[j-1].mpole->bn[Sext-1] != 0e0)) {
       K = MapNorm(M*Map*Inv(M), g, A1, A0, Map_res, 1);
-#if 0
+#if 1
       dx_fl = LieExp(g, Id);
 #else
       for (k = 0; k < 4; k++)
@@ -589,24 +637,18 @@ void get_dx_dJ(double dx2[], const bool prt)
       dx[X_] = h_ijklm(dx_re[x_]*Id_scl, 1, 1, 0, 0, 0);
       dx[Y_] = h_ijklm(dx_re[x_]*Id_scl, 0, 0, 1, 1, 0);
       for (k = 0; k < 2; k++)
-	// dx2[k] += sqr(dx[k]);
-	dx2[k] +=
-	  elem[j-1].mpole->bn[Sext-1]*elem[j-1].L*elem[j-1].Beta[k]*dx[k];
+	dx2[k] += sqr(dx[k]);
       if (prt) {
 	outf << std::setw(4) << j << std::fixed << std::setprecision(3)
 	     << std::setw(8) << elem[j-1].S
 	     << " " << std::setw(8) << elem[j-1].Name;
 	for (k = 0; k < 2; k++)
 	  outf << std::scientific << std::setprecision(5)
-	       << std::setw(13)
-	       << elem[j-1].mpole->bn[Sext-1]*elem[j-1].L*dx[k];
+	       << std::setw(13) << dx[k];
 	outf << "\n";
       }
     }
   }
-
-  for (k = 0; k < 2; k++)
-    dx2[k] = sqr(dx2[k]);
 
   printf("  dx(J) = [%9.3e, %9.3e]\n", dx2[X_], dx2[Y_]);
   if (prt) outf.close();
@@ -958,7 +1000,7 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
 double get_chi2(const bool prt)
 {
   int              n, j, k, n_extra;
-  double           chi2, bn, dx2[2];
+  double           chi2, bn, dx2[4];
   std::vector<int> Fnum_extra;
   std::vector<tps> dK, b, b_extra;
   static bool      first = true;
@@ -1000,7 +1042,6 @@ double get_chi2(const bool prt)
 
   for (k = 0; k < 2; k++)
     chi2 += dx_dJ_scl*dx2[k];
-
 
   if (chi2_extra) {
     b_extra.clear();
@@ -1703,6 +1744,7 @@ int main(int argc, char *argv[])
 
   if (false) no_mpoles(3);
 
+  get_twiss();
   if (!true)
     conj_grad(bn_prms, f_nl, df_nl);
   else
