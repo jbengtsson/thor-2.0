@@ -71,7 +71,7 @@ const double
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
                     0e1, 0e1},
 #elif CASE_DNU == 4
-  scl_dnu_conf[] = {-0e0, -0e0, -0e0, -0e0, -0e0, -0e0,
+  scl_dnu_conf[] = {-1e0, -1e0, -1e0, -1e0, -1e0, -1e0,
                     0e-1, 0e-1},
 #endif
 #if DNU
