@@ -1643,7 +1643,7 @@
      &                bind(C, name="mapnorm_")
       use iso_c_binding
       implicit none
-      integer(C_LONG) x(*), a1(*), a2(*), ft, xy(*), h,nord
+      integer(C_LONG) x(*), a1(*), a2(*), ft, xy(*), h, nord
 
       integer isi,ndim,ndim2,ntt
 !--NORMALIZATION ROUTINES OF LIELIB
