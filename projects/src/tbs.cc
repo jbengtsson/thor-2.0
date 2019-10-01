@@ -56,7 +56,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  dx_dJ_scl      = 1e2,
+  dx_dJ_scl      = 1e1,
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
@@ -71,7 +71,7 @@ const double
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
                     0e1, 0e1},
 #elif CASE_DNU == 4
-  scl_dnu_conf[] = {-1e0, -1e0, -1e0, -1e0, -1e0, -1e0,
+  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
                     0e-1, 0e-1},
 #endif
 #if DNU
@@ -1681,6 +1681,43 @@ void lat_select(void)
 }
 
 
+void map_gymn(void)
+{
+  ss_vect<tps> Id, map1, map_res;
+
+  Id.identity();
+
+  danot_(no_tps-1);
+  get_Map();
+  danot_(no_tps);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+
+  map1 =
+    A0*A1*FExpo(g, Id, 3, no_tps, -1)
+    *FExpo(K, Id, 2, no_tps, -1)
+    *Inv(A0*A1*FExpo(g, Id, 3, no_tps, -1));
+#if 1
+  map_res =
+    Inv(FExpo(K, Id, 2, no_tps, -1))
+    *Inv(A0*A1*FExpo(g, Id, 3, no_tps, -1))*Map
+    *A0*A1*FExpo(g, Id, 3, no_tps, -1);
+  daeps_(1e-7);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  std::cout << std::scientific << std::setprecision(5) << 1e0*K << 1e0*g;
+  danot_(no_tps-1);
+  std::cout << std::scientific << std::setprecision(5)
+	    << 1e0*Map_res[x_] << 1e0*map_res[x_];
+#else
+  map_res =
+    Inv(A0*A1*FExpo(g, Id, 3, no_tps, -1))*Map
+    *A0*A1*FExpo(g, Id, 3, no_tps, -1);
+  daeps_(1e-7);
+  danot_(no_tps-1);
+  std::cout << std::scientific << std::setprecision(5) << (map_res-map_res)[x_];
+#endif
+}
+
+
 int main(int argc, char *argv[])
 {
   int j;
@@ -1742,6 +1779,11 @@ int main(int argc, char *argv[])
 
     bn_prms.prt_bn_lat("bn_ini.out");
     // exit(0);
+  }
+
+  if (!false) {
+    map_gymn();
+    exit(0);
   }
 
   if (false) no_mpoles(3);
