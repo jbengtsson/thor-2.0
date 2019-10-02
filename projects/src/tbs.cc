@@ -56,7 +56,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  dx_dJ_scl      = 1e1,
+  dx_dJ_scl      = 1e12,
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
@@ -224,9 +224,9 @@ void param_type::prt_bn(double *bn) const
     // Bounded.
     bn_ext = bn_bounded(bn[i+1], bn_min[i], bn_max[i]);
     printf(" %12.5e", bn_ext);
-    if ((i+1) % n_prt == 0) printf("\n  ");
+    if ((i != n_bn-1) && ((i+1) % n_prt == 0)) printf("\n  ");
   }
-  if (n_bn % n_prt != 0) printf("\n");
+  printf("\n");
 }
 
 
@@ -600,6 +600,7 @@ void get_dx_dJ(double dx2[], const bool prt)
 {
   int           j, k;
   double        dx[2];
+  tps           g_re, g_im;
   ss_vect<tps>  Id, Id_scl1, dx_fl, dx_re, dx_im, M;
   std::ofstream outf;
 
@@ -625,19 +626,11 @@ void get_dx_dJ(double dx2[], const bool prt)
     M.propagate(j, j);
     if ((elem[j-1].kind == Mpole) && (elem[j-1].mpole->bn[Sext-1] != 0e0)) {
       K = MapNorm(M*Map*Inv(M), g, A1, A0, Map_res, 1);
-#if 1
-      dx_fl = LieExp(g, Id);
-#else
-      for (k = 0; k < 4; k++)
-      	dx_fl[k] = PB(g, Id[k]);
-#endif
-      for (k = 0; k < 4; k++)
-	CtoR(dx_fl[k], dx_re[k], dx_im[k]);
-      dx_re = A1*dx_re; dx_im = A1*dx_im;
-      dx[X_] =
-	elem[j-1].mpole->bn[Sext-1]*h_ijklm(dx_re[x_]*Id_scl, 1, 1, 0, 0, 0);
-      dx[Y_] =
-	elem[j-1].mpole->bn[Sext-1]*h_ijklm(dx_re[x_]*Id_scl, 0, 0, 1, 1, 0);
+      CtoR(g, g_re, g_im);
+      dx[0] =
+	elem[j-1].mpole->bn[Sext-1]*h_ijklm(g_im*Id_scl, 2, 1, 0, 0, 0);
+      dx[1] =
+	elem[j-1].mpole->bn[Sext-1]*h_ijklm(g_im*Id_scl, 1, 0, 1, 1, 0);
       for (k = 0; k < 2; k++)
 	dx2[k] += sqr(dx[k]);
       if (prt) {
@@ -1775,7 +1768,7 @@ int main(int argc, char *argv[])
     // exit(0);
   }
 
-  if (!false) {
+  if (false) {
     map_gymn();
     exit(0);
   }
