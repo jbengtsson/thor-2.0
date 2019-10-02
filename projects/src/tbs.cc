@@ -56,7 +56,7 @@ const double
   scl_dnu[]      = {0e-2, 0e-2, 0e-2},
   scl_ksi[]      = {0e0, 1e0, 0e0, 0e0, 0e0, 0e0}, // 1st not used.
   delta_scl      = 0e0,
-  dx_dJ_scl      = 1e3,
+  dx_dJ_scl      = 1e4,
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
@@ -599,7 +599,7 @@ void get_twiss(void)
 void get_dx_dJ(double dx2[], const bool prt)
 {
   int           j, k;
-  double        dx[2];
+  double        b3L, dx[2];
   ss_vect<tps>  Id, Id_scl1, dx_fl, dx_re, dx_im, M;
   std::ofstream outf;
 
@@ -623,33 +623,32 @@ void get_dx_dJ(double dx2[], const bool prt)
     dx2[k] = 0e0;
   for (j = 1; j <= n_elem; j++) {
     M.propagate(j, j);
-    if ((elem[j-1].kind == Mpole) && (elem[j-1].mpole->bn[Sext-1] != 0e0)) {
-      K = MapNorm(M*Map*Inv(M), g, A1, A0, Map_res, 1);
+    if (elem[j-1].kind == Mpole) {
+      b3L = get_bn(elem[j-1].Fnum, elem[j-1].Knum, Sext)*elem[j-1].L;
+      if (b3L != 0e0) {
+	K = MapNorm(M*Map*Inv(M), g, A1, A0, Map_res, 1);
 #if 1
-      dx_fl = LieExp(g, Id);
+	dx_fl = LieExp(g, Id);
 #else
-      for (k = 0; k < 4; k++)
-      	dx_fl[k] = PB(g, Id[k]);
+	for (k = 0; k < 4; k++)
+	  dx_fl[k] = PB(g, Id[k]);
 #endif
-      for (k = 0; k < 4; k++)
-	CtoR(dx_fl[k], dx_re[k], dx_im[k]);
-      dx_re = A1*dx_re; dx_im = A1*dx_im;
-      dx[X_] =
-	elem[j-1].mpole->bn[Sext-1]
-	*h_ijklm(dx_re[x_]*Id_scl, 1, 1, 0, 0, 0);
-      dx[Y_] =
-	elem[j-1].mpole->bn[Sext-1]
-	*h_ijklm(dx_re[x_]*Id_scl, 0, 0, 1, 1, 0);
-      for (k = 0; k < 2; k++)
-	dx2[k] += sqr(dx[k]);
-      if (prt) {
-	outf << std::setw(4) << j << std::fixed << std::setprecision(3)
-	     << std::setw(8) << elem[j-1].S
-	     << " " << std::setw(8) << elem[j-1].Name;
+	for (k = 0; k < 4; k++)
+	  CtoR(dx_fl[k], dx_re[k], dx_im[k]);
+	dx_re = A1*dx_re; dx_im = A1*dx_im;
+	dx[X_] = b3L*h_ijklm(dx_re[x_]*Id_scl, 1, 1, 0, 0, 0);
+	dx[Y_] = b3L*h_ijklm(dx_re[x_]*Id_scl, 0, 0, 1, 1, 0);
 	for (k = 0; k < 2; k++)
-	  outf << std::scientific << std::setprecision(5)
-	       << std::setw(13) << dx[k];
-	outf << "\n";
+	  dx2[k] += sqr(dx[k]);
+	if (prt) {
+	  outf << std::setw(4) << j << std::fixed << std::setprecision(3)
+	       << std::setw(8) << elem[j-1].S
+	       << " " << std::setw(8) << elem[j-1].Name;
+	  for (k = 0; k < 2; k++)
+	    outf << std::scientific << std::setprecision(5)
+		 << std::setw(13) << dx[k];
+	  outf << "\n";
+	}
       }
     }
   }
@@ -1011,7 +1010,7 @@ double get_chi2(const bool prt)
 
   const int n_prt = 4;
 
-#define CASE_SCL 6
+#define CASE_SCL 4
 
   // First minimize, then balance.
 #if CASE_SCL == 1
