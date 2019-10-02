@@ -1683,7 +1683,7 @@ void lat_select(void)
 
 void map_gymn(void)
 {
-  ss_vect<tps> Id, map_res;
+  ss_vect<tps>  Id, map_res;
 
   Id.identity();
 
@@ -1697,9 +1697,7 @@ void map_gymn(void)
     Inv(FExpo(K, Id, 2, no_tps, -1))
     *Inv(A0*A1*FExpo(g, Id, 3, no_tps, -1))*Map
     *A0*A1*FExpo(g, Id, 3, no_tps, -1);
-  daeps_(1e-7);
-  K = MapNorm(Map, g, A1, A0, Map_res, 1);
-  std::cout << std::scientific << std::setprecision(5) << 1e0*K << 1e0*g;
+  daeps_(1e-8);
   danot_(no_tps-1);
   std::cout << std::scientific << std::setprecision(5)
 	    << 1e0*Map_res[x_] << 1e0*map_res[x_];
@@ -1707,7 +1705,7 @@ void map_gymn(void)
   map_res =
     Inv(A0*A1*FExpo(g, Id, 3, no_tps, -1))*Map
     *A0*A1*FExpo(g, Id, 3, no_tps, -1);
-  daeps_(1e-7);
+  daeps_(1e-8);
   danot_(no_tps-1);
   std::cout << std::scientific << std::setprecision(5) << (map_res-map_res)[x_];
 #endif

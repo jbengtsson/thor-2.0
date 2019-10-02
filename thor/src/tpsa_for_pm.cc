@@ -1028,7 +1028,7 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
   }
 
   daexp_(a.intptr, rbuf, ibuf1, ibuf2, name);
-  s << std::endl;
+  s << "\n";
   
   i = 0;
   while ((i < name_len_for) && (name[i] != ' ')) {
@@ -1036,27 +1036,24 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
   }
   n = (int) rbuf[0];
   s << ", NO = " << no_tps
-    << ", NV = " << ss_dim << ", INA = " << a.intptr << std::endl;
+    << ", NV = " << ss_dim << ", INA = " << a.intptr << "\n";
 
   for (i = 1; i <= 66; i++)
     s << "-"; 
-  s << std::endl;
+  s << "\n";
 
   if (header) prt_header(s);
   
   if (n != 0) {
-    s << std::endl;
-    s << "   |I|         a              ";
+    s << "\n   |I|         a              ";
     for (i = 1; i <= ss_dim; i++)
       s << "  i";
-    s << std::endl;
-    s << "                I              ";
+    s << "\n                I              ";
     for (i = 1; i <= ss_dim; i++)
       s << std::setw(3) << i;
-    s << std::endl;
-    s << std::endl;
+    s << "\n\n";
   } else
-    s << "   ALL COMPONENTS ZERO " << std::endl;
+    s << "   ALL COMPONENTS ZERO " << "\n";
   for (no = 0; no <= no_tps; no++) {
     for (i = 1; i <= n; i++) {
       dehash_(no_tps, ss_dim, ibuf1[i-1], ibuf2[i-1], jj);
@@ -1069,7 +1066,7 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
 	    << std::setprecision(16) << rbuf[i] << " ";
 	  for (j = 0; j < ss_dim; j++)
 	    s << std::setw(3) << jj[j];
-	  s << std::endl;
+	  s << "\n";
 	}
     }
   }
@@ -1078,7 +1075,7 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
     << std::scientific << std::setw(24) << std::setprecision(16) << 0.0 << " ";
   for (j = 0; j < ss_dim; j++)
     s << std::setw(3) << 0;
-  s << std::endl;
+  s << "\n";
 
   return os << s.str();
 }
