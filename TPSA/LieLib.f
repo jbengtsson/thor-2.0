@@ -33,7 +33,7 @@
       double precision epsplane,xplane
       common /choice/ xplane(ndim),epsplane,nplane(ndim)
 !+CA DASCR
-!      call daexter
+      call daexter
       do i=1,ndim
         nplane(i)=2*i-1
         ang(i)=0.d0
@@ -334,6 +334,7 @@
 
       integer i,ie,iv,ndim,ndim2,nt,ntt
 ! ROUTINES USING THE MAP IN AD-FORM
+! Note, no must be set to nomax
       parameter (ndim=3)
       parameter (ndim2=6)
       parameter (ntt=40)
@@ -827,15 +828,18 @@
       return
       end subroutine
 
-      subroutine taked(h,m,ht)
+      subroutine taked(h,m,ht) bind(C, name="taked_")
+      use iso_c_binding
       implicit none
-      integer i,m,ndim2,ntt
+      integer(C_LONG) h(*), m, ht(*)
+
+      integer i,ndim2,ntt
 !  \VEC{HT}= \VEC{H_M}  (TAKES M^th DEGREE PIECE ALL VARIABLES INCLUDED)
       parameter (ndim2=6)
       parameter (ntt=40)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
-      integer h(*),ht(*),j(ntt)
+      integer j(ntt)
 
       integer b1,b2,x(ndim2)
 !
@@ -962,13 +966,13 @@
       implicit none
       integer(C_LONG) h(*), mfile
       real(C_DOUBLE) eps
- 
+
       integer i,ndim2,ntt
       double precision deps,filtres
 !  print a map   in resonance basis for human consumption (useless)
       parameter (ndim2=6)
       parameter (ntt=40)
-      integer b(ndim2) ,c(ndim2)
+      integer b(ndim2),c(ndim2)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
       integer ifilt
@@ -1021,8 +1025,11 @@
       return
       end function
 
-      subroutine daflo(h,x,y)
+      subroutine daflo(h,x,y) bind(C, name="daflo_")
+      use iso_c_binding
       implicit none
+      integer(C_LONG) h(*), x, y
+
       integer i,ndim,ndim2,ntt
 ! LIE EXPONENT ROUTINES WITH FLOW OPERATORS
 
@@ -1032,7 +1039,6 @@
       parameter (ntt=40)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
-      integer  h(*),x,y
       integer b1,b2,b3
 !
       call etallnom1(b1,'B1        ')
@@ -1054,15 +1060,17 @@
       return
       end subroutine
 
-      subroutine daflod(h,x,y)
+      subroutine daflod(h,x,y) bind(C, name="daflod_")
+      use iso_c_binding
       implicit none
+      integer(C_LONG) h(*), x(*), y(*)
+
       integer i,ndim,ndim2,ntt
       parameter (ndim=3)
       parameter (ndim2=6)
       parameter (ntt=40)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
-      integer  h(*),x(*),y(*)
       integer b1(ndim2),b2(ndim2)
 !
       call etall(b1,nd2)
@@ -1130,17 +1138,19 @@
       return
       end subroutine
 
-      subroutine difd(h1,v,sca)
+      subroutine difd(h1,v,sca) bind(C, name="difd_")
+      use iso_c_binding
       implicit none
+      integer(C_LONG) h1, v(*)
+      real(C_DOUBLE)  sca
+
       integer i,ndim,ndim2,ntt
-      double precision sca
 ! INVERSE OF INTD ROUTINE
       parameter (ndim=3)
       parameter (ndim2=6)
       parameter (ntt=40)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
-      integer  v(*),h1
       integer b1,h
       call etall1(b1)
       call etall1(h)
@@ -1266,7 +1276,7 @@
 !
       call etallnom(bm,nd2  ,'BM        ')
       call etallnom(b0,nd2  ,'B0        ')
-      call etallnom1(v  ,'V         ')
+      call etallnom1(v,'V         ')
 
       call dacop(x,v)
 
@@ -1640,7 +1650,7 @@
       end subroutine
 
       logical(C_BOOL) function mapnorm(x,ft,a2,a1,xy,h,nord)            &
-     &                bind(C, name="mapnorm_")
+     &                         bind(C, name="mapnorm_")
       use iso_c_binding
       implicit none
       integer(C_LONG) x(*), a1(*), a2(*), ft, xy(*), h, nord
@@ -2799,7 +2809,7 @@
       end subroutine
 
       logical(C_BOOL) function midbflo(c,a2,a2i,q,a,st)                 &
-     &                bind(C, name="midbflo_")
+     &                         bind(C, name="midbflo_")
       use iso_c_binding
       implicit none
       integer(C_LONG) ndim
@@ -2900,7 +2910,7 @@
       end function
 
       logical(C_BOOL) function mapflol(sa,sai,cr,cm,st)                 &
-     &                bind(C, name="mapflol_")
+     &                         bind(C, name="mapflol_")
       use iso_c_binding
       implicit none
       integer(C_LONG) ndim, ndim2
@@ -3556,7 +3566,7 @@
       end subroutine
 
       logical(C_BOOL) function eig6(fm,reval,aieval,revec,aievec)       &
-     &                bind(C, name="eig6_")
+     &                         bind(C, name="eig6_")
       use iso_c_binding
       implicit none
       integer(C_LONG) ndim2

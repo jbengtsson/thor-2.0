@@ -625,7 +625,7 @@ void get_dx_dJ(double dx2[], const bool prt)
     M.propagate(j, j);
     if ((elem[j-1].kind == Mpole) && (elem[j-1].mpole->bn[Sext-1] != 0e0)) {
       K = MapNorm(M*Map*Inv(M), g, A1, A0, Map_res, 1);
-#if 0
+#if 1
       dx_fl = LieExp(g, Id);
 #else
       for (k = 0; k < 4; k++)
@@ -1683,7 +1683,7 @@ void lat_select(void)
 
 void map_gymn(void)
 {
-  ss_vect<tps> Id, map1, map_res;
+  ss_vect<tps> Id, map_res;
 
   Id.identity();
 
@@ -1692,10 +1692,6 @@ void map_gymn(void)
   danot_(no_tps);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
 
-  map1 =
-    A0*A1*FExpo(g, Id, 3, no_tps, -1)
-    *FExpo(K, Id, 2, no_tps, -1)
-    *Inv(A0*A1*FExpo(g, Id, 3, no_tps, -1));
 #if 1
   map_res =
     Inv(FExpo(K, Id, 2, no_tps, -1))

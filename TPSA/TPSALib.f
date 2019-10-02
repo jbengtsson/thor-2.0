@@ -37,20 +37,20 @@
 !
 !     THE PARAMETERS USED BELOW HAVE THE FOLLOWING MEANING:
 !
-!     A,B:                NAME OF INPUT DA VECTORS   (integer)
-!     C:                  NAME OF OUTPUT DA VECTOR   (integer)
-!     X,Y:                NAME OF INPUT DA MATRIX    (integer(...))
-!     Z:                  NAME OF OUTPUT DA MATRIX   (integer(...))
+!     A,B:                NAME OF INPUT DA VECTORS   (INTEGER)
+!     C:                  NAME OF OUTPUT DA VECTOR   (INTEGER)
+!     X,Y:                NAME OF INPUT DA MATRIX    (INTEGER(...))
+!     Z:                  NAME OF OUTPUT DA MATRIX   (INTEGER(...))
 !
 !     F:                  NAME OF A DA FUNCTION      (CHARACTER*4)
 !     G:                  NAME OF EXTERNAL FUNCTION  (DOUBLE PRECISION)
-!     JJ:                 ARRAY OF EXPONENTS         (integer(20))
-!     O:                  ORDER                      (integer)
-!     N:                  NUMBER OF VARIABLES        (integer)
-!     I,J,K:              integer NUMBER             (integer
+!     JJ:                 ARRAY OF EXPONENTS         (INTEGER(20))
+!     O:                  ORDER                      (INTEGER)
+!     N:                  NUMBER OF VARIABLES        (INTEGER)
+!     I,J,K:              INTEGER NUMBER             (INTEGER
 !     R,RA,RB:            REAL NUMBERS               (DOUBLE PRECISION)
 !     H:                  ARRAY OF LENGTH LH         (DOUBLE PRECISION)
-!     U:                  OUTPUT UNIT NUMBER         (integer)
+!     U:                  OUTPUT UNIT NUMBER         (INTEGER)
 !     T:                  COMMENT TEXT               (CHARACTER*10)
 !
 !
@@ -115,8 +115,8 @@
 !     DAINF: RETURNS INFOS ABOUT A DA VECTOR PREVIOUSLY DECLARED
 !     DAPAC: PACKS DA VECTORS
 !     DACHK: CHECKS IF DA VECTORS HAVE COMPATIBLE ATTRIBUTES
-!     DCODE: TRANSFORMS DIGITS IN A CERTAIN BASE TO A DECIMAL integer
-!     NCODE: EXTRACTS DIGITS IN A CERTAIN BASE FROM A DECIMAL integer
+!     DCODE: TRANSFORMS DIGITS IN A CERTAIN BASE TO A DECIMAL INTEGER
+!     NCODE: EXTRACTS DIGITS IN A CERTAIN BASE FROM A DECIMAL INTEGER
 !
 !
 !     FURTHER WISHES
@@ -145,11 +145,11 @@
 !     DANAME:   NAME OF DA VECTOR
 !
 !     CC:       STACK OF DOUBLE PRECISON COEFFICIENTS
-!     I1:       FIRST CHARACTERISTIC integer (CF DAINI)
-!     I2:       SECOND CHARACTERISTIC integer (CF DAINI)
+!     I1:       FIRST CHARACTERISTIC INTEGER (CF DAINI)
+!     I2:       SECOND CHARACTERISTIC INTEGER (CF DAINI)
 !
-!     IE1:      CHARACTERISTIC integer 1 OF UNPACKED REPRESENTATION (CF DAINI)
-!     IE2:      CHARACTERISTIC integer 2 OF UNPACKED REPRESENTATION (CF DAINI)
+!     IE1:      CHARACTERISTIC INTEGER 1 OF UNPACKED REPRESENTATION (CF DAINI)
+!     IE2:      CHARACTERISTIC INTEGER 2 OF UNPACKED REPRESENTATION (CF DAINI)
 !     IEO:      ORDER OF ENTRY IN UNPACKED REPRESENTATION
 !     IA1:      REVERSE TO IE1 (CF DAINI)
 !     IA2:      REVERSE TO IE2 (CF DAINI)
@@ -171,13 +171,14 @@
 !
 !-----------------------------------------------------------------------------1
 !
+
       module tpsa
       contains
 
       subroutine daini(no,nv,iunit) bind(C, name="daini_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) no, nv, iunit
+      integer(c_long) no, nv, iunit
 
       integer i,iall,ibase,ic1,ic2,icmax,io1,io2,iout,j,jd,jj,jjj,      &
      &jjjj,jl,js,k,n
@@ -207,7 +208,7 @@
       character aa*10
       dimension n(lnv+1),k(0:lnv),j(lnv),jj(lnv)
 !
-      write(*, *) "daini:  ", no, nv
+      write(*, *) "daini:", no, nv
       if(eps.le.0.d0) eps=1.d-38
 !      if(EPS.le.0.d0) eps=1.d-90
       epsmac=1.d-7
@@ -413,8 +414,10 @@
       return
       end subroutine
 
-      subroutine daexter
+      subroutine daexter() bind(C, name="daexter_")
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
+
       integer i
 !     *****************************
 !
@@ -517,10 +520,10 @@
 !
 
       subroutine daallno1(ic,ccc) bind(C, name="daallno1_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG)    ic
-      character(C_CHAR) ccc(10)
+      integer(c_long)   ic
+      character(c_char) ccc(*)
 
       integer ind,l,ndanum,no,nv
       double precision x
@@ -587,9 +590,11 @@
          endif
 
  !        c = ccc
-         do j=1, 10
+         do j=1, 4
             c(j:j) = ccc(j)
          enddo
+         write(c(5:10),'(I6)') ic
+         c(5:10) = adjustl(c(5:10))
          daname(ind) = c
 
          if (incnda) then
@@ -634,10 +639,10 @@
 
 
       subroutine daallno(ic,l,ccc) bind(C, name="daallno_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG)    ic(*), l
-      character(C_CHAR) ccc(10)
+      integer(c_long)   ic(*), l
+      character(c_char) ccc(*)
 
       integer i,j,ind,ndanum,no,nv
       double precision x
@@ -705,10 +710,11 @@
           endif
 
 !          c = ccc
-          do j=1, 10
+          do j=1, 4
              c(j:j) = ccc(j)
           enddo
-          if(l.ne.1) write(c(6:10),'(I5)') i
+          write(c(5:10),'(I6)') ic(i)
+          c(5:10) = adjustl(c(5:10))
           daname(ind) = c
 
           if (incnda) then
@@ -754,10 +760,10 @@
 
 
       subroutine daall1(ic,ccc,no,nv) bind(C, name="daall1_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG)    ic, no, nv
-      character(C_CHAR) ccc(10)
+      integer(c_long)   ic, no, nv
+      character(c_char) ccc(*)
 
       integer j,ind,l,ndanum
       double precision x
@@ -827,10 +833,11 @@
          endif
 
 !     c = ccc
-         do j=1, 10
+         do j=1, 4
             c(j:j) = ccc(j)
          enddo
-
+         write(c(5:10),'(I6)') ic
+         c(5:10) = adjustl(c(5:10))
          daname(ind) = c
 
          if (incnda) then
@@ -875,10 +882,10 @@
       end subroutine
 !
       subroutine daall(ic,l,ccc,no,nv) bind(C, name="daall_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG)    ic(*), l, no, nv
-      character(C_CHAR) ccc(10)
+      integer(c_long)   ic(*), l, no, nv
+      character(c_char) ccc(*)
 
       integer i,j,ind,ndanum
       double precision x
@@ -949,11 +956,11 @@
           endif
 
 !          c = ccc
-          do j=1, 10
+          do j=1, 4
              c(j:j) = ccc(j)
           enddo
-          if(l.ne.1) write(c(6:10),'(I5)') i
-
+          write(c(5:10),'(I6)') ic(i)
+          c(5:10) = adjustl(c(5:10))
           daname(ind) = c
 
           if (incnda) then
@@ -999,9 +1006,9 @@
       end subroutine
 !
       subroutine dadal1(idal) bind(C, name="dadal1_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) idal
+      integer(c_long) idal
 
 !     ************************
 !
@@ -1049,9 +1056,9 @@
 
 
       subroutine dadal(idal,l) bind(C, name="dadal_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) idal(*), l
+      integer(c_long) idal(*), l
 
       integer i
 !     ************************
@@ -1102,10 +1109,10 @@
 
 
       subroutine davar(ina,ckon,i) bind(C, name="davar_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, i
-      real(C_DOUBLE) ckon
+      integer(c_long) ina, i
+      real(c_double) ckon
 
       integer ibase,ic1,ic2,illa,ilma,inoa,inva
       integer(8) ipoa
@@ -1166,10 +1173,10 @@
       end subroutine
 !
       subroutine dacon(ina,ckon) bind(C, name="dacon_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina
-      real(C_DOUBLE) ckon
+      integer(c_long) ina
+      real(c_double) ckon
 
       integer illa,ilma,inoa,inva
       integer(8) ipoa
@@ -1199,9 +1206,9 @@
       end subroutine
 !
       subroutine danot(not) bind(C, name="danot_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) not
+      integer(c_long) not
 
 !     *********************
 !
@@ -1241,9 +1248,9 @@
       end subroutine
 
       subroutine daeps(deps) bind(C, name="daeps_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      real(C_DOUBLE) deps
+      real(c_double) deps
 
 !     **********************
 !
@@ -1262,11 +1269,11 @@
       end subroutine
 !
       subroutine dapek(ina,jj,cjj) bind(C, name="dapek_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
       include "TPSALib_prm.f"
-      integer(C_LONG) ina, jj(lnv)
-      real(C_DOUBLE) cjj
+      integer(c_long) ina, jj(lnv)
+      real(c_double) cjj
 
       integer ibase,ic,ic1,ic2,icu,icz,ii1,ikk,illa,ilma,               &
      &inoa,inva,jj1,mchk
@@ -1377,11 +1384,11 @@
       end subroutine
 !
       subroutine dapok(ina,jj,cjj) bind(C, name="dapok_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
       include "TPSALib_prm.f"
-      integer(C_LONG) ina, jj(lnv)
-      real(C_DOUBLE) cjj
+      integer(c_long) ina, jj(lnv)
+      real(c_double) cjj
 
       integer ic,ic1,ic2,icu,icz,illa,ilma,inoa,inva,                   &
      &jj1,mchk
@@ -1530,9 +1537,9 @@
       end subroutine
 !
       subroutine daclr(inc) bind(C, name="daclr_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) inc
+      integer(c_long) inc
 
       integer illc,ilmc,inoc,invc
       integer(8) i, ipoc
@@ -1556,9 +1563,9 @@
       end subroutine
 !
       subroutine dacop(ina,inb) bind(C, name="dacop_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina,inb
+      integer(c_long) ina,inb
 
       integer iif,illa,illb,ilma,ilmb,inoa,inob,inva,invb
       integer(8) ia, ib, ipoa, ipob
@@ -1660,9 +1667,9 @@
       end subroutine
 !
       subroutine daadd(ina,inb,inc) bind(C, name="daadd_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, inb, inc
+      integer(c_long) ina, inb, inc
 
       integer i,ic,ic1,ic2,icu,icz,ii,illa,ilma,inoa,inva,              &
      &ipok,iu,iz,jj,jj1
@@ -1701,9 +1708,9 @@
       end subroutine
 !
       subroutine dasub(ina,inb,inc) bind(C, name="dasub_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, inb, inc
+      integer(c_long) ina, inb, inc
 
       integer idasub
       integer i,ic,ic1,ic2,icu,icz,ii,illa,ilma,inoa,inva,              &
@@ -1958,9 +1965,9 @@
       end subroutine
 
       subroutine damul(ina,inb,inc) bind(C, name="damul_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, inb, inc
+      integer(c_long) ina, inb, inc
 
       integer illc,ilmc,incc,inoc,invc
       integer(8) ipoc, ipoa, ipob
@@ -2111,9 +2118,9 @@
       end subroutine
 !
       subroutine dadiv(ina,inb,inc) bind(C, name="dadiv_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, inb, inc
+      integer(c_long) ina, inb, inc
 
       integer idadiv
       integer illc,ilmc,incc,inoc,invc
@@ -2157,9 +2164,9 @@
 
 !
       subroutine dasqr(ina,inc) bind(C, name="dasqr_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, inc
+      integer(c_long) ina, inc
 
       integer illc,ilmc,incc,inoc,invc
       integer(8) ipoa, ipoc
@@ -2309,10 +2316,10 @@
       end subroutine
 !
       subroutine dacad(ina,ckon,inb) bind(C, name="dacad_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, inb
-      real(C_DOUBLE) ckon
+      integer(c_long) ina, inb
+      real(c_double) ckon
 
       integer illa,illb,ilma,ilmb,inoa,inob,inva,invb,ipoa,ipob
       double precision const
@@ -2399,18 +2406,18 @@
       end subroutine
 !
       subroutine dacmu(ina,ckon,inc) bind(C, name="dacmu_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, inc
-      real(C_DOUBLE) ckon
+      integer(c_long) ina, inc
+      real(c_double) ckon
 
       integer illc,ilmc,incc,inoc,invc
       integer(8) ipoa, ipoc
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE integer E.
+!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE INTEGER E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -2449,8 +2456,8 @@
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE integer E.
+!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE INTEGER E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -2622,10 +2629,10 @@
       end subroutine
 !
       subroutine dalin(ina,afac,inb,bfac,inc) bind(C, name="dalin_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, inb, inc
-      real(C_DOUBLE) afac, bfac
+      integer(c_long) ina, inb, inc
+      real(c_double) afac, bfac
 
       integer illc,ilmc,incc,inoc,invc
       integer(8) ipoc, ipob, ipoa
@@ -2831,10 +2838,10 @@
       end subroutine
 !
       subroutine dafun(cf1,ina,inc) bind(C, name="dafun_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG)    ina, inc
-      character(C_CHAR) cf1(4)
+      integer(c_long)   ina, inc
+      character(c_char) cf1(4)
 
       integer illc,ilmc,incc,inoc,invc,j
       integer(8) ipoc
@@ -3376,10 +3383,10 @@
 !
 
       subroutine daabs(ina,anorm) bind(C, name="daabs_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina
-      real(C_DOUBLE) anorm
+      integer(c_long) ina
+      real(c_double) anorm
 
       integer illa,ilma,inoa,inva
       integer(8) i, ipoa
@@ -3401,13 +3408,13 @@
       end subroutine
 !
       subroutine daabs2(ina,anorm) bind(C, name="daabs2_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina
-      real(C_DOUBLE) anorm
+      integer(c_long) ina
+      real(c_double) anorm
 
-      integer illa,ilma,inoa,inva,ipoa
-      integer(8) i
+      integer illa,ilma,inoa,inva
+      integer(8) i, ipoa
 !     ***************************
 !
 !     THIS SUBROUTINE COMPUTES THE NORM OF THE DA VECTOR A
@@ -3486,9 +3493,9 @@
       end subroutine
 !
       subroutine dacct(ma,ia,mb,ib,mc,ic) bind(C, name="dacct_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ma(*), mb(*), mc(*), ia, ib, ic
+      integer(c_long) ma(*), mb(*), mc(*), ia, ib, ic
 
       integer i,ij,illc,ilmc,inoc,invc
       integer(8) ipoc
@@ -3536,7 +3543,7 @@
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
 !
-!      integer MON(LNO+1),ICC(LNV),MB(*),MC(*),MA(*)
+!      INTEGER MON(LNO+1),ICC(LNV),MB(*),MC(*),MA(*)
 !ETIENNE
 !      integer mon(lno+1),icc(lno),mb(*),mc(*),ma(*)
       integer mon(lno+1),icc(lnv),mb(*),mc(*),ma(*)
@@ -3609,11 +3616,10 @@
       return
       end subroutine
 
-
       subroutine mtree(mb,ib,mc,ic) bind(C, name="mtree_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) mb(*), ib, mc(*), ic
+      integer(c_long) mb(*), ib, mc(*), ic
 
       integer ic1,ic2,ichk,ii,iib,iic,illb,illc,                        &
      &ilmb,ilmc,inob,inoc,invb,invc,j,jl,jnon,nterm,ntermf
@@ -3624,7 +3630,7 @@
 !     THIS SUBROUTINE IS USED FOR CONCATENATION AND TRACKING OF VECTORS
 !     THROUGH A DA MAP. IT COMPUTES THE TREE THAT HAS TO BE TRANSVERSED
 !     MB IS THE DA MATRIX WITH IA TERMS. THE OUTPUT MC IS A CA MATRIX WHICH
-!     CONTAINS COEFFICIENTS AND CONTROL integerS USED FOR THE TRAVERSAL.
+!     CONTAINS COEFFICIENTS AND CONTROL INTEGERS USED FOR THE TRAVERSAL.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -3708,7 +3714,7 @@
       enddo
 !
       call dapac(ichk)
-!      CALL DAPRI(ICHK,32)
+!ETIENNE      CALL DAPRI(ICHK,32)
 !
 !     SETTING UP TREE STRUCTURE
 !     *************************
@@ -3816,7 +3822,6 @@
       return
       end subroutine
 
-
       subroutine ppushprint(mc,ic,mf,jc,line)
       implicit none
       integer i,ic,iv,jc,jl,jv,mc,mf
@@ -3825,6 +3830,7 @@
       character*20 line
       if(mf.le.0) return
       write(mf,*) 0,0,jc+1,0,line
+      write(mf,*) 0,0,jc+1,0
       do i=1,ic
         jc=1+jc
         write(mf,*) jc,jl,jv,cc(idapo(mc(i)))
@@ -3847,10 +3853,10 @@
 !
 
       subroutine ppush(mc,ic,xi,xf) bind(C, name="ppush_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) mc, ic
-      real(C_DOUBLE) xi, xf
+      integer(c_long) mc, ic
+      real(c_double) xi, xf
 
       integer i,iv,jl,jv
       double precision xm,xt,xx
@@ -3924,9 +3930,9 @@
       end subroutine
 
       subroutine dainv(ma,ia,mb,ib) bind(C, name="dainv_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ma(*), ia, mb(*), ib
+      integer(c_long) ma(*), ia, mb(*), ib
 
       integer i,ij,illb,ilmb,inob,invb
       integer(8) ipob
@@ -4010,10 +4016,10 @@
 !
       if(ia.ne.ib) then
         write(6,*)'ERROR IN DAINV, IA .NE. IB'
-        call dadeb(31,'ERR DAINV ',1)
+        call dadeb(31,'ERR DAINV1',1)
       elseif(ia.ne.inva.or.ib.ne.invb) then
         write(6,*)'ERROR IN DAINV, IA.NE.INVA.OR.IB.NE.INVB'
-        call dadeb(31,'ERR DAINV ',1)
+        call dadeb(31,'ERR DAINV2',1)
       endif
 !
 !     ALLOCATING LOCAL VECTORS
@@ -4050,7 +4056,7 @@
 !
       if(ier.eq.132) then
         write(6,*)'ERROR IN ROUTINE DAINV'
-        call dadeb(31,'ERR DAINV ',1)
+        call dadeb(31,'ERR DAINV3',1)
       endif
 !
       ier = 0
@@ -4127,12 +4133,12 @@
       end subroutine
 !
       subroutine matinv(a,ai,n,nmx,ier) bind(C, name="matinv_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) nmax
+      integer(c_long) nmax
       parameter (nmax=400)
-      integer(C_LONG) n, nmx, ier
-      real(C_DOUBLE) a(nmx,nmx),ai(nmx,nmx)
+      integer(c_long) n, nmx, ier
+      real(c_double) a(nmx,nmx),ai(nmx,nmx)
 
       integer i,indx,j
       double precision aw,d
@@ -4288,9 +4294,9 @@
 !
 
       subroutine dapin(ma,ia,mb,ib,jx) bind(C, name="dapin_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ma(*), ia, mb(*), ib, jx(*)
+      integer(c_long) ma(*), ia, mb(*), ib, jx(*)
 
       integer i,ij,illb,ilmb,inob,invb
       integer(8) ipob
@@ -4396,9 +4402,9 @@
       end subroutine
 !
       subroutine dader(idif,ina,inc) bind(C, name="dader_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) idif, ina, inc
+      integer(c_long) idif, ina, inc
 
       integer illc,ilmc,incc,inoc,invc
       integer(8) ipoc
@@ -4663,10 +4669,10 @@
       end subroutine
 !
       subroutine dacfu(ina,fun,inc) bind(C, name="dacfu_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, inc
-      real(C_DOUBLE), bind(C) :: fun
+      integer(c_long) ina, inc
+      real(c_double), bind(C) :: fun
       external       fun
 
       integer illc,ilmc,incc,inoc,invc
@@ -4877,11 +4883,11 @@
       end subroutine
 !
 
-      SUBROUTINE DAIMP(r, ic1, ic2, ina) bind(C, name="daimp_")
-      use iso_c_binding
+      subroutine daimp(r, ic1, ic2, ina) bind(C, name="daimp_")
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ic1, ic2, ina
-      real(C_DOUBLE) r
+      integer(c_long) ic1, ic2, ina
+      real(c_double) r
 
       integer    lh
       integer(8) i, ic
@@ -4909,15 +4915,15 @@
 
       idall(ina) = lh
 
-      RETURN
-      END subroutine
-*
-      SUBROUTINE DAEXP(ina, r, ic1, ic2, name) bind(C, name="daexp_")
-      use iso_c_binding
+      return
+      end subroutine
+
+      subroutine daexp(ina, r, ic1, ic2, name) bind(C, name="daexp_")
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG)    ina, ic1, ic2
-      real(C_DOUBLE)    r
-      character(C_CHAR) name(10)
+      integer(c_long)   ina, ic1, ic2
+      real(c_double)    r
+      character(c_char) name(*)
 
       integer    i, lh, k, jj
       integer(8) ic
@@ -4962,15 +4968,13 @@
          ic = ic + 1
       enddo
 
-      RETURN
-      END subroutine
-*
-
+      return
+      end subroutine
 
       subroutine dapri(ina,iunit) bind(C, name="dapri_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, iunit
+      integer(c_long) ina, iunit
 
       integer iii,illa,ilma,inoa,inva,ioa,iout,ipoa,j,k
       integer(8) i, ii
@@ -5045,7 +5049,7 @@
 !ETIENNE
               iout = iout+1
               write(iunit,'(I6,2X,E21.14,I5,4X,18(2I2,1X))')            &
-     &             iout,cc(ii),ioa,(j(iii),iii=1,nvmax)
+     &        iout,cc(ii),ioa,(j(iii),iii=1,nvmax)
 !ETIENNE
 !              write(iunit,*) cc(ii)
             endif
@@ -5061,7 +5065,6 @@
 !
       return
       end subroutine
-
 
       subroutine dapriold(ina,iunit)
       implicit none
@@ -5149,7 +5152,6 @@
 !
       return
       end subroutine
-
 
       subroutine dapri77(ina,iunit)
       implicit none
@@ -5376,9 +5378,9 @@
       end subroutine
 
       subroutine darea(ina,iunit) bind(C, name="darea_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, iunit
+      integer(c_long) ina, iunit
 
       integer i,iche,ii,ii1,ii2,iin,illa,ilma,inoa,inva,io,io1,         &
      &iwarin,iwarno,iwarnv,j,nno
@@ -5482,9 +5484,9 @@
 !FF
 !
       subroutine darea77(ina,iunit) bind(C, name="darea77_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) ina, iunit
+      integer(c_long) ina, iunit
 
       integer i,ic,iche,ii,ii1,ii2,iin,illa,ilma,inoa,inva,ipoa,        &
      &j,k,nojoh,nvjoh
@@ -5818,9 +5820,9 @@
 
 !ETIENNE
       subroutine datra(idif,ina,inc) bind(C, name="datra_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) idif, ina, inc
+      integer(c_long) idif, ina, inc
 
       integer ibase,ider1,ider1s,ider2,ider2s,iee,ifac,illa,            &
      &illc,ilma,ilmc,inoa,inoc,inva,invc,jj
@@ -5949,16 +5951,18 @@
       return
       end subroutine
 
-      subroutine hash(no1,nv1,jj,ic1,ic2)
+      subroutine hash(no1,nv1,jj,ic1,ic2) bind(C, name="hash_")
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer i,ibase,ic1,ic2,isplit,no1,nv1
+      integer(c_long) no1, nv1, jj(*), ic1, ic2
+
+      integer i,ibase,isplit
 !     ****************************
 !
 !     THIS SUBROUTINE CODES THE EXPONENTS IN JJ INTO THEIR DA CODES I1,I2.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
-      integer jj(*)
 
       ibase = no1 + 1
       isplit = (nv1+1)/2
@@ -5977,9 +5981,9 @@
       end subroutine
 !
       subroutine dehash(no1,nv1,ic1,ic2,jj) bind(C, name="dehash_")
-      use iso_c_binding
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      integer(C_LONG) no1, nv1, ic1, ic2, jj(*)
+      integer(c_long) no1, nv1, ic1, ic2, jj(*)
 
       integer i,ibase,ic,isplit
       double precision x
@@ -6097,7 +6101,7 @@
 !
 !     THIS SUBROUTINE FILLS THE DA VECTOR A WITH RANDOM ENTRIES.
 !     FOR CM > 0, THE VECTOR IS FILLED WITH REALS,
-!     FOR CM < 0, THE VECTOR IS FILLED WITH SINGLE DIGIT integerS
+!     FOR CM < 0, THE VECTOR IS FILLED WITH SINGLE DIGIT INTEGERS
 !     ABS(CM) IS THE FILLING FACTOR
 !
 !-----------------------------------------------------------------------------1
@@ -6146,10 +6150,10 @@
       return
       end subroutine
 !
-      real(C_DOUBLE) function bran(xran) bind(C, name="bran_")
-      use iso_c_binding
+      real(c_double) function bran(xran) bind(C, name="bran_")
+      use iso_c_binding, only: c_char, c_long, c_double
       implicit none
-      real(C_DOUBLE) xran
+      real(c_double) xran
 
 !     ************************************
 !
@@ -6164,8 +6168,6 @@
 !
       return
       end function
-!
-!
 
       subroutine danorm2(ina,inc)
       implicit none
@@ -6174,8 +6176,8 @@
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE integer E.
+!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE INTEGER E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -6202,8 +6204,8 @@
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE integer E.
+!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE INTEGER E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -6244,8 +6246,8 @@
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE integer E.
+!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE INTEGER E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -6272,8 +6274,8 @@
 !     ******************************
 !
 !     THIS SUBROUTINE MULTIPLIES THE DA VECTOR DENOTED BY THE
-!     THE integer A WITH THE CONSTANT C AND STORES THE RESULT IN
-!     THE DA VECTOR DENOTED WITH THE integer E.
+!     THE INTEGER A WITH THE CONSTANT C AND STORES THE RESULT IN
+!     THE DA VECTOR DENOTED WITH THE INTEGER E.
 !
 !-----------------------------------------------------------------------------1
       include "TPSALib_prm.f"
@@ -6396,6 +6398,7 @@
       return
       end subroutine
 ! ANFANG UNTERPROGRAMM
+
       subroutine darea6(ina,zfeld,i56)
       implicit none
       integer i,i56,ii1,ii2,iin,illa,ilma,ina,inoa,inva,io,io1,ip,      &
@@ -6525,6 +6528,7 @@
       return
       end function
 ! ANFANG UNTERPROGRAMM
+
       subroutine daprimax(ina,iunit)
       implicit none
       integer iii,illa,ilma,ina,inoa,inva,ioa,iout,iunit,j
@@ -6874,11 +6878,12 @@
 !
       return
       end subroutine
-      integer function  mypause(i)
+
+      integer function mypause(i)
       implicit none
 ! Replaces obsolescent feature pause
       integer i
-!      write (*,'(A,i6)',ADVANCE='NO') ' PAUSE: ',i
+!      write (*,'(A,i6)',ADVANCE='NO') ' PAUSE:',i
       write (*,'(A,i6)') ' PAUSE: ',i
       read(*,*)
       mypause=i

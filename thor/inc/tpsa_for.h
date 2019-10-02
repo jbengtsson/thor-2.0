@@ -17,10 +17,10 @@ extern "C" {
   void dadiv_(const long int &, const long int &, long int &);
   void dacad_(const long int &, const double &, long int &);
   // dacsu <=> dacad(a, -r, b)
-  //void dasuc_(const long int &, const double &, long int &);
+  /* void dasuc_(const long int &, const double &, long int &); */
   void dacmu_(const long int &, const double &, long int &);
   // dacdi <=> dacmu(a, 1/r, b)
-  //void dadic_(const long int &, const double &, long int &);
+  /* void dadic_(const long int &, const double &, long int &); */
   void dafun_(const char [], const long int &, long int &);
   void dader_(const long int &, const long int &, long int &);
   void datra_(const long int &, const long int &, long int &);

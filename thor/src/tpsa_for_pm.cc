@@ -12,10 +12,9 @@ bool ini_tps    = false, header = false, res_basis = false, stable = false,
 
 const int n_max = 100;     // max iterations for LieExp
 
-// Fortran strings are passed from C by: [str, strlen(str)].
-const int  name_len_for = 10; // name length in FORTRAN library is 10.
-const char tpsa_name[name_len_for] = "tpsa     "; // String + NULL = 10.
-
+// Name length for FORTRAN library is 10; 10+1 for C.
+const int  name_len_for              = 10;
+const char tpsa_name[name_len_for+1] = "tps-";
 int bufsize;  // Note, max no of monomials is (no+nv)!/(nv!*no!)
 
 
@@ -120,7 +119,6 @@ extern "C" {
 
 void TPSA_Ini(void)
 {
-
   std::cout << std::endl;
   std::cout << std::scientific << std::setprecision(0)
        << "TPSA_Ini: no = " << no_tps << ", nv = " << ss_dim
@@ -153,7 +151,8 @@ void TPSAEps(const double eps)
 tps::tps(void)
 {
   if (!ini_tps) TPSA_Ini();
-  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
+  intptr = 0;
+  daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
   dacon_(intptr, 0.0);
   if (debug_tpsa)
     std::cout << "tps(void):                        "
@@ -162,9 +161,9 @@ tps::tps(void)
 
 tps::tps(const double r)
 {
-
   if (!ini_tps) TPSA_Ini();
-  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
+  intptr = 0;
+  daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
   dacon_(intptr, r);
   if (debug_tpsa)
     std::cout << "tps(const double r):              "
@@ -173,9 +172,9 @@ tps::tps(const double r)
 
 tps::tps(const double r, const int i)
 {
-
   if (!ini_tps) TPSA_Ini();
-  intptr = 0; daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
+  intptr = 0;
+  daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
   if (i == 0)
     dacon_(intptr, r);
   else
@@ -185,8 +184,8 @@ tps::tps(const double r, const int i)
 	 << ", intptr = " << intptr << std::endl;
 }
 
-tps::tps(const tps &x) {
-
+tps::tps(const tps &x)
+{
   if (!ini_tps) TPSA_Ini();
   intptr = 0;
   daall_(intptr, 1, tpsa_name, no_tps, ss_dim);
@@ -196,11 +195,11 @@ tps::tps(const tps &x) {
 	 << ", intptr = " << intptr << std::endl;
 }
 
-tps::~tps(void) {
-
+tps::~tps(void)
+{
   if (debug_tpsa)
     std::cout << "~tps(void):                       "
-	 << ", intptr = " << intptr << std::endl;
+	      << ", intptr = " << intptr << std::endl;
 
   dadal_(intptr, 1);
 }
@@ -990,9 +989,32 @@ std::istream& operator>>(std::istream &is, tps &a)
 }
 
 
+void prt_header(std::ostream &os)
+{
+  os << "\n";
+  if (!res_basis) {
+    os << "                                                        n\n"
+       << "      ====     i  i   i  i  i   i  i     i             ====\n"
+       << "      \\         1  2   3  4  5   6  7     n            \\   \n"
+       << "  P =  |   a  x  p   y  p  d  ct  p ... p  ,    |I| =  |   i\n"
+       << "      /     I     x      y         1     n             /     k\n"
+       << "      ====                                             ====\n"
+       << "       I                                               k=1\n";
+  } else {
+    os << "                                                          n\n"
+       << "      ====      i   i   i   i  i   i  i     i            ====\n"
+       << "      \\        + 1 - 2 + 3 - 4  5   6  7     n           \\   \n"
+       << "  P =  |   a  h   h   h   h   d  ct  p ... p  ,    |I| =  |   i\n"
+       << "      /     I  x   x   y   y          1     n            /     k\n"
+       << "      ====                                               ====\n"
+       << "       I                                                 k=1\n";
+  }
+}
+
+
 std::ostream& operator<<(std::ostream &os, const tps &a)
 {
-  char               name[name_len_for];
+  char               name[name_len_for+1];
   int                i, j, ord, n, no;
   long int           ibuf1[bufsize], ibuf2[bufsize], jj[ss_dim];
   double             rbuf[bufsize];
@@ -1008,8 +1030,8 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
   daexp_(a.intptr, rbuf, ibuf1, ibuf2, name);
   s << std::endl;
   
-  name[name_len_for-1] = '\0'; i = 0;
-  while ((i <= 10) && (name[i] != ' ')) {
+  i = 0;
+  while ((i < name_len_for) && (name[i] != ' ')) {
     s << name[i]; i++;
   }
   n = (int) rbuf[0];
@@ -1020,40 +1042,7 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
     s << "-"; 
   s << std::endl;
 
-  if (header) {
-    s << std::endl;
-    if (!res_basis) {
-      s << "                                                        n"
-	<< std::endl;
-      s << "      ====     i  i   i  i  i   i  i     i             ===="
-	<< std::endl;
-      s << "      \\         1  2   3  4  5   6  7     n            \\   "
-	<< std::endl;
-      s << "  P =  |   a  x  p   y  p  d  ct  p ... p  ,    |I| =  |   i"
-	<< std::endl;
-      s << "      /     I     x      y         1     n             /     k"
-	<< std::endl;
-      s << "      ====                                             ===="
-	<< std::endl;
-      s << "       I                                               k=1"
-	<< std::endl;
-    } else {
-      s << "                                                          n"
-	<< std::endl;
-      s << "      ====      i   i   i   i  i   i  i     i            ===="
-	<< std::endl;
-      s << "      \\        + 1 - 2 + 3 - 4  5   6  7     n           \\   "
-	<< std::endl;
-      s << "  P =  |   a  h   h   h   h   d  ct  p ... p  ,    |I| =  |   i"
-	<< std::endl;
-      s << "      /     I  x   x   y   y          1     n            /     k"
-	<< std::endl;
-      s << "      ====                                               ===="
-	<< std::endl;
-      s << "       I                                                 k=1"
-	<< std::endl;
-    }
-  }
+  if (header) prt_header(s);
   
   if (n != 0) {
     s << std::endl;
