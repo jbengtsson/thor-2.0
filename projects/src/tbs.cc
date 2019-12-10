@@ -39,13 +39,8 @@ ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
 // Center of straight.
 const double
-#if LAT_CASE == 1
 // M-H6BA-18-99pm-01.11-01.
-  beta_inj[]     = {12.3, 5.6},
-#elif LAT_CASE == 2
-// M-H6BA-17E-69pm-04.02-01
-  beta_inj[]     = {11.1, 5.5},
-#endif
+  beta_inj[]     = {11.2, 6.1},
   A_max[]        = {3.5e-3, 1.5e-3},
   delta_max      = 2.5e-2,
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
@@ -1014,7 +1009,7 @@ double get_chi2(const bool prt)
 
   const int n_prt = 4;
 
-#define CASE_SCL 6
+#define CASE_SCL 2
 
   // First minimize, then balance.
 #if CASE_SCL == 1
@@ -1413,7 +1408,7 @@ void prt_perf(FILE *outf, std::vector<double> p)
       fprintf(outf, " %10d", (int)(p[k]+0.5));
     else
       fprintf(outf, " %10.3e", p[k]);
-    if ((k == n-ind+1) || (k == n-3)) printf("\n");
+    if ((k == n-ind+1) || (k == n-3)) fprintf(outf, "\n");
   }
   fprintf(outf, "\n");
   fflush(outf);
@@ -1477,7 +1472,6 @@ void bn_mc(const int n_stats, const int ind, const int n_ksi)
   Bubble_Sort2(ind, perf);
 
   outf = file_write("tbs_b3_m_c.out");
-  fprintf(outf, "\n");
   for (j = 0; j < (int)perf.size(); j++)
     prt_perf(outf, perf[j]);
   fclose(outf);
@@ -1566,6 +1560,15 @@ void lat_select(void)
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   case 3:
+    no_mpoles(3); no_mpoles(4);
+
+    bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
+
+    bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[3]);
+    break;
+  case 4:
     // ALS-U.
     // bn_prms.add_prm("sf", 3, -bn_max[3], bn_max[3], dbn[3]);
     // bn_prms.add_prm("sd", 3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1663,7 +1666,7 @@ int main(int argc, char *argv[])
     Id_delta_scl[j] *= sqrt(twoJ_delta[j/2]);
   Id_delta_scl[delta_] *= delta_max;
 
-  if (false) {
+  if (!false) {
     no_mpoles(3);
     // no_mpoles(4);
     m_c(1000);
