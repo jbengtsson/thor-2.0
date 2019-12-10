@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 4
+#define NO 6
 
 #include "thor_lib.h"
 
@@ -1014,7 +1014,7 @@ double get_chi2(const bool prt)
 
   const int n_prt = 4;
 
-#define CASE_SCL 2
+#define CASE_SCL 6
 
   // First minimize, then balance.
 #if CASE_SCL == 1
@@ -1400,23 +1400,23 @@ void get_perf(int &n_good, double &chi2)
 }
 
 
-void prt_perf(std::vector<double> p)
+void prt_perf(FILE *outf, std::vector<double> p)
 {
   int k, n;
 
   const int ind = 16;
 
-  printf("\n");
+  fprintf(outf, "\n");
   n = p.size();
   for (k = 0; k < n; k++) {
     if (k == n-ind)
-      printf(" %10d", (int)(p[k]+0.5));
+      fprintf(outf, " %10d", (int)(p[k]+0.5));
     else
-      printf(" %10.3e", p[k]);
+      fprintf(outf, " %10.3e", p[k]);
     if ((k == n-ind+1) || (k == n-3)) printf("\n");
   }
-  printf("\n");
-  fflush(stdout);
+  fprintf(outf, "\n");
+  fflush(outf);
 }
 
 
@@ -1427,6 +1427,7 @@ void bn_mc(const int n_stats, const int ind, const int n_ksi)
   std::vector<int>    Fnum_ksi1, sgns;
   std::vector<double> p;
   perf_vec            perf;
+  FILE                *outf;
 
  for (k = 0; k < n_ksi; k++)
     Fnum_ksi1.push_back(bn_prms.Fnum[k]);
@@ -1470,14 +1471,16 @@ void bn_mc(const int n_stats, const int ind, const int n_ksi)
 
     perf.push_back(p);
 
-    prt_perf(p);
+    prt_perf(stdout, p);
   }
 
   Bubble_Sort2(ind, perf);
 
-  printf("\n");
+  outf = file_write("tbs_b3_m_c.out");
+  fprintf(outf, "\n");
   for (j = 0; j < (int)perf.size(); j++)
-    prt_perf(perf[j]);
+    prt_perf(outf, perf[j]);
+  fclose(outf);
 }
 
 
@@ -1490,22 +1493,22 @@ void m_c(const int n)
 
   switch (1) {
   case 1:
-    bn_prms.add_prm("sf1", 3, -2e2,   2e2, 1e-2);
+    bn_prms.add_prm("sf1", 3, -2e2,   2e2,   1e-2);
     bn_prms.add_prm("sd1", 3, -2.5e2, 2.5e2, 1e-2);
     bn_prms.add_prm("sd2", 3, -2e2,   0e2,   1e-2);
 
-    // bn_prms.add_prm("s",   3, -1.5e2, 1.5e2, 1e-2);
-    // bn_prms.add_prm("sh2", 3, -1.5e2, 1.5e2, 1e-2);
+    bn_prms.add_prm("s",   3, -1.5e2, 1.5e2, 1e-2);
+    bn_prms.add_prm("sh2", 3, -1.5e2, 1.5e2, 1e-2);
  
     bn_mc(n, bn_prms.n_bn+2, 2);
     break;
   case 2:
-    bn_prms.add_prm("sf1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd1", 3, -4.5e2,  4.5e2, 1e-2);
-    bn_prms.add_prm("sd2", 3, -3e2,    0e2,   1e-2);
+    bn_prms.add_prm("sf1", 3, -2e2,   2e2,   1e-2);
+    bn_prms.add_prm("sd1", 3, -2.5e2, 2.5e2, 1e-2);
+    bn_prms.add_prm("sd2", 3, -2e2,   0e2,   1e-2);
 
-    bn_prms.add_prm("s",   3, -2e2, 2e2, 1e-2);
-    bn_prms.add_prm("sh2", 3, -2e2, 2e2, 1e-2);
+    bn_prms.add_prm("s",   3, -1.5e2, 1.5e2, 1e-2);
+    bn_prms.add_prm("sh2", 3, -1.5e2, 1.5e2, 1e-2);
 
     bn_prms.add_prm("sf1", 4, -1e3, 1e3, 1e-2);
     bn_prms.add_prm("sd1", 4, -1e3, 1e3, 1e-2);
@@ -1662,7 +1665,7 @@ int main(int argc, char *argv[])
 
   if (false) {
     no_mpoles(3);
-    no_mpoles(4);
+    // no_mpoles(4);
     m_c(1000);
     exit(0);
   }
