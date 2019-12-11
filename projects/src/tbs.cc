@@ -60,7 +60,7 @@ const double
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-#define CASE_DNU 5
+#define CASE_DNU 4
 #if CASE_DNU == 1
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
                      0e1,  0e1},
@@ -69,10 +69,10 @@ const double
                     0e1, 0e1},
 #elif CASE_DNU == 3
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
-                    0e1, 0e1},
+                    1e1, 1e1},
 #elif CASE_DNU == 4
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
-                    0e-1, 0e-1},
+                    -1e1, -1e1},
 #elif CASE_DNU == 5
   scl_dnu_conf[] = {0e0, 0e0, 0e0, 0e0, 0e0, 0e0,
                     0e0, 0e0},
@@ -1014,7 +1014,7 @@ double get_chi2(const bool prt)
 
   const int n_prt = 4;
 
-#define CASE_SCL 6
+#define CASE_SCL 3
 
   // First minimize, then balance.
 #if CASE_SCL == 1
@@ -1557,7 +1557,9 @@ void lat_select(void)
     break;
  case 2:
     // Then balance terms.
-    // 3+2 b_3+0.
+    // 3+2 b_3, 1 b_4.
+    bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
+
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
@@ -1698,7 +1700,10 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (false) no_mpoles(3);
+  if (!false) {
+    // no_mpoles(3);
+    no_mpoles(4);
+  }
 
   get_twiss();
   if (!true)
