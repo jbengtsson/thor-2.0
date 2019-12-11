@@ -60,7 +60,7 @@ const double
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-#define CASE_DNU 4
+#define CASE_DNU 5
 #if CASE_DNU == 1
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
                      0e1,  0e1},
@@ -1413,7 +1413,7 @@ void prt_perf(FILE *outf, std::vector<double> p)
       fprintf(outf, " %10d", (int)(p[k]+0.5));
     else
       fprintf(outf, " %10.3e", p[k]);
-    if ((k == n-ind+1) || (k == n-3)) printf("\n");
+    if ((k == n-ind+1) || (k == n-3)) fprintf(outf, "\n");
   }
   fprintf(outf, "\n");
   fflush(outf);
