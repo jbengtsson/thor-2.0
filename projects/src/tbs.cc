@@ -1700,7 +1700,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (!false) {
+  if (false) {
     // no_mpoles(3);
     no_mpoles(4);
   }
