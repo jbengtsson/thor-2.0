@@ -47,7 +47,7 @@ const double
   beta_inj[]     = {11.1, 5.5},
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
-  delta_max      = 1.5e-2,
+  delta_max      = 2.5e-2,
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
@@ -1555,7 +1555,7 @@ void lat_select(void)
   case 2:
     // Then balance terms.
     // 3+2 b_3, 1 b_4.
-    if (false)
+    if (!false)
       bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
 
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
