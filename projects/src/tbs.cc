@@ -60,22 +60,17 @@ const double
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-#define CASE_DNU 5
+#define CASE_DNU 2
 #if CASE_DNU == 1
-  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
-                     0e1,  0e1},
+  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, 0e0, 0e0, 0e0,  0e0},
 #elif CASE_DNU == 2
-  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1,
-                    0e1, 0e1},
+  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1, -1e1, -1e1},
 #elif CASE_DNU == 3
-  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e1, 0e1,
-                    1e1, 1e1},
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e0, 0e0, 0e0, 0e0},
 #elif CASE_DNU == 4
-  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1,
-                    -1e1, -1e1},
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1},
 #elif CASE_DNU == 5
-  scl_dnu_conf[] = {0e0, 0e0, 0e0, 0e0, 0e0, 0e0,
-                    0e0, 0e0},
+  scl_dnu_conf[] = {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 #endif
 #if DNU
   scl_dnu_2d     = 1e6,
@@ -1065,13 +1060,15 @@ double get_chi2(const bool prt)
       b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)));
       b_extra.push_back(scl*sqr(2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)));
 
-      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)));
-      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
-      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 4)));
+      if (!false) {
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 4)));
 
-      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)));
-      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
-      b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)));
+      }
     }
 
     for (k = 0; k < (int)b_extra.size(); k++)
@@ -1555,10 +1552,11 @@ void lat_select(void)
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
     break;
- case 2:
+  case 2:
     // Then balance terms.
     // 3+2 b_3, 1 b_4.
-    bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    if (false)
+      bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
 
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
