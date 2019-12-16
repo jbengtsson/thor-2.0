@@ -47,7 +47,7 @@ const double
   beta_inj[]     = {11.1, 5.5},
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
-  delta_max      = 2.5e-2,
+  delta_max      = 3e-2,
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
@@ -60,13 +60,13 @@ const double
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-#define CASE_DNU 2
+#define CASE_DNU 3
 #if CASE_DNU == 1
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, 0e0, 0e0, 0e0,  0e0},
 #elif CASE_DNU == 2
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1, -1e1, -1e1},
 #elif CASE_DNU == 3
-  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 0e0, 0e0, 0e0, 0e0},
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, -1e1, -1e1, 0e0, 0e0},
 #elif CASE_DNU == 4
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1},
 #elif CASE_DNU == 5
@@ -1009,7 +1009,7 @@ double get_chi2(const bool prt)
 
   const int n_prt = 4;
 
-#define CASE_SCL 3
+#define CASE_SCL 4
 
   // First minimize, then balance.
 #if CASE_SCL == 1
