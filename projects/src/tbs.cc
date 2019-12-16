@@ -60,13 +60,14 @@ const double
   // Negative: minimize,
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
-#define CASE_DNU 3
+  // Last two weights should be > 0.
+#define CASE_DNU 2
 #if CASE_DNU == 1
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, 0e0, 0e0, 0e0,  0e0},
 #elif CASE_DNU == 2
-  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1, -1e1, -1e1},
+  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1, 1e1, 1e1},
 #elif CASE_DNU == 3
-  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, -1e1, -1e1, 0e0, 0e0},
+  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, -1e1, -1e1, 1e1, 1e1},
 #elif CASE_DNU == 4
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1},
 #elif CASE_DNU == 5
@@ -1555,6 +1556,8 @@ void lat_select(void)
   case 2:
     // Then balance terms.
     // 3+2 b_3, 1 b_4.
+    if (!false)
+      bn_prms.add_prm("of2", 5, -bn_max[5], bn_max[5], dbn[5]);
     if (!false)
       bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
 
