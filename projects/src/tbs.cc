@@ -47,7 +47,7 @@ const double
   beta_inj[]     = {11.1, 5.5},
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
-  delta_max      = 3e-2,
+  delta_max      = 5e-2,
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
