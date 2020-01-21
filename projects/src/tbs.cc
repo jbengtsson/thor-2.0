@@ -37,6 +37,8 @@ ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
 #define LAT_CASE 1
 
+const int n_cell = 6;
+
 // Center of straight.
 const double
 #if LAT_CASE == 1
@@ -48,6 +50,7 @@ const double
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
   delta_max      = 3e-2,
+  ksi_1[]        = {1.5/n_cell, 1.5/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
@@ -952,8 +955,8 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
   k = 0;
   b.clear();
 
-  b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
-  b.push_back(scl_ksi[1]*sqr(dK[k])); k++;
+  b.push_back(scl_ksi[1]*sqr(dK[k]-ksi_1[X_])); k++;
+  b.push_back(scl_ksi[1]*sqr(dK[k]-ksi_1[Y_])); k++;
 
   dK_shift(scl_dnu_conf[0], dK[k], dK[k+1], b); k += 2;
   dK_shift(scl_dnu_conf[1], dK[k], dK[k+1], b); k += 2;
@@ -1061,7 +1064,7 @@ double get_chi2(const bool prt)
       b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)));
       b_extra.push_back(scl*sqr(2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)));
 
-      if (!false) {
+      if (false) {
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 4)));
@@ -1069,6 +1072,26 @@ double get_chi2(const bool prt)
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)));
+      }
+
+      if (!false) {
+	b_extra.push_back
+	  (scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 1)
+		   +h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)
+		   +h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
+	b_extra.push_back
+	  (scl*sqr(-h_ijklm(nus_scl[3], 0, 0, 0, 0, 1)
+		   +h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)
+		   -h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
+
+	b_extra.push_back
+	  (scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 1)
+		   +h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)
+		   +h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
+	b_extra.push_back
+	  (scl*sqr(-h_ijklm(nus_scl[4], 0, 0, 0, 0, 1)
+		   +h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)
+		   -h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
       }
     }
 
@@ -1674,11 +1697,11 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    no_mpoles(3);
+    // no_mpoles(3);
     bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e-2);
     bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e-2);
     bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e-2);
-    fit_ksi1(0.0, 0.0, bn_prms.Fnum);
+    fit_ksi1(ksi_1[X_], ksi_1[X_], bn_prms.Fnum);
     bn_prms.prt_bn_lat("ksi1.out");
     exit(0);
   }
