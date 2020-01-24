@@ -50,7 +50,7 @@ const double
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
   delta_max      = 3e-2,
-  ksi_1[]        = {1.5/n_cell, 1.5/n_cell},
+  ksi_1[]        = {2.0/n_cell, 0.0/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
@@ -1002,6 +1002,15 @@ void get_b(std::vector<T> &dK, std::vector<T> &b)
 }
 
 
+void get_dnu_tune_conf(const tps K, double dnu[])
+{
+  // double ;
+
+  // for (k = 0; k < 2; k++)
+  //   dnu[k]
+}
+
+
 double get_chi2(const bool prt)
 {
   int              n, j, k, n_extra;
@@ -1696,12 +1705,12 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (false) {
+  if (!false) {
     // no_mpoles(3);
     bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e-2);
     bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e-2);
     bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e-2);
-    fit_ksi1(ksi_1[X_], ksi_1[X_], bn_prms.Fnum);
+    fit_ksi1(ksi_1[X_], ksi_1[Y_], bn_prms.Fnum);
     bn_prms.prt_bn_lat("ksi1.out");
     exit(0);
   }
