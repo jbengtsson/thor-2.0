@@ -35,7 +35,7 @@ tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 tps          K_re_delta_scl;
 ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
-#define LAT_CASE 1
+#define LAT_CASE 2
 
 const int n_cell = 6;
 
@@ -50,7 +50,7 @@ const double
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
   delta_max      = 3e-2,
-  ksi_1[]        = {2.0/n_cell, 0.0/n_cell},
+  ksi_1[]        = {0.0/n_cell, 0.0/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
@@ -1073,7 +1073,7 @@ double get_chi2(const bool prt)
       b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)));
       b_extra.push_back(scl*sqr(2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)));
 
-      if (false) {
+      if (!false) {
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 4)));
@@ -1082,27 +1082,7 @@ double get_chi2(const bool prt)
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 4)));
       }
-
-      if (!false) {
-	b_extra.push_back
-	  (scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 1)
-		   +h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)
-		   +h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
-	b_extra.push_back
-	  (scl*sqr(-h_ijklm(nus_scl[3], 0, 0, 0, 0, 1)
-		   +h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)
-		   -h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
-
-	b_extra.push_back
-	  (scl*sqr(h_ijklm(nus_scl[4], 0, 0, 0, 0, 1)
-		   +h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)
-		   +h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
-	b_extra.push_back
-	  (scl*sqr(-h_ijklm(nus_scl[4], 0, 0, 0, 0, 1)
-		   +h_ijklm(nus_scl[4], 0, 0, 0, 0, 2)
-		   -h_ijklm(nus_scl[4], 0, 0, 0, 0, 3)));
-      }
-    }
+   }
 
     for (k = 0; k < (int)b_extra.size(); k++)
       chi2 += b_extra[k].cst();
@@ -1588,27 +1568,16 @@ void lat_select(void)
   case 2:
     // Then balance terms.
     // 3+2 b_3, 1 b_4.
-    if (false)
-      bn_prms.add_prm("of2", 5, -bn_max[5], bn_max[5], dbn[5]);
-    if (!false)
-      bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    if (!false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    if (false) bn_prms.add_prm("of2", 5, -bn_max[5], bn_max[5], dbn[5]);
 
+    if (!false) bn_prms.add_prm("s3",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
 
     bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
-    break;
-  case 3:
-    // ALS-U.
-    // bn_prms.add_prm("sf", 3, -bn_max[3], bn_max[3], dbn[3]);
-    // bn_prms.add_prm("sd", 3, -bn_max[3], bn_max[3], dbn[3]);
-
-    bn_prms.add_prm("sh1", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh3", 3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh4", 3, -bn_max[3], bn_max[3], dbn[3]);
     break;
   default:
     printf("\nlat_select: unknown case\n");
@@ -1705,7 +1674,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (!false) {
+  if (false) {
     // no_mpoles(3);
     bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e-2);
     bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e-2);
