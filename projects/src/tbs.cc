@@ -1568,6 +1568,11 @@ void lat_select(void)
   case 2:
     // Then balance terms.
     // 3+2 b_3, 1 b_4.
+    if (!false) {
+      bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
+      bn_prms.add_prm("of2", 5, -bn_max[5], bn_max[5], dbn[5]);
+    }
+
     if (!false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
     if (false) bn_prms.add_prm("of2", 5, -bn_max[5], bn_max[5], dbn[5]);
 
