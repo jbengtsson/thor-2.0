@@ -1569,12 +1569,11 @@ void lat_select(void)
     // Then balance terms.
     // 3+2 b_3, 1 b_4.
     if (!false) {
-      bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
-      bn_prms.add_prm("of2", 5, -bn_max[5], bn_max[5], dbn[5]);
+      bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], dbn[5]);
+      bn_prms.add_prm("sd1", 5, -bn_max[5], bn_max[5], dbn[5]);
+      bn_prms.add_prm("sd2", 5, -bn_max[5], bn_max[5], dbn[5]);
     }
-
     if (!false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
-    if (false) bn_prms.add_prm("of2", 5, -bn_max[5], bn_max[5], dbn[5]);
 
     if (!false) bn_prms.add_prm("s3",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1680,10 +1679,10 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    // no_mpoles(3);
+    no_mpoles(3);
     bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e-2);
     bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e-2);
-    bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e-2);
+    // bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e-2);
     fit_ksi1(ksi_1[X_], ksi_1[Y_], bn_prms.Fnum);
     bn_prms.prt_bn_lat("ksi1.out");
     exit(0);
