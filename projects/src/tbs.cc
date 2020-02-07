@@ -1569,11 +1569,14 @@ void lat_select(void)
     // Then balance terms.
     // 3+2 b_3, 1 b_4.
     if (!false) {
+      bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
+      bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
+      bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
       bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], dbn[5]);
       bn_prms.add_prm("sd1", 5, -bn_max[5], bn_max[5], dbn[5]);
       bn_prms.add_prm("sd2", 5, -bn_max[5], bn_max[5], dbn[5]);
     }
-    if (!false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    if (false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
 
     if (!false) bn_prms.add_prm("s3",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
