@@ -64,13 +64,13 @@ const double
   // Positive: maintain opposite signs;
   // increase weight on remaining until opposite signs are obtained.
   // Last two weights should be > 0.
-#define CASE_DNU 2
+#define CASE_DNU 3
 #if CASE_DNU == 1
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, 0e0, 0e0, 0e0,  0e0},
 #elif CASE_DNU == 2
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1, 1e1, 1e1},
 #elif CASE_DNU == 3
-  scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, -1e1, -1e1, 1e1, 1e1},
+  scl_dnu_conf[] = {1e1, 1e1, -1e1, 1e1, 1e1, 1e1, 1e1, 1e1},
 #elif CASE_DNU == 4
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1},
 #elif CASE_DNU == 5
@@ -1022,7 +1022,7 @@ double get_chi2(const bool prt)
 
   const int n_prt = 4;
 
-#define CASE_SCL 2
+#define CASE_SCL 5
 
   // First minimize, then balance.
 #if CASE_SCL == 1
