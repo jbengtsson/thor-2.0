@@ -49,7 +49,7 @@ const double
   beta_inj[]     = {11.1, 5.5},
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
-  delta_max      = 3e-2,
+  delta_max      = 3.5e-2,
   ksi_1[]        = {0.0/n_cell, 0.0/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
@@ -70,7 +70,7 @@ const double
 #elif CASE_DNU == 2
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1, 1e1, 1e1},
 #elif CASE_DNU == 3
-  scl_dnu_conf[] = {1e1, 1e1, -1e1, 1e1, 1e1, 1e1, 1e1, 1e1},
+  scl_dnu_conf[] = {1e1, -1e1, 1e1, -1e1, 1e1, 1e1, 1e1, 1e1},
 #elif CASE_DNU == 4
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1},
 #elif CASE_DNU == 5
@@ -1022,7 +1022,7 @@ double get_chi2(const bool prt)
 
   const int n_prt = 4;
 
-#define CASE_SCL 5
+#define CASE_SCL 2
 
   // First minimize, then balance.
 #if CASE_SCL == 1
@@ -1575,6 +1575,10 @@ void lat_select(void)
       bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], dbn[5]);
       bn_prms.add_prm("sd1", 5, -bn_max[5], bn_max[5], dbn[5]);
       bn_prms.add_prm("sd2", 5, -bn_max[5], bn_max[5], dbn[5]);
+
+      bn_prms.add_prm("s3",  4, -bn_max[4], bn_max[4], dbn[4]);
+      bn_prms.add_prm("s",   4, -bn_max[4], bn_max[4], dbn[4]);
+      bn_prms.add_prm("sh2", 4, -bn_max[4], bn_max[4], dbn[4]);
     }
     if (false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
 
