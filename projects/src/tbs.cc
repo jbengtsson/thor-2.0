@@ -49,8 +49,8 @@ const double
   beta_inj[]     = {11.1, 5.5},
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
-  delta_max      = 3.5e-2,
-  ksi_1[]        = {0.0/n_cell, 0.0/n_cell},
+  delta_max      = 3e-2,
+  ksi_1[]        = {3.0/n_cell, 3.0/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
@@ -70,7 +70,7 @@ const double
 #elif CASE_DNU == 2
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1, 1e1, 1e1},
 #elif CASE_DNU == 3
-  scl_dnu_conf[] = {1e1, -1e1, 1e1, -1e1, 1e1, 1e1, 1e1, 1e1},
+  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, 1e1, 1e1, 1e1, 1e1},
 #elif CASE_DNU == 4
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1},
 #elif CASE_DNU == 5
@@ -1568,7 +1568,7 @@ void lat_select(void)
   case 2:
     // Then balance terms.
     // 3+2 b_3, 1 b_4.
-    if (!false) {
+    if (false) {
       bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
       bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
       bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
@@ -1580,7 +1580,7 @@ void lat_select(void)
       bn_prms.add_prm("s",   4, -bn_max[4], bn_max[4], dbn[4]);
       bn_prms.add_prm("sh2", 4, -bn_max[4], bn_max[4], dbn[4]);
     }
-    if (false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    if (!false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
 
     if (!false) bn_prms.add_prm("s3",  3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1686,10 +1686,10 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    no_mpoles(3);
+    // no_mpoles(3);
     bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e-2);
     bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e-2);
-    // bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e-2);
+    bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e-2);
     fit_ksi1(ksi_1[X_], ksi_1[Y_], bn_prms.Fnum);
     bn_prms.prt_bn_lat("ksi1.out");
     exit(0);
