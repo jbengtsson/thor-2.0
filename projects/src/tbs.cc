@@ -35,22 +35,22 @@ tps          h_re, h_im, h_re_scl, h_im_scl, K_re, K_im, K_re_scl;
 tps          K_re_delta_scl;
 ss_vect<tps> nus, nus_scl, Id_scl, Id_delta_scl;
 
-#define LAT_CASE 2
+#define LAT_CASE 1
 
 const int n_cell = 6;
 
 // Center of straight.
 const double
 #if LAT_CASE == 1
-// M-H6BA-18-99pm-01.11-01.
-  beta_inj[]     = {12.3, 5.6},
+// M-H6BA-18-99pm-01.12-01.
+  beta_inj[]     = {11.3, 7.1},
 #elif LAT_CASE == 2
 // M-H6BA-17E-69pm-04.02-01
   beta_inj[]     = {11.1, 5.5},
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
   delta_max      = 3e-2,
-  ksi_1[]        = {4.0/n_cell, 4.0/n_cell},
+  ksi_1[]        = {0.0/n_cell, 0.0/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
@@ -70,7 +70,7 @@ const double
 #elif CASE_DNU == 2
   scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1, 1e1, 1e1},
 #elif CASE_DNU == 3
-  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, 1e1, 1e1, 1e1, 1e1},
+  scl_dnu_conf[] = {-1e1, -1e1, -1e1, -1e1, -1e1, -1e1, 1e1, 1e1},
 #elif CASE_DNU == 4
   scl_dnu_conf[] = {1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1, 1e1},
 #elif CASE_DNU == 5

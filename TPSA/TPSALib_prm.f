@@ -19,8 +19,8 @@
 !     &           lno=11, lnv=7)
 
 !     For Laptop, NO = 7.
-!      parameter (lda=100000, lst=300000000, lea=500000, lia=80000,          &
-!     &           lno=10, lnv=7)
+      parameter (lda=100000, lst=300000000, lea=500000, lia=80000,          &
+     &           lno=10, lnv=7)
 !      parameter (lda=100000, lst=390000000, lea=500000, lia=80000,          &
 !     &           lno=10, lnv=7)
 !      parameter (lda=100000, lst=400000000, lea=500000, lia=80000,         &
@@ -29,8 +29,8 @@
 !      parameter (lda=100000, lst=700000000, lea=500000, lia=80000,         &
 !     &           lno=10, lnv=7)
 !     For Workstation.
-      parameter (lda=100000, lst=900000000, lea=500000, lia=80000,         &
-     &           lno=10, lnv=7)
+!      parameter (lda=100000, lst=900000000, lea=500000, lia=80000,         &
+!     &           lno=10, lnv=7)
 !     For Cluster, NO = 11. Increase virtual memory for SGE by:
 !       qsub -l mem_free=50G,h_vmem=50G -q...
 !      parameter (lda=100000, lst=2000000000, lea=500000, lia=80000,        &

@@ -1,4 +1,4 @@
-#define NO 8
+#define NO 4
 
 #include "thor_lib.h"
 
