@@ -50,7 +50,7 @@ const double
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
   delta_max      = 3e-2,
-  ksi_1[]        = {3.0/n_cell, 3.0/n_cell},
+  ksi_1[]        = {4.0/n_cell, 4.0/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(0.5e-3)/beta_inj[X_], sqr(0.1e-3)/beta_inj[Y_]};
 
