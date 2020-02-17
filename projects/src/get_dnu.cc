@@ -334,6 +334,51 @@ void get_dnu2(const double Ax_max, const double Ay_max, const double delta)
 }
 
 
+void get_dnu3(const double Ax_max, const double Ay_max, const double delta)
+{
+  char            str[max_str];
+  int             i, j, k;
+  double          twoJ[2], nux, nuy;
+  ss_vect<double> ps;
+  ss_vect<tps>    Id;
+  std::ifstream   inf;
+  std::ofstream   outf;
+
+  const int
+    n_ampl  = 10;
+    n_delta =  5;
+
+  if (false) {
+    sprintf(str, "%s%s", home_dir, "/Thor-2.0/thor/wrk");
+    file_rd(inf, strcat(str, "/nus.dat"));
+    inf >> nus[3] >> nus[4];
+    inf.close();
+  }
+
+  file_wr(outf, "dnu_dAxy_pert.out");
+  Id.zero(); Id[delta_] = delta;
+  ps.zero();
+  for (j = -n_delta; j <= n_delta; j++) {
+  for (j = -n_ampl; j <= n_ampl; j++) {
+    for (k = -n_ampl; k <= n_ampl; k++) {
+      ps[x_] = j*Ax_max/n_ampl; ps[y_] = k*Ay_max/n_ampl;
+      get_twoJ(ps, twoJ);
+      Id[x_] = sqrt(twoJ[X_]); Id[px_] = sqrt(twoJ[X_]);
+      Id[y_] = sqrt(twoJ[Y_]); Id[py_] = sqrt(twoJ[Y_]);
+      nux = (nus[3]*Id).cst(); nuy = (nus[4]*Id).cst();
+
+      outf << std::scientific << std::setprecision(3)
+	   << std::setw(12) << 1e3*ps[x_] << std::setw(12) << 1e3*ps[y_]
+	   << std::fixed << std::setprecision(5)
+	   << " " << std::setw(8) << nux << " " << std::setw(8) << nuy
+	   << std::endl;
+    }
+    outf << std::endl;
+  }
+  outf.close();
+}
+
+
 void wtf()
 {
   long int jj[ss_dim];
