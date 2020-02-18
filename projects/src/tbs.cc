@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 6
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -49,8 +49,8 @@ const double
   beta_inj[]     = {11.1, 5.5},
 #endif
   A_max[]        = {3.5e-3, 1.5e-3},
-  delta_max      = 2e-2,
-  A_delta_max[]  = {2e-3, 0.5e-3},
+  delta_max      = 1.8e-2,
+  A_delta_max[]  = {1.8e-3, 0.1e-3},
   ksi_1[]        = {0.0/n_cell, 0.0/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(A_delta_max[X_])/beta_inj[X_],
@@ -842,26 +842,49 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
 	 2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
 
-  printf("\n %11.3e %11.3e\n",
+  printf("delta^2, delta^4:\n %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
 	 2e0*h_ijklm(nus_scl[3], 0, 0, 0, 0, 4));
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 2),
 	 2e0*h_ijklm(nus_scl[4], 0, 0, 0, 0, 4));
 
-  printf("\n %11.3e %11.3e\n",
+  printf("delta^3:\n %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 3),
 	 5e0/3e0*h_ijklm(nus_scl[3], 0, 0, 0, 0, 5));
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 3),
 	 5e0/3e0*h_ijklm(nus_scl[4], 0, 0, 0, 0, 5));
 
-  printf("\n %11.3e %11.3e\n",
+  printf("J*delta:\n %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 1),
 	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 1));
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 1),
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 1));
+
+  printf("J*delta^2:\n %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 2),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 2));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 2));
+
+  printf("J*delta^3:\n %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 3),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 3));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 3),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 3));
+
+  printf("J^2*delta:\n %11.3e %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 1),
+	 h_ijklm(nus_scl[3], 1, 1, 1, 1, 1),
+	 h_ijklm(nus_scl[3], 0, 0, 2, 2, 1));
+  printf(" %11.3e %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[4], 0, 0, 2, 2, 1),
+	 h_ijklm(nus_scl[4], 1, 1, 1, 1, 1),
+	 h_ijklm(nus_scl[4], 2, 2, 0, 0, 1));
 }
 
 
@@ -1031,7 +1054,7 @@ double get_chi2(const bool prt)
 
   const int n_prt = 4;
 
-#define CASE_SCL 2
+#define CASE_SCL 3
 
   // First minimize, then balance.
 #if CASE_SCL == 1
@@ -1097,6 +1120,16 @@ double get_chi2(const bool prt)
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 1)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 1)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 1)));
+
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 2)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 2)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 2)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 2)));
+
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 3)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 3)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 3)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 3)));
       }
    }
 
@@ -1592,6 +1625,8 @@ void lat_select(void)
       bn_prms.add_prm("sd1", 5, -bn_max[5], bn_max[5], dbn[5]);
       bn_prms.add_prm("sd2", 5, -bn_max[5], bn_max[5], dbn[5]);
     }
+
+    if (!false) bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], dbn[5]);
 
     if (false) {
       bn_prms.add_prm("s3",  4, -bn_max[4], bn_max[4], dbn[4]);

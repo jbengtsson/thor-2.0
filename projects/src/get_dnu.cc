@@ -1,4 +1,4 @@
-#define NO 4
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -11,8 +11,8 @@ const double
   // A_max[]    = {5e-3, 1.5e-3},
   // delta_max  = 3e-2,
   beta_inj[] = {9.7, 5.9},
-  A_max[]    = {15e-3, 6e-3},
-  delta_max  = 3.5e-2,
+  A_max[]    = {1.5e-3, 2.5e-3},
+  delta_max  = 2e-2,
   // beta_inj[] = {4.1, 1.8},
   // A_max[]    = {4e-3, 2.5e-3},
   // delta_max  = 4e-2,
@@ -292,6 +292,43 @@ void get_dnu(const double Ax_max, const double Ay_max, const double delta_max)
 }
 
 
+void get_dnu_x_delta(const double Ax_max, const double Ay,
+		     const double delta_max)
+{
+  int             i, j;
+  double          twoJ[2], nux, nuy;
+  ss_vect<double> ps;
+  ss_vect<tps>    Id;
+  std::ifstream   inf;
+  std::ofstream   outf;
+
+  const int n_ampl = 10, n_delta = 5;
+
+  file_wr(outf, "dnu_dA_x_delta_pert.out");
+  Id.zero();
+  ps.zero(); ps[y_] = Ay;
+  for (i = -n_delta; i <= n_delta; i++) {
+    ps[delta_] = i*delta_max/n_delta;
+    for (j = -n_ampl; j <= n_ampl; j++) {
+      ps[x_] = j*Ax_max/n_ampl;
+      get_twoJ(ps, twoJ);
+      Id[x_] = sqrt(twoJ[X_]); Id[px_] = sqrt(twoJ[X_]);
+      Id[y_] = sqrt(twoJ[Y_]); Id[py_] = sqrt(twoJ[Y_]);
+      Id[delta_] = ps[delta_];
+      nux = (nus[3]*Id).cst(); nuy = (nus[4]*Id).cst();
+
+      outf << std::scientific << std::setprecision(3)
+	   << std::setw(12) << 1e3*ps[x_] << std::setw(12) << ps[delta_]
+	   << std::fixed << std::setprecision(5)
+	   << " " << std::setw(8) << nux << " " << std::setw(8) << nuy
+	   << std::endl;
+    }
+    outf << std::endl;
+  }
+  outf.close();
+}
+
+
 void get_dnu2(const double Ax_max, const double Ay_max, const double delta)
 {
   char            str[max_str];
@@ -317,51 +354,6 @@ void get_dnu2(const double Ax_max, const double Ay_max, const double delta)
   for (i = -n_ampl; i <= n_ampl; i++) {
     for (j = -n_ampl; j <= n_ampl; j++) {
       ps[x_] = i*Ax_max/n_ampl; ps[y_] = j*Ay_max/n_ampl;
-      get_twoJ(ps, twoJ);
-      Id[x_] = sqrt(twoJ[X_]); Id[px_] = sqrt(twoJ[X_]);
-      Id[y_] = sqrt(twoJ[Y_]); Id[py_] = sqrt(twoJ[Y_]);
-      nux = (nus[3]*Id).cst(); nuy = (nus[4]*Id).cst();
-
-      outf << std::scientific << std::setprecision(3)
-	   << std::setw(12) << 1e3*ps[x_] << std::setw(12) << 1e3*ps[y_]
-	   << std::fixed << std::setprecision(5)
-	   << " " << std::setw(8) << nux << " " << std::setw(8) << nuy
-	   << std::endl;
-    }
-    outf << std::endl;
-  }
-  outf.close();
-}
-
-
-void get_dnu3(const double Ax_max, const double Ay_max, const double delta)
-{
-  char            str[max_str];
-  int             i, j, k;
-  double          twoJ[2], nux, nuy;
-  ss_vect<double> ps;
-  ss_vect<tps>    Id;
-  std::ifstream   inf;
-  std::ofstream   outf;
-
-  const int
-    n_ampl  = 10;
-    n_delta =  5;
-
-  if (false) {
-    sprintf(str, "%s%s", home_dir, "/Thor-2.0/thor/wrk");
-    file_rd(inf, strcat(str, "/nus.dat"));
-    inf >> nus[3] >> nus[4];
-    inf.close();
-  }
-
-  file_wr(outf, "dnu_dAxy_pert.out");
-  Id.zero(); Id[delta_] = delta;
-  ps.zero();
-  for (j = -n_delta; j <= n_delta; j++) {
-  for (j = -n_ampl; j <= n_ampl; j++) {
-    for (k = -n_ampl; k <= n_ampl; k++) {
-      ps[x_] = j*Ax_max/n_ampl; ps[y_] = k*Ay_max/n_ampl;
       get_twoJ(ps, twoJ);
       Id[x_] = sqrt(twoJ[X_]); Id[px_] = sqrt(twoJ[X_]);
       Id[y_] = sqrt(twoJ[Y_]); Id[py_] = sqrt(twoJ[Y_]);
@@ -482,9 +474,9 @@ int main(int argc, char *argv[])
   // Note, nus are in Floquet space.
   get_A();
 
-  get_dnu(A_max[X_], A_max[Y_], delta_max);
+  // get_dnu(A_max[X_], A_max[Y_], delta_max);
 
-//  get_dnu2(Ax, Ay, 0.0);
+  get_dnu_x_delta(A_max[X_], 0.1e-3, delta_max);
 
-//  get_dnu2(Ax, Ay, 2.5e-2);
+  // get_dnu2(Ax, Ay, 0.0);
 }
