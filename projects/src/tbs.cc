@@ -1,6 +1,6 @@
 #include <cfloat>
 
-#define NO 7
+#define NO 6
 
 #include "thor_lib.h"
 
@@ -48,9 +48,15 @@ const double
 // M-H6BA-17E-69pm-04.02-01
   beta_inj[]     = {11.1, 5.5},
 #endif
+#if 0
   A_max[]        = {3.5e-3, 1.5e-3},
   delta_max      = 2e-2,
   A_delta_max[]  = {2e-3, 0.1e-3},
+#else
+  A_max[]        = {3e-3, 1.5e-3},
+  delta_max      = 1.8e-2,
+  A_delta_max[]  = {1.8e-3, 0.1e-3},
+#endif
   ksi_1[]        = {0.0/n_cell, 0.0/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(A_delta_max[X_])/beta_inj[X_],
@@ -849,7 +855,7 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[4], 0, 0, 0, 0, 2),
 	 2e0*h_ijklm(nus_scl[4], 0, 0, 0, 0, 4));
 
-  printf("delta^3:\n %11.3e %11.3e\n",
+  printf("delta^3, delta^5:\n %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 3),
 	 5e0/3e0*h_ijklm(nus_scl[3], 0, 0, 0, 0, 5));
   printf(" %11.3e %11.3e\n",
@@ -869,13 +875,6 @@ void prt_dnu(void)
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2),
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 2));
-
-  printf("J*delta^3:\n %11.3e %11.3e\n",
-	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 3),
-	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 3));
-  printf(" %11.3e %11.3e\n",
-	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 3),
-	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 3));
 
   printf("J^2*delta:\n %11.3e %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 1),
@@ -1126,10 +1125,12 @@ double get_chi2(const bool prt)
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 2)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 2)));
 
-	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 1, 1, 0, 0, 3)));
-	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 1, 1, 3)));
-	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 1, 1, 3)));
-	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 3)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 2, 2, 0, 0, 1)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 1, 1, 1, 1, 1)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 2, 2, 1)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 0, 0, 2, 2, 1)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 1, 1, 1)));
+	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 2, 2, 0, 0, 1)));
       }
    }
 
@@ -1617,32 +1618,22 @@ void lat_select(void)
   case 2:
     // Then balance terms.
     // 3+2 b_3, 1 b_4.
-    if (false) {
-      bn_prms.add_prm("sf1", 4, -bn_max[4], bn_max[4], dbn[4]);
-      bn_prms.add_prm("sd1", 4, -bn_max[4], bn_max[4], dbn[4]);
-      bn_prms.add_prm("sd2", 4, -bn_max[4], bn_max[4], dbn[4]);
-      bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], dbn[5]);
-      bn_prms.add_prm("sd1", 5, -bn_max[5], bn_max[5], dbn[5]);
-      bn_prms.add_prm("sd2", 5, -bn_max[5], bn_max[5], dbn[5]);
-    }
-
-    if (!false) bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], dbn[5]);
-
-    if (false) {
-      bn_prms.add_prm("s3",  4, -bn_max[4], bn_max[4], dbn[4]);
-      bn_prms.add_prm("s",   4, -bn_max[4], bn_max[4], dbn[4]);
-      bn_prms.add_prm("sh2", 4, -bn_max[4], bn_max[4], dbn[4]);
-    }
-
-    if (!false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
-
-    if (!false) bn_prms.add_prm("s3",  3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
-    bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
-
     bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
+
+    bn_prms.add_prm("sh1", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("sh2", 3, -bn_max[3], bn_max[3], dbn[3]);
+    bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
+
+    if (!false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
+    if (false) bn_prms.add_prm("of2", 5, -bn_max[5], bn_max[5], dbn[5]);
+
+    if (false) {
+      bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], dbn[5]);
+      bn_prms.add_prm("sd1", 5, -bn_max[5], bn_max[5], dbn[5]);
+      // bn_prms.add_prm("sd2", 5, -bn_max[5], bn_max[5], dbn[5]);
+    }
     break;
   default:
     printf("\nlat_select: unknown case\n");
