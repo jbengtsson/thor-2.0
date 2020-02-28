@@ -848,7 +848,18 @@ void prt_dnu(void)
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 0),
 	 2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0));
 
-  printf("delta^2, delta^4:\n %11.3e %11.3e\n",
+  printf("\nJ^3:\n %11.3e %11.3e %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[3], 3, 3, 0, 0, 0),
+	 h_ijklm(nus_scl[3], 2, 2, 1, 1, 0),
+	 h_ijklm(nus_scl[3], 1, 1, 2, 2, 0),
+	 h_ijklm(nus_scl[3], 0, 0, 3, 3, 0));
+  printf(" %11.3e %11.3e %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[4], 0, 0, 3, 3, 0),
+	 h_ijklm(nus_scl[4], 1, 1, 2, 2, 0),
+	 h_ijklm(nus_scl[4], 2, 2, 1, 1, 0),
+	 h_ijklm(nus_scl[4], 3, 3, 0, 0, 0));
+
+  printf("\ndelta^2, delta^4:\n %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[3], 0, 0, 0, 0, 2),
 	 2e0*h_ijklm(nus_scl[3], 0, 0, 0, 0, 4));
   printf(" %11.3e %11.3e\n",
@@ -875,6 +886,13 @@ void prt_dnu(void)
   printf(" %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 2),
 	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 2));
+
+  printf("J*delta^3:\n %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[3], 1, 1, 0, 0, 3),
+	 h_ijklm(nus_scl[3], 0, 0, 1, 1, 3));
+  printf(" %11.3e %11.3e\n",
+	 h_ijklm(nus_scl[4], 0, 0, 1, 1, 3),
+	 h_ijklm(nus_scl[4], 1, 1, 0, 0, 3));
 
   printf("J^2*delta:\n %11.3e %11.3e %11.3e\n",
 	 h_ijklm(nus_scl[3], 2, 2, 0, 0, 1),
@@ -1104,7 +1122,7 @@ double get_chi2(const bool prt)
       b_extra.push_back(scl*sqr(h_ijklm(nus_scl[4], 1, 1, 0, 0, 0)));
       b_extra.push_back(scl*sqr(2e0*h_ijklm(nus_scl[4], 2, 2, 0, 0, 0)));
 
-      if (!false) {
+      if (false) {
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 2)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 3)));
 	b_extra.push_back(scl*sqr(h_ijklm(nus_scl[3], 0, 0, 0, 0, 4)));
@@ -1603,9 +1621,9 @@ void lat_select(void)
 {
 
   const double
-    //                         b_3   b_4  b_5  b_6
-    bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9},
-    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0};
+    //                         b_3   b_4  b_5  b_6  b_7
+    bn_max[] = {0e0, 0e0, 0e0, 2e3,  1e6, 5e7, 1e9, 1e12},
+    dbn[]    = {0e0, 0e0, 0e0, 1e-2, 1e0, 1e1, 1e0, 1e0};
 
   switch (2) {
   case 1:
@@ -1617,7 +1635,7 @@ void lat_select(void)
     break;
   case 2:
     // Then balance terms.
-    // 3+2 b_3, 1 b_4.
+    // 3+3 b_3, 1 b_4.
     bn_prms.add_prm("sf1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd1", 3, -bn_max[3], bn_max[3], dbn[3]);
     bn_prms.add_prm("sd2", 3, -bn_max[3], bn_max[3], dbn[3]);
@@ -1627,13 +1645,6 @@ void lat_select(void)
     bn_prms.add_prm("s",   3, -bn_max[3], bn_max[3], dbn[3]);
 
     if (!false) bn_prms.add_prm("of1", 4, -bn_max[4], bn_max[4], dbn[4]);
-    if (false) bn_prms.add_prm("of2", 5, -bn_max[5], bn_max[5], dbn[5]);
-
-    if (false) {
-      bn_prms.add_prm("sf1", 5, -bn_max[5], bn_max[5], dbn[5]);
-      bn_prms.add_prm("sd1", 5, -bn_max[5], bn_max[5], dbn[5]);
-      // bn_prms.add_prm("sd2", 5, -bn_max[5], bn_max[5], dbn[5]);
-    }
     break;
   default:
     printf("\nlat_select: unknown case\n");
