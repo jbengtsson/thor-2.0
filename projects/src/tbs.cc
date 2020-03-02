@@ -1742,7 +1742,7 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    // no_mpoles(3);
+    no_mpoles(3);
     bn_prms.add_prm("sf1", 3, -5e3, 5e3, 1e-2);
     bn_prms.add_prm("sd1", 3, -5e3, 5e3, 1e-2);
     bn_prms.add_prm("sd2", 3, -5e3, 5e3, 1e-2);
