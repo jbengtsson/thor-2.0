@@ -1167,6 +1167,8 @@ double get_chi2(const bool prt)
     printf("\n  ksi1        = [%7.5f, %7.5f] ([%9.3e, %9.3e])\n",
 	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
 	   b[k].cst(), b[k+1].cst());
+    printf("  ksi2        = [%7.5f, %7.5f]\n",
+	   h_ijklm(nus[3], 0, 0, 0, 0, 2), h_ijklm(nus[4], 0, 0, 0, 0, 2));
     k += 2;
     printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
     	   b[k].cst(), b[k+1].cst(), b[k+2].cst(), b[k+3].cst());
