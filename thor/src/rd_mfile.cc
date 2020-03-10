@@ -67,31 +67,31 @@ void clr_mpole(mpole_type<T> *mpole)
   int  i;
 
   mpole->method = 0; mpole->n_step = 0;
-  mpole->dx_sys[X_] = 0.0; mpole->dx_sys[Y_] = 0.0;
-  mpole->dx_rms[X_] = 0.0; mpole->dx_rms[Y_] = 0.0;
-  mpole->dx_rnd[X_] = 0.0; mpole->dx_rnd[Y_] = 0.0;
-  mpole->droll_par = 0.0; mpole->droll_sys = 0.0; mpole->droll_rms = 0.0;
-  mpole->droll_rnd = 0.0;
+  mpole->dx_sys[X_] = 0e0; mpole->dx_sys[Y_] = 0e0;
+  mpole->dx_rms[X_] = 0e0; mpole->dx_rms[Y_] = 0e0;
+  mpole->dx_rnd[X_] = 0e0; mpole->dx_rnd[Y_] = 0e0;
+  mpole->droll_par = 0e0; mpole->droll_sys = 0e0; mpole->droll_rms = 0e0;
+  mpole->droll_rnd = 0e0;
   for (i = 0; i < mpole_max; i++) {
-    mpole->an_par[i] = 0.0; mpole->an_sys[i] = 0.0; mpole->an_rms[i] = 0.0;
-    mpole->an_rnd[i] = 0.0; mpole->an[i] = 0.0;
-    mpole->bn_par[i] = 0.0; mpole->bn_sys[i] = 0.0; mpole->bn_rms[i] = 0.0;
-    mpole->bn_rnd[i] = 0.0; mpole->bn[i] = 0.0;
+    mpole->an_par[i] = 0e0; mpole->an_sys[i] = 0e0; mpole->an_rms[i] = 0e0;
+    mpole->an_rnd[i] = 0e0; mpole->an[i] = 0e0;
+    mpole->bn_par[i] = 0e0; mpole->bn_sys[i] = 0e0; mpole->bn_rms[i] = 0e0;
+    mpole->bn_rnd[i] = 0e0; mpole->bn[i] = 0e0;
   }
-  mpole->order = 0; mpole->n_design = 0; mpole->edge1 = 0.0;
-  mpole->edge2 = 0.0; mpole->gap = 0.0; mpole->h_bend = 0.0;
+  mpole->order = 0; mpole->n_design = 0; mpole->edge1 = 0e0;
+  mpole->edge2 = 0e0; mpole->gap = 0e0; mpole->h_bend = 0e0;
 }
 
 template<typename T>
 void clr_elem(elem_type<T> &elem)
 {
-  elem.L = 0.0; elem.S = 0.0; elem.Fnum = 0; elem.Knum = 0;
-  elem.dx[X_] = 0.0; elem.dx[Y_] = 0.0;
-  elem.droll[X_] = 0.0; elem.droll[Y_] = 0.0; elem.droll_par = 0.0;
-  elem.c0 = 0.0; elem.c1 = 0.0; elem.s1 = 0.0;
+  elem.L = 0e0; elem.S = 0e0; elem.Fnum = 0; elem.Knum = 0;
+  elem.dx[X_] = 0e0; elem.dx[Y_] = 0e0;
+  elem.droll[X_] = 0e0; elem.droll[Y_] = 0e0; elem.droll_par = 0e0;
+  elem.c0 = 0e0; elem.c1 = 0e0; elem.s1 = 0e0;
   elem.kind = Undef;
-  elem.max_ampl[X_][0] = 0.0; elem.max_ampl[X_][0] = 0.0;
-  elem.max_ampl[Y_][0] = 0.0; elem.max_ampl[Y_][0] = 0.0;
+  elem.max_ampl[X_][0] = 0e0; elem.max_ampl[X_][0] = 0e0;
+  elem.max_ampl[Y_][0] = 0e0; elem.max_ampl[Y_][0] = 0e0;
 }
 
 void clr_Family(void)
@@ -170,7 +170,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 
       switch (elem[ind].kind) {
       case Marker:
-	L = 0.0;
+	L = 0e0;
 	break ;
       case Drift:
 	// Note, L is polymorphic
@@ -231,7 +231,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	       &elem[ind].cavity->h_rf, &E0, &elem[ind].cavity->phi_rf);
 	elem[ind].cavity->V_rf = elem[ind].cavity->V_rf*E0;
 	elem[ind].cavity->f_rf = elem[ind].cavity->f_rf*clight/(2.0*pi);
-	E0 = E0/1e9; L = 0.0;
+	E0 = E0/1e9; L = 0e0;
 	break;
       case Thinkick:
 	elem[ind].kind = Mpole;
@@ -246,7 +246,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
 	sscanf(line, "%lf %lf %lf", &elem[ind].dx[X_],
 	       &elem[ind].dx[Y_], &drerror);
 
-	L = 0.0;
+	L = 0e0;
 	elem[ind].droll[X_] = cos(dtor(drerror));
 	elem[ind].droll[Y_] = sin(dtor(drerror));
 	elem[ind].c0 = sin(L*elem[ind].mpole->h_bend/2.0);
@@ -336,7 +336,9 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       break;
       case Map_:
 	elem[ind].map = new map_type;
-	Id.identity(); elem[ind].map->M.zero();
+	Id.identity();
+	L = 0e0;
+	elem[ind].map->M.zero();
 	for (j = 0; j < n_ps; j++) {
 	  inf.getline(line, line_max);
 	  if (prt) printf("%s\n", line);
@@ -357,7 +359,7 @@ void rd_mfile(const char file_name[], elem_type<T> elem[])
       elem[ind].L = L;
 
       if (ind == 0)
-	elem[ind].S = 0.0;
+	elem[ind].S = 0e0;
       else
 	elem[ind].S = elem[ind-1].S + L;
     } else {
