@@ -456,6 +456,10 @@ void prt_drv_terms(const tps &h_re, const tps &h_im, const tps &K_re)
   printf("  k_11110 = %12.5e\n", h_ijklm(K_re, 1, 1, 1, 1, 0));
   printf("  k_00220 = %12.5e\n", h_ijklm(K_re, 0, 0, 2, 2, 0));
 
+  printf("\nSecond order chromaticity:\n");
+  printf("  k_11002 = %12.5e\n", h_ijklm(K_re, 1, 1, 0, 0, 2));
+  printf("  k_00112 = %12.5e\n", h_ijklm(K_re, 0, 0, 1, 1, 2));
+
   printf("\nSecond order cross terms:\n");
   printf("  k_22001 = %12.5e\n", h_ijklm(K_re, 2, 2, 0, 0, 1));
   printf("  k_11111 = %12.5e\n", h_ijklm(K_re, 1, 1, 1, 1, 1));
