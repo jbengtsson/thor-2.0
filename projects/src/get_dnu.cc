@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -402,10 +402,75 @@ void wtf()
 }
 
 
+void prt_drv_terms(const tps &h_re, const tps &h_im, const tps &K_re)
+{
+  printf("\nFirst order chromatic terms:\n");
+  printf("  h_11001: %12.5e\n", h_ijklm(h_re, 1, 1, 0, 0, 1));
+  printf("  h_00111: %12.5e\n", h_ijklm(h_re, 0, 0, 1, 1, 1));
+
+  printf("\n  h_20001 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 2, 0, 0, 0, 1), h_ijklm(h_im, 2, 0, 0, 0, 1));
+  printf("  h_00201 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 0, 0, 2, 0, 1), h_ijklm(h_im, 0, 0, 2, 0, 1));
+  printf("  h_10002 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 1, 0, 0, 0, 2), h_ijklm(h_im, 1, 0, 0, 0, 2));
+
+  printf("\nFirst order geometric terms:\n");
+  printf("  h_30000 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 3, 0, 0, 0, 0), h_ijklm(h_im, 3, 0, 0, 0, 0));
+  printf("  h_21000 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 2, 1, 0, 0, 0), h_ijklm(h_im, 2, 1, 0, 0, 0));
+  printf("  h_10200 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 1, 0, 2, 0, 0), h_ijklm(h_im, 1, 0, 2, 0, 0));
+  printf("  h_10110 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 1, 0, 1, 1, 0), h_ijklm(h_im, 1, 0, 1, 1, 0));
+  printf("  h_10020 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 1, 0, 0, 2, 0), h_ijklm(h_im, 1, 0, 0, 2, 0));
+ 
+  printf("\nSecond order geometric terms:\n");
+  printf("  h_40000 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 4, 0, 0, 0, 0), h_ijklm(h_im, 4, 0, 0, 0, 0));
+  printf("  h_31000 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 3, 1, 0, 0, 0), h_ijklm(h_im, 3, 1, 0, 0, 0));
+  printf("  h_22000 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 2, 2, 0, 0, 0), h_ijklm(h_im, 2, 2, 0, 0, 0));
+  printf("  h_20200 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 2, 0, 2, 0, 0), h_ijklm(h_im, 2, 0, 2, 0, 0));
+  printf("  h_11200 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 1, 1, 2, 0, 0), h_ijklm(h_im, 1, 1, 2, 0, 0));
+  printf("  h_20110 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 2, 0, 1, 1, 0), h_ijklm(h_im, 2, 0, 1, 1, 0));
+  printf("  h_11110 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 1, 1, 1, 1, 0), h_ijklm(h_im, 1, 1, 1, 1, 0));
+  printf("  h_00310 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 0, 0, 3, 1, 0), h_ijklm(h_im, 0, 0, 3, 1, 0));
+  printf("  h_20020 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 2, 0, 0, 2, 0), h_ijklm(h_im, 2, 0, 0, 2, 0));
+  printf("  h_00400 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 0, 0, 4, 0, 0), h_ijklm(h_im, 0, 0, 4, 0, 0));
+  printf("  h_00220 = [%12.5e, %12.5e]\n",
+	 h_ijklm(h_re, 0, 0, 2, 2, 0), h_ijklm(h_im, 0, 0, 2, 2, 0));
+
+  printf("\nSecond order anharmonic terms:\n");
+  printf("  k_22000 = %12.5e\n", h_ijklm(K_re, 2, 2, 0, 0, 0));
+  printf("  k_11110 = %12.5e\n", h_ijklm(K_re, 1, 1, 1, 1, 0));
+  printf("  k_00220 = %12.5e\n", h_ijklm(K_re, 0, 0, 2, 2, 0));
+
+  printf("\nSecond order chromaticity:\n");
+  printf("  k_11002 = %12.5e\n", h_ijklm(K_re, 1, 1, 0, 0, 2));
+  printf("  k_00112 = %12.5e\n", h_ijklm(K_re, 0, 0, 1, 1, 2));
+
+  printf("\nSecond order cross terms:\n");
+  printf("  k_22001 = %12.5e\n", h_ijklm(K_re, 2, 2, 0, 0, 1));
+  printf("  k_11111 = %12.5e\n", h_ijklm(K_re, 1, 1, 1, 1, 1));
+  printf("  k_00221 = %12.5e\n", h_ijklm(K_re, 0, 0, 2, 2, 1));
+}
+
+
 int main(int argc, char *argv[])
 {
-  tps           H, H_re, H_im, g_re, g_im, K_re, K_im;
-  ss_vect<tps>  Id;
+  tps           h_re, h_im, g_re, g_im, K_re, K_im;
+  ss_vect<tps>  Id_scl;
   std::ofstream outf;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
@@ -427,8 +492,10 @@ int main(int argc, char *argv[])
 
   danot_(1);
 
-  // get_twiss(1, n_elem); calc_twiss();
-  prt_lat("linlat.out");
+  if (!false) {
+    // get_twiss(1, n_elem); calc_twiss();
+    prt_lat("linlat.out");
+  }
 
   danot_(no_tps-1);
 
@@ -437,35 +504,34 @@ int main(int argc, char *argv[])
 
   danot_(no_tps);
   get_map_normal_form(); nus = dHdJ(K);
-
   CtoR(K, K_re, K_im); CtoR(g, g_re, g_im);
 
-  Id.identity();
-  Id[x_] *= sqrt(twoJ[X_]); Id[px_] *= sqrt(twoJ[X_]);
-  Id[y_] *= sqrt(twoJ[Y_]); Id[py_] *= sqrt(twoJ[Y_]);
-  Id[delta_] *= delta_max;
+  Id_scl.identity();
+  Id_scl[x_] *= sqrt(twoJ[X_]); Id_scl[px_] *= sqrt(twoJ[X_]);
+  Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
+  Id_scl[delta_] *= delta_max;
 
   if (true) {
-//    H = get_H(); CtoR(H, H_re, H_im);
+    CtoR(get_h(), h_re, h_im);
 
-//    outf.open("H.dat", ios::out);
-//    outf << H_re*Id;
-//    outf.close();
+    prt_drv_terms(h_re, h_im, K_re);
+
+    outf.open("h.dat", std::ios::out);
+    outf << h_re << h_im;
+    outf.close();
 
     outf.open("K.dat", std::ios::out);
     outf << K_re;
     outf.close();
 
     outf.open("g.dat", std::ios::out);
-    outf << g_im;
+    outf << g_re << g_im;
     outf.close();
 
-//    cout << N*nus[3]*Id << N*nus[4]*Id;
+//    cout << N*nus[3]*Id_scl << N*nus[4]*Id_scl;
 
     outf.open("nus.dat", std::ios::out);
-    // Remove numeric noise.
-    daeps_(1e-2);
-    outf << 1e0*nus[3] << 1e0*nus[4];
+    outf << nus[3] << nus[4];
     outf.close();
   }
 

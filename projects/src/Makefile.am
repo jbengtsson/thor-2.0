@@ -48,7 +48,7 @@ AM_CPPFLAGS = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc  \
               -I$(HOME)/R-2.8.1/include \
 	      -I/usr/local/include -I/usr/include/openmpi
 
-#AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend -fPIC -Wl,--no-relax
-AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend -fPIC
+AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend -fPIC -Wl,--no-relax
+#AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend -fPIC
 #CXXFLAGS = -g -Wl,-stack_size -Wl,0x40000000 -O2 -Wall -Wno-non-template-friend
 UNLIMIT_RESOURCES = datasize memorysize stacksize
