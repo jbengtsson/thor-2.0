@@ -42,8 +42,8 @@ const int n_cell = 6;
 // Center of straight.
 const double
 #if LAT_CASE == 1
-// M-H6BA-18-99pm-01.12-01.
-  beta_inj[]     = {11.3, 7.1},
+// M-H6BA-18-99pm-01.14-01.
+  beta_inj[]     = {10.7, 6.5},
 #elif LAT_CASE == 2
 // M-H6BA-17E-69pm-04.02-01
   beta_inj[]     = {11.1, 5.5},
@@ -60,7 +60,7 @@ const double
   ksi_1[]        = {0.0/n_cell, 0.0/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(A_delta_max[X_])/beta_inj[X_],
-		    sqr(A_delta_max[Y_])/beta_inj[Y_]};
+		    sqr(A_delta_max[Y_])/beta_inj[Y_]},
 
 const double
   scl_h[]        = {0e0, 0e0, 0e0},
@@ -1167,7 +1167,7 @@ double get_chi2(const bool prt)
     printf("\n  ksi1        = [%7.5f, %7.5f] ([%9.3e, %9.3e])\n",
 	   h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1),
 	   b[k].cst(), b[k+1].cst());
-    printf("  ksi2        = [%7.5f, %7.5f]\n",
+    printf("  ksi2        = [%10.3e, %10.3e]\n",
 	   h_ijklm(nus[3], 0, 0, 0, 0, 2), h_ijklm(nus[4], 0, 0, 0, 0, 2));
     k += 2;
     printf("\n  Tune Conf.:   %10.3e %10.3e %10.3e %10.3e\n",
