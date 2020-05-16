@@ -16,8 +16,9 @@ AC_PROG_CPP
 AC_PROG_RANLIB
 #AC_PROG_CXX(gjb)
 AC_PROG_CXX
+AC_PROG_F77(gfortran-9)
 #AC_PROG_F77(g77)
-AC_PROG_F77(gfortran)
+#AC_PROG_F77(gfortran)
 #AC_PROG_F77(g95)
 
 # Checks for libraries.

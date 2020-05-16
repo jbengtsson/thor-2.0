@@ -60,7 +60,7 @@ const double
   ksi_1[]        = {0.0/n_cell, 0.0/n_cell},
   twoJ[]         = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
   twoJ_delta[]   = {sqr(A_delta_max[X_])/beta_inj[X_],
-		    sqr(A_delta_max[Y_])/beta_inj[Y_]},
+		    sqr(A_delta_max[Y_])/beta_inj[Y_]};
 
 const double
   scl_h[]        = {0e0, 0e0, 0e0},

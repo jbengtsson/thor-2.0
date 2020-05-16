@@ -10,8 +10,8 @@ const double
   // beta_inj[] = {8.7, 2.1},
   // A_max[]    = {5e-3, 1.5e-3},
   // delta_max  = 3e-2,
-  beta_inj[] = {9.7, 5.9},
-  A_max[]    = {1.5e-3, 2.5e-3},
+  beta_inj[] = {10.7, 6.5},
+  A_max[]    = {3.5e-3, 1.5e-3},
   delta_max  = 2e-2,
   // beta_inj[] = {4.1, 1.8},
   // A_max[]    = {4e-3, 2.5e-3},
@@ -405,8 +405,8 @@ void wtf()
 void prt_drv_terms(const tps &h_re, const tps &h_im, const tps &K_re)
 {
   printf("\nFirst order chromatic terms:\n");
-  printf("  h_11001: %12.5e\n", h_ijklm(h_re, 1, 1, 0, 0, 1));
-  printf("  h_00111: %12.5e\n", h_ijklm(h_re, 0, 0, 1, 1, 1));
+  printf("  k_11001: %12.5e\n", h_ijklm(K_re, 1, 1, 0, 0, 1));
+  printf("  k_00111: %12.5e\n", h_ijklm(K_re, 0, 0, 1, 1, 1));
 
   printf("\n  h_20001 = [%12.5e, %12.5e]\n",
 	 h_ijklm(h_re, 2, 0, 0, 0, 1), h_ijklm(h_im, 2, 0, 0, 0, 1));
@@ -514,7 +514,7 @@ int main(int argc, char *argv[])
   if (true) {
     CtoR(get_h(), h_re, h_im);
 
-    prt_drv_terms(h_re, h_im, K_re);
+    prt_drv_terms(h_re*Id_scl, h_im*Id_scl, K_re*Id_scl);
 
     outf.open("h.dat", std::ios::out);
     outf << h_re << h_im;
