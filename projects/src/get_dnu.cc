@@ -1,4 +1,4 @@
-#define NO 5
+#define NO 6
 
 #include "thor_lib.h"
 
@@ -22,6 +22,23 @@ const char home_dir[] = "/home/bengtsson";
 
 double       alpha_rad_x, nu0[2];
 ss_vect<tps> A_inv, nus;
+
+
+void chk_lat(void)
+{
+  double       nu[2], ksi[2], alpha[2], beta[2];
+  ss_vect<tps> nus;
+
+  get_COD(10, 1e-10, 0.0, false);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  nus = dHdJ(K); get_nu_ksi(nus, nu, ksi); get_ab(alpha, beta, 0);
+  printf("\n  alpha   = [%9.5f, %9.5f]\n", alpha[X_], alpha[Y_]);
+  printf("  beta    = [%9.5f, %9.5f]\n", beta[X_], beta[Y_]);
+  printf("  nu      = [%9.5f, %9.5f]\n", nu[0], nu[1]);
+  printf("  ksi     = [%9.5f, %9.5f]\n", ksi[0], ksi[1]);
+  printf("  alpha_c = %12.5e\n",
+	 h_ijklm(Map[ct_], 0, 0, 0, 0, 1)/elem[n_elem-1].S);
+}
 
 
 void get_dnu(const ss_vect<tps> &A, double dnu[])
@@ -182,7 +199,7 @@ void get_map_normal_form()
 }
 
 
-void get_A(void)
+ ss_vect<tps> get_A_inv(ss_vect<tps> &A1)
 {
   int          j;
   long int     jj[ss_dim];
@@ -196,24 +213,25 @@ void get_A(void)
 
   for (j = 0; j < ss_dim; j++)
     jj[j] = (j < 4)? 1 : 0;
-  A_inv = PInv(A, jj);
+  return PInv(A, jj);
 }
 
 
-void get_twoJ(const ss_vect<double> &ps, double twoJ[])
+void get_twoJ(const ss_vect<tps> &A_inv, const ss_vect<double> &ps,
+	      double twoJ[])
 {
   int             j;
   ss_vect<double> z;
   ss_vect<tps>    Id;
 
   z = (A_inv*ps).cst();
-
   for (j = 0; j < 2; j++)
     twoJ[j] = sqr(z[2*j]) + sqr(z[2*j+1]);
 }
 
 
-void get_dnu(const double Ax_max, const double Ay_max, const double delta_max)
+void get_dnu(ss_vect<tps> A_inv, const double Ax_max, const double Ay_max,
+	     const double delta_max)
 {
   char            str[max_str];
   int             i;
@@ -225,6 +243,10 @@ void get_dnu(const double Ax_max, const double Ay_max, const double delta_max)
 
   const int    n_ampl = 25, n_delta = 20;
   const double A_min = 1e-6;
+  const std::string
+    file_name1 = "dnu_dAx_pert.out",
+    file_name2 = "dnu_dAy_pert.out",
+    file_name3 = "chrom2_pert.out";
 
   if (false) {
     sprintf(str, "%s%s", home_dir, "/Thor-2.0/thor/wrk");
@@ -233,15 +255,15 @@ void get_dnu(const double Ax_max, const double Ay_max, const double delta_max)
     inf.close();
   }
 
-//  sprintf(str, "%s%s", home_dir, "/projects/src/");
-//  file_wr(outf, strcat(str, "dnu_dAx_pert.out"));
-  file_wr(outf, "dnu_dAx_pert.out");
+  // sprintf(str, "%s%s", home_dir, "/projects/src/");
+  // file_wr(outf, strcat(str, "dnu_dAx_pert.out"));
+  file_wr(outf, file_name1.c_str());
   Id.zero(); ps.zero();
   for (i = -n_ampl; i <= n_ampl; i++) {
     ps[x_] = i*Ax_max/n_ampl;
     if (ps[x_] == 0.0) ps[x_] = A_min;
     ps[y_] = A_min;
-    get_twoJ(ps, twoJ);
+    get_twoJ(A_inv, ps, twoJ);
     Id[x_] = sqrt(twoJ[X_]); Id[px_] = sqrt(twoJ[X_]);
     Id[y_] = sqrt(twoJ[Y_]); Id[py_] = sqrt(twoJ[Y_]);
     nux = (nus[3]*Id).cst(); nuy = (nus[4]*Id).cst();
@@ -253,16 +275,16 @@ void get_dnu(const double Ax_max, const double Ay_max, const double delta_max)
   }
   outf.close();
 
-//  sprintf(str, "%s%s", home_dir, "/projects/src/");
-//  file_wr(outf, strcat(str, "dnu_dAy_pert.out"));
-  file_wr(outf, "dnu_dAy_pert.out");
+  // sprintf(str, "%s%s", home_dir, "/projects/src/");
+  // file_wr(outf, strcat(str, "dnu_dAy_pert.out"));
+  file_wr(outf, file_name2.c_str());
   Id.zero(); ps.zero();
   for (i = -n_ampl; i <= n_ampl; i++) {
     ps[x_] = A_min;
     ps[y_] = i*Ay_max/n_ampl;
     if (ps[y_] == 0.0) ps[y_] = A_min;
-//    get_twoJ(2, ps, A1, twoJ);
-    get_twoJ(ps, twoJ);
+    // get_twoJ(2, ps, A1, twoJ);
+    get_twoJ(A_inv, ps, twoJ);
     Id[x_] = sqrt(twoJ[X_]); Id[px_] = sqrt(twoJ[X_]);
     Id[y_] = sqrt(twoJ[Y_]); Id[py_] = sqrt(twoJ[Y_]);
     nux = (nus[3]*Id).cst(); nuy = (nus[4]*Id).cst();
@@ -274,9 +296,9 @@ void get_dnu(const double Ax_max, const double Ay_max, const double delta_max)
   }
   outf.close();
 
-//  sprintf(str, "%s%s", home_dir, "/projects/src/");
-//  file_wr(outf, strcat(str, "chrom2_pert.out"));
-  file_wr(outf, "chrom2_pert.out");
+  // sprintf(str, "%s%s", home_dir, "/projects/src/");
+  // file_wr(outf, strcat(str, "chrom2_pert.out"));
+  file_wr(outf, file_name3.c_str());
   Id.zero(); ps.zero();
   for (i = -n_delta; i <= n_delta; i++) {
     ps[delta_] = i*delta_max/n_delta; Id[delta_] = ps[delta_];
@@ -292,7 +314,7 @@ void get_dnu(const double Ax_max, const double Ay_max, const double delta_max)
 }
 
 
-void get_dnu_x_delta(const double Ax_max, const double Ay,
+void get_dnu_x_delta(ss_vect<tps> A_inv, const double Ax_max, const double Ay,
 		     const double delta_max)
 {
   int             i, j;
@@ -302,16 +324,17 @@ void get_dnu_x_delta(const double Ax_max, const double Ay,
   std::ifstream   inf;
   std::ofstream   outf;
 
-  const int n_ampl = 10, n_delta = 5;
+  const int         n_ampl = 10, n_delta = 5;
+  const std::string file_name = "dnu_dA_x_delta_pert.out";
 
-  file_wr(outf, "dnu_dA_x_delta_pert.out");
+  file_wr(outf, file_name.c_str());
   Id.zero();
   ps.zero(); ps[y_] = Ay;
   for (i = -n_delta; i <= n_delta; i++) {
     ps[delta_] = i*delta_max/n_delta;
     for (j = -n_ampl; j <= n_ampl; j++) {
       ps[x_] = j*Ax_max/n_ampl;
-      get_twoJ(ps, twoJ);
+      get_twoJ(A_inv, ps, twoJ);
       Id[x_] = sqrt(twoJ[X_]); Id[px_] = sqrt(twoJ[X_]);
       Id[y_] = sqrt(twoJ[Y_]); Id[py_] = sqrt(twoJ[Y_]);
       Id[delta_] = ps[delta_];
@@ -319,6 +342,7 @@ void get_dnu_x_delta(const double Ax_max, const double Ay,
 
       outf << std::scientific << std::setprecision(3)
 	   << std::setw(12) << 1e3*ps[x_] << std::setw(12) << ps[delta_]
+	   <<  std::setw(12) << twoJ[X_] <<  std::setw(12) << twoJ[Y_]
 	   << std::fixed << std::setprecision(5)
 	   << " " << std::setw(8) << nux << " " << std::setw(8) << nuy
 	   << std::endl;
@@ -329,7 +353,8 @@ void get_dnu_x_delta(const double Ax_max, const double Ay,
 }
 
 
-void get_dnu2(const double Ax_max, const double Ay_max, const double delta)
+void get_dnu2(ss_vect<tps> A_inv, const double Ax_max, const double Ay_max,
+	      const double delta)
 {
   char            str[max_str];
   int             i, j;
@@ -339,7 +364,8 @@ void get_dnu2(const double Ax_max, const double Ay_max, const double delta)
   std::ifstream   inf;
   std::ofstream   outf;
 
-  const int n_ampl = 10;
+  const int         n_ampl = 10;
+  const std::string file_name = "dnu_dAxy_pert.out";
 
   if (false) {
     sprintf(str, "%s%s", home_dir, "/Thor-2.0/thor/wrk");
@@ -348,13 +374,13 @@ void get_dnu2(const double Ax_max, const double Ay_max, const double delta)
     inf.close();
   }
 
-  file_wr(outf, "dnu_dAxy_pert.out");
+  file_wr(outf, file_name.c_str());
   Id.zero(); Id[delta_] = delta;
   ps.zero();
   for (i = -n_ampl; i <= n_ampl; i++) {
     for (j = -n_ampl; j <= n_ampl; j++) {
       ps[x_] = i*Ax_max/n_ampl; ps[y_] = j*Ay_max/n_ampl;
-      get_twoJ(ps, twoJ);
+      get_twoJ(A_inv, ps, twoJ);
       Id[x_] = sqrt(twoJ[X_]); Id[px_] = sqrt(twoJ[X_]);
       Id[y_] = sqrt(twoJ[Y_]); Id[py_] = sqrt(twoJ[Y_]);
       nux = (nus[3]*Id).cst(); nuy = (nus[4]*Id).cst();
@@ -402,7 +428,8 @@ void wtf()
 }
 
 
-void prt_drv_terms(const tps &h_re, const tps &h_im, const tps &K_re,
+void prt_drv_terms(const tps &h_re, const tps &h_im,
+		   const tps &g_re, const tps &g_im, const tps &K_re,
 		   const ss_vect<tps> &nus)
 {
   printf("\nLinear chromaticity:\n");
@@ -453,16 +480,16 @@ void prt_drv_terms(const tps &h_re, const tps &h_im, const tps &K_re,
   printf("  h_00220 = [%10.3e, %10.3e]\n",
 	 h_ijklm(h_re, 0, 0, 2, 2, 0), h_ijklm(h_im, 0, 0, 2, 2, 0));
 
+  printf("\nSecond order chromaticity:\n");
+  printf("  ksi2    = [%10.3e, %10.3e]\n",
+	 h_ijklm(nus[3], 0, 0, 0, 0, 2), h_ijklm(nus[4], 0, 0, 0, 0, 2));
+
   printf("\nSecond order anharmonic terms:\n");
   printf("  k_22000 = %10.3e\n", h_ijklm(K_re, 2, 2, 0, 0, 0));
   printf("  k_11110 = %10.3e\n", h_ijklm(K_re, 1, 1, 1, 1, 0));
   printf("  k_00220 = %10.3e\n", h_ijklm(K_re, 0, 0, 2, 2, 0));
 
-  printf("\nSecond order chromaticity:\n");
-  printf("  ksi2    = [%10.3e, %10.3e]\n",
-	 h_ijklm(nus[3], 0, 0, 0, 0, 2), h_ijklm(nus[4], 0, 0, 0, 0, 2));
-
-  printf("\nSecond order cross terms:\n");
+  printf("\nCross terms:\n");
   printf("  k_22001 = %10.3e\n", h_ijklm(K_re, 2, 2, 0, 0, 1));
   printf("  k_11111 = %10.3e\n", h_ijklm(K_re, 1, 1, 1, 1, 1));
   printf("  k_00221 = %10.3e\n", h_ijklm(K_re, 0, 0, 2, 2, 1));
@@ -470,6 +497,16 @@ void prt_drv_terms(const tps &h_re, const tps &h_im, const tps &K_re,
   printf("\nThird order chromaticity:\n");
   printf("  ksi3    = [%10.3e, %10.3e]\n",
 	 h_ijklm(nus[3], 0, 0, 0, 0, 3), h_ijklm(nus[4], 0, 0, 0, 0, 3));
+
+  printf("\nFirst order chromatic terms:\n");
+  printf("  g_20001 = [%10.3e, %10.3e]\n",
+	 h_ijklm(g_re, 2, 0, 0, 0, 1), h_ijklm(g_im, 2, 0, 0, 0, 1));
+  printf("  g_00201 = [%10.3e, %10.3e]\n",
+	 h_ijklm(g_re, 0, 0, 2, 0, 1), h_ijklm(g_im, 0, 0, 2, 0, 1));
+
+  printf("\nFourth order chromaticity:\n");
+  printf("  ksi4    = [%10.3e, %10.3e]\n",
+	 h_ijklm(nus[3], 0, 0, 0, 0, 4), h_ijklm(nus[4], 0, 0, 0, 0, 4));
 }
 
 
@@ -490,6 +527,11 @@ int main(int argc, char *argv[])
 
   // Disable log messages from TPSALib and LieLib.
   idprset(-1);
+
+  if (!false) {
+    danot_(3);
+    chk_lat();
+  }
 
   if (false) {
     wtf();
@@ -520,8 +562,9 @@ int main(int argc, char *argv[])
   if (true) {
     CtoR(get_h(), h_re, h_im);
 
-    Id_scl.identity();
-    prt_drv_terms(h_re*Id_scl, h_im*Id_scl, K_re*Id_scl, nus*Id_scl);
+    // Id_scl.identity();
+    prt_drv_terms(h_re*Id_scl, h_im*Id_scl, g_re*Id_scl, g_im*Id_scl,
+		  K_re*Id_scl, nus*Id_scl);
 
     outf.open("h.dat", std::ios::out);
     outf << h_re << h_im;
@@ -532,7 +575,7 @@ int main(int argc, char *argv[])
     outf.close();
 
     outf.open("g.dat", std::ios::out);
-    outf << g_re << g_im;
+    outf << g_re*Id_scl << g_im*Id_scl;
     outf.close();
 
 //    cout << N*nus[3]*Id_scl << N*nus[4]*Id_scl;
@@ -545,11 +588,11 @@ int main(int argc, char *argv[])
   daeps_(eps_tps);
 
   // Note, nus are in Floquet space.
-  get_A();
+  A_inv = get_A_inv();
 
-  // get_dnu(A_max[X_], A_max[Y_], delta_max);
+  if (!true) get_dnu(A_inv, A_max[X_], A_max[Y_], delta_max);
 
-  get_dnu_x_delta(A_max[X_], 0.1e-3, delta_max);
+  get_dnu_x_delta(A_inv, 2e-3, 0.1e-3, delta_max);
 
-  // get_dnu2(Ax, Ay, 0.0);
+  // get_dnu2(A_inv, Ax, Ay, 0.0);
 }
