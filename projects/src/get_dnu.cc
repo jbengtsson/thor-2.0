@@ -484,12 +484,18 @@ void prt_drv_terms(const tps &h_re, const tps &h_im,
   printf("  ksi2    = [%10.3e, %10.3e]\n",
 	 h_ijklm(nus[3], 0, 0, 0, 0, 2), h_ijklm(nus[4], 0, 0, 0, 0, 2));
 
-  printf("\nSecond order anharmonic terms:\n");
+  printf("\nTune footprint:\n");
   printf("  k_22000 = %10.3e\n", h_ijklm(K_re, 2, 2, 0, 0, 0));
   printf("  k_11110 = %10.3e\n", h_ijklm(K_re, 1, 1, 1, 1, 0));
   printf("  k_00220 = %10.3e\n", h_ijklm(K_re, 0, 0, 2, 2, 0));
 
-  printf("\nCross terms:\n");
+  printf("\n");
+  printf("  k_33000 = %10.3e\n", h_ijklm(K_re, 3, 3, 0, 0, 0));
+  printf("  k_22110 = %10.3e\n", h_ijklm(K_re, 2, 2, 1, 1, 0));
+  printf("  k_11220 = %10.3e\n", h_ijklm(K_re, 1, 1, 2, 2, 0));
+  printf("  k_00330 = %10.3e\n", h_ijklm(K_re, 0, 0, 3, 3, 0));
+
+  printf("\nCross Terms\n");
   printf("  k_22001 = %10.3e\n", h_ijklm(K_re, 2, 2, 0, 0, 1));
   printf("  k_11111 = %10.3e\n", h_ijklm(K_re, 1, 1, 1, 1, 1));
   printf("  k_00221 = %10.3e\n", h_ijklm(K_re, 0, 0, 2, 2, 1));
@@ -528,7 +534,7 @@ int main(int argc, char *argv[])
   // Disable log messages from TPSALib and LieLib.
   idprset(-1);
 
-  if (!false) {
+  if (false) {
     danot_(3);
     chk_lat();
   }
