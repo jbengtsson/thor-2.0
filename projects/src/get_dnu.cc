@@ -7,16 +7,13 @@ int no_tps   = NO,
 
 
 const double
-  // beta_inj[] = {8.7, 2.1},
-  // A_max[]    = {5e-3, 1.5e-3},
-  // delta_max  = 3e-2,
-  beta_inj[] = {10.7, 6.5},
-  A_max[]    = {3.5e-3, 1.5e-3},
-  delta_max  = 2e-2,
-  // beta_inj[] = {4.1, 1.8},
-  // A_max[]    = {4e-3, 2.5e-3},
-  // delta_max  = 4e-2,
-  twoJ[]     = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]};
+  beta_inj[]    = {10.7, 6.5},
+  A_max[]       = {3.5e-3, 1.5e-3},
+  delta_max     = 2e-2,
+  A_delta_max[] = {2e-3, 0.1e-3},
+  twoJ[]        = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
+  twoJ_delta[]  =
+  {sqr(A_delta_max[X_])/beta_inj[X_], sqr(A_delta_max[Y_])/beta_inj[Y_]};
 
 const char home_dir[] = "/home/bengtsson";
 
@@ -411,6 +408,7 @@ void wtf()
 
 
 void prt_drv_terms(const tps &h_re, const tps &h_im, const ss_vect<tps> &nus,
+		   const ss_vect<tps> &nus_delta,
 		   const tps &g_re, const tps &g_im)
 {
   printf("\nLinear chromaticity:\n");
@@ -474,10 +472,19 @@ void prt_drv_terms(const tps &h_re, const tps &h_im, const ss_vect<tps> &nus,
   printf("  nu(2J_y)        = [%10.3e, %10.3e]\n",
 	 h_ijklm(nus[3], 0, 0, 1, 1, 0), h_ijklm(nus[4], 0, 0, 1, 1, 0));
 
+  printf("\n  nu(2J_xˆ2)      = [%10.3e, %10.3e]\n",
+	 h_ijklm(nus[3], 2, 2, 0, 0, 0), h_ijklm(nus[4], 2, 2, 0, 0, 0));
+  printf("  nu(2J_x, 2J_y)  = [%10.3e, %10.3e]\n",
+	 h_ijklm(nus[3], 1, 1, 1, 1, 0), h_ijklm(nus[4], 1, 1, 1, 1, 0));
+  printf("  nu(2J_yˆ2)      = [%10.3e, %10.3e]\n",
+	 h_ijklm(nus[3], 0, 0, 2, 2, 0), h_ijklm(nus[4], 0, 0, 2, 2, 0));
+
   printf("\n  nu(2J_x, delta) = [%10.3e, %10.3e]\n",
-	 h_ijklm(nus[3], 1, 1, 0, 0, 1), h_ijklm(nus[4], 1, 1, 0, 0, 1));
+	 h_ijklm(nus_delta[3], 1, 1, 0, 0, 1),
+	 h_ijklm(nus_delta[4], 1, 1, 0, 0, 1));
   printf("  nu(2J_y, delta) = [%10.3e, %10.3e]\n",
-	 h_ijklm(nus[3], 0, 0, 1, 1, 1), h_ijklm(nus[4], 0, 0, 1, 1, 1));
+	 h_ijklm(nus_delta[3], 0, 0, 1, 1, 1),
+	 h_ijklm(nus_delta[4], 0, 0, 1, 1, 1));
 
   printf("\nChromatic distortions:\n");
   printf("  g_20001         = [%10.3e, %10.3e]\n",
@@ -509,7 +516,7 @@ void prt_drv_terms(const tps &h_re, const tps &h_im, const ss_vect<tps> &nus,
 int main(int argc, char *argv[])
 {
   tps           h_re, h_im, g_re, g_im, K_re, K_im;
-  ss_vect<tps>  Id_scl;
+  ss_vect<tps>  Id_scl, Id_delta_scl;
   std::ofstream outf;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
@@ -555,11 +562,18 @@ int main(int argc, char *argv[])
   Id_scl[y_] *= sqrt(twoJ[Y_]); Id_scl[py_] *= sqrt(twoJ[Y_]);
   Id_scl[delta_] *= delta_max;
 
+  Id_delta_scl.identity();
+  Id_delta_scl[x_]     *= sqrt(twoJ_delta[X_]);
+  Id_delta_scl[px_]    *= sqrt(twoJ_delta[X_]);
+  Id_delta_scl[y_]     *= sqrt(twoJ_delta[Y_]);
+  Id_delta_scl[py_]    *= sqrt(twoJ_delta[Y_]);
+  Id_delta_scl[delta_] *= delta_max;
+
   if (true) {
     CtoR(get_h(), h_re, h_im);
 
-    // Id_scl.identity();
-    prt_drv_terms(h_re*Id_scl, h_im*Id_scl, nus*Id_scl,
+    // Id_scl.identity(); Id_delta_scl.identity();
+    prt_drv_terms(h_re*Id_scl, h_im*Id_scl, nus*Id_scl, nus*Id_delta_scl,
 		  g_re*Id_scl, g_im*Id_scl);
 
     outf.open("h.dat", std::ios::out);
