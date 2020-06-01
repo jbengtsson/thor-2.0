@@ -407,6 +407,15 @@ void wtf()
 }
 
 
+double h_abs_ijklm(const tps &h_re, const tps &h_im,
+		   const int i, const int j, const int k, const int l,
+		   const int m)
+{
+  return sqrt(sqr(h_ijklm(h_re, i, j, k, l, m))
+  	      +sqr(h_ijklm(h_im, i, j, k, l, m)));
+}
+
+
 void prt_drv_terms(const tps &h_re, const tps &h_im, const ss_vect<tps> &nus,
 		   const ss_vect<tps> &nus_delta,
 		   const tps &g_re, const tps &g_im)
@@ -416,48 +425,48 @@ void prt_drv_terms(const tps &h_re, const tps &h_im, const ss_vect<tps> &nus,
 	 h_ijklm(nus[3], 0, 0, 0, 0, 1), h_ijklm(nus[4], 0, 0, 0, 0, 1));
 
   printf("\n3rd order chromatic terms:\n");
-  printf("  h_20001         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 2, 0, 0, 0, 1), h_ijklm(h_im, 2, 0, 0, 0, 1));
-  printf("  h_00201         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 0, 0, 2, 0, 1), h_ijklm(h_im, 0, 0, 2, 0, 1));
-  printf("  h_10002         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 1, 0, 0, 0, 2), h_ijklm(h_im, 1, 0, 0, 0, 2));
+  printf("  h_20001         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 2, 0, 0, 0, 1));
+  printf("  h_00201         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 0, 0, 2, 0, 1));
+  printf("  h_10002         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 1, 0, 0, 0, 2));
 
   printf("\n3rd order geometric terms:\n");
-  printf("  h_30000         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 3, 0, 0, 0, 0), h_ijklm(h_im, 3, 0, 0, 0, 0));
-  printf("  h_21000         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 2, 1, 0, 0, 0), h_ijklm(h_im, 2, 1, 0, 0, 0));
-  printf("  h_10200         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 1, 0, 2, 0, 0), h_ijklm(h_im, 1, 0, 2, 0, 0));
-  printf("  h_10110         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 1, 0, 1, 1, 0), h_ijklm(h_im, 1, 0, 1, 1, 0));
-  printf("  h_10020         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 1, 0, 0, 2, 0), h_ijklm(h_im, 1, 0, 0, 2, 0));
+  printf("  h_30000         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 3, 0, 0, 0, 0));
+  printf("  h_21000         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 2, 1, 0, 0, 0));
+  printf("  h_10200         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 1, 0, 2, 0, 0));
+  printf("  h_10110         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 1, 0, 1, 1, 0));
+  printf("  h_10020         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 1, 0, 0, 2, 0));
  
   printf("\n4th order geometric terms:\n");
-  printf("  h_40000         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 4, 0, 0, 0, 0), h_ijklm(h_im, 4, 0, 0, 0, 0));
-  printf("  h_31000         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 3, 1, 0, 0, 0), h_ijklm(h_im, 3, 1, 0, 0, 0));
-  printf("  h_22000         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 2, 2, 0, 0, 0), h_ijklm(h_im, 2, 2, 0, 0, 0));
-  printf("  h_20200         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 2, 0, 2, 0, 0), h_ijklm(h_im, 2, 0, 2, 0, 0));
-  printf("  h_11200         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 1, 1, 2, 0, 0), h_ijklm(h_im, 1, 1, 2, 0, 0));
-  printf("  h_20110         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 2, 0, 1, 1, 0), h_ijklm(h_im, 2, 0, 1, 1, 0));
-  printf("  h_11110         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 1, 1, 1, 1, 0), h_ijklm(h_im, 1, 1, 1, 1, 0));
-  printf("  h_00310         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 0, 0, 3, 1, 0), h_ijklm(h_im, 0, 0, 3, 1, 0));
-  printf("  h_20020         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 2, 0, 0, 2, 0), h_ijklm(h_im, 2, 0, 0, 2, 0));
-  printf("  h_00400         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 0, 0, 4, 0, 0), h_ijklm(h_im, 0, 0, 4, 0, 0));
-  printf("  h_00220         = [%10.3e, %10.3e]\n",
-	 h_ijklm(h_re, 0, 0, 2, 2, 0), h_ijklm(h_im, 0, 0, 2, 2, 0));
+  printf("  h_40000         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 4, 0, 0, 0, 0));
+  printf("  h_31000         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 3, 1, 0, 0, 0));
+  printf("  h_22000         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 2, 2, 0, 0, 0));
+  printf("  h_20200         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 2, 0, 2, 0, 0));
+  printf("  h_11200         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 1, 1, 2, 0, 0));
+  printf("  h_20110         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 2, 0, 1, 1, 0));
+  printf("  h_11110         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 1, 1, 1, 1, 0));
+  printf("  h_00310         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 0, 0, 3, 1, 0));
+  printf("  h_20020         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 2, 0, 0, 2, 0));
+  printf("  h_00400         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 0, 0, 4, 0, 0));
+  printf("  h_00220         = %10.3e\n",
+	 h_abs_ijklm(h_re, h_im, 0, 0, 2, 2, 0));
 
   printf("\nTune footprint:\n");
   printf("  nu(deltaˆ2)     = [%10.3e, %10.3e]\n",
@@ -487,15 +496,15 @@ void prt_drv_terms(const tps &h_re, const tps &h_im, const ss_vect<tps> &nus,
 	 h_ijklm(nus_delta[4], 0, 0, 1, 1, 1));
 
   printf("\nChromatic distortions:\n");
-  printf("  g_20001         = [%10.3e, %10.3e]\n",
-	 h_ijklm(g_re, 2, 0, 0, 0, 1), h_ijklm(g_im, 2, 0, 0, 0, 1));
-  printf("  g_00201         = [%10.3e, %10.3e]\n",
-	 h_ijklm(g_re, 0, 0, 2, 0, 1), h_ijklm(g_im, 0, 0, 2, 0, 1));
+  printf("  g_20001         =  %10.3e\n",
+	 h_abs_ijklm(g_re, g_im, 2, 0, 0, 0, 1));
+  printf("  g_00201         =  %10.3e\n",
+	 h_abs_ijklm(g_re, g_im, 0, 0, 2, 0, 1));
 
-  printf("\n  g_20002         = [%10.3e, %10.3e]\n",
-	 h_ijklm(g_re, 2, 0, 0, 0, 2), h_ijklm(g_im, 2, 0, 0, 0, 2));
-  printf("  g_00202         = [%10.3e, %10.3e]\n",
-	 h_ijklm(g_re, 0, 0, 2, 0, 2), h_ijklm(g_im, 0, 0, 2, 0, 2));
+  printf("\n  g_20002         =  %10.3e\n",
+	 h_abs_ijklm(g_re, g_im, 2, 0, 0, 0, 2));
+  printf("  g_00202         =  %10.3e\n",
+	 h_abs_ijklm(g_re, g_im, 0, 0, 2, 0, 2));
 }
 
 
