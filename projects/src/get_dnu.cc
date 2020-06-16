@@ -1,4 +1,4 @@
-#define NO 8
+#define NO 6
 
 #include "thor_lib.h"
 
@@ -620,7 +620,7 @@ int main(int argc, char *argv[])
 
   if (!true) get_dnu(A_inv, A_max[X_], A_max[Y_], delta_max);
 
-  get_dnu_x_delta(A_inv, 2e-3, 0.1e-3, delta_max);
+  get_dnu_x_delta(A_inv, A_delta_max[X_], A_delta_max[Y_], delta_max);
 
   // get_dnu2(A_inv, Ax, Ay, 0.0);
 }
