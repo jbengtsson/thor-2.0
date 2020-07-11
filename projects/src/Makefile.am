@@ -28,7 +28,7 @@ tbs_SOURCES          = tbs.cc
 get_dnu_SOURCES      = get_dnu.cc
 
 LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
-	  -L$(NUM_REC)/lib  -L/usr/local/Cellar/gcc/9.3.0/lib/gcc/9 \
+	  -L$(NUM_REC)/lib  -L/usr/local/Cellar/gcc/10.1.0/lib/gcc/10 \
           -lnum_rec \
 	  -lstdc++ -lgfortran \
           -lm
