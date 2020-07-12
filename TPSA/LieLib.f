@@ -1153,7 +1153,7 @@
         call dader(2*i,h,b1)
         call   dacmu(b1,sca,v(2*i-1))
       enddo
-      call dadal1(h1)
+      call dadal1(h)
       call dadal1(b1)
       return
       end subroutine
