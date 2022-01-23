@@ -241,15 +241,14 @@ void prt_bend(FILE *outf, const int loc)
 
   fprintf(outf,
 	  "%-8s: multipole, l = %7.5f, t = %7.5f, t1 = %7.5f, t2 = %7.5f,\n"
-	  "          hom = (%d, %12.5e, 0e0,",
+	  "          hom = (%d, %12.5e, 0e0,"
+	  " %d, %12.5e, 0e0),\n"
+	  "          n = nbend, Method = Meth;\n",
 	  elemp->Name, elemp->L,
 	  elemp->L*elemp->mpole->h_bend*180e0/M_PI,
 	  elemp->mpole->edge1, elemp->mpole->edge2,
-	  Quad, get_bn(Fnum, 1, Quad));
-  fprintf(outf,
-	  " %d, %12.5e, 0e0),\n",
+	  Quad, get_bn(Fnum, 1, Quad),
 	  Oct, get_bn(Fnum, 1, Oct));
-  fprintf(outf, "          n = nbend, Method = Meth;\n");
 }
 
 
@@ -259,12 +258,11 @@ void prt_quad(FILE *outf, const int loc)
 
   fprintf(outf,
 	  "%-8s: multipole, l = %7.5f,\n"
-	  "          hom = (%d, %12.5e, 0e0,",
-	  elem[loc].Name, elem[loc].L, Quad, get_bn(Fnum, 1, Quad));
-  fprintf(outf,
-	  " %d, %12.5e, 0e0),\n",
+	  "          hom = (%d, %12.5e, 0e0,"
+	  " %d, %12.5e, 0e0),\n"
+	  "          n = 1, Method = Meth;\n",
+	  elem[loc].Name, elem[loc].L, Quad, get_bn(Fnum, 1, Quad),
 	  Oct, get_bn(Fnum, 1, Oct));
-  fprintf(outf, "          n = 1, Method = Meth;\n");
 }
 
 
@@ -273,13 +271,12 @@ void prt_sext(FILE *outf, const int loc)
   const int Fnum = elem[loc].Fnum;
 
   fprintf(outf,
-	 "%-8s: multipole, l = %7.5f,\n"
-	 "          hom = (%d, %12.5e, 0e0,",
-	 elem[loc].Name, elem[loc].L, Sext, get_bn(Fnum, 1, Sext));
- fprintf(outf,
-	 " %d, %12.5e, 0e0),\n",
-	 Oct, get_bn(Fnum, 1, Oct));
- fprintf(outf, "          n = 1, Method = Meth;\n");
+	  "%-8s: multipole, l = %7.5f,\n"
+	  "          hom = (%d, %12.5e, 0e0,"
+	  " %d, %12.5e, 0e0),\n"
+	  "          n = 1, Method = Meth;\n",
+	  elem[loc].Name, elem[loc].L, Sext, get_bn(Fnum, 1, Sext),
+	  Oct, get_bn(Fnum, 1, Oct));
 }
 
 
@@ -374,7 +371,7 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
     get_K_ijklm_p("s2",  Oct, Id_scl, k_ijklm);
   }
   if (!false) {
-    get_K_ijklm_p("q1",  Oct, Id_scl, k_ijklm);
+    if (false) get_K_ijklm_p("q1",  Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("uq1", Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("uq2", Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("uq3", Oct, Id_scl, k_ijklm);
@@ -421,7 +418,7 @@ int main(int argc, char *argv[])
   }
 
   analyze(Id_scl, k_ijklm);
-  correct(k_ijklm, 1e-13, 0.9);
+  correct(k_ijklm, 1e-12, 0.9);
   prt_mfile("flat_file.fit");
   analyze(Id_scl, k_ijklm);
 }
