@@ -211,20 +211,20 @@ void get_sing_val(const int n, double w[], const double svd_cut)
     }
     if (k % 6 == 0) printf("\n");
   }
-  printf("\n");
+  if (n % 6 != 0) printf("\n");
 }
 
 
-void set_bn(const int n, const double *bn, const std::vector<Lie_term> &k_ijklm)
+void set_bn(const int n, const double *bn, const double scl,
+	    const std::vector<Lie_term> &k_ijklm)
 {
   // Integrated strengths: b_n*L.
   int k, Fnum;
 
-  printf("\nb_n:\n ");
+  printf("\nb_n:\n  scaled by %3.1f\n ", scl);
   for (k = 0; k < n; k++) {
     Fnum = get_Fnum(k_ijklm[0].prms[k].c_str());
-    fflush(stdout);
-    set_bn(Fnum, Oct, bn[k+1]);
+    set_bn(Fnum, Oct, scl*bn[k+1]);
     if (!true)
       printf(" %10.3e", get_bn(Fnum, 1, Oct));
     else
@@ -294,7 +294,7 @@ void prt_bn(const std::vector<Lie_term> &k_ijklm)
   outf = file_write(file_name.c_str());
 
   fprintf(outf, "\n");
-  for (k = 1; k < k_ijklm[0].label.size(); k++) {
+  for (k = 0; k < k_ijklm[0].prms.size(); k++) {
     Fnum = get_Fnum(k_ijklm[0].prms[k].c_str());
     loc = get_loc(Fnum, 1) - 1;
     if (elem[loc].mpole->n_design == Dip)
@@ -309,7 +309,8 @@ void prt_bn(const std::vector<Lie_term> &k_ijklm)
 }
 
 
-void correct(const std::vector<Lie_term> &k_ijklm, const double svd_cut)
+void correct(const std::vector<Lie_term> &k_ijklm, const double svd_cut,
+	     const double scl)
 {
   double **A, **U, **V, *w, *b, *bn;
 
@@ -330,7 +331,7 @@ void correct(const std::vector<Lie_term> &k_ijklm, const double svd_cut)
 
   dsvbksb(U, w, V, m, n, b, bn);
 
-  set_bn(n, bn, k_ijklm);
+  set_bn(n, bn, scl, k_ijklm);
   prt_bn(k_ijklm);
 
   free_dmatrix(A, 1, m, 1, n); free_dmatrix(U, 1, m, 1, n);
@@ -359,9 +360,10 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
     std::cout << std::scientific << std::setprecision(3)
 	      << "\nK:\n" << K_re << "\ng:\n" << g_im;
 
-  printf("\n  nu  = [%6.3f, %6.3f]\n"
-  	 "  ksi = [%6.3f, %6.3f]\n",
-	 nu[X_], nu[Y_], ksi[X_], ksi[Y_]);
+  if (false)
+    printf("\n  nu  = [%6.3f, %6.3f]\n"
+	   "  ksi = [%6.3f, %6.3f]\n",
+	   nu[X_], nu[Y_], ksi[X_], ksi[Y_]);
 
   k_ijklm.clear();
 
@@ -377,7 +379,7 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
     get_K_ijklm_p("uq2", Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("uq3", Oct, Id_scl, k_ijklm);
   }
-  if (!false) {
+  if (false) {
     get_K_ijklm_p("b1",  Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("b2",  Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("mb1", Oct, Id_scl, k_ijklm);
@@ -419,7 +421,7 @@ int main(int argc, char *argv[])
   }
 
   analyze(Id_scl, k_ijklm);
-  correct(k_ijklm, 1e-13);
+  correct(k_ijklm, 1e-13, 0.9);
   prt_mfile("flat_file.fit");
   analyze(Id_scl, k_ijklm);
 }
