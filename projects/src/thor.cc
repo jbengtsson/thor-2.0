@@ -964,7 +964,7 @@ void tune_scan(const int n_b2, const int b2s[], const bool opt)
 {
   int           i, j, k, l, n;
   long int      loc;
-  double        nu_x, nu_y, nu[2], ksi[2];
+  double        nu_x, nu_y, nu[3], ksi[2];
   double        dnu_x, dnu_y;
   ss_vect<tps>  nus;
 

@@ -3,7 +3,7 @@
 bin_PROGRAMS = H_min max_iv_match max_iv_uc max_iv_dnu \
 	       vlad vlad_2 vlad_3 vlad_4 vlad_5 sls_2 diamond_ii delta \
                delta_lo delta_lo2 quad2d quad3d tune_conf tune_conf_2 \
-	       tune_conf_3 tbs get_dnu
+	       tune_conf_3 tbs get_dnu mpole_scheme
 
 H_min_SOURCES        = H_min.cc
 max_iv_match_SOURCES = max_iv_match.cc
@@ -26,9 +26,10 @@ tune_conf_2_SOURCES  = tune_conf_2.cc
 tune_conf_3_SOURCES  = tune_conf_3.cc
 tbs_SOURCES          = tbs.cc
 get_dnu_SOURCES      = get_dnu.cc
+mpole_scheme_SOURCES = mpole_scheme.cc
 
 LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
-	  -L$(NUM_REC)/lib  -L/usr/local/Cellar/gcc/10.1.0/lib/gcc/10 \
+	  -L$(NUM_REC)/lib  -L/usr/local/Cellar/gcc/11.2.0/lib/gcc/11 \
           -lnum_rec \
 	  -lstdc++ -lgfortran \
           -lm
