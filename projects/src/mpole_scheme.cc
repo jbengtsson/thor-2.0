@@ -367,6 +367,19 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
   get_K_ijklm(K_re, k_ijklm);
 
   if (!false) {
+    if (false) get_K_ijklm_p("q1",  Sext, Id_scl, k_ijklm);
+    get_K_ijklm_p("uq1", Sext, Id_scl, k_ijklm);
+    get_K_ijklm_p("uq2", Sext, Id_scl, k_ijklm);
+    get_K_ijklm_p("uq3", Sext, Id_scl, k_ijklm);
+  }
+  if (false) {
+    get_K_ijklm_p("b1",  Sext, Id_scl, k_ijklm);
+    get_K_ijklm_p("b2",  Sext, Id_scl, k_ijklm);
+    get_K_ijklm_p("mb1", Sext, Id_scl, k_ijklm);
+    get_K_ijklm_p("mb2", Sext, Id_scl, k_ijklm);
+  }
+
+  if (!false) {
     get_K_ijklm_p("s1",  Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("s2",  Oct, Id_scl, k_ijklm);
   }
@@ -384,6 +397,35 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
   }
 
   prt_K_ijklm(k_ijklm);
+}
+
+void analyze_2(void)
+{
+  tps          h, h_re, h_im, dh;
+  ss_vect<tps> Id;
+
+  danot_(no_tps-1);
+  get_Map();
+  danot_(no_tps);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  h = get_H(g);
+
+  dh = (h-h*Inv(A0*A1)*Map*A0*A1);
+  // Truncate to 4th order.
+  danot_(3);
+  h = 1e0*h;
+  dh = 1e0*dh;
+  // Remove momentum dependence.
+  Id.identity();
+  Id[delta_] = 0e0;
+  h = h*Id;
+  dh = dh*Id;
+  
+  CtoR(h, h_re, h_im);
+
+  std::cout << std::scientific << std::setprecision(3)
+	    << "\ndh:\n" << dh << "\nh:\n" << h
+	    << "\nh_re:\n" << h_re << "\nh_im:\n" << h_im;
 }
 
 
@@ -413,12 +455,14 @@ int main(int argc, char *argv[])
     Id_scl[k] *= sqrt(twoJ[k/2]);
   Id_scl[delta_] *= delta_max;
 
+  if (!false) chk_lat(Map, Map_res, nu, ksi);
+
   if (!false) {
-    chk_lat(Map, Map_res, nu, ksi);
+    analyze(Id_scl, k_ijklm);
+    correct(k_ijklm, 1e-12, 0.9);
+    prt_mfile("flat_file.fit");
+    analyze(Id_scl, k_ijklm);
   }
 
-  analyze(Id_scl, k_ijklm);
-  correct(k_ijklm, 1e-12, 0.9);
-  prt_mfile("flat_file.fit");
-  analyze(Id_scl, k_ijklm);
+  if (false) analyze_2();
 }
