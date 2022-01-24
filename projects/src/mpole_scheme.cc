@@ -16,6 +16,7 @@ typedef struct {
   std::string              label;
   double                   cst;
   std::vector<std::string> prms;
+  std::vector<int>         n;
   std::vector<double>      Jacobian;
 } Lie_term;
 
@@ -140,18 +141,23 @@ void get_K_ijklm_p(const std::string &name, const int n,
 	      << "\n" << std::setw(8) << name << std::setw(4) << Fnum << ":\n"
 	      << std::scientific << std::setprecision(3) << K_re;
 
-  clr_bn_par(Fnum, Oct);
+  clr_bn_par(Fnum, n);
 
   k_ijklm[0].prms.push_back(name);
+  k_ijklm[0].n.push_back(n);
   k_ijklm[0].Jacobian.push_back(h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7));
   k_ijklm[1].prms.push_back(name);
+  k_ijklm[1].n.push_back(n);
   k_ijklm[1].Jacobian.push_back(h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7));
   k_ijklm[2].prms.push_back(name);
+  k_ijklm[2].n.push_back(n);
   k_ijklm[2].Jacobian.push_back(h_ijklm_p(K_re, 0, 0, 2, 2, 0, 7));
 
   k_ijklm[3].prms.push_back(name);
+  k_ijklm[3].n.push_back(n);
   k_ijklm[3].Jacobian.push_back(h_ijklm_p(K_re, 1, 1, 0, 0, 2, 7));
   k_ijklm[4].prms.push_back(name);
+  k_ijklm[4].n.push_back(n);
   k_ijklm[4].Jacobian.push_back(h_ijklm_p(K_re, 0, 0, 1, 1, 2, 7));
 }
 
@@ -161,7 +167,7 @@ void prt_Lie_term(const Lie_term &k_ijklm)
   int k;
 
   printf(" %s %10.3e", k_ijklm.label.c_str(), k_ijklm.cst);
-  for (k = 0; k < (int)k_ijklm.Jacobian.size(); k++)
+  for (k = 0; k < k_ijklm.Jacobian.size(); k++)
     printf(" %10.3e", k_ijklm.Jacobian[k]);
   printf("\n");
 }
@@ -173,7 +179,10 @@ void prt_K_ijklm(const std::vector<Lie_term> &k_ijklm)
 
   printf("\n             cst.");
   for (k = 0; k < k_ijklm[0].prms.size(); k++)
-    printf(" %8s  ", k_ijklm[0].prms[k].c_str());
+    printf("      %-5s", k_ijklm[0].prms[k].c_str());
+  printf("\n                 ");
+  for (k = 0; k < k_ijklm[0].prms.size(); k++)
+    printf("       %1d   ", k_ijklm[0].n[k]);
   printf("\nAnharmonic terms:\n");
   for (k = 0; k < 3; k++)
     prt_Lie_term(k_ijklm[k]);
@@ -215,26 +224,27 @@ void get_sing_val(const int n, double w[], const double svd_cut)
 }
 
 
-void set_bn(const int n, const double *bn, const double scl,
+void set_bn(const double *bn, const double scl,
 	    const std::vector<Lie_term> &k_ijklm)
 {
   // Integrated strengths: b_n*L.
-  int k, Fnum;
+  int k, Fnum, n;
 
   printf("\nb_n:\n  scaled by %3.1f\n ", scl);
-  for (k = 0; k < n; k++) {
+  for (k = 0; k < k_ijklm[0].prms.size(); k++) {
+    n = k_ijklm[0].n[k];
     Fnum = get_Fnum(k_ijklm[0].prms[k].c_str());
-    set_bn(Fnum, Oct, scl*bn[k+1]);
+    set_bn(Fnum, n, scl*bn[k+1]);
     if (!true)
-      printf(" %10.3e", get_bn(Fnum, 1, Oct));
+      printf("  %10.3e", get_bn(Fnum, 1, n));
     else
-      printf(" %10.3e", get_bnL(Fnum, 1, Oct));
+      printf("  %10.3e", get_bnL(Fnum, 1, n));
   }
   printf("\n");
 }
 
 
-void prt_bend(FILE *outf, const int loc)
+void prt_bend(FILE *outf, const int loc, const int n)
 {
   const elem_type<double> *elemp = &elem[loc];
   const int               Fnum = elemp->Fnum;
@@ -248,11 +258,11 @@ void prt_bend(FILE *outf, const int loc)
 	  elemp->L*elemp->mpole->h_bend*180e0/M_PI,
 	  elemp->mpole->edge1, elemp->mpole->edge2,
 	  Quad, get_bn(Fnum, 1, Quad),
-	  Oct, get_bn(Fnum, 1, Oct));
+	  n, get_bn(Fnum, 1, n));
 }
 
 
-void prt_quad(FILE *outf, const int loc)
+void prt_quad(FILE *outf, const int loc, const int n)
 {
   const int Fnum = elem[loc].Fnum;
 
@@ -262,11 +272,11 @@ void prt_quad(FILE *outf, const int loc)
 	  " %d, %12.5e, 0e0),\n"
 	  "          n = 1, Method = Meth;\n",
 	  elem[loc].Name, elem[loc].L, Quad, get_bn(Fnum, 1, Quad),
-	  Oct, get_bn(Fnum, 1, Oct));
+	  n, get_bn(Fnum, 1, n));
 }
 
 
-void prt_sext(FILE *outf, const int loc)
+void prt_sext(FILE *outf, const int loc, const int n)
 {
   const int Fnum = elem[loc].Fnum;
 
@@ -275,8 +285,8 @@ void prt_sext(FILE *outf, const int loc)
 	  "          hom = (%d, %12.5e, 0e0,"
 	  " %d, %12.5e, 0e0),\n"
 	  "          n = 1, Method = Meth;\n",
-	  elem[loc].Name, elem[loc].L, Sext, get_bn(Fnum, 1, Sext),
-	  Oct, get_bn(Fnum, 1, Oct));
+	  elem[loc].Name, elem[loc].L, 3, get_bn(Fnum, 1, Sext),
+	  n, get_bn(Fnum, 1, n));
 }
 
 
@@ -295,11 +305,11 @@ void prt_bn(const std::vector<Lie_term> &k_ijklm)
     Fnum = get_Fnum(k_ijklm[0].prms[k].c_str());
     loc = get_loc(Fnum, 1) - 1;
     if (elem[loc].mpole->n_design == Dip)
-      prt_bend(outf, loc);
+      prt_bend(outf, loc, k_ijklm[0].n[k]);
     else if (elem[loc].mpole->n_design == Quad)
-      prt_quad(outf, loc);
+      prt_quad(outf, loc, k_ijklm[0].n[k]);
     else if (elem[loc].mpole->n_design == Sext)
-      prt_sext(outf, loc);
+      prt_sext(outf, loc, k_ijklm[0].n[k]);
   }
 
   fclose(outf);
@@ -328,7 +338,7 @@ void correct(const std::vector<Lie_term> &k_ijklm, const double svd_cut,
 
   dsvbksb(U, w, V, m, n, b, bn);
 
-  set_bn(n, bn, scl, k_ijklm);
+  set_bn(bn, scl, k_ijklm);
   prt_bn(k_ijklm);
 
   free_dmatrix(A, 1, m, 1, n); free_dmatrix(U, 1, m, 1, n);
@@ -366,7 +376,7 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
 
   get_K_ijklm(K_re, k_ijklm);
 
-  if (!false) {
+  if (false) {
     if (false) get_K_ijklm_p("q1",  Sext, Id_scl, k_ijklm);
     get_K_ijklm_p("uq1", Sext, Id_scl, k_ijklm);
     get_K_ijklm_p("uq2", Sext, Id_scl, k_ijklm);
@@ -379,7 +389,7 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
     get_K_ijklm_p("mb2", Sext, Id_scl, k_ijklm);
   }
 
-  if (!false) {
+  if (false) {
     get_K_ijklm_p("s1",  Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("s2",  Oct, Id_scl, k_ijklm);
   }
@@ -389,7 +399,7 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
     get_K_ijklm_p("uq2", Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("uq3", Oct, Id_scl, k_ijklm);
   }
-  if (false) {
+  if (!false) {
     get_K_ijklm_p("b1",  Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("b2",  Oct, Id_scl, k_ijklm);
     get_K_ijklm_p("mb1", Oct, Id_scl, k_ijklm);
@@ -458,8 +468,12 @@ int main(int argc, char *argv[])
   if (!false) chk_lat(Map, Map_res, nu, ksi);
 
   if (!false) {
-    analyze(Id_scl, k_ijklm);
-    correct(k_ijklm, 1e-12, 0.9);
+    printf("\n");
+    for (k = 1; k <= 1; k++) {
+      printf("\nk = %d:", k);
+      analyze(Id_scl, k_ijklm);
+      correct(k_ijklm, 1e-12, 0.9);
+    }
     prt_mfile("flat_file.fit");
     analyze(Id_scl, k_ijklm);
   }
