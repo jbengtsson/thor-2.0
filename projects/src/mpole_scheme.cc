@@ -14,7 +14,7 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 typedef struct {
   std::string              label;
-  double                   cst;
+  double                   scl, cst;
   std::vector<std::string> prms;
   std::vector<int>         n;
   std::vector<double>      Jacobian;
@@ -98,31 +98,9 @@ void chk_lat(ss_vect<tps> &map, ss_vect<tps> &map_res,
 }
 
 
-void get_K_ijklm(const tps &K, std::vector<Lie_term> &k_ijklm)
-{
-  Lie_term h;
-
-  h.label = "k_22000";
-  h.cst = h_ijklm(K, 2, 2, 0, 0, 0);
-  k_ijklm.push_back(h);
-  h.label = "k_11110";
-  h.cst = h_ijklm(K, 1, 1, 1, 1, 0);
-  k_ijklm.push_back(h);
-  h.label = "k_00220";
-  h.cst = h_ijklm(K, 0, 0, 2, 2, 0);
-  k_ijklm.push_back(h);
-
-  h.label = "k_11002";
-  h.cst = h_ijklm(K, 1, 1, 0, 0, 2);
-  k_ijklm.push_back(h);
-  h.label = "k_00112";
-  h.cst = h_ijklm(K, 0, 0, 1, 1, 2);
-  k_ijklm.push_back(h);
-}
-
-
-void get_K_ijklm_p(const std::string &name, const int n,
-		   const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
+void get_K_ijklm(const std::string &name, const int n,
+		   const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
+		   const bool tune_fp)
 {
   tps K, K_re, K_im;
 
@@ -145,20 +123,36 @@ void get_K_ijklm_p(const std::string &name, const int n,
 
   k_ijklm[0].prms.push_back(name);
   k_ijklm[0].n.push_back(n);
-  k_ijklm[0].Jacobian.push_back(h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7));
+  k_ijklm[0].Jacobian.push_back(k_ijklm[0].scl*
+				h_ijklm_p(K_re, 1, 1, 0, 0, 1, 7));
   k_ijklm[1].prms.push_back(name);
   k_ijklm[1].n.push_back(n);
-  k_ijklm[1].Jacobian.push_back(h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7));
-  k_ijklm[2].prms.push_back(name);
-  k_ijklm[2].n.push_back(n);
-  k_ijklm[2].Jacobian.push_back(h_ijklm_p(K_re, 0, 0, 2, 2, 0, 7));
+  k_ijklm[1].Jacobian.push_back(k_ijklm[1].scl*
+				h_ijklm_p(K_re, 0, 0, 1, 1, 1, 7));
 
-  k_ijklm[3].prms.push_back(name);
-  k_ijklm[3].n.push_back(n);
-  k_ijklm[3].Jacobian.push_back(h_ijklm_p(K_re, 1, 1, 0, 0, 2, 7));
-  k_ijklm[4].prms.push_back(name);
-  k_ijklm[4].n.push_back(n);
-  k_ijklm[4].Jacobian.push_back(h_ijklm_p(K_re, 0, 0, 1, 1, 2, 7));
+  if (tune_fp) {
+    k_ijklm[2].prms.push_back(name);
+    k_ijklm[2].n.push_back(n);
+    k_ijklm[2].Jacobian.push_back(k_ijklm[2].scl*
+				  h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7));
+    k_ijklm[3].prms.push_back(name);
+    k_ijklm[3].n.push_back(n);
+    k_ijklm[3].Jacobian.push_back(k_ijklm[3].scl*
+				  h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7));
+    k_ijklm[4].prms.push_back(name);
+    k_ijklm[4].n.push_back(n);
+    k_ijklm[4].Jacobian.push_back(k_ijklm[4].scl*
+				  h_ijklm_p(K_re, 0, 0, 2, 2, 0, 7));
+
+    k_ijklm[5].prms.push_back(name);
+    k_ijklm[5].n.push_back(n);
+    k_ijklm[5].Jacobian.push_back(k_ijklm[5].scl*
+				  h_ijklm_p(K_re, 1, 1, 0, 0, 2, 7));
+    k_ijklm[6].prms.push_back(name);
+    k_ijklm[6].n.push_back(n);
+    k_ijklm[6].Jacobian.push_back(k_ijklm[6].scl*
+				  h_ijklm_p(K_re, 0, 0, 1, 1, 2, 7));
+  }
 }
 
 
@@ -166,29 +160,34 @@ void prt_Lie_term(const Lie_term &k_ijklm)
 {
   int k;
 
-  printf(" %s %10.3e", k_ijklm.label.c_str(), k_ijklm.cst);
+  printf(" %s %6.1e %10.3e", k_ijklm.label.c_str(), k_ijklm.scl, k_ijklm.cst);
   for (k = 0; k < k_ijklm.Jacobian.size(); k++)
     printf(" %10.3e", k_ijklm.Jacobian[k]);
   printf("\n");
 }
 
 
-void prt_K_ijklm(const std::vector<Lie_term> &k_ijklm)
+void prt_K_ijklm(const std::vector<Lie_term> &k_ijklm, const bool tune_fp)
 {
   int k;
 
-  printf("\n             cst.");
+  printf("\n           scl.      cst.");
   for (k = 0; k < k_ijklm[0].prms.size(); k++)
     printf("      %-5s", k_ijklm[0].prms[k].c_str());
-  printf("\n                 ");
+  printf("\n                         ");
   for (k = 0; k < k_ijklm[0].prms.size(); k++)
     printf("       %1d   ", k_ijklm[0].n[k]);
-  printf("\nAnharmonic terms:\n");
-  for (k = 0; k < 3; k++)
+  printf("\nLinear chromaticity:\n");
+  for (k = 0; k < 2; k++)
     prt_Lie_term(k_ijklm[k]);
-  printf("2nd order chromaticity:\n");
-  for (k = 3; k < 5; k++)
-    prt_Lie_term(k_ijklm[k]);
+  if (tune_fp) {
+    printf("\nAnharmonic terms:\n");
+    for (k = 2; k < 5; k++)
+      prt_Lie_term(k_ijklm[k]);
+    printf("2nd order chromaticity:\n");
+    for (k = 5; k < 7; k++)
+      prt_Lie_term(k_ijklm[k]);
+  }
 }
 
 
@@ -234,8 +233,8 @@ void set_bn(const double *bn, const double scl,
   for (k = 0; k < k_ijklm[0].prms.size(); k++) {
     n = k_ijklm[0].n[k];
     Fnum = get_Fnum(k_ijklm[0].prms[k].c_str());
-    set_bn(Fnum, n, scl*bn[k+1]);
-    if (!true)
+    set_dbn(Fnum, n, scl*bn[k+1]);
+    if (true)
       printf("  %10.3e", get_bn(Fnum, 1, n));
     else
       printf("  %10.3e", get_bnL(Fnum, 1, n));
@@ -347,11 +346,17 @@ void correct(const std::vector<Lie_term> &k_ijklm, const double svd_cut,
 }
 
 
-void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
+void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
+	     const bool tune_fp)
 {
   double       nu[3], ksi[3];
   tps          g_re, g_im, K, K_re, K_im;
   ss_vect<tps> nus;
+  Lie_term     h;
+
+  const double
+    scl_ksi[] = {0e0, 1e0, 1e-1, 1e-10},
+    scl_a     = 1e-1;
 
   danot_(no_tps-1);
   get_Map();
@@ -374,39 +379,73 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
 
   k_ijklm.clear();
 
-  get_K_ijklm(K_re, k_ijklm);
+  h.scl = scl_ksi[1];
+  h.label = "k_11001";
+  h.cst = h.scl*h_ijklm(K_re, 1, 1, 0, 0, 1);
+  k_ijklm.push_back(h);
+  h.label = "k_00111";
+  h.cst = h.scl*h_ijklm(K_re, 0, 0, 1, 1, 1);
+  k_ijklm.push_back(h);
 
-  if (false) {
-    if (false) get_K_ijklm_p("q1",  Sext, Id_scl, k_ijklm);
-    get_K_ijklm_p("uq1", Sext, Id_scl, k_ijklm);
-    get_K_ijklm_p("uq2", Sext, Id_scl, k_ijklm);
-    get_K_ijklm_p("uq3", Sext, Id_scl, k_ijklm);
-  }
-  if (false) {
-    get_K_ijklm_p("b1",  Sext, Id_scl, k_ijklm);
-    get_K_ijklm_p("b2",  Sext, Id_scl, k_ijklm);
-    get_K_ijklm_p("mb1", Sext, Id_scl, k_ijklm);
-    get_K_ijklm_p("mb2", Sext, Id_scl, k_ijklm);
+  if (tune_fp) {
+    h.scl = scl_a;
+    h.label = "k_22000";
+    h.cst = h.scl*h_ijklm(K_re, 2, 2, 0, 0, 0);
+    k_ijklm.push_back(h);
+    h.label = "k_11110";
+    h.cst = h.scl*h_ijklm(K_re, 1, 1, 1, 1, 0);
+    k_ijklm.push_back(h);
+    h.label = "k_00220";
+    h.cst = h.scl*h_ijklm(K_re, 0, 0, 2, 2, 0);
+    k_ijklm.push_back(h);
+
+    h.scl = scl_ksi[2];
+    h.label = "k_11002";
+    h.cst = h.scl*h_ijklm(K_re, 1, 1, 0, 0, 2);
+    k_ijklm.push_back(h);
+    h.label = "k_00112";
+    h.cst = h.scl*h_ijklm(K_re, 0, 0, 1, 1, 2);
+    k_ijklm.push_back(h);
   }
 
-  if (false) {
-    get_K_ijklm_p("s1",  Oct, Id_scl, k_ijklm);
-    get_K_ijklm_p("s2",  Oct, Id_scl, k_ijklm);
-  }
   if (!false) {
-    if (false) get_K_ijklm_p("q1",  Oct, Id_scl, k_ijklm);
-    get_K_ijklm_p("uq1", Oct, Id_scl, k_ijklm);
-    get_K_ijklm_p("uq2", Oct, Id_scl, k_ijklm);
-    get_K_ijklm_p("uq3", Oct, Id_scl, k_ijklm);
-  }
-  if (!false) {
-    get_K_ijklm_p("b1",  Oct, Id_scl, k_ijklm);
-    get_K_ijklm_p("b2",  Oct, Id_scl, k_ijklm);
-    get_K_ijklm_p("mb1", Oct, Id_scl, k_ijklm);
-    get_K_ijklm_p("mb2", Oct, Id_scl, k_ijklm);
+    get_K_ijklm("s1a", Sext, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("s1b", Sext, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("s2",  Sext, Id_scl, k_ijklm, tune_fp);
   }
 
-  prt_K_ijklm(k_ijklm);
+  if (false) {
+    if (false) get_K_ijklm("q1",  Sext, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("uq1", Sext, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("uq2", Sext, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("uq3", Sext, Id_scl, k_ijklm, tune_fp);
+  }
+  if (false) {
+    get_K_ijklm("b1",  Sext, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("b2",  Sext, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("mb1", Sext, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("mb2", Sext, Id_scl, k_ijklm, tune_fp);
+  }
+
+  if (false) {
+    get_K_ijklm("s1a", Oct, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("s1b", Oct, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("s2",  Oct, Id_scl, k_ijklm, tune_fp);
+  }
+  if (false) {
+    if (false) get_K_ijklm("q1",  Oct, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("uq1", Oct, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("uq2", Oct, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("uq3", Oct, Id_scl, k_ijklm, tune_fp);
+  }
+  if (false) {
+    get_K_ijklm("b1",  Oct, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("b2",  Oct, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("mb1", Oct, Id_scl, k_ijklm, tune_fp);
+    get_K_ijklm("mb2", Oct, Id_scl, k_ijklm, tune_fp);
+  }
+
+  prt_K_ijklm(k_ijklm, tune_fp);
 }
 
 void analyze_2(void)
@@ -450,6 +489,8 @@ int main(int argc, char *argv[])
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
   IBS_on    = false;
 
+  const bool tune_fp = true;
+
   rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
 
   // initialize the symplectic integrator after energy has been defined
@@ -469,13 +510,13 @@ int main(int argc, char *argv[])
 
   if (!false) {
     printf("\n");
-    for (k = 1; k <= 1; k++) {
+    for (k = 1; k <= 20; k++) {
       printf("\nk = %d:", k);
-      analyze(Id_scl, k_ijklm);
-      correct(k_ijklm, 1e-12, 0.9);
+      analyze(Id_scl, k_ijklm, tune_fp);
+      correct(k_ijklm, 1e-12, 0.2);
     }
     prt_mfile("flat_file.fit");
-    analyze(Id_scl, k_ijklm);
+    analyze(Id_scl, k_ijklm, tune_fp);
   }
 
   if (false) analyze_2();
