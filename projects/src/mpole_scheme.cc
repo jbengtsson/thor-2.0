@@ -279,13 +279,20 @@ void prt_sext(FILE *outf, const int loc, const int n)
 {
   const int Fnum = elem[loc].Fnum;
 
-  fprintf(outf,
-	  "%-8s: multipole, l = %7.5f,\n"
-	  "          hom = (%d, %12.5e, 0e0,"
-	  " %d, %12.5e, 0e0),\n"
-	  "          n = 1, Method = Meth;\n",
-	  elem[loc].Name, elem[loc].L, 3, get_bn(Fnum, 1, Sext),
-	  n, get_bn(Fnum, 1, n));
+  if (n == Sext)
+    fprintf(outf,
+	    "%-8s: multipole, l = %7.5f,\n"
+	    "          hom = (%d, %12.5e, 0e0),\n"
+	    "          n = 1, Method = Meth;\n",
+	    elem[loc].Name, elem[loc].L, Sext, get_bn(Fnum, 1, Sext));
+  else
+    fprintf(outf,
+	    "%-8s: multipole, l = %7.5f,\n"
+	    "          hom = (%d, %12.5e, 0e0,"
+	    " %d, %12.5e, 0e0),\n"
+	    "          n = 1, Method = Meth;\n",
+	    elem[loc].Name, elem[loc].L, Sext, get_bn(Fnum, 1, Sext),
+	    n, get_bn(Fnum, 1, n));
 }
 
 
@@ -510,7 +517,7 @@ int main(int argc, char *argv[])
 
   if (!false) {
     printf("\n");
-    for (k = 1; k <= 20; k++) {
+    for (k = 1; k <= 30; k++) {
       printf("\nk = %d:", k);
       analyze(Id_scl, k_ijklm, tune_fp);
       correct(k_ijklm, 1e-12, 0.2);
