@@ -1,4 +1,4 @@
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -14,17 +14,21 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 typedef struct {
   std::string              label;
-  double                   scl, cst;
-  std::vector<std::string> prms;
+  double                   cst_scl, cst;
+  std::vector<std::string> bn;
   std::vector<int>         n;
-  std::vector<double>      Jacobian;
+  std::vector<double>      Jacobian, bn_scl;
 } Lie_term;
 
 
 const double
+#if 1
+  beta_inj[] = {2.7, 2.5},
+#else
   beta_inj[] = {2.8, 2.6},
+#endif
   A_max[]    = {3e-3, 1.5e-3},
-  delta_max  = 2e-2,
+  delta_max  = 3e-2,
   twoJ[]     = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]};
 
 
@@ -98,69 +102,12 @@ void chk_lat(ss_vect<tps> &map, ss_vect<tps> &map_res,
 }
 
 
-void get_K_ijklm(const std::string &name, const int n,
-		   const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
-		   const bool tune_fp)
-{
-  tps K, K_re, K_im;
-
-  const int Fnum = get_Fnum(name.c_str());
-
-  set_bn_par(Fnum, n, 7);
-
-  danot_(no_tps-1);
-  get_Map();
-  danot_(no_tps);
-  K = MapNorm(Map, g, A1, A0, Map_res, 1);
-  CtoR(K*Id_scl, K_re, K_im);
-
-  if (false)
-    std::cout << std::scientific << std::setprecision(3)
-	      << "\n" << std::setw(8) << name << std::setw(4) << Fnum << ":\n"
-	      << std::scientific << std::setprecision(3) << K_re;
-
-  clr_bn_par(Fnum, n);
-
-  k_ijklm[0].prms.push_back(name);
-  k_ijklm[0].n.push_back(n);
-  k_ijklm[0].Jacobian.push_back(k_ijklm[0].scl*
-				h_ijklm_p(K_re, 1, 1, 0, 0, 1, 7));
-  k_ijklm[1].prms.push_back(name);
-  k_ijklm[1].n.push_back(n);
-  k_ijklm[1].Jacobian.push_back(k_ijklm[1].scl*
-				h_ijklm_p(K_re, 0, 0, 1, 1, 1, 7));
-
-  if (tune_fp) {
-    k_ijklm[2].prms.push_back(name);
-    k_ijklm[2].n.push_back(n);
-    k_ijklm[2].Jacobian.push_back(k_ijklm[2].scl*
-				  h_ijklm_p(K_re, 2, 2, 0, 0, 0, 7));
-    k_ijklm[3].prms.push_back(name);
-    k_ijklm[3].n.push_back(n);
-    k_ijklm[3].Jacobian.push_back(k_ijklm[3].scl*
-				  h_ijklm_p(K_re, 1, 1, 1, 1, 0, 7));
-    k_ijklm[4].prms.push_back(name);
-    k_ijklm[4].n.push_back(n);
-    k_ijklm[4].Jacobian.push_back(k_ijklm[4].scl*
-				  h_ijklm_p(K_re, 0, 0, 2, 2, 0, 7));
-
-    k_ijklm[5].prms.push_back(name);
-    k_ijklm[5].n.push_back(n);
-    k_ijklm[5].Jacobian.push_back(k_ijklm[5].scl*
-				  h_ijklm_p(K_re, 1, 1, 0, 0, 2, 7));
-    k_ijklm[6].prms.push_back(name);
-    k_ijklm[6].n.push_back(n);
-    k_ijklm[6].Jacobian.push_back(k_ijklm[6].scl*
-				  h_ijklm_p(K_re, 0, 0, 1, 1, 2, 7));
-  }
-}
-
-
 void prt_Lie_term(const Lie_term &k_ijklm)
 {
   int k;
 
-  printf(" %s %6.1e %10.3e", k_ijklm.label.c_str(), k_ijklm.scl, k_ijklm.cst);
+  printf(" %s %6.1e %10.3e",
+	 k_ijklm.label.c_str(), k_ijklm.cst_scl, k_ijklm.cst);
   for (k = 0; k < k_ijklm.Jacobian.size(); k++)
     printf(" %10.3e", k_ijklm.Jacobian[k]);
   printf("\n");
@@ -172,20 +119,38 @@ void prt_K_ijklm(const std::vector<Lie_term> &k_ijklm, const bool tune_fp)
   int k;
 
   printf("\n           scl.      cst.");
-  for (k = 0; k < k_ijklm[0].prms.size(); k++)
-    printf("      %-5s", k_ijklm[0].prms[k].c_str());
+  for (k = 0; k < k_ijklm[0].bn.size(); k++)
+    printf("      %-5s", k_ijklm[0].bn[k].c_str());
   printf("\n                         ");
-  for (k = 0; k < k_ijklm[0].prms.size(); k++)
+  for (k = 0; k < k_ijklm[0].bn.size(); k++)
     printf("       %1d   ", k_ijklm[0].n[k]);
+  printf("\n                         ");
+  for (k = 0; k < k_ijklm[0].bn.size(); k++)
+    printf("    %7.1e", k_ijklm[0].bn_scl[k]);
+
   printf("\nLinear chromaticity:\n");
   for (k = 0; k < 2; k++)
     prt_Lie_term(k_ijklm[k]);
+
+  printf("\nGeometric terms:\n");
+  for (k = 2; k < 7; k++)
+    prt_Lie_term(k_ijklm[k]);
+
   if (tune_fp) {
     printf("\nAnharmonic terms:\n");
-    for (k = 2; k < 5; k++)
+    for (k = 7; k < 10; k++)
       prt_Lie_term(k_ijklm[k]);
-    printf("2nd order chromaticity:\n");
-    for (k = 5; k < 7; k++)
+
+    printf("\nAnharmonic terms:\n");
+    for (k = 10; k < 14; k++)
+      prt_Lie_term(k_ijklm[k]);
+
+    printf("\n2nd order chromaticity:\n");
+    for (k = 14; k < 16; k++)
+      prt_Lie_term(k_ijklm[k]);
+
+    printf("\n3rd order chromaticity:\n");
+    for (k = 16; k < 18; k++)
       prt_Lie_term(k_ijklm[k]);
   }
 }
@@ -230,11 +195,11 @@ void set_bn(const double *bn, const double scl,
   int k, Fnum, n;
 
   printf("\nb_n:\n  scaled by %3.1f\n ", scl);
-  for (k = 0; k < k_ijklm[0].prms.size(); k++) {
+  for (k = 0; k < k_ijklm[0].bn.size(); k++) {
     n = k_ijklm[0].n[k];
-    Fnum = get_Fnum(k_ijklm[0].prms[k].c_str());
-    set_dbn(Fnum, n, scl*bn[k+1]);
-    if (true)
+    Fnum = get_Fnum(k_ijklm[0].bn[k].c_str());
+    set_dbn(Fnum, n, scl*k_ijklm[0].bn_scl[k]*bn[k+1]);
+    if (!true)
       printf("  %10.3e", get_bn(Fnum, 1, n));
     else
       printf("  %10.3e", get_bnL(Fnum, 1, n));
@@ -307,8 +272,8 @@ void prt_bn(const std::vector<Lie_term> &k_ijklm)
   outf = file_write(file_name.c_str());
 
   fprintf(outf, "\n");
-  for (k = 0; k < k_ijklm[0].prms.size(); k++) {
-    Fnum = get_Fnum(k_ijklm[0].prms[k].c_str());
+  for (k = 0; k < k_ijklm[0].bn.size(); k++) {
+    Fnum = get_Fnum(k_ijklm[0].bn[k].c_str());
     loc = get_loc(Fnum, 1) - 1;
     if (elem[loc].mpole->n_design == Dip)
       prt_bend(outf, loc, k_ijklm[0].n[k]);
@@ -353,8 +318,23 @@ void correct(const std::vector<Lie_term> &k_ijklm, const double svd_cut,
 }
 
 
-void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
-	     const bool tune_fp)
+void get_h2_ijklm(const tps &h, const double scl, const int i, const int j,
+		  const int k, const int l, const int m,
+		  std::vector<Lie_term> &h2_ijklm)
+{
+  Lie_term           h2;
+  std::ostringstream str;
+
+  h2.cst_scl = scl;
+  str << "k_" << i << j << k << l << m;
+  h2.label = str.str();
+  h2.cst = h2.cst_scl*h_ijklm(h, i, j, k, l, m);
+  h2_ijklm.push_back(h2);
+}
+
+
+void get_constr(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
+		const bool tune_fp)
 {
   double       nu[3], ksi[3];
   tps          g_re, g_im, K, K_re, K_im;
@@ -362,8 +342,9 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
   Lie_term     h;
 
   const double
-    scl_ksi[] = {0e0, 1e0, 1e-1, 1e-10},
-    scl_a     = 1e-1;
+    scl_h     = 1e-1,
+    scl_ksi[] = {0e0, 1e1, 1e0, 1e0},
+    scl_a     = 1e0;
 
   danot_(no_tps-1);
   get_Map();
@@ -386,72 +367,133 @@ void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
 
   k_ijklm.clear();
 
-  h.scl = scl_ksi[1];
-  h.label = "k_11001";
-  h.cst = h.scl*h_ijklm(K_re, 1, 1, 0, 0, 1);
-  k_ijklm.push_back(h);
-  h.label = "k_00111";
-  h.cst = h.scl*h_ijklm(K_re, 0, 0, 1, 1, 1);
-  k_ijklm.push_back(h);
+  get_h2_ijklm(K_re, scl_ksi[1], 1, 1, 0, 0, 1, k_ijklm);
+  get_h2_ijklm(K_re, scl_ksi[1], 0, 0, 1, 1, 1, k_ijklm);
+
+  get_h2_ijklm(g_im, scl_h, 1, 0, 1, 1, 0, k_ijklm);
+  get_h2_ijklm(g_im, scl_h, 2, 1, 0, 0, 0, k_ijklm);
+  get_h2_ijklm(g_im, scl_h, 3, 0, 0, 0, 0, k_ijklm);
+  get_h2_ijklm(g_im, scl_h, 1, 0, 0, 2, 0, k_ijklm);
+  get_h2_ijklm(g_im, scl_h, 1, 0, 2, 0, 0, k_ijklm);
 
   if (tune_fp) {
-    h.scl = scl_a;
-    h.label = "k_22000";
-    h.cst = h.scl*h_ijklm(K_re, 2, 2, 0, 0, 0);
-    k_ijklm.push_back(h);
-    h.label = "k_11110";
-    h.cst = h.scl*h_ijklm(K_re, 1, 1, 1, 1, 0);
-    k_ijklm.push_back(h);
-    h.label = "k_00220";
-    h.cst = h.scl*h_ijklm(K_re, 0, 0, 2, 2, 0);
-    k_ijklm.push_back(h);
+    get_h2_ijklm(K_re, scl_a, 2, 2, 0, 0, 0, k_ijklm);
+    get_h2_ijklm(K_re, scl_a, 1, 1, 1, 1, 0, k_ijklm);
+    get_h2_ijklm(K_re, scl_a, 0, 0, 2, 2, 0, k_ijklm);
 
-    h.scl = scl_ksi[2];
-    h.label = "k_11002";
-    h.cst = h.scl*h_ijklm(K_re, 1, 1, 0, 0, 2);
-    k_ijklm.push_back(h);
-    h.label = "k_00112";
-    h.cst = h.scl*h_ijklm(K_re, 0, 0, 1, 1, 2);
-    k_ijklm.push_back(h);
+    get_h2_ijklm(K_re, scl_a, 3, 3, 0, 0, 0, k_ijklm);
+    get_h2_ijklm(K_re, scl_a, 2, 2, 1, 1, 0, k_ijklm);
+    get_h2_ijklm(K_re, scl_a, 1, 1, 2, 2, 0, k_ijklm);
+    get_h2_ijklm(K_re, scl_a, 0, 0, 3, 3, 0, k_ijklm);
+
+    get_h2_ijklm(K_re, scl_ksi[2], 1, 1, 0, 0, 2, k_ijklm);
+    get_h2_ijklm(K_re, scl_ksi[2], 0, 0, 1, 1, 2, k_ijklm);
+
+    get_h2_ijklm(K_re, scl_ksi[3], 1, 1, 0, 0, 3, k_ijklm);
+    get_h2_ijklm(K_re, scl_ksi[3], 0, 0, 1, 1, 3, k_ijklm);
   }
 
-  if (!false) {
-    get_K_ijklm("s1a", Sext, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("s1b", Sext, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("s2",  Sext, Id_scl, k_ijklm, tune_fp);
-  }
+}
 
-  if (false) {
-    if (false) get_K_ijklm("q1",  Sext, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("uq1", Sext, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("uq2", Sext, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("uq3", Sext, Id_scl, k_ijklm, tune_fp);
-  }
-  if (false) {
-    get_K_ijklm("b1",  Sext, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("b2",  Sext, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("mb1", Sext, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("mb2", Sext, Id_scl, k_ijklm, tune_fp);
-  }
 
-  if (false) {
-    get_K_ijklm("s1a", Oct, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("s1b", Oct, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("s2",  Oct, Id_scl, k_ijklm, tune_fp);
-  }
-  if (false) {
-    if (false) get_K_ijklm("q1",  Oct, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("uq1", Oct, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("uq2", Oct, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("uq3", Oct, Id_scl, k_ijklm, tune_fp);
-  }
-  if (false) {
-    get_K_ijklm("b1",  Oct, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("b2",  Oct, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("mb1", Oct, Id_scl, k_ijklm, tune_fp);
-    get_K_ijklm("mb2", Oct, Id_scl, k_ijklm, tune_fp);
-  }
+void get_h1_ijklm(const tps &h1, const std::string &name, const int n,
+		  const int i, const int j, const int k, const int l,
+		  const int m, const double bn_scl, Lie_term &k_ijklm)
+{
+  k_ijklm.bn.push_back(name);
+  k_ijklm.n.push_back(n);
+  k_ijklm.Jacobian.push_back
+    (bn_scl*k_ijklm.cst_scl*h_ijklm_p(h1, i, j, k, l, m, 7));
+  k_ijklm.bn_scl.push_back(bn_scl);
+}
 
+
+void get_K_ijklm(const std::string &name, const int n,
+		 const ss_vect<tps> &Id_scl, const double bn_scl,
+		 std::vector<Lie_term> &k_ijklm, const bool tune_fp)
+{
+  tps g_re, g_im, K, K_re, K_im;
+
+  const int Fnum = get_Fnum(name.c_str());
+
+  set_bn_par(Fnum, n, 7);
+
+  danot_(no_tps-1);
+  get_Map();
+  danot_(no_tps);
+  K = MapNorm(Map, g, A1, A0, Map_res, 1);
+  CtoR(g*Id_scl, g_re, g_im);
+  CtoR(K*Id_scl, K_re, K_im);
+
+  if (false)
+    std::cout << std::scientific << std::setprecision(3)
+	      << "\n" << std::setw(8) << name << std::setw(4) << Fnum << ":\n"
+	      << std::scientific << std::setprecision(3) << K_re;
+
+  clr_bn_par(Fnum, n);
+
+  get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 1, bn_scl, k_ijklm[0]);
+  get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 1, bn_scl, k_ijklm[1]);
+
+  get_h1_ijklm(g_im, name, n, 1, 0, 1, 1, 0, bn_scl, k_ijklm[2]);
+  get_h1_ijklm(g_im, name, n, 2, 1, 0, 0, 0, bn_scl, k_ijklm[3]);
+  get_h1_ijklm(g_im, name, n, 3, 0, 0, 0, 0, bn_scl, k_ijklm[4]);
+  get_h1_ijklm(g_im, name, n, 1, 0, 0, 2, 0, bn_scl, k_ijklm[5]);
+  get_h1_ijklm(g_im, name, n, 1, 0, 2, 0, 0, bn_scl, k_ijklm[6]);
+
+  if (tune_fp) {
+    get_h1_ijklm(K_re, name, n, 2, 2, 0, 0, 0, bn_scl, k_ijklm[7]);
+    get_h1_ijklm(K_re, name, n, 1, 1, 1, 1, 0, bn_scl, k_ijklm[8]);
+    get_h1_ijklm(K_re, name, n, 0, 0, 2, 2, 0, bn_scl, k_ijklm[9]);
+
+    get_h1_ijklm(K_re, name, n, 3, 3, 0, 0, 0, bn_scl, k_ijklm[10]);
+    get_h1_ijklm(K_re, name, n, 2, 2, 1, 1, 0, bn_scl, k_ijklm[11]);
+    get_h1_ijklm(K_re, name, n, 1, 1, 2, 2, 0, bn_scl, k_ijklm[12]);
+    get_h1_ijklm(K_re, name, n, 0, 0, 3, 3, 0, bn_scl, k_ijklm[13]);
+
+    get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 2, bn_scl, k_ijklm[14]);
+    get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 2, bn_scl, k_ijklm[15]);
+
+    get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 3, bn_scl, k_ijklm[16]);
+    get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 3, bn_scl, k_ijklm[17]);
+  }
+}
+
+
+void get_params(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
+		const bool tune_fp)
+{
+  const double bn_scl[] = {0e0, 0e0, 0e0, 1e0, 1e2, 1e4};
+
+  get_K_ijklm("s1a", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  get_K_ijklm("s1b", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  get_K_ijklm("s2",  Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+
+  get_K_ijklm("mb1", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  get_K_ijklm("mb2", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+
+  get_K_ijklm("s1a", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+  get_K_ijklm("s1b", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+  get_K_ijklm("s2",  Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+
+  get_K_ijklm("uq1", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+  get_K_ijklm("uq2", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+  get_K_ijklm("uq3", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+
+  get_K_ijklm("s1a", Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
+  get_K_ijklm("s1b", Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
+  get_K_ijklm("s2",  Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
+
+}
+
+
+void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
+	     const bool tune_fp)
+{
+  get_constr(Id_scl, k_ijklm, tune_fp);
+
+  get_params(Id_scl, k_ijklm, tune_fp);
+  
   prt_K_ijklm(k_ijklm, tune_fp);
 }
 
@@ -520,7 +562,7 @@ int main(int argc, char *argv[])
     for (k = 1; k <= 30; k++) {
       printf("\nk = %d:", k);
       analyze(Id_scl, k_ijklm, tune_fp);
-      correct(k_ijklm, 1e-12, 0.2);
+      correct(k_ijklm, 1e-12, 0.3);
     }
     prt_mfile("flat_file.fit");
     analyze(Id_scl, k_ijklm, tune_fp);
