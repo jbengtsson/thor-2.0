@@ -1,4 +1,4 @@
-#define NO 7
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -343,7 +343,7 @@ void get_constr(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
 
   const double
     scl_h     = 1e-1,
-    scl_ksi[] = {0e0, 1e1, 1e0, 1e0},
+    scl_ksi[] = {0e0, 1e1, 1e0, 0e0},
     scl_a     = 1e0;
 
   danot_(no_tps-1);
@@ -465,24 +465,29 @@ void get_params(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
 {
   const double bn_scl[] = {0e0, 0e0, 0e0, 1e0, 1e2, 1e4};
 
-  get_K_ijklm("s1a", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-  get_K_ijklm("s1b", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-  get_K_ijklm("s2",  Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  get_K_ijklm("s1a_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  get_K_ijklm("s1b_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  get_K_ijklm("s2a_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  get_K_ijklm("s2b_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
 
-  get_K_ijklm("mb1", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-  get_K_ijklm("mb2", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  if (false) {
+    get_K_ijklm("mb1", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+    get_K_ijklm("mb2", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  }
 
-  get_K_ijklm("s1a", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-  get_K_ijklm("s1b", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-  get_K_ijklm("s2",  Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+  if (false) {
+    get_K_ijklm("s1a", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+    get_K_ijklm("s1b", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+    get_K_ijklm("s2",  Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
 
-  get_K_ijklm("uq1", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-  get_K_ijklm("uq2", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-  get_K_ijklm("uq3", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+    get_K_ijklm("uq1", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+    get_K_ijklm("uq2", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+    get_K_ijklm("uq3", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
 
-  get_K_ijklm("s1a", Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
-  get_K_ijklm("s1b", Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
-  get_K_ijklm("s2",  Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
+    get_K_ijklm("s1a", Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
+    get_K_ijklm("s1b", Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
+    get_K_ijklm("s2",  Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
+  }
 
 }
 
