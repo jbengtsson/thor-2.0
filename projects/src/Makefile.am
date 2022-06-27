@@ -28,29 +28,26 @@ tbs_SOURCES          = tbs.cc
 get_dnu_SOURCES      = get_dnu.cc
 mpole_scheme_SOURCES = mpole_scheme.cc
 
+GSL_INCLUDE = /usr/local/Cellar/gsl/2.7.1
+# GSL_INCLUDE = /net/home/lli/OPAL/OPAL-2.0.1
+
 LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
-	  -L$(NUM_REC)/lib  -L/usr/local/Cellar/gcc/11.2.0/lib/gcc/11 \
-          -lnum_rec \
-	  -lstdc++ -lgfortran \
-          -lm
-#	  -L/usr/lib/x86_64-linux-gnu \
-#	  -lgsl -lgslcblas
-#	  -lmpich \
-#	  -lmpl
-#          -lg2c 
-#	  -lstdc++ -ltermcap -ldl \
-#	  -L$(HOME)/R-2.8.1/src/main -L$(HOME)/R-2.8.1/lib
-#          -lR -lRblas -lRlapack
-#	  -L$(HOME)/readline-5.0
-#	  -lreadline -lhistory
+	  -L$(NUM_REC)/lib -lnum_rec \
+	  -lstdc++ \
+          -lm \
+	  -L$(GSL_INCLUDE)/lib -lgsl \
+	  -lgfortran
 
 #INCLUDES = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc -I$(HOME)/R-2.8.1/include \
 #	   -I/usr/local/include -I/usr/include/openmpi
+
 AM_CPPFLAGS = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc  \
               -I$(HOME)/R-2.8.1/include \
-	      -I/usr/local/include -I/usr/include/openmpi
+	      -I/usr/local/include -I/usr/include/openmpi \
+              -I$(GSL_INCLUDE)/include
 
-#AM_CXXFLAGS = -g -O2 -Wall -Wno-non-template-friend -fPIC -Wl,--no-relax
+AM_FFLAGS   = -g -O0 -Wall -fbounds-check
+
 AM_CXXFLAGS = -g -O2 -Wall -fPIC
-#CXXFLAGS = -g -Wl,-stack_size -Wl,0x40000000 -O2 -Wall -Wno-non-template-friend
+
 UNLIMIT_RESOURCES = datasize memorysize stacksize

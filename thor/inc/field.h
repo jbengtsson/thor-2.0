@@ -228,7 +228,7 @@ template<typename T> class ss_vect {
   friend void CtoR(const tps &, tps &, tps &);
   friend tps RtoC(const tps &, const tps &);
   friend tps LieFact_DF(const ss_vect<tps> &, ss_vect<tps> &);
-  friend tps LieFact(const ss_vect &);
+  friend tps LieFact(const ss_vect<tps> &);
   friend ss_vect<tps> FlowFact(const ss_vect<tps> &);
   friend tps Intd(const ss_vect<tps> &, const double);
 

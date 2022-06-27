@@ -108,7 +108,7 @@ void prt_Lie_term(const Lie_term &k_ijklm)
 
   printf(" %s %6.1e %10.3e",
 	 k_ijklm.label.c_str(), k_ijklm.cst_scl, k_ijklm.cst);
-  for (k = 0; k < k_ijklm.Jacobian.size(); k++)
+  for (k = 0; k < (int)k_ijklm.Jacobian.size(); k++)
     printf(" %10.3e", k_ijklm.Jacobian[k]);
   printf("\n");
 }
@@ -119,13 +119,13 @@ void prt_K_ijklm(const std::vector<Lie_term> &k_ijklm, const bool tune_fp)
   int k;
 
   printf("\n           scl.      cst.");
-  for (k = 0; k < k_ijklm[0].bn.size(); k++)
+  for (k = 0; k < (int)k_ijklm[0].bn.size(); k++)
     printf("      %-5s", k_ijklm[0].bn[k].c_str());
   printf("\n                         ");
-  for (k = 0; k < k_ijklm[0].bn.size(); k++)
+  for (k = 0; k < (int)k_ijklm[0].bn.size(); k++)
     printf("       %1d   ", k_ijklm[0].n[k]);
   printf("\n                         ");
-  for (k = 0; k < k_ijklm[0].bn.size(); k++)
+  for (k = 0; k < (int)k_ijklm[0].bn.size(); k++)
     printf("    %7.1e", k_ijklm[0].bn_scl[k]);
 
   printf("\nLinear chromaticity:\n");
@@ -204,7 +204,7 @@ void set_bn(const double *bn, const double scl,
     printf("\nb_n*L:\n  scaled by %3.1f\n ", scl);
   else
     printf("\nb_n:\n  scaled by %3.1f\n ", scl);
-  for (k = 0; k < k_ijklm[0].bn.size(); k++) {
+  for (k = 0; k < (int)k_ijklm[0].bn.size(); k++) {
     n = k_ijklm[0].n[k];
     Fnum = get_Fnum(k_ijklm[0].bn[k].c_str());
     set_dbn(Fnum, n, scl*k_ijklm[0].bn_scl[k]*bn[k+1]);
@@ -281,7 +281,7 @@ void prt_bn(const std::vector<Lie_term> &k_ijklm)
   outf = file_write(file_name.c_str());
 
   fprintf(outf, "\n");
-  for (k = 0; k < k_ijklm[0].bn.size(); k++) {
+  for (k = 0; k < (int)k_ijklm[0].bn.size(); k++) {
     Fnum = get_Fnum(k_ijklm[0].bn[k].c_str());
     loc = get_loc(Fnum, 1) - 1;
     if (elem[loc].mpole->n_design == Dip)
@@ -484,10 +484,13 @@ void get_params(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
 {
   const double bn_scl[] = {0e0, 0e0, 0e0, 1e0, 1e2, 1e4};
 
-  get_K_ijklm("s1a_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-  get_K_ijklm("s1b_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-  get_K_ijklm("s2a_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-  get_K_ijklm("s2b_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  get_K_ijklm("sf_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  get_K_ijklm("sd_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+
+  if (!false)
+    get_K_ijklm("sf2_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  if (!false)
+    get_K_ijklm("sd2_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
 
   if (false) {
     get_K_ijklm("s1a_h", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);

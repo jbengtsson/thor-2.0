@@ -5489,9 +5489,13 @@ double get_dynap(const double r, const double delta, const int n,
   /* Determine the dynamical aperture by tracking.
      Assumes mid-plane symmetry.                    */
 
-  int           i, j;
-  double        r1, phi, x0[2]={0e0, 0e0}, x1[2], x2[2], DA, alpha[2], beta[2];
-  std::ofstream os;
+  int
+    i, j;
+  double
+    r1, phi, x0[2]={0e0, 0e0}, x1[2], x2[2]={0e0, 0e0}, DA,
+    alpha[2], beta[2];
+  std::ofstream
+    os;
 
   os.open("dynap.dat", std::ios::out);
   os << "# Dynamical Aperture:" << std::endl;
