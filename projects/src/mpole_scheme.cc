@@ -487,37 +487,25 @@ void get_params(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
   get_K_ijklm("sf_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
   get_K_ijklm("sd_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
 
-  if (!false)
+  if (!false) {
     get_K_ijklm("sf2_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-  if (!false)
-    get_K_ijklm("sd2_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+    // get_K_ijklm("sd2_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+  }
 
-  if (false) {
-    get_K_ijklm("s1a_h", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-    get_K_ijklm("s1b_h", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-    get_K_ijklm("s2a_h", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-    get_K_ijklm("s2b_h", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+  if (!false) {
+    get_K_ijklm("sf_h", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+    get_K_ijklm("sd_h", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
   }
 
   if (false) {
-    get_K_ijklm("mb1", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-    get_K_ijklm("mb2", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+    get_K_ijklm("bb_h",  Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
+    get_K_ijklm("mbb",   Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
   }
 
   if (false) {
-    get_K_ijklm("s1a", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-    get_K_ijklm("s1b", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-    get_K_ijklm("s2",  Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-
-    get_K_ijklm("uq1", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-    get_K_ijklm("uq2", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-    get_K_ijklm("uq3", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-
-    get_K_ijklm("s1a", Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
-    get_K_ijklm("s1b", Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
-    get_K_ijklm("s2",  Dec, Id_scl, bn_scl[Dec], k_ijklm, tune_fp);
+    get_K_ijklm("bb_h",  Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
+    get_K_ijklm("mbb",   Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
   }
-
 }
 
 
