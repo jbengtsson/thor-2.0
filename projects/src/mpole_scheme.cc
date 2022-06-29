@@ -2,6 +2,8 @@
 
 #include "thor_lib.h"
 
+#include "param_type.cc"
+
 int
   no_tps   = NO,
   ndpt_tps = 5;
@@ -13,11 +15,18 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 
 typedef struct {
-  std::string              label;
-  double                   cst_scl, cst;
-  std::vector<std::string> bn;
-  std::vector<int>         n;
-  std::vector<double>      Jacobian, bn_scl;
+  std::string
+    label;
+  double
+    cst_scl,
+    cst;
+  std::vector<std::string>
+    bn;
+  std::vector<int>
+    n;
+  std::vector<double>
+    bn_scl,
+    Jacobian;
 } Lie_term;
 
 
@@ -30,6 +39,8 @@ const double
   A_max[]    = {3e-3, 1.5e-3},
   delta_max  = 2e-2,
   twoJ[]     = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]};
+
+
 
 
 tps get_h(ss_vect<tps> &map)
@@ -192,26 +203,26 @@ void get_sing_val(const int n, double w[], const double svd_cut)
 }
 
 
-void set_bn(const double *bn, const double scl,
-	    const std::vector<Lie_term> &k_ijklm)
+void set_bn(const double *dbn, param_type &bns)
 {
   // Integrated strengths: b_n*L.
-  int k, Fnum, n;
+  int k;
 
   const bool int_str = true;
 
   if (int_str)
-    printf("\nb_n*L:\n  scaled by %3.1f\n ", scl);
+    printf("\nb_n*L:\n");
   else
-    printf("\nb_n:\n  scaled by %3.1f\n ", scl);
-  for (k = 0; k < (int)k_ijklm[0].bn.size(); k++) {
-    n = k_ijklm[0].n[k];
-    Fnum = get_Fnum(k_ijklm[0].bn[k].c_str());
-    set_dbn(Fnum, n, scl*k_ijklm[0].bn_scl[k]*bn[k+1]);
+    printf("\nb_n:\n");
+  for (k = 0; k < (int)bns.Fnum.size(); k++) {
+    set_dbn(bns.Fnum[k], bns.n[k], bns.bn_scl[k]*dbn[k+1]);
+    bns.bn[k] =
+      bn_internal(get_bn(bns.Fnum[k], 1, bns.n[k]), bns.bn_min[k],
+		  bns.bn_max[k]);
     if (int_str)
-      printf("  %10.3e", get_bnL(Fnum, 1, n));
+      printf("  %10.3e", get_bnL(bns.Fnum[k], 1, bns.n[k]));
     else
-      printf("  %10.3e", get_bn(Fnum, 1, n));
+      printf("  %10.3e", get_bn(bns.Fnum[k], 1, bns.n[k]));
   }
   printf("\n");
 }
@@ -296,10 +307,10 @@ void prt_bn(const std::vector<Lie_term> &k_ijklm)
 }
 
 
-void correct(const std::vector<Lie_term> &k_ijklm, const double svd_cut,
-	     const double scl)
+void correct(param_type &bns, const std::vector<Lie_term> &k_ijklm,
+	     const double svd_cut, const double scl)
 {
-  double **A, **U, **V, *w, *b, *bn;
+  double **A, **U, **V, *w, *b, *dbn;
 
   const int
     m = k_ijklm.size(),
@@ -308,7 +319,7 @@ void correct(const std::vector<Lie_term> &k_ijklm, const double svd_cut,
   printf("\nsvd:\n  m = %d n = %d\n", m, n);
 
   A = dmatrix(1, m, 1, n); U = dmatrix(1, m, 1, n); V = dmatrix(1, n, 1, n);
-  w = dvector(1, n); b = dvector(1, m); bn = dvector(1, n);
+  w = dvector(1, n); b = dvector(1, m); dbn = dvector(1, n);
 
   get_A(m, n, k_ijklm, A, w, U, V, b);
 
@@ -316,14 +327,15 @@ void correct(const std::vector<Lie_term> &k_ijklm, const double svd_cut,
   dsvdcmp(U, m, n, w, V);
   get_sing_val(n, w, svd_cut);
 
-  dsvbksb(U, w, V, m, n, b, bn);
+  dsvbksb(U, w, V, m, n, b, dbn);
 
-  set_bn(bn, scl, k_ijklm);
+  set_bn(dbn, bns);
+  bns.print();
   prt_bn(k_ijklm);
 
   free_dmatrix(A, 1, m, 1, n); free_dmatrix(U, 1, m, 1, n);
   free_dmatrix(V, 1, n, 1, n); free_dvector(w, 1, n); free_dvector(b, 1, m);
-  free_dvector(bn, 1, n);
+  free_dvector(dbn, 1, n);
 }
 
 
@@ -405,7 +417,6 @@ void get_constr(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
     get_h2_ijklm(K_re, scl_ksi[3], 1, 1, 0, 0, 3, k_ijklm);
     get_h2_ijklm(K_re, scl_ksi[3], 0, 0, 1, 1, 3, k_ijklm);
   }
-
 }
 
 
@@ -479,8 +490,8 @@ void get_K_ijklm(const std::string &name, const int n,
 }
 
 
-void get_params(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
-		const bool tune_fp)
+void get_params(const ss_vect<tps> &Id_scl, const param_type &bns,
+		std::vector<Lie_term> &k_ijklm, const bool tune_fp)
 {
   const double bn_scl[] = {0e0, 0e0, 0e0, 1e0, 1e2, 1e4};
 
@@ -509,12 +520,12 @@ void get_params(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
 }
 
 
-void analyze(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
-	     const bool tune_fp)
+void analyze(const ss_vect<tps> &Id_scl, const param_type &bns,
+	     std::vector<Lie_term> &k_ijklm, const bool tune_fp)
 {
   get_constr(Id_scl, k_ijklm, tune_fp);
 
-  get_params(Id_scl, k_ijklm, tune_fp);
+  get_params(Id_scl, bns, k_ijklm, tune_fp);
   
   prt_K_ijklm(k_ijklm, tune_fp);
 }
@@ -549,11 +560,44 @@ void analyze_2(void)
 }
 
 
+void get_bns(param_type &bns)
+{
+  const double
+    bn_scl[] = {0e0, 0e0, 0e0,  1e0,  1e2,  1e4},
+    bn_min[] = {0e0, 0e0, 0e0, -1e3, -1e4, -1e5},
+    bn_max[] = {0e0, 0e0, 0e0,  1e3,  1e4,  1e5};
+
+  bns.add_prm("sf_h", Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
+  bns.add_prm("sd_h", Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
+
+  if (!false) {
+    bns.add_prm("sf2_h", Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
+    // bns.add_prm("sd2_h", Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
+  }
+
+  if (!false) {
+    bns.add_prm("sf_h", Oct, bn_min[Oct], bn_max[Oct], bn_scl[Oct]);
+    bns.add_prm("sd_h", Oct, bn_min[Oct], bn_max[Oct], bn_scl[Oct]);
+  }
+
+  if (false) {
+    bns.add_prm("bb_h", Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
+    bns.add_prm("mbb",  Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
+  }
+
+  if (false) {
+    bns.add_prm("bb_h", Oct, bn_min[Oct], bn_max[Oct], bn_scl[Oct]);
+    bns.add_prm("mbb",  Oct, bn_min[Oct], bn_max[Oct], bn_scl[Oct]);
+  }
+}
+
+
 int main(int argc, char *argv[])
 {
   int                   k;
   double                nu[3], ksi[3];
   ss_vect<tps>          Id_scl;
+  param_type            bns;
   std::vector<Lie_term> k_ijklm;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
@@ -580,14 +624,18 @@ int main(int argc, char *argv[])
   if (!false) chk_lat(Map, Map_res, nu, ksi);
 
   if (!false) {
+    get_bns(bns);
+    bns.ini_prm();
+    bns.print();
+
     printf("\n");
     for (k = 1; k <= 30; k++) {
       printf("\nk = %d:", k);
-      analyze(Id_scl, k_ijklm, tune_fp);
-      correct(k_ijklm, 1e-10, 0.3);
+      analyze(Id_scl, bns, k_ijklm, tune_fp);
+      correct(bns, k_ijklm, 1e-10, 0.3);
     }
     prt_mfile("flat_file.fit");
-    analyze(Id_scl, k_ijklm, tune_fp);
+    analyze(Id_scl, bns, k_ijklm, tune_fp);
   }
 
   if (false) analyze_2();
