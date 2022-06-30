@@ -1,3 +1,6 @@
+#ifndef  _THOR_TOOLS_H_
+#define _THOR_TOOLS_H_ 1
+
 const double  max_ampl[] = { 100e-3, 100e-3 };
 
 const int     n_alphac = 3;
@@ -398,3 +401,5 @@ void get_rad(char *cav_name, double I_beam);
 void get_emittance(void);
 
 void set_map(map_type *map);
+
+#endif /* _THOR_TOOLS_H_ */

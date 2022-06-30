@@ -2,6 +2,9 @@
 
    Definitions:  Polymorphic number class.              */
 
+#ifndef  _THOR_FIELD_H_
+#define _THOR_FIELD_H_ 1
+
 #include <sstream>
 //using namespace std;
 
@@ -396,3 +399,5 @@ inline ss_vect<T>::ss_vect(const ss_vect<U> &a)
   for (i = 0; i < ss_dim; i++)
     ss[i] = a[i];
 }
+
+#endif /* _THOR_FIELD_H_ */

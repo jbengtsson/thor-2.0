@@ -1,3 +1,6 @@
+#ifndef  _THOR_SI_H_
+#define _THOR_SI_H_ 1
+
 // E0 contain kinetic energy [GeV].
 extern double E0, dE, beta0, gamma0;
 extern tps    I2, I4, I5;
@@ -151,3 +154,5 @@ extern bool rad_on, H_exact, totpath_on, cavity_on, quad_fringe_on;
 extern bool emittance_on, IBS_on;
 
 void ini_si(void);
+
+#endif /* _THOR_SI_H_ */

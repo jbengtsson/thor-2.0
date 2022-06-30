@@ -26,7 +26,7 @@ tune_conf_2_SOURCES  = tune_conf_2.cc
 tune_conf_3_SOURCES  = tune_conf_3.cc
 tbs_SOURCES          = tbs.cc
 get_dnu_SOURCES      = get_dnu.cc
-mpole_scheme_SOURCES = mpole_scheme.cc
+mpole_scheme_SOURCES = mpole_scheme.cc param_type.cc
 
 GSL_INCLUDE = /usr/local/Cellar/gsl/2.7.1
 # GSL_INCLUDE = /net/home/lli/OPAL/OPAL-2.0.1

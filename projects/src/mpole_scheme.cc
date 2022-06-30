@@ -2,7 +2,7 @@
 
 #include "thor_lib.h"
 
-#include "param_type.cc"
+#include "param_type.h"
 
 int
   no_tps   = NO,
