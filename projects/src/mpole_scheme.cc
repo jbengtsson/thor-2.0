@@ -20,12 +20,7 @@ typedef struct {
   double
     cst_scl,
     cst;
-  std::vector<std::string>
-    bn;
-  std::vector<int>
-    n;
   std::vector<double>
-    bn_scl,
     Jacobian;
 } Lie_term;
 
@@ -125,19 +120,20 @@ void prt_Lie_term(const Lie_term &k_ijklm)
 }
 
 
-void prt_K_ijklm(const std::vector<Lie_term> &k_ijklm, const bool tune_fp)
+void prt_K_ijklm(const param_type &bns, const std::vector<Lie_term> &k_ijklm,
+		 const bool tune_fp)
 {
   int k;
 
   printf("\n           scl.      cst.");
-  for (k = 0; k < (int)k_ijklm[0].bn.size(); k++)
-    printf("      %-5s", k_ijklm[0].bn[k].c_str());
+  for (k = 0; k < bns.n_prm; k++)
+    printf("      %-5s", bns.name[k].c_str());
   printf("\n                         ");
-  for (k = 0; k < (int)k_ijklm[0].bn.size(); k++)
-    printf("       %1d   ", k_ijklm[0].n[k]);
+  for (k = 0; k < bns.n_prm; k++)
+    printf("       %1d   ", bns.n[k]);
   printf("\n                         ");
-  for (k = 0; k < (int)k_ijklm[0].bn.size(); k++)
-    printf("    %7.1e", k_ijklm[0].bn_scl[k]);
+  for (k = 0; k < bns.n_prm; k++)
+    printf("    %7.1e", bns.bnL_scl[k]);
 
   printf("\nLinear chromaticity:\n");
   for (k = 0; k < 2; k++)
@@ -203,28 +199,26 @@ void get_sing_val(const int n, double w[], const double svd_cut)
 }
 
 
-void set_bn(const double *dbn, param_type &bns)
+void set_bnL(const double *dbnL, param_type &bns)
 {
-  // Integrated strengths: b_n*L.
-  int k;
+  int    k;
+  double bnL_ext;
 
-  const bool int_str = true;
+  printf("\n      b_n       b_n*L\n");
+  for (k = 0; k < bns.n_prm; k++) {
+    bnL_ext =
+      get_bnL(bns.Fnum[k], 1, bns.n[k]) + bns.bnL_scl[k]*dbnL[k+1];
+    bns.bnL[k] = bnL_internal(bnL_ext, bns.bnL_min[k], bns.bnL_max[k]);
+    if (false)
+      printf("  %1d %11.3e %11.3e %11.3e\n",
+	     k, bnL_ext, bns.bnL[k],
+	     bnL_bounded(bns.bnL[k], bns.bnL_min[k], bns.bnL_max[k]));
 
-  if (int_str)
-    printf("\nb_n*L:\n");
-  else
-    printf("\nb_n:\n");
-  for (k = 0; k < (int)bns.Fnum.size(); k++) {
-    set_dbn(bns.Fnum[k], bns.n[k], bns.bn_scl[k]*dbn[k+1]);
-    bns.bn[k] =
-      bn_internal(get_bn(bns.Fnum[k], 1, bns.n[k]), bns.bn_min[k],
-		  bns.bn_max[k]);
-    if (int_str)
-      printf("  %10.3e", get_bnL(bns.Fnum[k], 1, bns.n[k]));
-    else
-      printf("  %10.3e", get_bn(bns.Fnum[k], 1, bns.n[k]));
+    set_bnL(bns.Fnum[k], bns.n[k],
+	    bnL_bounded(bns.bnL[k], bns.bnL_min[k], bns.bnL_max[k]));
+    printf("  %10.3e %10.3e\n",
+	   get_bn(bns.Fnum[k], 1, bns.n[k]), get_bnL(bns.Fnum[k], 1, bns.n[k]));
   }
-  printf("\n");
 }
 
 
@@ -281,10 +275,10 @@ void prt_sext(FILE *outf, const int loc, const int n)
 }
 
 
-void prt_bn(const std::vector<Lie_term> &k_ijklm)
+void prt_bn(const param_type &bns)
 {
   long int loc;
-  int      k, Fnum;
+  int      k;
   FILE     *outf;
 
   const std::string file_name = "b4.out";
@@ -292,15 +286,14 @@ void prt_bn(const std::vector<Lie_term> &k_ijklm)
   outf = file_write(file_name.c_str());
 
   fprintf(outf, "\n");
-  for (k = 0; k < (int)k_ijklm[0].bn.size(); k++) {
-    Fnum = get_Fnum(k_ijklm[0].bn[k].c_str());
-    loc = get_loc(Fnum, 1) - 1;
+  for (k = 0; k < bns.n_prm; k++) {
+    loc = get_loc(bns.Fnum[k], 1) - 1;
     if (elem[loc].mpole->n_design == Dip)
-      prt_bend(outf, loc, k_ijklm[0].n[k]);
+      prt_bend(outf, loc, bns.n[k]);
     else if (elem[loc].mpole->n_design == Quad)
-      prt_quad(outf, loc, k_ijklm[0].n[k]);
+      prt_quad(outf, loc, bns.n[k]);
     else if (elem[loc].mpole->n_design == Sext)
-      prt_sext(outf, loc, k_ijklm[0].n[k]);
+      prt_sext(outf, loc, bns.n[k]);
   }
 
   fclose(outf);
@@ -310,32 +303,45 @@ void prt_bn(const std::vector<Lie_term> &k_ijklm)
 void correct(param_type &bns, const std::vector<Lie_term> &k_ijklm,
 	     const double svd_cut, const double scl)
 {
-  double **A, **U, **V, *w, *b, *dbn;
+  int    k;
+  double **A, **U, **V, *w, *b, *dbnL, *bnL_max, *bnL;
 
   const int
     m = k_ijklm.size(),
-    n = k_ijklm[0].Jacobian.size();
+    n = bns.n_prm;
 
   printf("\nsvd:\n  m = %d n = %d\n", m, n);
 
   A = dmatrix(1, m, 1, n); U = dmatrix(1, m, 1, n); V = dmatrix(1, n, 1, n);
-  w = dvector(1, n); b = dvector(1, m); dbn = dvector(1, n);
+  w = dvector(1, n); b = dvector(1, m); dbnL = dvector(1, n);
+  bnL_max = dvector(1, n); bnL = dvector(1, n);
 
   get_A(m, n, k_ijklm, A, w, U, V, b);
 
+#if 0
   dmcopy(A, m, n, U);
   dsvdcmp(U, m, n, w, V);
   get_sing_val(n, w, svd_cut);
 
-  dsvbksb(U, w, V, m, n, b, dbn);
+  dsvbksb(U, w, V, m, n, b, dbnL);
+#else
+  for (k = 0; k < n; k++) {
+    bnL_max[k+1] = bns.bnL_max[k]*bns.L[k]/bns.bnL_scl[k];
+    bnL[k+1] = get_bnL(bns.Fnum[k], 1, bns.n[k])/bns.bnL_scl[k];
+  }
 
-  set_bn(dbn, bns);
+  SVD_lim(m, n, A, b, bnL_max, svd_cut, bnL, dbnL);
+
+#endif
+
+  set_bnL(dbnL, bns);
   bns.print();
-  prt_bn(k_ijklm);
+  prt_bn(bns);
 
   free_dmatrix(A, 1, m, 1, n); free_dmatrix(U, 1, m, 1, n);
   free_dmatrix(V, 1, n, 1, n); free_dvector(w, 1, n); free_dvector(b, 1, m);
-  free_dvector(dbn, 1, n);
+  free_dvector(dbnL, 1, n); free_dvector(bnL_max, 1, n);
+  free_dvector(bnL, 1, n);
 }
 
 
@@ -422,18 +428,15 @@ void get_constr(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
 
 void get_h1_ijklm(const tps &h1, const std::string &name, const int n,
 		  const int i, const int j, const int k, const int l,
-		  const int m, const double bn_scl, Lie_term &k_ijklm)
+		  const int m, const double bnL_scl, Lie_term &k_ijklm)
 {
-  k_ijklm.bn.push_back(name);
-  k_ijklm.n.push_back(n);
   k_ijklm.Jacobian.push_back
-    (bn_scl*k_ijklm.cst_scl*h_ijklm_p(h1, i, j, k, l, m, 7));
-  k_ijklm.bn_scl.push_back(bn_scl);
+    (bnL_scl*k_ijklm.cst_scl*h_ijklm_p(h1, i, j, k, l, m, 7));
 }
 
 
 void get_K_ijklm(const std::string &name, const int n,
-		 const ss_vect<tps> &Id_scl, const double bn_scl,
+		 const ss_vect<tps> &Id_scl, const double bnL_scl,
 		 std::vector<Lie_term> &k_ijklm, const bool tune_fp)
 {
   int k;
@@ -458,65 +461,46 @@ void get_K_ijklm(const std::string &name, const int n,
   clr_bn_par(Fnum, n);
 
   k = 0;
-  get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 1, bn_scl, k_ijklm[k++]);
-  get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 1, bn_scl, k_ijklm[k++]);
+  get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 1, bnL_scl, k_ijklm[k++]);
+  get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 1, bnL_scl, k_ijklm[k++]);
 
-  get_h1_ijklm(g_im, name, n, 1, 0, 0, 0, 2, bn_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 2, 0, 0, 0, 1, bn_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 0, 0, 2, 0, 1, bn_scl, k_ijklm[k++]);
+  get_h1_ijklm(g_im, name, n, 1, 0, 0, 0, 2, bnL_scl, k_ijklm[k++]);
+  get_h1_ijklm(g_im, name, n, 2, 0, 0, 0, 1, bnL_scl, k_ijklm[k++]);
+  get_h1_ijklm(g_im, name, n, 0, 0, 2, 0, 1, bnL_scl, k_ijklm[k++]);
 
-  get_h1_ijklm(g_im, name, n, 1, 0, 1, 1, 0, bn_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 2, 1, 0, 0, 0, bn_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 3, 0, 0, 0, 0, bn_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 1, 0, 0, 2, 0, bn_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 1, 0, 2, 0, 0, bn_scl, k_ijklm[k++]);
+  get_h1_ijklm(g_im, name, n, 1, 0, 1, 1, 0, bnL_scl, k_ijklm[k++]);
+  get_h1_ijklm(g_im, name, n, 2, 1, 0, 0, 0, bnL_scl, k_ijklm[k++]);
+  get_h1_ijklm(g_im, name, n, 3, 0, 0, 0, 0, bnL_scl, k_ijklm[k++]);
+  get_h1_ijklm(g_im, name, n, 1, 0, 0, 2, 0, bnL_scl, k_ijklm[k++]);
+  get_h1_ijklm(g_im, name, n, 1, 0, 2, 0, 0, bnL_scl, k_ijklm[k++]);
 
   if (tune_fp) {
-    get_h1_ijklm(K_re, name, n, 2, 2, 0, 0, 0, bn_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 1, 1, 1, 1, 0, bn_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 0, 0, 2, 2, 0, bn_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 2, 2, 0, 0, 0, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 1, 1, 1, 1, 0, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 0, 0, 2, 2, 0, bnL_scl, k_ijklm[k++]);
 
-    get_h1_ijklm(K_re, name, n, 3, 3, 0, 0, 0, bn_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 2, 2, 1, 1, 0, bn_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 1, 1, 2, 2, 0, bn_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 0, 0, 3, 3, 0, bn_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 3, 3, 0, 0, 0, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 2, 2, 1, 1, 0, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 1, 1, 2, 2, 0, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 0, 0, 3, 3, 0, bnL_scl, k_ijklm[k++]);
 
-    get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 2, bn_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 2, bn_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 2, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 2, bnL_scl, k_ijklm[k++]);
 
-    get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 3, bn_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 3, bn_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 3, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 3, bnL_scl, k_ijklm[k++]);
   }
 }
 
 
-void get_params(const ss_vect<tps> &Id_scl, const param_type &bns,
+void get_Jacobian(const ss_vect<tps> &Id_scl, const param_type &bns,
 		std::vector<Lie_term> &k_ijklm, const bool tune_fp)
 {
-  const double bn_scl[] = {0e0, 0e0, 0e0, 1e0, 1e2, 1e4};
+  int k;
 
-  get_K_ijklm("sf_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-  get_K_ijklm("sd_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-
-  if (!false) {
-    get_K_ijklm("sf2_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-    // get_K_ijklm("sd2_h", Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-  }
-
-  if (!false) {
-    get_K_ijklm("sf_h", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-    get_K_ijklm("sd_h", Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-  }
-
-  if (false) {
-    get_K_ijklm("bb_h",  Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-    get_K_ijklm("mbb",   Sext, Id_scl, bn_scl[Sext], k_ijklm, tune_fp);
-  }
-
-  if (false) {
-    get_K_ijklm("bb_h",  Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-    get_K_ijklm("mbb",   Oct, Id_scl, bn_scl[Oct], k_ijklm, tune_fp);
-  }
+  for (k = 0; k < bns.n_prm; k++)
+    get_K_ijklm(bns.name[k], bns.n[k], Id_scl, bns.bnL_scl[k]/bns.L[k], k_ijklm,
+		tune_fp);
 }
 
 
@@ -525,9 +509,9 @@ void analyze(const ss_vect<tps> &Id_scl, const param_type &bns,
 {
   get_constr(Id_scl, k_ijklm, tune_fp);
 
-  get_params(Id_scl, bns, k_ijklm, tune_fp);
+  get_Jacobian(Id_scl, bns, k_ijklm, tune_fp);
   
-  prt_K_ijklm(k_ijklm, tune_fp);
+  prt_K_ijklm(bns, k_ijklm, tune_fp);
 }
 
 void analyze_2(void)
@@ -563,31 +547,21 @@ void analyze_2(void)
 void get_bns(param_type &bns)
 {
   const double
-    bn_scl[] = {0e0, 0e0, 0e0,  1e0,  1e2,  1e4},
-    bn_min[] = {0e0, 0e0, 0e0, -1e3, -1e4, -1e5},
-    bn_max[] = {0e0, 0e0, 0e0,  1e3,  1e4,  1e5};
+    bnL_scl[] = {0e0, 0e0, 0e0,  1e0,  1e2,  1e4},
+    bnL_min[] = {0e0, 0e0, 0e0, -3e2, -1e4, -1e5},
+    bnL_max[] = {0e0, 0e0, 0e0,  3e2,  1e4,  1e5};
 
-  bns.add_prm("sf_h", Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
-  bns.add_prm("sd_h", Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
-
-  if (!false) {
-    bns.add_prm("sf2_h", Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
-    // bns.add_prm("sd2_h", Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
-  }
+  bns.add_prm("sf_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+  bns.add_prm("sd_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
 
   if (!false) {
-    bns.add_prm("sf_h", Oct, bn_min[Oct], bn_max[Oct], bn_scl[Oct]);
-    bns.add_prm("sd_h", Oct, bn_min[Oct], bn_max[Oct], bn_scl[Oct]);
+    bns.add_prm("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    // bns.add_prm("sd2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
   }
 
-  if (false) {
-    bns.add_prm("bb_h", Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
-    bns.add_prm("mbb",  Sext, bn_min[Sext], bn_max[Sext], bn_scl[Sext]);
-  }
-
-  if (false) {
-    bns.add_prm("bb_h", Oct, bn_min[Oct], bn_max[Oct], bn_scl[Oct]);
-    bns.add_prm("mbb",  Oct, bn_min[Oct], bn_max[Oct], bn_scl[Oct]);
+  if (!false) {
+    bns.add_prm("sf_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    bns.add_prm("sd_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
   }
 }
 
@@ -633,8 +607,8 @@ int main(int argc, char *argv[])
       printf("\nk = %d:", k);
       analyze(Id_scl, bns, k_ijklm, tune_fp);
       correct(bns, k_ijklm, 1e-10, 0.3);
+      prt_mfile("flat_file.fit");
     }
-    prt_mfile("flat_file.fit");
     analyze(Id_scl, bns, k_ijklm, tune_fp);
   }
 
