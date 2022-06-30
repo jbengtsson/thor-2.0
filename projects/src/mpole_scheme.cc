@@ -1,4 +1,3 @@
-
 #define NO 5
 
 #include "thor_lib.h"
