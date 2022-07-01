@@ -621,9 +621,18 @@ void get_bns(param_type &bns)
 
     locs.clear();
     Fnum = get_Fnum("sd_h");
-    for (k = 1; k <= get_n_Kids(Fnum); k++)
+    for (k = 3; k <= get_n_Kids(Fnum)-2; k++)
       locs.push_back(get_loc(Fnum, k));
     bns.create_Fam("sd1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+
+    locs.clear();
+    Fnum = get_Fnum("sd_h");
+    locs.push_back(get_loc(Fnum, 1));
+    locs.push_back(get_loc(Fnum, 2));
+    locs.push_back(get_loc(Fnum, 19));
+    locs.push_back(get_loc(Fnum, 20));
+    bns.create_Fam("sd2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
 		   locs);
 
     bns.add_Fam("sf_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
