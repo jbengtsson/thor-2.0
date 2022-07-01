@@ -1,7 +1,7 @@
 #include "param_type.h"
 
 
-void param_type::add_prm(const std::string name, const int n,
+void param_type::add_Fam(const std::string name, const int n,
 			 const double bnL_min, const double bnL_max,
 			 const double bnL_scl)
 {
@@ -21,24 +21,47 @@ void param_type::add_prm(const std::string name, const int n,
 }
 
 
+void param_type::create_Fam(const std::string Fname, const int n,
+			    const double bnL_min, const double bnL_max,
+			    const double bnL_scl,
+			    const std::vector<int> &locs)
+{
+  const bool prt = false;
+
+  this->name.push_back(Fname);
+  this->Fnum.push_back(-1);
+  this->n.push_back(n);
+  this->L.push_back(0e0);
+  this->bnL_min.push_back(bnL_min);
+  this->bnL_max.push_back(bnL_max);
+  this->bnL_scl.push_back(bnL_scl);
+  this->bnL.push_back(0e0);
+  this->locs.push_back(locs);
+  this->n_prm = this->Fnum.size();
+
+  if (prt) printf("add_prm: %2d\n", this->n_prm);
+}
+
+
 void param_type::ini_prm(void)
 {
-  int    k;
+  int    k, Fnum;
   double bnL_ext;
 
   bool prt = false;
 
+  if (prt) printf("\n");
   for (k = 0; k < n_prm; k++) {
-    L[k] = get_L(Fnum[k], 1);
-    bnL_ext = get_bnL(Fnum[k], 1, n[k]);
-    // Bounded.
+    Fnum = (this->Fnum[k] > 0)? this->Fnum[k] : elem[locs[k][0]-1].Fnum;
+    L[k] = get_L(Fnum, 1);
+    bnL_ext = get_bnL(Fnum, 1, n[k]);
     if ((bnL_min[k] <= bnL_ext) && (bnL_ext <= bnL_max[k])) {
       bnL[k] = bnL_internal(bnL_ext, bnL_min[k], bnL_max[k]);
       if (prt) {
-	printf("ini_prm:");
+	printf("ini_prm: k = %1d Fnum = %1d\n", k, Fnum);
 	print(k);
       }
-  } else {
+    } else {
       printf("\nini_prm:\n outside range: %-8s %10.3e %10.3e [%10.3e, %10.3e]"
 	     "\n",
 	     name[k].c_str(), bnL_ext, bnL_ext, bnL_min[k], bnL_max[k]);
@@ -49,7 +72,7 @@ void param_type::ini_prm(void)
 
 void param_type::set_prm(void)
 {
-  int    i;
+  int    k, Fnum;
   double bnL_ext;
 
   const bool prt = false;
@@ -57,13 +80,13 @@ void param_type::set_prm(void)
   const int  n_prt = 6;
 
   if (prt) printf("\nset_prm:\n  ");
-  for (i = 0; i <= n_prm; i++) {
-    // Bounded.
-    bnL_ext = bnL_bounded(bnL[i], bnL_min[i], bnL_max[i]);
-    set_bnL(Fnum[i], n[i], bnL_ext, 0e0);
+  for (k = 0; k <= n_prm; k++) {
+    Fnum = (this->Fnum[k] > 0)? this->Fnum[k] : elem[locs[k][0]-1].Fnum;
+    bnL_ext = bnL_bounded(bnL[k], bnL_min[k], bnL_max[k]);
+    set_bnL(Fnum, n[k], bnL_ext, 0e0);
     if (prt) {
       printf(" %12.5e", bnL_ext);
-      if (i % n_prt == 0) printf("\n  ");
+      if (k % n_prt == 0) printf("\n  ");
     }
   }
   if (prt && (n_prm % n_prt != 0)) printf("\n");

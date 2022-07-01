@@ -20,10 +20,15 @@ public:
   std::vector<int>
     Fnum,
     n;
+  std::vector< std::vector<int> >
+    locs;
 
-  void add_prm(const std::string Fname, const int n,
+  void add_Fam(const std::string Fname, const int n,
 	       const double bnL_min, const double bnL_max,
 	       const double bnL_scl);
+  void create_Fam(const std::string Fname, const int n,
+		  const double bnL_min, const double bnL_max,
+		  const double bnL_scl, const std::vector<int> &locs);
   void ini_prm(void);
   void set_prm(void);
   void print(const int k) const;

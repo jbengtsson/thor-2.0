@@ -1,4 +1,4 @@
-#define NO 5
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -34,8 +34,6 @@ const double
   A_max[]    = {3e-3, 1.5e-3},
   delta_max  = 2e-2,
   twoJ[]     = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]};
-
-
 
 
 tps get_h(ss_vect<tps> &map)
@@ -199,33 +197,59 @@ void get_sing_val(const int n, double w[], const double svd_cut)
 }
 
 
-void set_bnL(const double *dbnL, param_type &bns)
+void set_Fam(param_type &bns, const int k, const double scl, const double *dbnL)
 {
-  int    k;
   double bnL_ext;
+
+  bnL_ext =
+    get_bnL(bns.Fnum[k], 1, bns.n[k]) + scl*bns.bnL_scl[k]*dbnL[k+1];
+  bns.bnL[k] = bnL_internal(bnL_ext, bns.bnL_min[k], bns.bnL_max[k]);
+  set_bnL(bns.Fnum[k], bns.n[k],
+	  bnL_bounded(bns.bnL[k], bns.bnL_min[k], bns.bnL_max[k]));
+  printf("  %10.3e %10.3e\n",
+	 get_bn(bns.Fnum[k], 1, bns.n[k]), get_bnL(bns.Fnum[k], 1, bns.n[k]));
+}
+
+
+void set_Kid(param_type &bns, const int k, const double scl, const double *dbnL)
+{
+  int    i, loc;
+  double bnL_ext;
+
+  loc = bns.locs[k][0];
+  bnL_ext =
+    get_bnL(elem[loc-1].Fnum, elem[loc-1].Knum, bns.n[k])
+    + scl*bns.bnL_scl[k]*dbnL[k+1];
+  bns.bnL[k] = bnL_internal(bnL_ext, bns.bnL_min[k], bns.bnL_max[k]);
+  for (i = 0; i < (int)bns.locs[k].size(); i++) {
+    loc = bns.locs[k][i];
+    set_bnL(elem[loc-1].Fnum, elem[loc-1].Knum, bns.n[k],
+	    bnL_bounded(bns.bnL[k], bns.bnL_min[k], bns.bnL_max[k]));
+  }
+  loc = bns.locs[k][0];
+  printf("  %10.3e %10.3e\n",
+	 get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, bns.n[k]),
+	 get_bnL(elem[loc-1].Fnum, elem[loc-1].Knum, bns.n[k]));
+}
+
+
+void set_bnL(const double scl, const double *dbnL, param_type &bns)
+{
+  int k;
 
   printf("\n      b_n       b_n*L\n");
   for (k = 0; k < bns.n_prm; k++) {
-    bnL_ext =
-      get_bnL(bns.Fnum[k], 1, bns.n[k]) + bns.bnL_scl[k]*dbnL[k+1];
-    bns.bnL[k] = bnL_internal(bnL_ext, bns.bnL_min[k], bns.bnL_max[k]);
-    if (false)
-      printf("  %1d %11.3e %11.3e %11.3e\n",
-	     k, bnL_ext, bns.bnL[k],
-	     bnL_bounded(bns.bnL[k], bns.bnL_min[k], bns.bnL_max[k]));
-
-    set_bnL(bns.Fnum[k], bns.n[k],
-	    bnL_bounded(bns.bnL[k], bns.bnL_min[k], bns.bnL_max[k]));
-    printf("  %10.3e %10.3e\n",
-	   get_bn(bns.Fnum[k], 1, bns.n[k]), get_bnL(bns.Fnum[k], 1, bns.n[k]));
+    if (bns.Fnum[k] > 0)
+      set_Fam(bns, k, scl, dbnL);
+    else
+      set_Kid(bns, k, scl, dbnL);
   }
 }
 
 
 void prt_bend(FILE *outf, const int loc, const int n)
 {
-  const elem_type<double> *elemp = &elem[loc];
-  const int               Fnum = elemp->Fnum;
+  const elem_type<double> *elemp = &elem[loc-1];
 
   fprintf(outf,
 	  "%-8s: multipole, l = %7.5f, t = %7.5f, t1 = %7.5f, t2 = %7.5f,\n"
@@ -235,43 +259,42 @@ void prt_bend(FILE *outf, const int loc, const int n)
 	  elemp->Name, elemp->L,
 	  elemp->L*elemp->mpole->h_bend*180e0/M_PI,
 	  elemp->mpole->edge1, elemp->mpole->edge2,
-	  Quad, get_bn(Fnum, 1, Quad),
-	  n, get_bn(Fnum, 1, n));
+	  Quad, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Quad),
+	  n, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n));
 }
 
 
 void prt_quad(FILE *outf, const int loc, const int n)
 {
-  const int Fnum = elem[loc].Fnum;
-
   fprintf(outf,
 	  "%-8s: multipole, l = %7.5f,\n"
 	  "          hom = (%d, %12.5e, 0e0,"
 	  " %d, %12.5e, 0e0),\n"
 	  "          n = 1, Method = Meth;\n",
-	  elem[loc].Name, elem[loc].L, Quad, get_bn(Fnum, 1, Quad),
-	  n, get_bn(Fnum, 1, n));
+	  elem[loc-1].Name, elem[loc-1].L, Quad,
+	  get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Quad),
+	  n, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n));
 }
 
 
 void prt_sext(FILE *outf, const int loc, const int n)
 {
-  const int Fnum = elem[loc].Fnum;
-
   if (n == Sext)
     fprintf(outf,
 	    "%-8s: multipole, l = %7.5f,\n"
 	    "          hom = (%d, %12.5e, 0e0),\n"
 	    "          n = 1, Method = Meth;\n",
-	    elem[loc].Name, elem[loc].L, Sext, get_bn(Fnum, 1, Sext));
+	    elem[loc-1].Name, elem[loc-1].L, n,
+	    get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n));
   else
     fprintf(outf,
 	    "%-8s: multipole, l = %7.5f,\n"
 	    "          hom = (%d, %12.5e, 0e0,"
 	    " %d, %12.5e, 0e0),\n"
 	    "          n = 1, Method = Meth;\n",
-	    elem[loc].Name, elem[loc].L, Sext, get_bn(Fnum, 1, Sext),
-	    n, get_bn(Fnum, 1, n));
+	    elem[loc-1].Name, elem[loc-1].L, Sext,
+	    get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n),
+	    n, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n));
 }
 
 
@@ -287,12 +310,12 @@ void prt_bn(const param_type &bns)
 
   fprintf(outf, "\n");
   for (k = 0; k < bns.n_prm; k++) {
-    loc = get_loc(bns.Fnum[k], 1) - 1;
-    if (elem[loc].mpole->n_design == Dip)
+    loc = (bns.Fnum[k] > 0)? get_loc(bns.Fnum[k], 1) : bns.locs[k][0];
+    if (elem[loc-1].mpole->n_design == Dip)
       prt_bend(outf, loc, bns.n[k]);
-    else if (elem[loc].mpole->n_design == Quad)
+    else if (elem[loc-1].mpole->n_design == Quad)
       prt_quad(outf, loc, bns.n[k]);
-    else if (elem[loc].mpole->n_design == Sext)
+    else if (elem[loc-1].mpole->n_design == Sext)
       prt_sext(outf, loc, bns.n[k]);
   }
 
@@ -303,7 +326,7 @@ void prt_bn(const param_type &bns)
 void correct(param_type &bns, const std::vector<Lie_term> &k_ijklm,
 	     const double svd_cut, const double scl)
 {
-  int    k;
+  int    k, Fnum;
   double **A, **U, **V, *w, *b, *dbnL, *bnL_max, *bnL;
 
   const int
@@ -326,17 +349,19 @@ void correct(param_type &bns, const std::vector<Lie_term> &k_ijklm,
   dsvbksb(U, w, V, m, n, b, dbnL);
 #else
   for (k = 0; k < n; k++) {
+    Fnum = (bns.Fnum[k] > 0)? bns.Fnum[k] : elem[bns.locs[k][0]-1].Fnum;
     bnL_max[k+1] = bns.bnL_max[k]*bns.L[k]/bns.bnL_scl[k];
-    bnL[k+1] = get_bnL(bns.Fnum[k], 1, bns.n[k])/bns.bnL_scl[k];
+    bnL[k+1] = get_bnL(Fnum, 1, bns.n[k])/bns.bnL_scl[k];
   }
 
   SVD_lim(m, n, A, b, bnL_max, svd_cut, bnL, dbnL);
 
 #endif
 
-  set_bnL(dbnL, bns);
+  set_bnL(scl, dbnL, bns);
   bns.print();
   prt_bn(bns);
+  prt_mfile("flat_file.fit");
 
   free_dmatrix(A, 1, m, 1, n); free_dmatrix(U, 1, m, 1, n);
   free_dmatrix(V, 1, n, 1, n); free_dvector(w, 1, n); free_dvector(b, 1, m);
@@ -370,8 +395,8 @@ void get_constr(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm,
 
   const double
     scl_h     = 1e-1,
-    scl_ksi[] = {0e0, 1e1, 1e0, 0e0},
-    scl_a[]   = {1e0, 0e0};
+    scl_ksi[] = {0e0, 1e1, 1e0, 1e-1},
+    scl_a[]   = {1e0, 1e0};
 
   danot_(no_tps-1);
   get_Map();
@@ -435,16 +460,23 @@ void get_h1_ijklm(const tps &h1, const std::string &name, const int n,
 }
 
 
-void get_K_ijklm(const std::string &name, const int n,
-		 const ss_vect<tps> &Id_scl, const double bnL_scl,
+void get_K_ijklm(const param_type &bns, const int k, const ss_vect<tps> &Id_scl,
 		 std::vector<Lie_term> &k_ijklm, const bool tune_fp)
 {
-  int k;
+  int i, loc;
   tps g_re, g_im, K, K_re, K_im;
 
-  const int Fnum = get_Fnum(name.c_str());
+  const std::string name   = bns.name[k];
+  const int         n      = bns.n[k];
+  const double      bn_scl = bns.bnL_scl[k]/bns.L[k];
 
-  set_bn_par(Fnum, n, 7);
+  if (bns.Fnum[k] > 0)
+    set_bn_par(bns.Fnum[k], n, 7);
+  else
+    for (i = 0; i < (int)bns.locs[k].size(); i++) {
+      loc = bns.locs[k][i];
+      set_bn_par(elem[loc-1].Fnum, elem[loc-1].Knum, n, 7);
+    }
 
   danot_(no_tps-1);
   get_Map();
@@ -453,42 +485,56 @@ void get_K_ijklm(const std::string &name, const int n,
   CtoR(g*Id_scl, g_re, g_im);
   CtoR(K*Id_scl, K_re, K_im);
 
-  if (false)
-    std::cout << std::scientific << std::setprecision(3)
-	      << "\n" << std::setw(8) << name << std::setw(4) << Fnum << ":\n"
-	      << std::scientific << std::setprecision(3) << K_re << K_im;
+  if (false) {
+    if (bns.Fnum[k] > 0)
+      std::cout << std::scientific << std::setprecision(3)
+		<< "\n" << std::setw(8) << name <<
+	std::setw(4) << bns.Fnum[k] << ":\n"
+		<< std::scientific << std::setprecision(3) << K_re << K_im;
+    else
+      std::cout << std::scientific << std::setprecision(3)
+		<< "\n" << std::setw(8) << name
+		<< std::setw(4) << elem[bns.locs[k][0]].Fnum << ":\n"
+		<< std::scientific << std::setprecision(3) << K_re << K_im;
+  }
+ 
+  if (bns.Fnum[k] > 0)
+    clr_bn_par(bns.Fnum[k], n);
+  else
+    for (i = 0; i < (int)bns.locs[k].size(); i++) {
+      loc = bns.locs[k][i];
+      clr_bn_par(elem[loc-1].Fnum, elem[loc-1].Knum, n);
+    }
 
-  clr_bn_par(Fnum, n);
+  i = 0;
+  get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 0, 0, 1, bn_scl, k_ijklm[i++]);
+  get_h1_ijklm(K_re, bns.name[k], n, 0, 0, 1, 1, 1, bn_scl, k_ijklm[i++]);
 
-  k = 0;
-  get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 1, bnL_scl, k_ijklm[k++]);
-  get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 1, bnL_scl, k_ijklm[k++]);
+  get_h1_ijklm(g_im, bns.name[k], n, 1, 0, 0, 0, 2, bn_scl, k_ijklm[i++]);
+  get_h1_ijklm(g_im, bns.name[k], n, 2, 0, 0, 0, 1, bn_scl, k_ijklm[i++]);
+  get_h1_ijklm(g_im, bns.name[k], n, 0, 0, 2, 0, 1, bn_scl, k_ijklm[i++]);
 
-  get_h1_ijklm(g_im, name, n, 1, 0, 0, 0, 2, bnL_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 2, 0, 0, 0, 1, bnL_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 0, 0, 2, 0, 1, bnL_scl, k_ijklm[k++]);
-
-  get_h1_ijklm(g_im, name, n, 1, 0, 1, 1, 0, bnL_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 2, 1, 0, 0, 0, bnL_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 3, 0, 0, 0, 0, bnL_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 1, 0, 0, 2, 0, bnL_scl, k_ijklm[k++]);
-  get_h1_ijklm(g_im, name, n, 1, 0, 2, 0, 0, bnL_scl, k_ijklm[k++]);
+  get_h1_ijklm(g_im, bns.name[k], n, 1, 0, 1, 1, 0, bn_scl, k_ijklm[i++]);
+  get_h1_ijklm(g_im, bns.name[k], n, 2, 1, 0, 0, 0, bn_scl, k_ijklm[i++]);
+  get_h1_ijklm(g_im, bns.name[k], n, 3, 0, 0, 0, 0, bn_scl, k_ijklm[i++]);
+  get_h1_ijklm(g_im, bns.name[k], n, 1, 0, 0, 2, 0, bn_scl, k_ijklm[i++]);
+  get_h1_ijklm(g_im, bns.name[k], n, 1, 0, 2, 0, 0, bn_scl, k_ijklm[i++]);
 
   if (tune_fp) {
-    get_h1_ijklm(K_re, name, n, 2, 2, 0, 0, 0, bnL_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 1, 1, 1, 1, 0, bnL_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 0, 0, 2, 2, 0, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 2, 2, 0, 0, 0, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 1, 1, 0, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 0, 0, 2, 2, 0, bn_scl, k_ijklm[i++]);
 
-    get_h1_ijklm(K_re, name, n, 3, 3, 0, 0, 0, bnL_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 2, 2, 1, 1, 0, bnL_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 1, 1, 2, 2, 0, bnL_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 0, 0, 3, 3, 0, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 3, 3, 0, 0, 0, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 2, 2, 1, 1, 0, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 2, 2, 0, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 0, 0, 3, 3, 0, bn_scl, k_ijklm[i++]);
 
-    get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 2, bnL_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 2, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 0, 0, 2, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 0, 0, 1, 1, 2, bn_scl, k_ijklm[i++]);
 
-    get_h1_ijklm(K_re, name, n, 1, 1, 0, 0, 3, bnL_scl, k_ijklm[k++]);
-    get_h1_ijklm(K_re, name, n, 0, 0, 1, 1, 3, bnL_scl, k_ijklm[k++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 0, 0, 3, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 0, 0, 1, 1, 3, bn_scl, k_ijklm[i++]);
   }
 }
 
@@ -499,8 +545,7 @@ void get_Jacobian(const ss_vect<tps> &Id_scl, const param_type &bns,
   int k;
 
   for (k = 0; k < bns.n_prm; k++)
-    get_K_ijklm(bns.name[k], bns.n[k], Id_scl, bns.bnL_scl[k]/bns.L[k], k_ijklm,
-		tune_fp);
+    get_K_ijklm(bns, k, Id_scl, k_ijklm, tune_fp);
 }
 
 
@@ -546,22 +591,84 @@ void analyze_2(void)
 
 void get_bns(param_type &bns)
 {
+  int              k, Fnum;
+  std::vector<int> locs;
+
+  const int lat_case = 1;
+
   const double
     bnL_scl[] = {0e0, 0e0, 0e0,  1e0,  1e2,  1e4},
     bnL_min[] = {0e0, 0e0, 0e0, -3e2, -1e4, -1e5},
     bnL_max[] = {0e0, 0e0, 0e0,  3e2,  1e4,  1e5};
 
-  bns.add_prm("sf_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-  bns.add_prm("sd_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+  switch (lat_case) {
+  case 1:
+    locs.clear();
+    Fnum = get_Fnum("sf_h");
+    for (k = 3; k <= get_n_Kids(Fnum)-2; k++)
+      locs.push_back(get_loc(Fnum, k));
+    bns.create_Fam("sf1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
 
-  if (!false) {
-    bns.add_prm("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    // bns.add_prm("sd2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-  }
+    locs.clear();
+    Fnum = get_Fnum("sf_h");
+    locs.push_back(get_loc(Fnum, 1));
+    locs.push_back(get_loc(Fnum, 2));
+    locs.push_back(get_loc(Fnum, 9));
+    locs.push_back(get_loc(Fnum, 10));
+    bns.create_Fam("sf2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
 
-  if (!false) {
-    bns.add_prm("sf_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-    bns.add_prm("sd_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    locs.clear();
+    Fnum = get_Fnum("sd_h");
+    for (k = 1; k <= get_n_Kids(Fnum); k++)
+      locs.push_back(get_loc(Fnum, k));
+    bns.create_Fam("sd1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+
+    bns.add_Fam("sf_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    bns.add_Fam("sd_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+   break;
+  case 2:
+    // b3_cf_425Grad_JB.
+    bns.add_Fam("sf_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+
+    if (!false)
+      bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    if (false)
+      bns.add_Fam("sd2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+
+    if (!false) {
+      bns.add_Fam("sf_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("sd_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+    break;
+  case 3:
+    // b3_sf_40Grad.
+    bns.add_Fam("sd1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd3a", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd3b", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf3",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf3a", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    break;
+  case 4:
+    // b3_sf_40Grad.
+    bns.add_Fam("sd1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd3a", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd3b", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf3",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    break;
+  default:
+    printf("get_bns: undefined multipole family\n");
+    exit(1);
+    break;
   }
 }
 
@@ -607,7 +714,6 @@ int main(int argc, char *argv[])
       printf("\nk = %d:", k);
       analyze(Id_scl, bns, k_ijklm, tune_fp);
       correct(bns, k_ijklm, 1e-10, 0.3);
-      prt_mfile("flat_file.fit");
     }
     analyze(Id_scl, bns, k_ijklm, tune_fp);
   }
