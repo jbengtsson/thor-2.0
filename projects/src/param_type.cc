@@ -5,6 +5,8 @@ void param_type::add_Fam(const std::string name, const int n,
 			 const double bnL_min, const double bnL_max,
 			 const double bnL_scl)
 {
+  std::vector<int> locs;
+
   const bool prt = false;
 
   this->name.push_back(name);
@@ -14,10 +16,15 @@ void param_type::add_Fam(const std::string name, const int n,
   this->bnL_min.push_back(bnL_min);
   this->bnL_max.push_back(bnL_max);
   this->bnL_scl.push_back(bnL_scl);
-  this->bnL.push_back(0e0);  
+  this->bnL.push_back(0e0);
+  locs.push_back(-1);
+  this->locs.push_back(locs);
   this->n_prm = this->Fnum.size();
 
-  if (prt) printf("add_prm: %2d\n", this->n_prm);
+  if (prt)
+    printf("add_prm:\n  %-8s Fnum = %2d n_locs = %2d n = %1d\n",
+	   this->name.back().c_str(), this->Fnum.back(),
+	   get_n_Kids(this->Fnum.back()), this->n.back());
 }
 
 
@@ -39,7 +46,10 @@ void param_type::create_Fam(const std::string Fname, const int n,
   this->locs.push_back(locs);
   this->n_prm = this->Fnum.size();
 
-  if (prt) printf("add_prm: %2d\n", this->n_prm);
+  if (prt)
+    printf("create_prm:\n  %-8s Fnum = %2d n_locs = %2d n = %1d\n",
+	   this->name.back().c_str(), this->Fnum.back(),
+	   (int)this->locs.back().size(), this->n.back());
 }
 
 
@@ -58,7 +68,7 @@ void param_type::ini_prm(void)
     if ((bnL_min[k] <= bnL_ext) && (bnL_ext <= bnL_max[k])) {
       bnL[k] = bnL_internal(bnL_ext, bnL_min[k], bnL_max[k]);
       if (prt) {
-	printf("ini_prm: k = %1d Fnum = %1d\n", k, Fnum);
+	printf("ini_prm:\n  k = %1d Fnum = %1d", k, Fnum);
 	print(k);
       }
     } else {
@@ -99,8 +109,8 @@ void param_type::print(const int k) const
 
   // Bounded.
   bnL_ext = bnL_bounded(bnL[k], bnL_min[k], bnL_max[k])/L[k];
-  printf(" %-8s %10.3e %10.3e [%9.3e, %9.3e]\n",
-	 name[k].c_str(), bnL_ext, bnL_ext*L[k], bnL_min[k], bnL_max[k]);
+  printf("  %-8s %10.3e %10.3e %1d [%9.3e, %9.3e]\n",
+	 name[k].c_str(), bnL_ext, bnL_ext*L[k], n[k], bnL_min[k], bnL_max[k]);
 }
 
 
@@ -108,7 +118,7 @@ void param_type::print(void) const
 {
   int k;
 
-  printf("\nFam. Name     b_n       b_n*L        min        max\n");
+  printf("\nFam. Name     b_n       b_n*L   n      min        max\n");
   for (k = 0; k < n_prm; k++)
     print(k);
 }
