@@ -99,8 +99,8 @@ void param_type::print(const int k) const
 
   // Bounded.
   bnL_ext = bnL_bounded(bnL[k], bnL_min[k], bnL_max[k])/L[k];
-  printf(" %-8s %10.3e [%9.3e, %9.3e] %9.3e\n",
-	 name[k].c_str(), bnL_ext, bnL_min[k], bnL_max[k], L[k]);
+  printf(" %-8s %10.3e %10.3e [%9.3e, %9.3e]\n",
+	 name[k].c_str(), bnL_ext, bnL_ext*L[k], bnL_min[k], bnL_max[k]);
 }
 
 
@@ -108,7 +108,7 @@ void param_type::print(void) const
 {
   int k;
 
-  printf("\n");
+  printf("\nFam. Name     b_n       b_n*L        min        max\n");
   for (k = 0; k < n_prm; k++)
     print(k);
 }
