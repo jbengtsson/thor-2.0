@@ -3,7 +3,7 @@
 bin_PROGRAMS = H_min max_iv_match max_iv_uc max_iv_dnu \
 	       vlad vlad_2 vlad_3 vlad_4 vlad_5 sls_2 diamond_ii delta \
                delta_lo delta_lo2 quad2d quad3d tune_conf tune_conf_2 \
-	       tune_conf_3 tbs get_dnu mpole_scheme
+	       tune_conf_3 tbs get_dnu mpole_scheme poincare_map
 
 H_min_SOURCES        = H_min.cc
 max_iv_match_SOURCES = max_iv_match.cc
@@ -27,6 +27,7 @@ tune_conf_3_SOURCES  = tune_conf_3.cc
 tbs_SOURCES          = tbs.cc
 get_dnu_SOURCES      = get_dnu.cc
 mpole_scheme_SOURCES = mpole_scheme.cc param_type.cc
+poincare_map_SOURCES = poincare_map.cc
 
 GSL_INCLUDE = /usr/local/Cellar/gsl/2.7.1
 # GSL_INCLUDE = /net/home/lli/OPAL/OPAL-2.0.1

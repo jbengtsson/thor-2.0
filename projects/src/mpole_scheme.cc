@@ -588,7 +588,7 @@ void get_bns(param_type &bns)
   int              k, Fnum;
   std::vector<int> locs;
 
-  const int lat_case = 2;
+  const int lat_case = 3;
 
   const double
     bnL_scl[] = {0e0, 0e0, 0e0,  1e0,  1e2,  1e4},
