@@ -70,7 +70,7 @@ void analyse(void)
   std::cout << std::scientific << std::setprecision(3) << "\nh:\n"
 	    << std::setw(11) << h << "\n";
 
-  h = BCH(k_2, h, 8);
+  h = BCH(k_2, h, 7);
   std::cout << std::scientific << std::setprecision(3) << "\nh:\n"
 	    << std::setw(11) << h << "\n";
 }

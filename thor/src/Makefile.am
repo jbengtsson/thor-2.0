@@ -11,6 +11,6 @@ AM_CPPFLAGS = $(GSL_INCLUDE) \
 #LIBS     = -L/home/bengtsson/gcc-4.2/lib
 
 FFLAGS      = -g -O2 -Wall -fbounds-check -fdefault-integer-8 -mcmodel=medium \
-	      -w -fallow-argument-mismatch -O2
+	      -w -fallow-argument-mismatch
 #AM_CXXFLAGS = -g -O0 -Wall -Wno-non-template-friend -fPIC
 AM_CXXFLAGS = -g -O0 -Wall -Wno-error=all -fPIC
