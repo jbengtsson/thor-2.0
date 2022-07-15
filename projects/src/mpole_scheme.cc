@@ -26,10 +26,10 @@ typedef struct {
 
 
 const double
-#if 0
-  beta_inj[] = {2.7, 2.5},
+#if 1
+  beta_inj[] = {3.1, 3.0},
 #else
-  beta_inj[] = {2.8, 2.6},
+  beta_inj[] = {3.1, 2.8},
 #endif
   A_max[]    = {3e-3, 1.5e-3},
   delta_max  = 2e-2,
@@ -264,7 +264,7 @@ void prt_quad(FILE *outf, const int loc, const int n)
 	  "%-8s: multipole, l = %7.5f,\n"
 	  "          hom = (%d, %12.5e, 0e0,"
 	  " %d, %12.5e, 0e0),\n"
-	  "          n = 1, Method = Meth;\n",
+	  "          n = nquad, Method = Meth;\n",
 	  elem[loc-1].Name, elem[loc-1].L, Quad,
 	  get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Quad),
 	  n, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n));
@@ -277,18 +277,22 @@ void prt_sext(FILE *outf, const int loc, const int n)
     fprintf(outf,
 	    "%-8s: multipole, l = %7.5f,\n"
 	    "          hom = (%d, %12.5e, 0e0),\n"
-	    "          n = 1, Method = Meth;\n",
+	    "          n = %d, Method = Meth;\n",
 	    elem[loc-1].Name, elem[loc-1].L, n,
-	    get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n));
+	    get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n),
+	    elem[loc-1].mpole->n_step);
   else
     fprintf(outf,
 	    "%-8s: multipole, l = %7.5f,\n"
-	    "          hom = (%d, %12.5e, 0e0,"
-	    " %d, %12.5e, 0e0),\n"
-	    "          n = 1, Method = Meth;\n",
-	    elem[loc-1].Name, elem[loc-1].L, Sext,
-	    get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Sext),
-	    n, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n));
+	    "          hom = (%d, %12.5e, 0e0,\n"
+	    "                 %d, %12.5e, 0e0,\n"
+	    "                 %d, %12.5e, 0e0),\n"
+	    "          n = %d, Method = Meth;\n",
+	    elem[loc-1].Name, elem[loc-1].L,
+	    Quad, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Quad),
+	    Sext, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Sext),
+	    n, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n),
+	    elem[loc-1].mpole->n_step);
 }
 
 
@@ -583,12 +587,23 @@ void analyze_2(void)
 }
 
 
+void no_mpoles(const int n)
+{
+  int j;
+
+  printf("\nzeroing multipoles: %d\n", n);
+  for (j = 0; j < n_elem; j++)
+    if (elem[j].kind == Mpole)
+      set_bn(elem[j].Fnum, elem[j].Knum, n, 0e0);
+}
+
+
 void get_bns(param_type &bns)
 {
   int              k, Fnum;
   std::vector<int> locs;
 
-  const int lat_case = 3;
+  const int lat_case = 5;
 
   const double
     bnL_scl[] = {0e0, 0e0, 0e0,  1e0,  1e2,  1e4},
@@ -597,7 +612,25 @@ void get_bns(param_type &bns)
 
   switch (lat_case) {
   case 1:
-    // b3_cf_425Grad & b3_sf_40Grad_JB.
+    // b3_sf_40Grad_JB & b3_cf_425Grad_JB: 3 b_3 fam.
+    locs.clear();
+    Fnum = get_Fnum("sf_h");
+    for (k = 3; k <= get_n_Kids(Fnum)-2; k++)
+      locs.push_back(get_loc(Fnum, k));
+    bns.create_Fam("sf1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+
+    locs.clear();
+    locs.push_back(get_loc(Fnum, 1));
+    locs.push_back(get_loc(Fnum, 2));
+    locs.push_back(get_loc(Fnum, 9));
+    locs.push_back(get_loc(Fnum, 10));
+    bns.create_Fam("sf2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+    bns.add_Fam("sd_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    break;
+  case 2:
+    // b3_cf_425Grad: 3 b_3 & 3 b_4 fam.
     locs.clear();
     Fnum = get_Fnum("sf_h");
     for (k = 3; k <= get_n_Kids(Fnum)-2; k++)
@@ -614,27 +647,73 @@ void get_bns(param_type &bns)
 		   locs);
     bns.add_Fam("sd_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
 
-    if (!false) {
-     locs.clear();
-      Fnum = get_Fnum("sf_h");
-      for (k = 3; k <= get_n_Kids(Fnum)-2; k++)
-	locs.push_back(get_loc(Fnum, k));
-      bns.create_Fam("sf1", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct],
-		     locs);
+    locs.clear();
+    Fnum = get_Fnum("sf_h");
+    for (k = 3; k <= get_n_Kids(Fnum)-2; k++)
+      locs.push_back(get_loc(Fnum, k));
+    bns.create_Fam("sf1", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct],
+		   locs);
 
-      locs.clear();
-      locs.push_back(get_loc(Fnum, 1));
-      locs.push_back(get_loc(Fnum, 2));
-      locs.push_back(get_loc(Fnum, 9));
-      locs.push_back(get_loc(Fnum, 10));
-      bns.create_Fam("sf2", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct],
-		     locs);
+    locs.clear();
+    locs.push_back(get_loc(Fnum, 1));
+    locs.push_back(get_loc(Fnum, 2));
+    locs.push_back(get_loc(Fnum, 9));
+    locs.push_back(get_loc(Fnum, 10));
+    bns.create_Fam("sf2", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct],
+		   locs);
 
-      bns.add_Fam("sd_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-    }
+    bns.add_Fam("sd_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     break;
-  case 2:
-    // b3_cf_425Grad_JB_2.
+  case 3:
+    // b3_sf_40Grad_JB & b3_cf_425Grad_JB: 4 b_3 fam.
+    locs.clear();
+    Fnum = get_Fnum("sf_h");
+    for (k = 3; k <= get_n_Kids(Fnum)-2; k++)
+      locs.push_back(get_loc(Fnum, k));
+    bns.create_Fam("sf1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+
+    locs.clear();
+    locs.push_back(get_loc(Fnum, 1));
+    locs.push_back(get_loc(Fnum, 2));
+    locs.push_back(get_loc(Fnum, 9));
+    locs.push_back(get_loc(Fnum, 10));
+    bns.create_Fam("sf2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+
+    locs.clear();
+    Fnum = get_Fnum("sd_h");
+    for (k = 3; k <= get_n_Kids(Fnum)-2; k++)
+      locs.push_back(get_loc(Fnum, k));
+    bns.create_Fam("sd1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+
+    locs.clear();
+    locs.push_back(get_loc(Fnum, 1));
+    locs.push_back(get_loc(Fnum, 2));
+    locs.push_back(get_loc(Fnum, 19));
+    locs.push_back(get_loc(Fnum, 20));
+    bns.create_Fam("sd2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+    break;
+  case 4:
+    // b3_sf_40Grad_JB_2: 3 b_3 fam.
+    bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    break;
+  case 5:
+    // b3_sf_40Grad_JB_2: 3 b_3 & 2 b_4 fam.
+    bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+
+    bns.add_Fam("uq1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    bns.add_Fam("uq2", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    // bns.add_Fam("uq3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    break;
+  case 6:
+    // b3_cf_425Grad_JB_2 3 b_3 & 3 b_4 fam.
     bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sd_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
@@ -643,11 +722,30 @@ void get_bns(param_type &bns)
     bns.add_Fam("sf2_h", Oct, bnL_min[Oct],   bnL_max[Oct],   bnL_scl[Oct]);
     bns.add_Fam("sd_h",  Oct, bnL_min[Oct],   bnL_max[Oct],   bnL_scl[Oct]);
     break;
-  case 3:
-    // b3_sf_40Grad_JB_2.
-    bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    bns.add_Fam("sd_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+  case 7:
+    if (false) no_mpoles(Sext);
+
+    // b3_sf_40Grad.
+    bns.add_Fam("sf1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf3",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf3a", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd3a", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd3b", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    break;
+  case 8:
+    if (false) no_mpoles(Sext);
+
+    // b3_cf_425Grad.
+    bns.add_Fam("sf1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sf3",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd3a", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd3b", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     break;
   default:
     printf("get_bns: undefined multipole family\n");
