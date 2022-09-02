@@ -603,12 +603,17 @@ void get_bns(param_type &bns)
   int              k, Fnum;
   std::vector<int> locs;
 
-  const int lat_case = 5;
+  const int lat_case = 8;
 
   const double
     bnL_scl[] = {0e0, 0e0, 0e0,  1e0,  1e2,  1e4},
     bnL_min[] = {0e0, 0e0, 0e0, -5e2, -1e4, -1e5},
     bnL_max[] = {0e0, 0e0, 0e0,  5e2,  1e4,  1e5};
+
+  if (false) {
+    no_mpoles(Sext);
+    no_mpoles(Oct);
+  }
 
   switch (lat_case) {
   case 1:
@@ -630,6 +635,42 @@ void get_bns(param_type &bns)
     bns.add_Fam("sd_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     break;
   case 2:
+    // b3_cf_425Grad: 3 b_3 fam + centre sf.
+    locs.clear();
+    Fnum = get_Fnum("sf_h");
+    for (k = 1; k <= get_n_Kids(Fnum); k++)
+      if ((k != 5) && (k != 6))
+	locs.push_back(get_loc(Fnum, k));
+    bns.create_Fam("sf1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+
+    locs.clear();
+    locs.push_back(get_loc(Fnum, 5));
+    locs.push_back(get_loc(Fnum, 6));
+    bns.create_Fam("sf2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+
+    bns.add_Fam("sd_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    break;
+  case 3:
+    // b3_cf_425Grad: 3 b_3 fam + centre sd.
+    bns.add_Fam("sf_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+
+    locs.clear();
+    Fnum = get_Fnum("sd_h");
+    for (k = 1; k <= get_n_Kids(Fnum); k++)
+      if ((k != 10) && (k != 11))
+	locs.push_back(get_loc(Fnum, k));
+    bns.create_Fam("sd1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+
+    locs.clear();
+    locs.push_back(get_loc(Fnum, 10));
+    locs.push_back(get_loc(Fnum, 11));
+    bns.create_Fam("sd2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
+		   locs);
+    break;
+  case 4:
     // b3_cf_425Grad: 3 b_3 & 3 b_4 fam.
     locs.clear();
     Fnum = get_Fnum("sf_h");
@@ -645,6 +686,7 @@ void get_bns(param_type &bns)
     locs.push_back(get_loc(Fnum, 10));
     bns.create_Fam("sf2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
 		   locs);
+
     bns.add_Fam("sd_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
 
     locs.clear();
@@ -664,7 +706,7 @@ void get_bns(param_type &bns)
 
     bns.add_Fam("sd_h", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     break;
-  case 3:
+  case 5:
     // b3_sf_40Grad_JB & b3_cf_425Grad_JB: 4 b_3 fam.
     locs.clear();
     Fnum = get_Fnum("sf_h");
@@ -696,13 +738,13 @@ void get_bns(param_type &bns)
     bns.create_Fam("sd2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext],
 		   locs);
     break;
-  case 4:
+  case 6:
     // b3_sf_40Grad_JB_2: 3 b_3 fam.
     bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sd_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     break;
-  case 5:
+  case 7:
     // b3_sf_40Grad_JB_2: 3 b_3 & 2 b_4 fam.
     bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
@@ -712,7 +754,7 @@ void get_bns(param_type &bns)
     bns.add_Fam("uq2", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     // bns.add_Fam("uq3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     break;
-  case 6:
+  case 8:
     // b3_cf_425Grad_JB_2 3 b_3 & 3 b_4 fam.
     bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
@@ -722,9 +764,7 @@ void get_bns(param_type &bns)
     bns.add_Fam("sf2_h", Oct, bnL_min[Oct],   bnL_max[Oct],   bnL_scl[Oct]);
     bns.add_Fam("sd_h",  Oct, bnL_min[Oct],   bnL_max[Oct],   bnL_scl[Oct]);
     break;
-  case 7:
-    if (false) no_mpoles(Sext);
-
+  case 9:
     // b3_sf_40Grad.
     bns.add_Fam("sf1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sf2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
@@ -735,9 +775,7 @@ void get_bns(param_type &bns)
     bns.add_Fam("sd3a", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sd3b", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     break;
-  case 8:
-    if (false) no_mpoles(Sext);
-
+  case 10:
     // b3_cf_425Grad.
     bns.add_Fam("sf1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sf2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
