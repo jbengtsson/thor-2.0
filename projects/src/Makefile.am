@@ -37,7 +37,7 @@ LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
 	  -lstdc++ \
           -lm \
 	  -L$(GSL_INCLUDE)/lib -lgsl \
-	  -lgfortran
+	  -L/usr/local/opt/gfortran/lib/gcc/12 -lgfortran
 
 #INCLUDES = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc -I$(HOME)/R-2.8.1/include \
 #	   -I/usr/local/include -I/usr/include/openmpi
