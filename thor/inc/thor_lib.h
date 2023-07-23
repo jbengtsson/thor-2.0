@@ -27,5 +27,5 @@
 #include "num_rec.h"
 
 extern int       no_tps, ndpt_tps;
-extern const int nd_tps, iref_tps;
+extern const int nv_tps, nd_tps, iref_tps;
 extern double    eps_tps;

@@ -25,15 +25,27 @@ typedef struct {
 } Lie_term;
 
 
+const bool
+  mpole_zero = !false;
+
 const double
-#if 1
-  beta_inj[] = {3.1, 3.0},
+#if 0
+  beta_inj[] = {2.7, 3.5},
 #else
-  beta_inj[] = {3.1, 2.8},
+  beta_inj[] = {2.8, 2.8},
 #endif
+
   A_max[]    = {3e-3, 1.5e-3},
-  delta_max  = 2e-2,
-  twoJ[]     = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]};
+  delta_max  = 4e-2,
+  twoJ[]     = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
+
+  bnL_scl[]  = {0e0, 0e0, 0e0,  1e0,  1e2,    1e4},
+  bnL_min[]  = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
+  bnL_max[]  = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
+
+  scl_h      = 1e-1,
+  scl_ksi[]  = {0e0, 1e1, 1e0, 0.5e0, 1e-1},
+  scl_a[]    = {1e0, 1e0};
 
 
 tps get_h(ss_vect<tps> &map)
@@ -158,6 +170,10 @@ void prt_K_ijklm(const param_type &bns, const std::vector<Lie_term> &k_ijklm)
 
   printf("\n3rd order chromaticity:\n");
   for (k = 19; k < 21; k++)
+    prt_Lie_term(k_ijklm[k]);
+
+  printf("\n4th order chromaticity:\n");
+  for (k = 21; k < 23; k++)
     prt_Lie_term(k_ijklm[k]);
 }
 
@@ -387,11 +403,6 @@ void get_constr(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
   ss_vect<tps> nus;
   Lie_term     h;
 
-  const double
-    scl_h     = 1e-1,
-    scl_ksi[] = {0e0, 1e1, 1e0, 1e-1},
-    scl_a[]   = {1e0, 1e0};
-
   danot_(no_tps-1);
   get_Map();
   danot_(no_tps);
@@ -440,6 +451,9 @@ void get_constr(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
 
   get_h2_ijklm(K_re, scl_ksi[3], 1, 1, 0, 0, 3, k_ijklm);
   get_h2_ijklm(K_re, scl_ksi[3], 0, 0, 1, 1, 3, k_ijklm);
+
+  get_h2_ijklm(K_re, scl_ksi[4], 1, 1, 0, 0, 4, k_ijklm);
+  get_h2_ijklm(K_re, scl_ksi[4], 0, 0, 1, 1, 4, k_ijklm);
 }
 
 
@@ -534,6 +548,9 @@ void get_K_ijklm(const param_type &bns, const int k, const ss_vect<tps> &Id_scl,
 
   get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 0, 0, 3, bn_scl, k_ijklm[i++]);
   get_h1_ijklm(K_re, bns.name[k], n, 0, 0, 1, 1, 3, bn_scl, k_ijklm[i++]);
+
+  get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 0, 0, 4, bn_scl, k_ijklm[i++]);
+  get_h1_ijklm(K_re, bns.name[k], n, 0, 0, 1, 1, 4, bn_scl, k_ijklm[i++]);
 }
 
 
@@ -603,14 +620,9 @@ void get_bns(param_type &bns)
   int              k, Fnum;
   std::vector<int> locs;
 
-  const int lat_case = 8;
+  const int lat_case = 11;
 
-  const double
-    bnL_scl[] = {0e0, 0e0, 0e0,  1e0,  1e2,  1e4},
-    bnL_min[] = {0e0, 0e0, 0e0, -5e2, -1e4, -1e5},
-    bnL_max[] = {0e0, 0e0, 0e0,  5e2,  1e4,  1e5};
-
-  if (false) {
+  if (mpole_zero) {
     no_mpoles(Sext);
     no_mpoles(Oct);
   }
@@ -755,14 +767,14 @@ void get_bns(param_type &bns)
     // bns.add_Fam("uq3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     break;
   case 8:
-    // b3_cf_425Grad_JB_2 3 b_3 & 3 b_4 fam.
+    // b3_cf_425Grad_JB_2 3 b_3 & 3 b_4 fam; 1 super period.
     bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sd_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
 
-    bns.add_Fam("sf_h",  Oct, bnL_min[Oct],   bnL_max[Oct],   bnL_scl[Oct]);
-    bns.add_Fam("sf2_h", Oct, bnL_min[Oct],   bnL_max[Oct],   bnL_scl[Oct]);
-    bns.add_Fam("sd_h",  Oct, bnL_min[Oct],   bnL_max[Oct],   bnL_scl[Oct]);
+    // bns.add_Fam("sf_h",  Oct, bnL_min[Oct],   bnL_max[Oct],   bnL_scl[Oct]);
+    // bns.add_Fam("sf2_h", Oct, bnL_min[Oct],   bnL_max[Oct],   bnL_scl[Oct]);
+    // bns.add_Fam("sd_h",  Oct, bnL_min[Oct],   bnL_max[Oct],   bnL_scl[Oct]);
     break;
   case 9:
     // b3_sf_40Grad.
@@ -785,6 +797,41 @@ void get_bns(param_type &bns)
     bns.add_Fam("sd3a", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sd3b", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     break;
+  case 11:
+    // b3_sfsf4Q.
+    bns.add_Fam("sf", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+
+    if (!false) {
+      bns.add_Fam("sf", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("sd", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+
+    if (!false) {
+      // bns.add_Fam("uq1", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("uq2", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("uq3", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("uq4", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+    break;
+  case 12:
+    // b3_cf425cf.
+    bns.add_Fam("sf", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+
+    if (!false) {
+      bns.add_Fam("sf", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("sd", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("sd2", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+     }
+
+    if (!false) {
+      bns.add_Fam("uq1", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("uq2", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("uq3", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+    break;
   default:
     printf("get_bns: undefined multipole family\n");
     exit(1);
@@ -800,6 +847,10 @@ int main(int argc, char *argv[])
   ss_vect<tps>          Id_scl;
   param_type            bns;
   std::vector<Lie_term> k_ijklm;
+
+  const double
+    step    = 0.3,
+    svd_cut = 1e-11;
 
   rad_on    = false; H_exact        = false; totpath_on   = false;
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
@@ -831,7 +882,7 @@ int main(int argc, char *argv[])
     for (k = 1; k <= 30; k++) {
       printf("\nk = %d:", k);
       analyze(Id_scl, bns, k_ijklm);
-      correct(bns, k_ijklm, 1e-9, 0.3);
+      correct(bns, k_ijklm, svd_cut, step);
     }
     analyze(Id_scl, bns, k_ijklm);
   }

@@ -73,6 +73,9 @@ ss_vect<T> operator+(const ss_vect<T> &x) { return ss_vect<T>(x); }
 template<typename T>
 ss_vect<T> operator-(const ss_vect<T> &x) { return ss_vect<T>(x) *= -1; }
 
+// instantiate
+template ss_vect<double> operator-(const ss_vect<double> &);
+template ss_vect<tps> operator-(const ss_vect<tps> &);
 
 ss_vect<double> operator+(const ss_vect<double> &a, const ss_vect<double> &b)
 { return ss_vect<double>(a) += b; }
@@ -103,6 +106,12 @@ ss_vect<double> operator*(const ss_vect<double> &a, const double b)
 
 ss_vect<double> operator*(const double a, const ss_vect<double> &b)
 { return ss_vect<double>(b) *= a; }
+
+ss_vect<tps> operator*(const ss_vect<tps> &a, const double b)
+{ return ss_vect<tps>(a) *= b; }
+
+ss_vect<tps> operator*(const double a, const ss_vect<tps> &b)
+{ return ss_vect<tps>(b) *= a; }
 
 
 template<typename T>

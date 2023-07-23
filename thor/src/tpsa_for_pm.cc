@@ -12,8 +12,6 @@ bool ini_tps    = false, header = false, res_basis = false, stable = false,
 
 const int n_max = 100;     // max iterations for LieExp
 
-// Name length for FORTRAN library is 10; 10+1 for C.
-const int  name_len_for              = 10;
 const char tpsa_name[name_len_for+1] = "tps-";
 int bufsize;  // Note, max no of monomials is (no+nv)!/(nv!*no!)
 

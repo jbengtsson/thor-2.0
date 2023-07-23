@@ -25,6 +25,7 @@ extern "C" {
   void dader_(const long int &, const long int &, long int &);
   void datra_(const long int &, const long int &, long int &);
   void danot_(const long int &);
+  long int getno_(void);
   void daeps_(const double &);
   void dacop_(const long int &, long int &);
   void daabs_(const long int &, double &);

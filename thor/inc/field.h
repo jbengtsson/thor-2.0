@@ -150,6 +150,13 @@ enum spatial_index { X_ = 0, Y_ = 1, Z_ = 2 };
 enum ps_index { x_ = 0, px_ = 1, y_ = 2, py_ = 3, delta_ = 4, ct_ = 5 };
 
 
+// pre-declare template friend functions: f<>()
+template<typename T>
+ss_vect<T> operator+(const ss_vect<T> &);
+template<typename T>
+ss_vect<T> operator-(const ss_vect<T> &);
+
+
 template<typename T> class ss_vect {
  public:
   typedef T value_type;
@@ -172,8 +179,8 @@ template<typename T> class ss_vect {
   ss_vect<T>& operator+=(const ss_vect<T> &);
   ss_vect<T>& operator-=(const ss_vect<T> &);
 
-  /* friend ss_vect<T> operator+<>(const ss_vect<T> &); */
-  /* friend ss_vect<T> operator-<>(const ss_vect<T> &); */
+  friend ss_vect<T> operator+<>(const ss_vect<T> &);
+  friend ss_vect<T> operator-<>(const ss_vect<T> &);
 
   friend ss_vect<double> operator+(const ss_vect<double> &,
 				   const ss_vect<double> &);
