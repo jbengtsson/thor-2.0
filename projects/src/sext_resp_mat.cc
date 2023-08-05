@@ -1,6 +1,10 @@
+#include <eigen3/Eigen/Dense>
+#include <complex>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_eigen.h>
 #include <assert.h>
 
-#define NO 3
+#define NO 5
 
 #include <assert.h>
 
@@ -11,6 +15,69 @@
 int
   no_tps   = NO,
   ndpt_tps = 5;
+
+
+typedef struct MNF_struct
+{
+  tps
+    K,              // New effective Hamiltonian.
+    g;              /* Generator for nonlinear canonical transformation to
+		       Floquet space.                                         */
+  ss_vect<tps>
+    A0, A0_inv,     // Transformation to fixed point.
+    A1, A1_inv,     // Linear transformation to Floquet space.
+    A_nl, A_nl_inv, // Nonlinear transformation to Floquet space.
+    nus,            // Tune shift.
+    map_res;        // Residual map.
+} MNF_struct;
+
+
+void print_map(const std::string &str, ss_vect<tps> M)
+{
+  const int n_dec = 5;
+
+  std::cout << str << "\n";
+  for (auto j = 0; j < ss_dim; j++) {
+    for (auto k = 0; k < ss_dim; k++)
+      std::cout << std::scientific << std::setprecision(5)
+		<< std::setw(n_dec+8) << M[j][k];
+    std::cout << "\n";
+  }
+}
+
+
+void no_mpoles(const int n)
+{
+  printf("\nzeroing multipoles: %d\n", n);
+  for (auto j = 0; j < n_elem; j++)
+    if (elem[j].kind == Mpole)
+      set_bn(elem[j].Fnum, elem[j].Knum, n, 0e0);
+}
+
+
+tps get_mns(const tps &a, const int no1, const int no2)
+{
+  tps  b;
+
+  danot_(no1-1);
+  b = -a;
+  danot_(no2);
+  b += a;
+  danot_(no_tps);
+
+  return b;
+}
+
+
+ss_vect<tps> get_mns(const ss_vect<tps> &x, const int no1, const int no2)
+{
+  ss_vect<tps> y;
+
+  for (auto k = 0; k < nv_tps; k++)
+    y[k] = get_mns(x[k], no1, no2);
+
+  return y;
+}
 
 
 tps get_h_k(const tps &h, const int k)
@@ -33,12 +100,199 @@ tps get_h_k(const tps &h, const int k)
 ss_vect<tps> get_M_k(const ss_vect<tps> &x, const int k)
 {
   // Taked in Forest's F77 LieLib.
-  int          i;
   ss_vect<tps> map_k;
 
-  for (i = 0; i < nv_tps; i++)
+  for (auto i = 0; i < nv_tps; i++)
     map_k[i] = get_h_k(x[i], k);
   return map_k;
+}
+
+
+#if 1
+// Obsolete.
+
+void CtoR_JB(const tps &a, tps &a_re, tps &a_im)
+{
+  int          k;
+  tps          b, c;
+  ss_vect<tps> Id, map;
+
+  Id.identity();
+
+  // b = p_k_cmplx_sgn_corr_fun(nd_tps, a);
+  std::cout << "\np_k_cmplx_sgn_corr_fun() not implemented\n";
+  assert(false);
+
+  // q_k -> (q_k + p_k) / 2
+  // p_k -> (q_k - p_k) / 2
+  // Complex space:
+  // q_k =   (h_q_k^+ + h_q_k^-) / 2
+  // p_k = i (h_q_k^+ - h_q_k^-) / 2
+  map.identity();
+  for (k = 0; k < nd_tps; k++) {
+    map[2*k]   = (Id[2*k]+Id[2*k+1])/2e0;
+    map[2*k+1] = (Id[2*k]-Id[2*k+1])/2e0;
+  }
+  b = b*map;
+
+  // q_k -> p_k
+  // p_k -> q_k
+  // Complex space:
+  // i (q_k -/+ i p_k) = (i q_k +/- p_k)
+  map.identity();
+  for (k = 0; k < nd_tps; k++) {
+    map[2*k]   = Id[2*k+1];
+    map[2*k+1] = Id[2*k];
+  }
+  c = b*map;
+
+  a_re = (b+c)/2e0;
+  a_im = (b-c)/2e0;
+}
+
+
+tps RtoC_JB(tps &a_re, tps &a_im)
+{
+  int          k;
+  tps          b;
+  ss_vect<tps> Id, map;
+
+  Id.identity();
+
+  b = a_re + a_im;
+
+  // q_k -> q_k + p_k
+  // p_k -> q_k - p_k
+  // Complex space:
+  // h_q_k^+ = q_k - i h_p_k
+  // h_q_k^- = q_k + i h_p_k
+  map.identity();
+  for (k = 0; k < nd_tps; k++) {
+    map[2*k]   = Id[2*k] + Id[2*k+1];
+    map[2*k+1] = Id[2*k] - Id[2*k+1];
+  }
+  b = b*map;
+  // b = p_k_cmplx_sgn_corr_fun(nd_tps, b);
+  std::cout << "\np_k_cmplx_sgn_corr_fun() not implemented\n";
+  assert(false);
+  return b;
+}
+
+#else
+
+double f_p_k_cmplx_sgn_corr(const long int jj[])
+{
+  // Adjust the sign for the momenta for the oscillating planes.
+  // Correct sign for complex vs. real momenta p_k.
+  //   q_k =  (h_q_k^+ + h_q_k^-) / 2
+  // i p_k = -(h_q_k^+ - h_q_k^-) / 2
+  // Adjust the sign for the momenta for the oscillating planes.
+  int ord, sgn = 0;
+
+  // Compute the sum of exponents for the momenta for the oscillating planes:
+  ord = 0;
+  for (auto k = 0; k < nd_tps; k++)
+    ord += jj[2*k+1];
+  ord = (ord % 4);
+  //  Sum_k c_ijkl x^i p_x^j y^k p_y^l
+  //  j + l mod 4 = [0, 3: +1; 1, 2: -1]
+  switch (ord) {
+  case 0:
+  case 3:
+    sgn = 1;
+    break;
+  case 1:
+  case 2:
+    sgn = -1;
+    break;
+  default:
+    printf("\n: undefined case %d\n", ord);
+    break;
+  }
+  return sgn;
+}
+
+
+tps tps_compute_function
+(const tps &a, std::function<double (const long int [])> fun)
+{
+  // Dacfu in Forest's LieLib.
+  char     name[name_len_for+1];
+  int      n;
+  long int ibuf1[bufsize], ibuf2[bufsize], jj[nv_tps];
+  double   rbuf[bufsize];
+  tps      b;
+
+  a.exprt(rbuf, ibuf1, ibuf2, name);
+  n = rbuf[0];
+  for (auto k = 1; k <= n; k++) {
+    dehash_(no_tps, nv_tps, ibuf1[k-1], ibuf2[k-1], jj);
+    rbuf[k] *= fun(jj);
+  }
+  b.imprt(n, rbuf, ibuf1, ibuf2);
+  return b;
+}
+
+
+ctps p_k_cmplx_sgn_corr(const ctps &a)
+{
+  return
+    ctps(tps_compute_function(a.real(), f_p_k_cmplx_sgn_corr),
+	 tps_compute_function(a.imag(), f_p_k_cmplx_sgn_corr));
+}
+
+
+ctps CtoR(const ctps &a)
+{
+  // Cartesian to resonance basis:
+  //   q_k =  (h_q_k^+ + h_q_k^-) / 2
+  // i p_k = -(h_q_k^+ - h_q_k^-) / 2
+  int          k;
+  ss_vect<tps> Id, Zero;
+
+  Id.identity();
+  Zero.zero();
+  map.identity();
+  for (k = 0; k < nd_tps; k++) {
+    map[2*k]   = (Id[2*k]+Id[2*k+1])/2e0;
+    map[2*k+1] = (Id[2*k]-Id[2*k+1])/2e0;
+  }
+  return p_k_cmplx_sgn_corr(a)*css_vect(map, Zero);
+}
+
+
+ctps RtoC(const ctps &a)
+{
+  // Resonance to Cartesian basis.
+  // h_q_k^+ = q_k - i h_p_k
+  // h_q_k^- = q_k + i h_p_k
+  int          k;
+  ss_vect<tps> Id, Zero;
+
+  Id.identity();
+  Zero.zero();
+  map.identity();
+  for (k = 0; k < nd_tps; k++) {
+    map[2*k]   = Id[2*k] + Id[2*k+1];
+    map[2*k+1] = Id[2*k] - Id[2*k+1];
+  }
+  return p_k_cmplx_sgn_corr(a*css_vect(map, Zero));
+}
+
+#endif
+
+ss_vect<tps> h_to_v(const tps &h)
+{
+  // Difd in Forest's F77 LieLib:
+  // Compute vector flow operator from Lie operator :h:
+  //   v = Omega * [del_x H, del_px H]^T
+  ss_vect<tps> v;
+
+  for (auto k = 0; k < nd_tps; k++) {
+    v[2*k]   = -Der(h, 2*k+2);
+    v[2*k+1] =  Der(h, 2*k+1);
+  }
+  return v;
 }
 
 
@@ -46,27 +300,24 @@ tps v_to_tps(const ss_vect<tps> &v, const tps &x)
 {
   // Daflo in Forest's F77 LieLib.
   //   y = v * nabla * x
-  int k;
-  tps y;
+  tps y = 0e0;
 
-  y = 0e0;
-  for (k = 0; k < 2*nd_tps; k++)
+  for (auto k = 0; k < 2*nd_tps; k++)
     y += v[k]*Der(x, k+1);
   return y;
 }
 
 
-tps exp_v_to_tps(const ss_vect<tps> &v, const tps &x, const double eps,
-	      const int n_max)
+tps exp_v_to_tps
+(const ss_vect<tps> &v, const tps &x, const double eps, const int n_max)
 {
   // Expflo in Forest's F77 LieLib:
   //   y = exp(v*nabla) * x
-  int    k;
   double eps1;
   tps    y_k, y;
 
   y_k = y = x;
-  for (k = 1; k <= n_max; k++) {
+  for (auto k = 1; k <= n_max; k++) {
     y_k = v_to_tps(v, y_k/k);
     y += y_k;
     eps1 = abs(y_k);
@@ -83,23 +334,36 @@ tps exp_v_to_tps(const ss_vect<tps> &v, const tps &x, const double eps,
 }
 
 
-tps exp_v_fac_to_tps(const ss_vect<tps> &v, const tps &x, const int k1,
-		      const int k2, const double scl)
+tps exp_v_fac_to_tps
+(const ss_vect<tps> &v, const tps &x, const int k1, const int k2,
+ const double scl)
 {
   // Facflo in Forest's F77 LieLib.
   //   y = exp(D_k1) * exp(D_k1+1) ...  * exp(D_k2) * x
-  int          k;
-  tps          y;
-  ss_vect<tps> v_k;
 
   const int n_max = 100; 
 
+  tps          y;
+  ss_vect<tps> v_k;
+
   y = x;
-  for (k = k1; k <= k2; k++) {
+  for (auto k = k1; k <= k2; k++) {
     v_k = scl*get_M_k(v, k);
     y = exp_v_to_tps(v_k, y, eps_tps, n_max);
   }
   return y;
+}
+
+
+ss_vect<tps> exp_v_fac_to_M(const ss_vect<tps> &v, const ss_vect<tps> &x,
+			    const int k1, const int k2, const double scl)
+{
+  // Facflod in Forest's F77 LieLib.
+  ss_vect<tps> M;
+
+  for (auto k = 0; k < 2*nd_tps; k++)
+    M[k] = exp_v_fac_to_tps(v, x[k], k1, k2, scl);
+  return M;
 }
 
 
@@ -109,60 +373,60 @@ ss_vect<tps> exp_v_to_map(const ss_vect<tps> &v, const ss_vect<tps> &map)
 
   ss_vect<tps> M;
 
+  M = map;
   for (auto k = 0; k < 2*nd_tps; k++)
-    M[k] = exp_v_to_tps(v, map[k], eps_tps, n_max);
-  return map;
+    M[k] = exp_v_to_tps(v, M[k], eps_tps, n_max);
+  return M;
 }
 
+#if 1
 
 ss_vect<tps>M_to_M_fact(const ss_vect<tps> &map)
 {
   // Flofac in Forest's F77 LieLib.
   // Factor map:
   //   M = M_2 ... * M_n
-  int          k;
   tps          y;
-  ss_vect<tps> map_lin, v_k, map_res, map_fact;
+  ss_vect<tps> map_lin, map_k, map_res, map_fact;
 
-  std::cout << "\nM_to_M_fact:\n1:\n" << map[x_];
   map_lin = get_M_k(map, 1);
-  std::cout << "\n2:\n" << map_lin;
-  prt_lin_map(3, Inv(map_lin));
-  std::cout << "\n3:\n" << Inv(map_lin);
   map_res = map*Inv(map_lin);
-  std::cout << "\n4:\n" << map_res;
 
   map_fact.zero();
-  for (k = 2; k <= no_tps; k++) {
+  for (auto k = 2; k <= no_tps; k++) {
     map_fact += get_M_k(map_res, k);
-    v_k = get_M_k(-map_fact, k);
-    map_res = exp_v_to_map(v_k, map_res);
+    map_k = get_M_k(-map_fact, k);
+    map_res = exp_v_to_map(map_k, map_res);
   }
-  std::cout << "\n5:\n" << map_fact[x_];
+
   return map_fact;
 }
 
+#else
 
-ss_vect<tps>M_to_M_fact2(const ss_vect<tps> &map)
+ss_vect<tps>M_to_M_fact(const ss_vect<tps> &map)
 {
   // Obsolete.
   // Flofac in Forest's F77 LieLib.
   // Factor map:
   //   M = M_2 ... * M_n
-  int          j, k;
   ss_vect<tps> map_lin, map_res, map_fact;
 
   map_lin = get_M_k(map, 1);
   map_res = map*Inv(map_lin);
+
   map_fact.zero();
-  for (k = 2; k <= no_tps; k++) {
+  for (auto k = 2; k <= no_tps; k++) {
     map_fact += get_M_k(map_res, k);
-    for (j = 0; j < 2*nd_tps; j++)
+
+    for (auto j = 0; j < 2*nd_tps; j++)
       map_res[j] = exp_v_fac_to_tps(map_fact, map_res[j], k, k, -1e0);
   }
+
   return map_fact;
 }
 
+#endif
 
 tps tps_fun
 (const tps &a, std::function<double (const long int [])> fun)
@@ -170,14 +434,14 @@ tps tps_fun
   // Dacfu in Forest's F77 LieLib.
   // Multiplies mononials I_vec with function f(I_vec).
   char     name[name_len_for+1];
-  int      k, n;
+  int      n;
   long int ibuf1[bufsize], ibuf2[bufsize], jj[nv_tps];
   double   rbuf[bufsize];
   tps      b;
 
   a.exprt(rbuf, ibuf1, ibuf2, name);
   n = rbuf[0];
-  for (k = 1; k <= n; k++) {
+  for (auto k = 1; k <= n; k++) {
     dehash_(no_tps, nv_tps, ibuf1[k-1], ibuf2[k-1], jj);
     rbuf[k] *= fun(jj);
   }
@@ -190,11 +454,9 @@ double f_int_mon(const long int jj[])
 {
   // Integrate monomials:
   //   scl = 1/(|I_vec|+1)
-  int    k;
-  double scl;
+  double scl = 0e0;
 
-  scl = 0e0;
-  for (k = 0; k < 2*nd_tps; k++)
+  for (auto k = 0; k < 2*nd_tps; k++)
     scl += jj[k];
   scl += 1e0;
   scl = 1e0/scl;
@@ -211,17 +473,16 @@ tps M_to_h(const ss_vect<tps> &map)
   //   Eqs. (34)-(37).
   // Integrate monomials:
   //   M -> exp(:h:)
-  int          k;
   tps          f_x, f_px, h;
   ss_vect<tps> Id;
 
   Id.identity();
   h = 0e0;
-  for (k = 0; k < nd_tps; k++) {
+  for (auto k = 0; k < nd_tps; k++) {
     // Integrate monomials.
-    f_x = tps_fun(map[2*k+1], f_int_mon)*Id[2*k];
-    f_px = tps_fun(map[2*k], f_int_mon)*Id[2*k+1];
-    h += f_x - f_px;
+    f_x  = tps_fun(map[2*k], f_int_mon)*Id[2*k+1];
+    f_px = tps_fun(map[2*k+1], f_int_mon)*Id[2*k];
+    h -= f_x - f_px;
   }
   return h;
 }
@@ -238,6 +499,43 @@ tps M_to_h_DF(const ss_vect<tps> &map)
 }
 
 
+#if 1
+
+ss_vect<tps> h_DF_to_M
+(const tps &h_DF, const ss_vect<tps> &x, const int k1, const int k2)
+{
+  // Fexpo in Forest's F77 LieLib.
+  // Compute map from Dragt-Finn factorisation:
+  //   M = exp(:h_3:) * exp(:h_4:) ...  * exp(:h_n:) * X
+  ss_vect<tps> v_DF;
+
+  v_DF = h_to_v(h_DF);
+  std::cout << v_DF;
+  assert(false);
+  return exp_v_fac_to_M(v_DF, x, k1, k2, 1e0);
+}
+
+#else
+
+ss_vect<tps> h_DF_to_M
+(const tps &h, const ss_vect<tps> &map, const int k1, const int k2)
+{
+  // Fexpo in Forest's LieLib.
+  // Compute map from Dragt-Finn factorisation:
+  //   exp(:h_3:) exp(:h_4:) ... exp(:h_no:)
+  tps          h_k;
+  ss_vect<tps> map1;
+
+  map1.identity();
+  for (auto k = k2; k >= k1; k--) {
+    h_k = get_h_k(h, k);
+    map1 = map1*LieExp(h_k, map);
+  }
+  return map1;
+}
+
+#endif
+
 tps get_h(ss_vect<tps> &map)
 {
   tps          h;
@@ -246,7 +544,8 @@ tps get_h(ss_vect<tps> &map)
   if (true) {
     // Dragt-Finn factorization
     h = LieFact_DF(Inv(A0*A1)*map*A0*A1, R);
-    R[6] = tps(0e0, 7); h = h*R;
+    R[6] = tps(0e0, 7);
+    h = h*R;
     return h;
   } else {
     // single Lie exponent
@@ -256,23 +555,285 @@ tps get_h(ss_vect<tps> &map)
 }
 
 
-void no_mpoles(const int n)
+ss_vect<tps> get_A0(const ss_vect<tps> &map)
 {
-  int j;
+  ss_vect<tps> Id, map1, dx, eta, A0, M_inv;
 
-  printf("\nzeroing multipoles: %d\n", n);
-  for (j = 0; j < n_elem; j++)
-    if (elem[j].kind == Mpole)
-      set_bn(elem[j].Fnum, elem[j].Knum, n, 0e0);
+  Id.zero();
+  Id[delta_] = tps(0e0, delta_+1);
+  dx = map*Id;
+
+  map1 = map - dx;
+  map1[delta_] = 0e0; map1[ct_] = 0e0;
+
+  Id.identity();
+  eta = Inv(Id-map1)*dx;
+
+  A0.identity();
+  A0 += eta;
+
+  return A0;
 }
 
 
-void dragt_finn_fact()
+void print_mat(const std::string &str, const Eigen::Matrix<double, 6, 6> &M)
+{
+  const int n_dec = 6;
+
+  std::cout << str << "\n";
+  for (auto j = 0; j < 2*nd_tps; j++) {
+    for (auto k = 0; k < 2*nd_tps; k++)
+      std::cout << std::scientific << std::setprecision(n_dec)
+		<< std::setw(n_dec+8) << M(j, k);
+    std::cout << "\n";
+  }
+}
+
+
+Eigen::Matrix<double, 6, 6> get_lin_map(ss_vect<tps> &map)
+{
+  Eigen::Matrix<double, 6, 6>
+    M;
+
+  for (auto j = 0; j < 2*nd_tps; j++) {
+    for (auto k = 0; k < 2*nd_tps; k++)
+      M(j, k) = map[j][k];
+  }
+  return M;
+}
+
+
+ss_vect<tps> get_map_Fl(ss_vect<tps> &map, MNF_struct &MNF)
+{
+  Matrix
+    R_mat;
+  ss_vect<tps>
+    R;
+  Eigen::Matrix<double, 6, 6>
+    M;
+ 
+  const int n_dim = 4;
+
+  // Find fixed point.
+  GoFix(map, MNF.A0, MNF.A0_inv, no_tps);
+
+  // Translate to fix point.
+  map = MNF.A0_inv*map*MNF.A0;
+
+  std::cout << "\nA0:\n";
+  prt_lin_map(nd_tps, A0);
+
+  std::cout << "\nM_map:\n";
+  prt_lin_map(nd_tps, map);
+
+  M = get_lin_map(map);
+
+  Eigen::IOFormat Fmt1(6, 0, " ", "\n", " ", "", "", "\n");
+  std::cout << "\nM_mat:\n" << M.format(Fmt1);
+
+  Eigen::EigenSolver<Eigen::Matrix<double, 6, 6> > s(M); 
+
+  Eigen::IOFormat Fmt2(3, 0, " ", "\n", " ", "", "", "\n");
+  std::cout << "\nEigenvalues:\n" << s.eigenvalues().format(Fmt2);
+  std::cout << "\nEigenvectors:\n" << s.eigenvectors().format(Fmt2);
+
+  assert(false);
+
+#if 0
+  getlinmat(n_dim, map, globval.OneTurnMat);
+  GDiag(n_dim, 1.0, globval.Ascr, globval.Ascrinv, R_mat,
+        globval.OneTurnMat, globval.Omega, globval.Alphac);
+  MNF.A1.identity();
+  putlinmat(4, globval.Ascr, MNF.A1);
+  R.identity(); putlinmat(4, R_mat, R);
+#endif
+
+  // Transform to Floquet space.
+  map = Inv(MNF.A1)*map*MNF.A1;
+
+  return R;
+}
+
+
+tps get_g(const tps nu_x, const tps nu_y, const tps &h)
+{
+  // Compute g = (1-R)^-1 * h 
+
+  long int      jj1[ss_dim], jj2[ss_dim];
+  double        re, im;
+  tps           h_re, h_im, g_re, g_im, mn1, mn2, cotan;
+  ss_vect<tps>  Id;
+
+  CtoR(h, h_re, h_im);
+
+  for (auto k = 0; k < nv_tps; k++) {
+    jj1[k] = 0; jj2[k] = 0;
+  }
+
+  Id.identity(); g_re = 0e0; g_im = 0e0;
+  for (auto i = 0; i <= no_tps; i++) {
+    jj1[x_] = i; jj2[px_] = i;
+    for (auto j = 0; j <= no_tps; j++) {
+      jj1[px_] = j; jj2[x_] = j;
+      for (auto k = 0; k <= no_tps; k++) {
+	jj1[y_] = k; jj2[py_] = k;
+	for (auto l = 0; l <= no_tps; l++) {
+	  jj1[py_] = l; jj2[y_] = l;
+	  if ((i+j+k+l <= no_tps) && ((i-j != 0) || (k-l != 0))) {
+	    cotan = 1.0/tan(((i-j)*nu_x+(k-l)*nu_y)*M_PI);
+	    mn1 =
+	      pow(Id[x_], i)*pow(Id[px_], j)*pow(Id[y_], k)*pow(Id[py_], l);
+	    mn2 =
+	      pow(Id[x_], j)*pow(Id[px_], i)*pow(Id[y_], l)*pow(Id[py_], k);
+
+	    for (auto m = 0; m <= no_tps-i-j-k-l; m++) {
+	      jj1[delta_] = m; jj2[delta_] = m;
+	      re = h_re[jj1]; im = h_im[jj1];
+	      // compute g
+	      g_re += (re-cotan*im)*(mn1+mn2)*pow(Id[delta_], m)/2.0;
+	      g_im += (im+cotan*re)*(mn1-mn2)*pow(Id[delta_], m)/2.0;
+	      h_re.pook(jj2, 0e0); h_im.pook(jj2, 0e0);
+	    }
+	  }
+	}
+      }
+    }
+  }
+
+  return RtoC(g_re, g_im);
+}
+
+
+tps get_Ker(const tps &h)
+{
+  long int     jj[ss_dim];
+  tps          h_Ke;
+  ss_vect<tps> Id;
+
+  for (auto k = 0; k < nv_tps; k++)
+    jj[k] = 0;
+
+  Id.identity();
+  h_Ke = 0e0;
+  for (auto i = 0; i <= no_tps; i++) {
+    jj[x_] = i; jj[px_] = i;
+    for (auto j = 0; j <= no_tps; j++) {
+      jj[y_] = j; jj[py_] = j;
+      for (auto k = 0; k <= no_tps; k++) {
+	jj[delta_] = k;
+	if ((2*i+2*j+k <= no_tps) && ((i != 0) || (j != 0) || (k != 0))) {
+	  h_Ke +=
+	    h[jj]*pow(Id[x_], i)*pow(Id[px_], i)
+	    *pow(Id[y_], j)*pow(Id[py_], j)*pow(Id[delta_], k);
+	}
+      }
+    }
+  }
+
+  return h_Ke;
+}
+
+
+MNF_struct map_norm(ss_vect<tps> &map)
+{
+  int           n;
+  double        nu0[2];
+  tps           hn, hn_re, hn_im, h_ke, gn, Kn, g, K;
+  ss_vect<tps>  Id, R, A, nus, map1, map2;
+  MNF_struct    MNF;
+
+  Id.identity();
+
+  danot_(no_tps-1);
+
+  map1 = map; R = get_map_Fl(map1, MNF);
+
+  danot_(no_tps);
+
+  K = 0e0;
+  for (auto k = 0; k < 2; k++) {
+    nu0[k] = atan2(R[2*k][2*k+1], R[2*k][2*k]);
+    if (nu0[k] < 0e0) nu0[k] += 2.0*M_PI;
+    nu0[k] /= 2.0*M_PI;
+    K -= M_PI*nu0[k]*(sqr(Id[2*k])+sqr(Id[2*k+1]));
+  }
+  std::cout << "\n";
+  std::cout << std::fixed << std::setprecision(5)
+       << "nu0 = (" << nu0[X_] << ", " << nu0[Y_] << ")" << "\n";
+
+  // Coasting beam.
+  K += h_ijklm(map1[ct_], 0, 0, 0, 0, 1)*sqr(Id[delta_])/2.0;
+//  CtoR(K, hn_re, hn_im);
+//  std::cout << "\n" << "K:" << hn_re;
+
+  g = 0e0;
+  for (auto k = 3; k <= no_tps; k++) {
+    n = pow(2, k-3);
+
+    map2 = map1*Inv(R*FExpo(K, Id, 3, k-1, -1));
+    hn = Intd(get_mns(map2, k-1, k-1), -1e0);
+    gn = get_g(nu0[X_], nu0[Y_], hn);
+    g += gn;
+    CtoR(hn, hn_re, hn_im);
+    Kn = RtoC(get_Ker(hn_re), get_Ker(hn_im));
+    K += Kn;
+//    std::cout << "\n" << "k = " << k << hn_re;
+
+    A = FExpo(gn, Id, k, k, -1);
+    map1 = Inv(A)*map1*A;
+  }
+
+  MNF.map_res = map1;
+
+  return MNF;
+}
+
+
+void test_map_norm(void)
+{
+  tps          g, g_re, g_im, K, k_re, k_im;
+  ss_vect<tps> M, A0, A1, map_res;
+  MNF_struct    MNF;
+
+  M.identity();
+  M.propagate(1, n_elem);
+
+  danot_(no_tps-1);
+
+  prt_lin_map(3, M);
+
+  if (false)
+    std::cout << std::scientific << std::setprecision(5)
+	      << std::setw(13) << M << "\n";
+
+  danot_(no_tps);
+
+  MNF = map_norm(M);
+
+  K = MapNorm(M, g, A1, A0, map_res, 1);
+  CtoR(K, k_re, k_im);
+ 
+  std::cout << "\nk_re:\n" << k_re;
+
+  // std::cout << MNF.g-g;
+//  CtoR(MNF.K-K, hn_re, hn_im);
+//  std::cout << hn_re;
+}
+
+
+void dragt_finn_fact(void)
 {
   tps          h_1, h_2;
   ss_vect<tps> R;
 
-  set_bn_par(get_Fnum("uq3"), Quad, 7);
+  if (true) {
+    if (true)
+      set_bn_par(get_Fnum("sf"), Sext, 7);
+    else
+      set_bn_par(get_Fnum("uq3"), Quad, 7);
+  }
+
+  danot_(no_tps-1);
 
   Map.identity();
   Map.propagate(1, n_elem);
@@ -286,49 +847,71 @@ void dragt_finn_fact()
 	      << std::setw(13) << Map << "\n";
 
   h_1 = LieFact_DF(Map, R);
-  R[6] = tps(0e0, 7); h_1 = h_1*R;
-
   h_2 = M_to_h_DF(Map);
 
-  assert(false);
   std::cout << std::scientific << std::setprecision(5)
 	    << "\nh:\n" << std::setw(13) << h_2 << "\n";
+  std::cout << std::scientific << std::setprecision(5)
+	    << "\nh_2-h_1:\n" << std::setw(13) << h_2-h_1 << "\n";
 }
 
+#if 0
 
-void print_map(const std::string &str, ss_vect<tps> M)
+void tst_ctor(MNF_struct &MNF)
 {
-  std::cout << str << "\n";
-  for (auto j = 0; j < ss_dim; j++) {
-    for (auto k = 0; k < ss_dim; k++)
-      std::cout << std::scientific << std::setprecision(5)
-		<< std::setw(13) << M[j][k];
-    std::cout << "\n";
-  }
+  tps          K_re, K_im, K_re_JB, K_im_JB, g_re, g_im, g_re_JB, g_im_JB;
+  ss_vect<tps> Id;
+  ctps         cK, cg;
+
+  Id.identity();
+
+  CtoR(MNF.K, K_re, K_im);
+  CtoR(MNF.g, g_re, g_im);
+  cK = CtoR(ctps(MNF.K, 0e0));
+  cg = CtoR(ctps(0e0, MNF.g));
+
+  cout << "\n[K_re-K_re_JB, K_im-K_im_JB]:\n"
+       << K_re-cK.real() << K_im-cK.imag();
+  daeps_(1e-7);
+  cout << "\n[g_re-g_re_JB, g_im-g_im_JB]:\n"
+       << g_re-cg.real() << g_im-cg.imag();
+  daeps_(eps_tps);
+
+  cK = RtoC(ctps(K_re, K_im));
+  cg = RtoC(ctps(g_re, g_im));
+
+  cout << "\nRtoC_JB(2, cK)-K:\n" << cK.real()-MNF.K << cK.imag();
+
+  daeps_(1e-6);
+  cout << "\nRtoC_JB(2, cg)-g:\n" << 1e0*cg.real() << cg.imag()-MNF.g;
+  daeps_(eps_tps);
 }
 
+#endif
 
-void test(void)
+void test_param_dep(void)
 {
   ss_vect<tps> Id, M;
 
   Id.identity();
 
   M.zero();
+  M[x_] = -1e0;
   for (auto k = 0; k < 2*nd_tps; k++)
     M[k] += (k+1e0)*Id[k];
   M[x_] += 3.14e-3*Id[x_]*Id[6];
 
+  Id *= 2e0;
   print_map("\nId:", Id);
   print_map("\nM:", M);
   std::cout << std::scientific << std::setprecision(5)
-	    << std::setw(13) << M[x_];
+	    << "\nM:\n" << std::setw(13) << M;
   std::cout << std::scientific << std::setprecision(5)
-	    << std::setw(13) << (M*Id)[x_];
+	    << "\n(M*Id)[x_]:\n" << std::setw(13) << (M*Id)[x_];
   std::cout << std::scientific << std::setprecision(5)
-	    << std::setw(13) << (Id*M)[x_];
+	    << "\n(Id*M)[x_]:\n" << std::setw(13) << (Id*M)[x_];
   std::cout << std::scientific << std::setprecision(5)
-	    << std::setw(13) << (M*M)[x_];
+	    << "\n(M*M)[x_]:\n" << std::setw(13) << (M*M)[x_];
 }
 
 
@@ -339,7 +922,8 @@ int main(int argc, char *argv[])
   cavity_on = false; quad_fringe_on = false; emittance_on = false;
   IBS_on    = false;
 
-  // rd_mfile(argv[1], elem); rd_mfile(argv[1], elem_tps);
+  rd_mfile(argv[1], elem);
+  rd_mfile(argv[1], elem_tps);
 
   // initialize the symplectic integrator after energy has been defined
   ini_si();
@@ -354,8 +938,14 @@ int main(int argc, char *argv[])
   if (false)
     no_mpoles(Sext);
 
-  // dragt_finn_fact();
+ if (!false)
+   test_map_norm();
 
-  danot_(no_tps);
-  test();
+  if (false)
+    dragt_finn_fact();
+
+  if (false) {
+    danot_(no_tps);
+    test_param_dep();
+  }
 }
