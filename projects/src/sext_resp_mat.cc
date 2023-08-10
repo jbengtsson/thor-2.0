@@ -2,6 +2,7 @@
 #include <complex>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_eigen.h>
+#include <boost/math/special_functions/sign.hpp>
 #include <assert.h>
 
 #define NO 5
@@ -32,17 +33,107 @@ typedef struct MNF_struct
 } MNF_struct;
 
 
+ss_vect<tps> mat2map(const Eigen::MatrixXd &A)
+{
+  ss_vect<tps> Id, B;
+
+  Id.identity();
+  B.zero();
+  for (auto j = 0; j < 2*nd_tps; j++)
+    for (auto k = 0; k < 2*nd_tps; k++)
+      B[j] += A(j, k)*Id[k];
+
+  return B;
+}
+
+
 void print_map(const std::string &str, ss_vect<tps> M)
 {
   const int n_dec = 5;
 
-  std::cout << str << "\n";
-  for (auto j = 0; j < ss_dim; j++) {
-    for (auto k = 0; k < ss_dim; k++)
-      std::cout << std::scientific << std::setprecision(5)
+  std::cout << str;
+  for (auto j = 0; j < 2*nd_tps; j++) {
+    for (auto k = 0; k < 2*nd_tps; k++)
+      std::cout << std::scientific << std::setprecision(n_dec)
 		<< std::setw(n_dec+8) << M[j][k];
     std::cout << "\n";
   }
+}
+
+
+void print_int_vec(const std::string &str, const Eigen::VectorXi &v)
+{
+  std::cout << str;
+  for (auto k = 0; k < v.size(); k++)
+    std::cout << std::setw(1) << v(k) << "\n";
+}
+
+
+void print_vec(const std::string &str, const Eigen::VectorXd &v)
+{
+  const int n_dec = 5;
+
+  std::cout << str;
+  for (auto k = 0; k < v.size(); k++)
+    std::cout << std::scientific << std::setprecision(n_dec)
+	      << std::setw(n_dec+8) << v(k) << "\n";
+}
+
+
+void print_mat(const std::string &str, const Eigen::MatrixXd &M)
+{
+  const int n_dec = 5;
+
+  std::cout << str;
+  for (auto j = 0; j < M.col(0).size(); j++) {
+    for (auto k = 0; k < M.row(0).size(); k++)
+      std::cout << std::scientific << std::setprecision(n_dec)
+		<< std::setw(n_dec+8) << M(j, k);
+    std::cout << "\n";
+  }
+}
+
+
+void print_complex_vec(const std::string &str, const Eigen::VectorXcd &v)
+{
+  const int n_dec = 5;
+
+  std::cout << str;
+  for (auto k = 0; k < v.size(); k++)
+    std::cout << std::scientific << std::setprecision(n_dec)
+	      << std::setw(n_dec+8) << v(k).real()
+	      << (boost::math::sign(v(k).imag())? "+i":"-i")
+	      << std::setw(n_dec+6) << fabs(v(k).imag()) << "\n";
+}
+
+
+void print_complex_mat(const std::string &str, const Eigen::MatrixXcd &M)
+{
+  const int n_dec = 5;
+
+  std::cout << str;
+  for (auto j = 0; j < M.col(0).size(); j++) {
+    for (auto k = 0; k < M.row(0).size(); k++)
+      std::cout << std::scientific << std::setprecision(n_dec)
+		<< std::setw(n_dec+8) << M(j, k).real()
+		<< (boost::math::sign(M(j, k).imag())? "+i":"-i")
+		<< std::setw(n_dec+6) << fabs(M(j, k).imag());
+    std::cout << "\n";
+  }
+}
+
+
+double acos2(const double sin, const double cos)
+{
+  if (fabs(cos) > 1e0) {
+    std::cout << std::scientific << std::setprecision(5)
+	      << "\nacos2 - argument > 1: " << cos << "\n";
+    return NAN;
+  }
+  auto phi = acos(cos);
+  if (sin < 0e0)
+    phi = 2e0*M_PI - phi;
+  return phi;
 }
 
 
@@ -113,7 +204,6 @@ ss_vect<tps> get_M_k(const ss_vect<tps> &x, const int k)
 
 void CtoR_JB(const tps &a, tps &a_re, tps &a_im)
 {
-  int          k;
   tps          b, c;
   ss_vect<tps> Id, map;
 
@@ -129,7 +219,7 @@ void CtoR_JB(const tps &a, tps &a_re, tps &a_im)
   // q_k =   (h_q_k^+ + h_q_k^-) / 2
   // p_k = i (h_q_k^+ - h_q_k^-) / 2
   map.identity();
-  for (k = 0; k < nd_tps; k++) {
+  for (auto k = 0; k < nd_tps; k++) {
     map[2*k]   = (Id[2*k]+Id[2*k+1])/2e0;
     map[2*k+1] = (Id[2*k]-Id[2*k+1])/2e0;
   }
@@ -140,7 +230,7 @@ void CtoR_JB(const tps &a, tps &a_re, tps &a_im)
   // Complex space:
   // i (q_k -/+ i p_k) = (i q_k +/- p_k)
   map.identity();
-  for (k = 0; k < nd_tps; k++) {
+  for (auto k = 0; k < nd_tps; k++) {
     map[2*k]   = Id[2*k+1];
     map[2*k+1] = Id[2*k];
   }
@@ -576,21 +666,7 @@ ss_vect<tps> get_A0(const ss_vect<tps> &map)
 }
 
 
-void print_mat(const std::string &str, const Eigen::Matrix<double, 6, 6> &M)
-{
-  const int n_dec = 6;
-
-  std::cout << str << "\n";
-  for (auto j = 0; j < 2*nd_tps; j++) {
-    for (auto k = 0; k < 2*nd_tps; k++)
-      std::cout << std::scientific << std::setprecision(n_dec)
-		<< std::setw(n_dec+8) << M(j, k);
-    std::cout << "\n";
-  }
-}
-
-
-Eigen::Matrix<double, 6, 6> get_lin_map(ss_vect<tps> &map)
+Eigen::MatrixXd get_lin_map(ss_vect<tps> &map)
 {
   Eigen::Matrix<double, 6, 6>
     M;
@@ -603,50 +679,281 @@ Eigen::Matrix<double, 6, 6> get_lin_map(ss_vect<tps> &map)
 }
 
 
+Eigen::VectorXd compute_nu_symp(const Eigen::MatrixXd &M)
+{
+  // Eigenvalues for a 4x4 symplectic periodic matrix.
+
+  const int
+    n_dof = 2,
+    n_dim = 2*n_dof;
+
+  double
+    x,
+    y;
+  Eigen::Vector<double, n_dof>
+    nu;
+  Eigen::MatrixXd
+    Id = Eigen::MatrixXd::Identity(n_dim, n_dim);
+
+  auto Pp1 = (M-Id).determinant();
+  auto Pm1 = (M+Id).determinant();
+  auto p = (Pp1-Pm1)/8e0;
+  auto q = (Pp1+Pm1)/8e0 - 1e0;
+  if (M.block(0, 0, n_dof, n_dof).trace()
+      > M.block(n_dof, n_dof, n_dof, n_dof).trace()) {
+    x = -p/2e0 + sqrt(sqr(p/2e0)-q);
+    y = -p/2e0 - sqrt(sqr(p/2e0)-q);
+  } else {
+    x = -p/2e0 - sqrt(sqr(p/2e0)-q);
+    y = -p/2e0 + sqrt(sqr(p/2e0)-q);
+  }
+  nu[X_] = acos(x)/(2e0*M_PI);
+  if (M(0, 1) < 0e0)
+    nu[X_] = 1e0 - nu[X_];
+  nu[Y_] = acos(y)/(2e0*M_PI);
+  if (M(2, 3) < 0e0)
+    nu[Y_] = 1e0 - nu[Y_];
+  std::cout << std::fixed << std::setprecision(5)
+	    << "\ncompute_nu:\n  nu = [" << nu[X_] << ", " << nu[Y_] << "]\n";
+
+  return nu;
+}
+
+
+int find_closest_nu(const double nu, const Eigen::VectorXcd &w)
+{
+  int    ind;
+  double nu_k, diff;
+
+  auto min = 1e30;
+  for (auto k = 0; k < w.size(); k++) {
+    nu_k = acos2(w(k).imag(), w(k).real())/(2e0*M_PI);
+    diff = fabs(nu_k-nu);
+    if (diff < min) {
+      ind = k;
+      min = diff;
+    }
+  }
+  return ind;
+}
+
+
+Eigen::VectorXi sort_eigen_vec
+(const Eigen::VectorXd &nu, const Eigen::VectorXcd &w)
+{
+  const int
+    n_dof = 2,
+    n_dim = 2*n_dof;
+
+  Eigen::VectorXi order(n_dim);
+
+  for (auto k = 0; k < nu.size(); k++) {
+    order(2*k) = find_closest_nu(nu[k], w);
+    order(2*k+1) = find_closest_nu(1e0-nu[k], w);
+  }
+  return order;
+}
+
+
+Eigen::MatrixXd compute_S(const int n_dof)
+{
+  // Remark: Beware of sign for longitudinal dim.
+  const int n_dim = 2*n_dof;
+
+  Eigen::MatrixXd S = Eigen::MatrixXd::Zero(n_dim, n_dim);
+  for (auto k = 0; k < n_dof; k++) {
+    S(2*k, 2*k+1) = 1e0;
+    S(2*k+1, 2*k) = -1e0;
+  }
+
+  return S;
+}
+
+
+Eigen::MatrixXd compute_A
+(const int n_dof, const Eigen::VectorXd &eta, Eigen::MatrixXcd &u_ord)
+{
+  const int
+    n_dim = 2*n_dof;
+  const std::complex<double>
+    I     = std::complex<double>(0e0, 1e0);
+
+  double
+    z,
+    scl,
+    sgn_im,
+    sgn_vec;
+  Eigen::MatrixXd
+    S = Eigen::MatrixXd::Zero(n_dim, n_dim),
+    A = Eigen::MatrixXd::Identity(6, 6),
+    B = Eigen::MatrixXd::Identity(6, 6);
+  Eigen::MatrixXcd
+    u(n_dim, n_dim);
+
+  S = compute_S(n_dof);
+
+  // Normalise eigenvectors: A^T.omega.A = omega.
+  for (auto k = 0; k < n_dof; k++) {
+    z = u_ord.col(2*k).real().dot(S*u_ord.col(2*k).imag());
+    sgn_im = boost::math::sign(z);
+    scl = sqrt(fabs(z));
+    sgn_vec = boost::math::sign(u_ord(2*k, 2*k).real());
+    u.col(2*k) =
+      sgn_vec*(u_ord.col(2*k).real()+sgn_im*u_ord.col(2*k).imag()*I)/scl;
+    u.col(2*k+1) =
+      sgn_vec
+      *(u_ord.col(2*k+1).real()+sgn_im*u_ord.col(2*k+1).imag()*I)/scl;
+  }
+    
+  u_ord = u;
+
+  print_complex_mat("\nu:\n", u);
+
+  for (auto k = 0; k < n_dof; k++) {
+    A.block(0, 0, n_dim, n_dim).col(2*k)   = u.col(2*k).real();
+    A.block(0, 0, n_dim, n_dim).col(2*k+1) = u.col(2*k).imag();
+  }
+
+  if (n_dof == 2) {
+    // For coasting beam translate to momentum dependent fix point.
+    B(x_, delta_) = eta(x_);
+    B(px_, delta_) = eta(px_);
+    B(ct_, x_) = eta(px_);
+    B(ct_, px_) = -eta(x_);
+
+    A = B*A;
+  }
+
+  return A;
+}
+
+
+Eigen::VectorXd compute_dispersion(const Eigen::MatrixXd &M)
+{
+  const int
+    n_dof = 2,
+    n_dim = 2*n_dof;
+  const Eigen::MatrixXd
+    Id = Eigen::MatrixXd::Identity(n_dim, n_dim);
+
+  Eigen::VectorXd
+    D(n_dim);
+
+  for (auto k = 0; k < n_dim; k++)
+    D(k) = M(k, delta_);
+
+  return (Id-M.block(0, 0, n_dim, n_dim)).inverse()*D;
+}
+
+
+ss_vect<tps> compute_M_diag(ss_vect<tps> &map)
+{
+  const int
+    n_dof = 2,
+    n_dim = 2*n_dof;
+
+  ss_vect<tps>
+    A;
+  Eigen::VectorXi
+    order(n_dim);
+  Eigen::VectorXd
+    nu_symp(n_dof),
+    nu_eig(n_dim),
+    nu_eig_ord(n_dim),
+    eta;
+  Eigen::VectorXcd
+    w_ord(n_dim);
+  Eigen::MatrixXd
+    M(6, 6);
+  Eigen::MatrixXcd
+    u(n_dim, n_dim),
+    u_ord(n_dim, n_dim);
+
+  A.zero();
+
+  M = get_lin_map(map);
+
+  // Check if stable.
+  auto Tr_x = M.block(0, 0, n_dof, n_dof).trace();
+  if (fabs(Tr_x) >= 2e0) {
+    std::cout << std::scientific << std::setprecision(5)
+	      << "\nEigenvalues - unstable in the horizontal plane:"
+	      << " Tr{M_x} = " << Tr_x << "\n";
+    return A;
+  }
+  auto Tr_y = M.block(n_dof, n_dof, n_dof, n_dof).trace();
+  if (fabs(Tr_y) >= 2e0) {
+    std::cout << std::scientific << std::setprecision(5)
+	      << "\nEigenvalues - unstable in the vertical plane:"
+	      << " Tr{M_y} = " << Tr_y << "\n";
+    return A;
+  }
+
+  print_mat("\nM_mat:\n", M);
+
+  auto M_4x4 = M.block(0, 0, n_dim, n_dim);
+  Eigen::EigenSolver<Eigen::Matrix<double, n_dim, n_dim> > s(M_4x4);
+
+  print_complex_vec("\nEigenvalues:\n", s.eigenvalues());
+  print_complex_mat("\nEigenvectors:\n", s.eigenvectors());
+
+  nu_symp = compute_nu_symp(M_4x4);
+
+  for (auto k = 0; k < n_dim; k++)
+    nu_eig[k] =
+      acos2(s.eigenvalues()(k).imag(), s.eigenvalues()(k).real())/(2e0*M_PI);
+
+  print_vec("\nnu_eig:\n", nu_eig);
+
+  order = sort_eigen_vec(nu_symp, s.eigenvalues());
+
+  print_int_vec("\norder:\n", order);
+
+  for (auto j = 0; j < n_dim; j++) {
+    w_ord(j) = s.eigenvalues()(order(j));
+    u_ord.col(j) = s.eigenvectors().col(order(j));
+    nu_eig_ord(j) = acos2(w_ord(j).imag(), w_ord(j).real())/(2e0*M_PI);
+  }
+
+  print_complex_vec("\nEigenvalues:\n", w_ord);
+  print_complex_mat("\nEigenvectors:\n", u_ord);
+  print_vec("\nnu_eig:\n", nu_eig_ord);
+
+  eta = compute_dispersion(M);
+
+  print_vec("\neta:\n", eta);
+
+  A = mat2map(compute_A(n_dof, eta, u_ord));
+
+  print_map("\nA:\n", A);
+
+  assert(false);
+
+  return A;
+}
+
+
 ss_vect<tps> get_map_Fl(ss_vect<tps> &map, MNF_struct &MNF)
 {
   Matrix
     R_mat;
   ss_vect<tps>
     R;
-  Eigen::Matrix<double, 6, 6>
-    M;
  
-  const int n_dim = 4;
-
+#if 0
   // Find fixed point.
   GoFix(map, MNF.A0, MNF.A0_inv, no_tps);
 
   // Translate to fix point.
   map = MNF.A0_inv*map*MNF.A0;
 
-  std::cout << "\nA0:\n";
-  prt_lin_map(nd_tps, A0);
+  print_map("\nA0:", A0);
+  print_map("\nM_map:", map);
+#endif
 
-  std::cout << "\nM_map:\n";
-  prt_lin_map(nd_tps, map);
-
-  M = get_lin_map(map);
-
-  Eigen::IOFormat Fmt1(6, 0, " ", "\n", " ", "", "", "\n");
-  std::cout << "\nM_mat:\n" << M.format(Fmt1);
-
-  Eigen::EigenSolver<Eigen::Matrix<double, 6, 6> > s(M); 
-
-  Eigen::IOFormat Fmt2(3, 0, " ", "\n", " ", "", "", "\n");
-  std::cout << "\nEigenvalues:\n" << s.eigenvalues().format(Fmt2);
-  std::cout << "\nEigenvectors:\n" << s.eigenvectors().format(Fmt2);
+  MNF.A1 = compute_M_diag(map);
 
   assert(false);
-
-#if 0
-  getlinmat(n_dim, map, globval.OneTurnMat);
-  GDiag(n_dim, 1.0, globval.Ascr, globval.Ascrinv, R_mat,
-        globval.OneTurnMat, globval.Omega, globval.Alphac);
-  MNF.A1.identity();
-  putlinmat(4, globval.Ascr, MNF.A1);
-  R.identity(); putlinmat(4, R_mat, R);
-#endif
 
   // Transform to Floquet space.
   map = Inv(MNF.A1)*map*MNF.A1;
@@ -800,7 +1107,7 @@ void test_map_norm(void)
 
   danot_(no_tps-1);
 
-  prt_lin_map(3, M);
+  print_map("\nM:", M);
 
   if (false)
     std::cout << std::scientific << std::setprecision(5)
@@ -840,7 +1147,7 @@ void dragt_finn_fact(void)
 
   danot_(no_tps);
 
-  prt_lin_map(3, Map);
+  print_map("\nMap:", Map);
 
   if (false)
     std::cout << std::scientific << std::setprecision(5)
