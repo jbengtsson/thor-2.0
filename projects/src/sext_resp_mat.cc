@@ -18,20 +18,20 @@ int
   ndpt_tps = 5;
 
 
-typedef struct MNF_struct
+typedef struct MNFType
 {
   tps
-    K,              // New effective Hamiltonian.
-    g;              /* Generator for nonlinear canonical transformation to
-		       Floquet space.                                         */
+    K,              // Normalised generator.
+    g;              // Generator for canonical transformation to Floquet space.
   ss_vect<tps>
+    M,              // Poincaré map.
+    M_res,          // Residual map.
     A0, A0_inv,     // Linear transformation to fixed point.
     A1, A1_inv,     // Linear transformation to Floquet space.
     A_nl, A_nl_inv, // Nonlinear transformation to Floquet space.
     R,              // Floquet space rotation.
-    nus,            // Tune shift.
-    map_res;        // Residual map.
-} MNF_struct;
+    nus;            // Tune shift.
+} MNFType;
 
 
 ss_vect<tps> mat2map(const Eigen::MatrixXd &A)
@@ -648,27 +648,6 @@ tps get_h(ss_vect<tps> &map)
 }
 
 
-ss_vect<tps> get_A0(const ss_vect<tps> &map)
-{
-  ss_vect<tps> Id, map1, dx, eta, A0, M_inv;
-
-  Id.zero();
-  Id[delta_] = tps(0e0, delta_+1);
-  dx = map*Id;
-
-  map1 = map - dx;
-  map1[delta_] = 0e0; map1[ct_] = 0e0;
-
-  Id.identity();
-  eta = Inv(Id-map1)*dx;
-
-  A0.identity();
-  A0 += eta;
-
-  return A0;
-}
-
-
 Eigen::MatrixXd get_lin_map(ss_vect<tps> &map)
 {
   Eigen::MatrixXd M(6, 6);
@@ -768,56 +747,6 @@ Eigen::MatrixXd compute_S(const int n_dof)
 }
 
 
-Eigen::MatrixXd compute_A
-(const int n_dof, const Eigen::VectorXd &eta, Eigen::MatrixXcd &u_ord)
-{
-  const int
-    n_dim = 2*n_dof;
-  const std::complex<double>
-    I = std::complex<double>(0e0, 1e0);
-
-  Eigen::MatrixXd
-    A = Eigen::MatrixXd::Identity(6, 6),
-    B = Eigen::MatrixXd::Identity(6, 6);
-  Eigen::MatrixXcd
-    u(n_dim, n_dim);
-
-  auto S = compute_S(n_dof);
-
-  // Normalise eigenvectors: A^T.omega.A = omega.
-  for (auto k = 0; k < n_dof; k++) {
-    auto z = u_ord.col(2*k).real().dot(S*u_ord.col(2*k).imag());
-    auto sgn_im = boost::math::sign(z);
-    auto scl = sqrt(fabs(z));
-    auto sgn_vec = boost::math::sign(u_ord(2*k, 2*k).real());
-    u.col(2*k) =
-      sgn_vec*(u_ord.col(2*k).real()+sgn_im*u_ord.col(2*k).imag()*I)/scl;
-    u.col(2*k+1) =
-      sgn_vec
-      *(u_ord.col(2*k+1).real()+sgn_im*u_ord.col(2*k+1).imag()*I)/scl;
-  }
-    
-  u_ord = u;
-
-  for (auto k = 0; k < n_dof; k++) {
-    A.block(0, 0, n_dim, n_dim).col(2*k)   = u.col(2*k).real();
-    A.block(0, 0, n_dim, n_dim).col(2*k+1) = u.col(2*k).imag();
-  }
-
-  if (n_dof == 2) {
-    // For coasting beam translate to momentum dependent fix point.
-    B(x_, delta_) = eta(x_);
-    B(px_, delta_) = eta(px_);
-    B(ct_, x_) = eta(px_);
-    B(ct_, px_) = -eta(x_);
-
-    A = B*A;
-  }
-
-  return A;
-}
-
-
 Eigen::VectorXd compute_dispersion(const Eigen::MatrixXd &M)
 {
   const int
@@ -833,14 +762,73 @@ Eigen::VectorXd compute_dispersion(const Eigen::MatrixXd &M)
 }
 
 
-ss_vect<tps> compute_M_diag(ss_vect<tps> &map, ss_vect<tps> &R)
+Eigen::MatrixXd compute_A0(const Eigen::MatrixXd &M)
+{
+  const int
+    n_dof = 2;
+
+  Eigen::MatrixXd
+    A0 = Eigen::MatrixXd::Identity(6, 6);
+
+  auto eta = compute_dispersion(M);
+
+  if (n_dof == 2) {
+    // Coasting beam - translate to momentum dependent fix point.
+    for (auto k = 0; k < n_dof; k++) {
+      A0(2*k, delta_)   =  eta(2*k);
+      A0(2*k+1, delta_) =  eta(2*k+1);
+      A0(ct_, 2*k)      =  eta(2*k+1);
+      A0(ct_, 2*k+1)    = -eta(2*k);
+    }
+  }
+
+  return A0;
+}
+
+
+Eigen::MatrixXd compute_A1(const int n_dof, Eigen::MatrixXcd &u_ord)
+{
+  const int
+    n_dim = 2*n_dof;
+  const std::complex<double>
+    I = std::complex<double>(0e0, 1e0);
+
+  Eigen::MatrixXd
+    A1 = Eigen::MatrixXd::Identity(6, 6);
+  Eigen::MatrixXcd
+    u(n_dim, n_dim);
+
+  auto S = compute_S(n_dof);
+
+  // Normalise eigenvectors: A^T.omega.A = omega.
+  for (auto k = 0; k < n_dof; k++) {
+    auto z = u_ord.col(2*k).real().dot(S*u_ord.col(2*k).imag());
+    auto sgn_im = boost::math::sign(z);
+    auto scl = sqrt(fabs(z));
+    auto sgn_vec = boost::math::sign(u_ord(2*k, 2*k).real());
+    u.col(2*k) =
+      sgn_vec*(u_ord.col(2*k).real()+sgn_im*u_ord.col(2*k).imag()*I)/scl;
+    u.col(2*k+1) =
+      sgn_vec*(u_ord.col(2*k+1).real()+sgn_im*u_ord.col(2*k+1).imag()*I)/scl;
+  }
+    
+  u_ord = u;
+
+  for (auto k = 0; k < n_dof; k++) {
+    A1.block(0, 0, n_dim, n_dim).col(2*k)   = u.col(2*k).real();
+    A1.block(0, 0, n_dim, n_dim).col(2*k+1) = u.col(2*k).imag();
+  }
+
+  return A1;
+}
+
+
+void compute_M_diag(MNFType &MNF)
 {
   const int
     n_dof = 2,
     n_dim = 2*n_dof;
 
-  ss_vect<tps>
-    zero;
   Eigen::VectorXd
     nu_eig(n_dim),
     nu_eig_ord(n_dim);
@@ -850,9 +838,7 @@ ss_vect<tps> compute_M_diag(ss_vect<tps> &map, ss_vect<tps> &R)
     u(n_dim, n_dim),
     u_ord(n_dim, n_dim);
 
-  zero.zero();
-
-  auto M = get_lin_map(map);
+  auto M = get_lin_map(MNF.M);
 
   // Check if stable.
   auto Tr_x = M.block(0, 0, n_dof, n_dof).trace();
@@ -860,14 +846,14 @@ ss_vect<tps> compute_M_diag(ss_vect<tps> &map, ss_vect<tps> &R)
     std::cout << std::scientific << std::setprecision(5)
 	      << "\nEigenvalues - unstable in the horizontal plane:"
 	      << " Tr{M_x} = " << Tr_x << "\n";
-    return zero;
+    return;
   }
   auto Tr_y = M.block(n_dof, n_dof, n_dof, n_dof).trace();
   if (fabs(Tr_y) >= 2e0) {
     std::cout << std::scientific << std::setprecision(5)
 	      << "\nEigenvalues - unstable in the vertical plane:"
 	      << " Tr{M_y} = " << Tr_y << "\n";
-    return zero;
+    return;
   }
 
   print_mat("\ncompute_M_diag:\nM_mat:\n", M);
@@ -890,16 +876,22 @@ ss_vect<tps> compute_M_diag(ss_vect<tps> &map, ss_vect<tps> &R)
       acos2(w_ord(k).imag(), w_ord(k).real())/(2e0*M_PI);
   }
 
-  auto eta = compute_dispersion(M);
-  auto A_mat = compute_A(n_dof, eta, u_ord);
-  auto R_mat = A_mat.inverse()*M*A_mat;
-  R = mat2map(R_mat);
+  auto A1_mat = compute_A1(n_dof, u_ord);
+  auto A0_mat = compute_A0(M);
+  auto R_mat  = (A0_mat*A1_mat).inverse()*M*A0_mat*A1_mat;
 
-  return mat2map(A_mat);
+  MNF.A0 = mat2map(A0_mat);
+  MNF.A1 = mat2map(A1_mat);
+  MNF.R  = mat2map(R_mat);
+
+  print_mat("\nA0:\n", A0_mat);
+  print_mat("\nA1:\n", A1_mat);
+  print_mat("\nA0*A1:\n", A0_mat*A1_mat);
+  print_mat("\nR:\n", R_mat);
 }
 
 
-void get_map_Fl(ss_vect<tps> &map, MNF_struct &MNF)
+void compute_M_Fl(MNFType &MNF)
 {
  
 #if 0
@@ -913,12 +905,7 @@ void get_map_Fl(ss_vect<tps> &map, MNF_struct &MNF)
   print_map("\nM_map:", map);
 #endif
 
-  MNF.A1 = compute_M_diag(map, MNF.R);
-
-  print_map("\nA1:\n", MNF.A1);
-
-  // Transform to Floquet space.
-  map = Inv(MNF.A1)*map*MNF.A1;
+  compute_M_diag(MNF);
 }
 
 
@@ -1001,59 +988,83 @@ tps get_Ker(const tps &h)
 }
 
 
-MNF_struct map_norm(ss_vect<tps> &map)
+double get_coeff
+(const tps &h, const int i_x, const int i_p_x, const int i_y, const int i_p_y,
+ const int i_delta, const int i_ct, const int i_prm)
+{
+  const long int jj[] = {i_x, i_p_x, i_y, i_p_y, i_delta, i_ct, i_prm};
+
+  return h[jj];
+}
+
+
+tps get_coeff_with_prm
+(const tps &h, const int i_x, const int i_p_x, const int i_y, const int i_p_y,
+ const int i_delta, const int i_ct, const int i_prm)
+{
+  tps coeff = 0e0;
+
+  auto ord_max = no_tps - i_x - i_p_x - i_y - i_p_y - i_delta - i_ct - i_prm;
+  for (auto ord = 0; ord < ord_max; ord++)
+    coeff += get_coeff(h, i_x, i_p_x, i_y, i_p_y, i_delta, i_ct, ord);
+
+  return coeff;
+}
+
+
+
+MNFType map_norm(const ss_vect<tps> &map)
 {
   int           n;
   double        nu0[2];
-  tps           hn, hn_re, hn_im, h_ke, gn, Kn, g, K;
-  ss_vect<tps>  Id, R, A, nus, map1, map2;
-  MNF_struct    MNF;
+  tps           hn, hn_re, hn_im, h_ke, gn, Kn, g;
+  ss_vect<tps>  Id, A, nus, M_Fl, map2;
+  MNFType       MNF;
 
   Id.identity();
 
   danot_(no_tps-1);
 
-  map1 = map;
-  get_map_Fl(map1, MNF);
-
-  assert(false);
+  MNF.M_res = MNF.M = map;
 
   danot_(no_tps);
 
-  K = 0e0;
+  compute_M_Fl(MNF);
+
+  M_Fl = Inv(MNF.A0*MNF.A1)*MNF.M*MNF.A0*MNF.A1;
+
+  MNF.K = 0e0;
   for (auto k = 0; k < 2; k++) {
-    nu0[k] = atan2(R[2*k][2*k+1], R[2*k][2*k]);
-    if (nu0[k] < 0e0) nu0[k] += 2.0*M_PI;
-    nu0[k] /= 2.0*M_PI;
-    K -= M_PI*nu0[k]*(sqr(Id[2*k])+sqr(Id[2*k+1]));
+    nu0[k] = atan2(MNF.R[2*k][2*k+1], MNF.R[2*k][2*k]);
+    if (nu0[k] < 0e0) nu0[k] += 2e0*M_PI;
+    nu0[k] /= 2e0*M_PI;
+    MNF.K -= M_PI*nu0[k]*(sqr(Id[2*k])+sqr(Id[2*k+1]));
   }
   std::cout << "\n";
   std::cout << std::fixed << std::setprecision(5)
        << "nu0 = (" << nu0[X_] << ", " << nu0[Y_] << ")" << "\n";
 
   // Coasting beam.
-  K += h_ijklm(map1[ct_], 0, 0, 0, 0, 1)*sqr(Id[delta_])/2.0;
-//  CtoR(K, hn_re, hn_im);
+  MNF.K += h_ijklm(M_Fl[ct_], 0, 0, 0, 0, 1)*sqr(Id[delta_])/2e0;
+//  CtoR(MNF.K, hn_re, hn_im);
 //  std::cout << "\n" << "K:" << hn_re;
 
   g = 0e0;
   for (auto k = 3; k <= no_tps; k++) {
     n = pow(2, k-3);
 
-    map2 = map1*Inv(R*FExpo(K, Id, 3, k-1, -1));
+    map2 = M_Fl*Inv(MNF.R*FExpo(MNF.K, Id, 3, k-1, -1));
     hn = Intd(get_mns(map2, k-1, k-1), -1e0);
     gn = get_g(nu0[X_], nu0[Y_], hn);
     g += gn;
     CtoR(hn, hn_re, hn_im);
     Kn = RtoC(get_Ker(hn_re), get_Ker(hn_im));
-    K += Kn;
+    MNF.K += Kn;
 //    std::cout << "\n" << "k = " << k << hn_re;
 
     A = FExpo(gn, Id, k, k, -1);
-    map1 = Inv(A)*map1*A;
+    M_Fl = Inv(A)*M_Fl*A;
   }
-
-  MNF.map_res = map1;
 
   return MNF;
 }
@@ -1063,12 +1074,19 @@ void test_map_norm(void)
 {
   tps          g, g_re, g_im, K, k_re, k_im;
   ss_vect<tps> M, A0, A1, map_res;
-  MNF_struct    MNF;
+  MNFType    MNF;
+
+  if (true) {
+    if (true)
+      set_bn_par(get_Fnum("sf"), Sext, 7);
+    else
+      set_bn_par(get_Fnum("uq3"), Quad, 7);
+  }
+
+  danot_(no_tps-1);
 
   M.identity();
   M.propagate(1, n_elem);
-
-  danot_(no_tps-1);
 
   print_map("\nM:\n", M);
 
@@ -1079,11 +1097,16 @@ void test_map_norm(void)
   danot_(no_tps);
 
   MNF = map_norm(M);
+  CtoR(MNF.K, k_re, k_im);
 
   K = MapNorm(M, g, A1, A0, map_res, 1);
-  CtoR(K, k_re, k_im);
- 
-  std::cout << "\nk_re:\n" << k_re;
+
+#if 0
+  std::cout << "\nMNF.K:\n" << MNF.K;
+  std::cout << "\nK:\n" << K;
+#else
+  std::cout << "\nMNF.K-K:\n" << MNF.K-K;
+#endif
 
   // std::cout << MNF.g-g;
 //  CtoR(MNF.K-K, hn_re, hn_im);
@@ -1127,7 +1150,7 @@ void dragt_finn_fact(void)
 
 #if 0
 
-void tst_ctor(MNF_struct &MNF)
+void tst_ctor(MNFType &MNF)
 {
   tps          K_re, K_im, K_re_JB, K_im_JB, g_re, g_im, g_re_JB, g_im_JB;
   ss_vect<tps> Id;
