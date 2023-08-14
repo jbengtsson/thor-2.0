@@ -856,8 +856,6 @@ void compute_M_diag(MNFType &MNF)
     return;
   }
 
-  print_mat("\ncompute_M_diag:\nM_mat:\n", M);
-
   auto M_4x4 = M.block(0, 0, n_dim, n_dim);
   Eigen::EigenSolver<Eigen::Matrix<double, n_dim, n_dim> > s(M_4x4);
 
@@ -884,28 +882,10 @@ void compute_M_diag(MNFType &MNF)
   MNF.A1 = mat2map(A1_mat);
   MNF.R  = mat2map(R_mat);
 
-  print_mat("\nA0:\n", A0_mat);
-  print_mat("\nA1:\n", A1_mat);
-  print_mat("\nA0*A1:\n", A0_mat*A1_mat);
-  print_mat("\nR:\n", R_mat);
-}
-
-
-void compute_M_Fl(MNFType &MNF)
-{
- 
-#if 0
-  // Find fixed point.
-  GoFix(map, MNF.A0, MNF.A0_inv, no_tps);
-
-  // Translate to fix point.
-  map = MNF.A0_inv*map*MNF.A0;
-
-  print_map("\nA0:", A0);
-  print_map("\nM_map:", map);
-#endif
-
-  compute_M_diag(MNF);
+  print_map("\nA0:\n",    MNF.A0);
+  print_map("\nA1:\n",    MNF.A1);
+  print_map("\nA0*A1:\n", MNF.A0*MNF.A1);
+  print_map("\nR:\n",     MNF.R);
 }
 
 
@@ -913,40 +893,50 @@ tps get_g(const tps nu_x, const tps nu_y, const tps &h)
 {
   // Compute g = (1-R)^-1 * h 
 
-  long int      jj1[ss_dim], jj2[ss_dim];
-  double        re, im;
-  tps           h_re, h_im, g_re, g_im, mn1, mn2, cotan;
-  ss_vect<tps>  Id;
+  long int     jj1[ss_dim], jj2[ss_dim];
+  double       re, im;
+  tps          h_re, h_im, g_re, g_im, mn1, mn2, cotan;
+  ss_vect<tps> Id;
 
   CtoR(h, h_re, h_im);
 
   for (auto k = 0; k < nv_tps; k++) {
-    jj1[k] = 0; jj2[k] = 0;
+    jj1[k] = jj2[k] = 0;
   }
 
-  Id.identity(); g_re = 0e0; g_im = 0e0;
+  Id.identity();
+  g_re = g_im = 0e0;
   for (auto i = 0; i <= no_tps; i++) {
-    jj1[x_] = i; jj2[px_] = i;
+    jj1[x_] = jj2[px_] = i;
     for (auto j = 0; j <= no_tps; j++) {
-      jj1[px_] = j; jj2[x_] = j;
+      jj1[px_] = jj2[x_] = j;
       for (auto k = 0; k <= no_tps; k++) {
-	jj1[y_] = k; jj2[py_] = k;
+	jj1[y_] = jj2[py_] = k;
 	for (auto l = 0; l <= no_tps; l++) {
-	  jj1[py_] = l; jj2[y_] = l;
+	  jj1[py_] = jj2[y_] = l;
 	  if ((i+j+k+l <= no_tps) && ((i-j != 0) || (k-l != 0))) {
-	    cotan = 1.0/tan(((i-j)*nu_x+(k-l)*nu_y)*M_PI);
+	    cotan = 1e0/tan(((i-j)*nu_x+(k-l)*nu_y)*M_PI);
 	    mn1 =
 	      pow(Id[x_], i)*pow(Id[px_], j)*pow(Id[y_], k)*pow(Id[py_], l);
 	    mn2 =
 	      pow(Id[x_], j)*pow(Id[px_], i)*pow(Id[y_], l)*pow(Id[py_], k);
 
 	    for (auto m = 0; m <= no_tps-i-j-k-l; m++) {
-	      jj1[delta_] = m; jj2[delta_] = m;
-	      re = h_re[jj1]; im = h_im[jj1];
-	      // compute g
-	      g_re += (re-cotan*im)*(mn1+mn2)*pow(Id[delta_], m)/2.0;
-	      g_im += (im+cotan*re)*(mn1-mn2)*pow(Id[delta_], m)/2.0;
-	      h_re.pook(jj2, 0e0); h_im.pook(jj2, 0e0);
+	      jj1[delta_] = jj2[delta_] = m;
+	      for (auto n = 0; n <= no_tps-i-j-k-l; n++) {
+		jj1[ss_dim-1] = jj2[ss_dim-1] = n;
+		re = h_re[jj1];
+		im = h_im[jj1];
+		// Compute g.
+		g_re +=
+		  (re-cotan*im)*(mn1+mn2)*pow(Id[delta_], m)
+		  *pow(Id[ss_dim-1], n)/2e0;
+		g_im +=
+		  (im+cotan*re)*(mn1-mn2)*pow(Id[delta_], m)
+		  *pow(Id[ss_dim-1], n)/2e0;
+		h_re.pook(jj2, 0e0);
+		h_im.pook(jj2, 0e0);
+	      }
 	    }
 	  }
 	}
@@ -964,21 +954,27 @@ tps get_Ker(const tps &h)
   tps          h_Ke;
   ss_vect<tps> Id;
 
-  for (auto k = 0; k < nv_tps; k++)
+  for (auto k = 0; k < ss_dim; k++)
     jj[k] = 0;
 
   Id.identity();
   h_Ke = 0e0;
   for (auto i = 0; i <= no_tps; i++) {
-    jj[x_] = i; jj[px_] = i;
+    jj[x_] = jj[px_] = i;
     for (auto j = 0; j <= no_tps; j++) {
-      jj[y_] = j; jj[py_] = j;
+      jj[y_] = jj[py_] = j;
       for (auto k = 0; k <= no_tps; k++) {
 	jj[delta_] = k;
-	if ((2*i+2*j+k <= no_tps) && ((i != 0) || (j != 0) || (k != 0))) {
-	  h_Ke +=
-	    h[jj]*pow(Id[x_], i)*pow(Id[px_], i)
-	    *pow(Id[y_], j)*pow(Id[py_], j)*pow(Id[delta_], k);
+	for (auto l = 0; l <= no_tps; l++) {
+	  jj[ss_dim-1] = l;
+	  if ((2*i+2*j+k+l <= no_tps) && ((i != 0) || (j != 0) || (k != 0))) {
+	    h_Ke +=
+	      h[jj]
+	      *pow(Id[x_], i)*pow(Id[px_], i)
+	      *pow(Id[y_], j)*pow(Id[py_], j)
+	      *pow(Id[delta_], k)
+	      *pow(Id[ss_dim-1], l);
+	  }
 	}
       }
     }
@@ -1017,7 +1013,7 @@ MNFType map_norm(const ss_vect<tps> &map)
 {
   int           n;
   double        nu0[2];
-  tps           hn, hn_re, hn_im, h_ke, gn, Kn, g;
+  tps           hn, hn_re, hn_im, h_ke, gn, Kn;
   ss_vect<tps>  Id, A, nus, M_Fl, map2;
   MNFType       MNF;
 
@@ -1029,9 +1025,22 @@ MNFType map_norm(const ss_vect<tps> &map)
 
   danot_(no_tps);
 
-  compute_M_Fl(MNF);
+#if 0
+  // Find fixed point.
+  GoFix(map, MNF.A0, MNF.A0_inv, no_tps);
+
+  // Translate to fix point.
+  map = MNF.A0_inv*map*MNF.A0;
+
+  print_map("\nA0:", A0);
+  print_map("\nM_map:", map);
+#endif
+
+  compute_M_diag(MNF);
 
   M_Fl = Inv(MNF.A0*MNF.A1)*MNF.M*MNF.A0*MNF.A1;
+
+  print_map("\nM_Fl:\n", M_Fl);
 
   MNF.K = 0e0;
   for (auto k = 0; k < 2; k++) {
@@ -1046,21 +1055,18 @@ MNFType map_norm(const ss_vect<tps> &map)
 
   // Coasting beam.
   MNF.K += h_ijklm(M_Fl[ct_], 0, 0, 0, 0, 1)*sqr(Id[delta_])/2e0;
-//  CtoR(MNF.K, hn_re, hn_im);
-//  std::cout << "\n" << "K:" << hn_re;
 
-  g = 0e0;
+  MNF.g = 0e0;
   for (auto k = 3; k <= no_tps; k++) {
     n = pow(2, k-3);
 
     map2 = M_Fl*Inv(MNF.R*FExpo(MNF.K, Id, 3, k-1, -1));
     hn = Intd(get_mns(map2, k-1, k-1), -1e0);
     gn = get_g(nu0[X_], nu0[Y_], hn);
-    g += gn;
+    MNF.g += gn;
     CtoR(hn, hn_re, hn_im);
     Kn = RtoC(get_Ker(hn_re), get_Ker(hn_im));
     MNF.K += Kn;
-//    std::cout << "\n" << "k = " << k << hn_re;
 
     A = FExpo(gn, Id, k, k, -1);
     M_Fl = Inv(A)*M_Fl*A;
@@ -1106,9 +1112,9 @@ void test_map_norm(void)
   std::cout << "\nK:\n" << K;
 #else
   std::cout << "\nMNF.K-K:\n" << MNF.K-K;
+  std::cout << "\nMNF.g-g:\n" << MNF.g-g;
 #endif
 
-  // std::cout << MNF.g-g;
 //  CtoR(MNF.K-K, hn_re, hn_im);
 //  std::cout << hn_re;
 }
