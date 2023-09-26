@@ -205,6 +205,134 @@ ss_vect<tps> get_M_k(const ss_vect<tps> &x, const int k)
 #if 1
 // Obsolete.
 
+
+
+void CtoR_JB2(const tps &a, tps &a_re, tps &a_im)
+{
+  int          k;
+  tps          b, c;
+  ss_vect<tps> Id;
+
+  Id.identity();
+
+  b = p_k_cmplx_sgn_corr_fun(nd_tps, a);
+
+  // q_k -> (q_k + p_k) / 2
+  // p_k -> (q_k - p_k) / 2
+  // Complex space:
+  // q_k =   (h_q_k^+ + h_q_k^-) / 2
+  // p_k = i (h_q_k^+ - h_q_k^-) / 2
+  map.identity();
+  for (k = 0; k < nd_tps; k++) {
+    map[2*k]   = (Id[2*k]+Id[2*k+1])/2e0;
+    map[2*k+1] = (Id[2*k]-Id[2*k+1])/2e0;
+  }
+  b = b*map;
+
+  // q_k -> p_k
+  // p_k -> q_k
+  // Complex space:
+  // i (q_k -/+ i p_k) = (i q_k +/- p_k)
+  map.identity();
+  for (k = 0; k < nd_tps; k++) {
+    map[2*k]   = Id[2*k+1];
+    map[2*k+1] = Id[2*k];
+  }
+  c = b*map;
+
+  a_re = (b+c)/2e0;
+  a_im = (b-c)/2e0;
+}
+
+
+tps RtoC_JB2(tps &a_re, tps &a_im)
+{
+  int          k;
+  tps          b;
+  ss_vect<tps> Id, map;
+
+  Id.identity();
+
+  b = a_re + a_im;
+
+  // q_k -> q_k + p_k
+  // p_k -> q_k - p_k
+  // Complex space:
+  // h_q_k^+ = q_k - i h_p_k
+  // h_q_k^- = q_k + i h_p_k
+  map.identity();
+  for (k = 0; k < nd_tps; k++) {
+    map[2*k]   = Id[2*k] + Id[2*k+1];
+    map[2*k+1] = Id[2*k] - Id[2*k+1];
+  }
+  b = b*map;
+  b = p_k_cmplx_sgn_corr_fun(nd_tps, b);
+  return b;
+}
+
+
+double f_p_k_cmplx_sgn_corr(const long int jj[])
+{
+  // Adjust the sign for the momenta for the oscillating planes.
+  // Correct sign for complex vs. real momenta p_k.
+  //   q_k =  (h_q_k^+ + h_q_k^-) / 2
+  // i p_k = -(h_q_k^+ - h_q_k^-) / 2
+  // Adjust the sign for the momenta for the oscillating planes.
+  int ord, k, sgn = 0;
+
+  // Compute the sum of exponents for the momenta for the oscillating planes:
+  ord = 0;
+  for (k = 0; k < nd_tps; k++)
+    ord += jj[2*k+1];
+  ord = (ord % 4);
+  //  Sum_k c_ijkl x^i p_x^j y^k p_y^l
+  //  j + l mod 4 = [0, 3: +1; 1, 2: -1]
+  switch (ord) {
+  case 0:
+  case 3:
+    sgn = 1;
+    break;
+  case 1:
+  case 2:
+    sgn = -1;
+    break;
+  default:
+    printf("\n: undefined case %d\n", ord);
+    break;
+  }
+  return sgn;
+}
+
+
+tps tps_compute_function
+(const tps &a, std::function<double (const long int [])> fun)
+{
+  // Dacfu in Forest's LieLib.
+  char     name[name_len_for+1];
+  int      k, n;
+  long int ibuf1[bufsize], ibuf2[bufsize], jj[nv_tps];
+  double   rbuf[bufsize];
+  tps      b;
+
+  a.exprt(rbuf, ibuf1, ibuf2, name);
+  n = rbuf[0];
+  for (k = 1; k <= n; k++) {
+    dehash_(no_tps, nv_tps, ibuf1[k-1], ibuf2[k-1], jj);
+    rbuf[k] *= fun(jj);
+  }
+  b.imprt(n, rbuf, ibuf1, ibuf2);
+  return b;
+}
+
+
+ctps p_k_cmplx_sgn_corr(const ctps &a)
+{
+  return
+    ctps(tps_compute_function(a.real(), f_p_k_cmplx_sgn_corr),
+	 tps_compute_function(a.imag(), f_p_k_cmplx_sgn_corr));
+}
+
+
 void CtoR_JB(const tps &a, tps &a_re, tps &a_im)
 {
   tps          b, c;
@@ -1103,7 +1231,9 @@ void test_map_norm(void)
   danot_(no_tps);
 
   MNF = map_norm(M);
+
   CtoR(MNF.K, k_re, k_im);
+  std::cout << k_re << k_im;
 
   K = MapNorm(M, g, A1, A0, map_res, 1);
 
