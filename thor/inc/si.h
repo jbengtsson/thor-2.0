@@ -136,7 +136,7 @@ struct Family {
 
 
 const int  max_elem   = 6000, // max no of elements
-           max_Family = 1000; // max no of families
+           max_Family = 1500; // max no of families
 // RHIC
 //const int  max_elem   = 7700, // max no of elements
 //           max_Family = 2200; // max no of families
