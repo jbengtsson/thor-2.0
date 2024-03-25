@@ -751,6 +751,7 @@ void cavity_pass(const elem_type<T> &elem, ss_vect<T> &x)
 {
   T  delta;
 
+  drift_pass(elem.L/2e0, x);
   if (cavity_on && (elem.cavity->V_rf != 0.0)) {
     delta = -elem.cavity->V_rf/(E0*1e9)*sin(2.0*pi*elem.cavity->f_rf
 	    /clight*x[ct_]);
@@ -760,6 +761,7 @@ void cavity_pass(const elem_type<T> &elem, ss_vect<T> &x)
 
     if (totpath_on) x[ct_] -= elem.cavity->h_rf/elem.cavity->f_rf*clight;
   }
+  drift_pass(elem.L/2e0, x);
 }
 
 
