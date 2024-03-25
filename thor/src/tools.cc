@@ -2285,18 +2285,17 @@ bool get_COD(const int i_max, const double eps, const double delta,
     dx_abs = sqrt(dx_abs); fixed_point += dx0.cst();
 
     if (prt) {
-      std::cout << std::endl;
       std::cout << std::scientific << std::setprecision(3)
-	   << "get_COD: " << n_iter << ", Err = " << dx_abs 
-	   << " (" << eps << ")" << std::endl;
+		<< "\nget_COD:\n" << std::setw(2) << n_iter << ", Err = "
+		<< dx_abs << " (" << eps << ")" << "\n";
       std::cout << std::scientific << std::setprecision(3)
-	   << "dx:" << std::setw(11) << dx0.cst() << std::endl;
+		<< "dx:" << std::setw(13) << dx0.cst() << "\n";
       if (true)
 	std::cout << std::scientific << std::setprecision(5)
-	     << "x:" << std::setw(13) << fixed_point << std::endl;
+		  << "x:   " << std::setw(13) << fixed_point << "\n";
       else
 	std::cout << std::scientific << std::setprecision(16)
-	     << "x:" << std::setw(24) << fixed_point << std::endl;
+		  << "x:   " << std::setw(24) << fixed_point << "\n";
     }
 
     if (dx_abs < eps) break;
