@@ -1,11 +1,13 @@
 #SUBDIRS      = Powell
 
-bin_PROGRAMS = H_min max_iv_match max_iv_uc max_iv_dnu \
+bin_PROGRAMS = thor H_min max_iv_match max_iv_uc max_iv_dnu \
 	       vlad vlad_2 vlad_3 vlad_4 vlad_5 sls_2 diamond_ii delta \
                delta_lo delta_lo2 quad2d quad3d tune_conf tune_conf_2 \
 	       tune_conf_3 tbs get_dnu mpole_scheme poincare_map \
-               sext_resp_mat
+               chk_drv_terms sxt_resp_mat max_4u
+#               sext_resp_mat
 
+thor_SOURCES          = thor.cc
 H_min_SOURCES         = H_min.cc
 max_iv_match_SOURCES  = max_iv_match.cc
 max_iv_uc_SOURCES     = max_iv_uc.cc
@@ -29,7 +31,10 @@ tbs_SOURCES           = tbs.cc
 get_dnu_SOURCES       = get_dnu.cc
 mpole_scheme_SOURCES  = mpole_scheme.cc param_type.cc
 poincare_map_SOURCES  = poincare_map.cc
-sext_resp_mat_SOURCES = sext_resp_mat.cc
+chk_drv_terms_SOURCES = chk_drv_terms.cc
+sxt_resp_mat_SOURCES  = sxt_resp_mat.cc
+max_4u_SOURCES        = max_4u.cc param_type.cc
+# sext_resp_mat_SOURCES = sext_resp_mat.c
 
 GSL_INCLUDE = /usr/local/Cellar/gsl/2.7.1
 # GSL_INCLUDE = /net/home/lli/OPAL/OPAL-2.0.1
@@ -39,7 +44,8 @@ LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
 	  -lstdc++ \
           -lm \
 	  -L$(GSL_INCLUDE)/lib -lgsl \
-	  -L/usr/local/opt/gfortran/lib/gcc/12 -lgfortran
+	  -L/usr/local/opt/gfortran/lib/gcc/13 \
+          -lgfortran
 
 #INCLUDES = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc -I$(HOME)/R-2.8.1/include \
 #	   -I/usr/local/include -I/usr/include/openmpi

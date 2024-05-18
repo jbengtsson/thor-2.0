@@ -105,12 +105,13 @@ void param_type::set_prm(void)
 
 void param_type::print(const int k) const
 {
-  double bnL_ext;
+  double bn_ext, bnL_ext;
 
   // Bounded.
-  bnL_ext = bnL_bounded(bnL[k], bnL_min[k], bnL_max[k])/L[k];
+  bnL_ext = bnL_bounded(bnL[k], bnL_min[k], bnL_max[k]);
+  bn_ext = (L[k] == 0e0)? bnL_ext : bnL_ext/L[k];
   printf("  %-8s %10.3e %10.3e %1d [%9.3e, %9.3e]\n",
-	 name[k].c_str(), bnL_ext, bnL_ext*L[k], n[k], bnL_min[k], bnL_max[k]);
+	 name[k].c_str(), bn_ext, bnL_ext, n[k], bnL_min[k], bnL_max[k]);
 }
 
 
