@@ -2,8 +2,8 @@
 
 #include "thor_lib.h"
 
-int  no_tps   = NO,
-  ndpt_tps = 5;
+int no_tps   = NO,
+    ndpt_tps = 5;
 
 
 /* SLS:
@@ -17,14 +17,15 @@ extern double        b2_max;
 extern tps           K, g;
 extern ss_vect<tps>  Map, A0, A1, Map_res;
 
-const int   max_n_femto = 7;
-
-const int   n_track     = 512;
-const int   n_aper      = 25;
+const int
+  max_n_femto = 7,
+  n_track     = 512,
+  n_aper      = 25,
+  max_ind     = 10,
+  n_prm_max   = 20;
 
 const bool  tune_scn = false;
 
-const int   max_ind = 10;
 
 bool          h[max_ind][max_ind][max_ind][max_ind][max_ind], fit_chrm;
 int           n_prm, prms[n_prm_max], bns[n_prm_max], n_cell, n_iter;
@@ -40,7 +41,7 @@ double        bnL_max[mpole_max];
 double        scl_dnu, scl_ksi1, scl_ksi2, scl_ksi_nl;
 double        scl_dnuddelta, scl_dnudJ, step;
 ss_vect<tps>  Id_scl;
-ofstream      quad_out, sext_out, oct_out, tune_out;
+std::ofstream      quad_out, sext_out, oct_out, tune_out;
 
 
 const char    lattice[]  = "NSLS-II_DBA";
@@ -134,21 +135,21 @@ void prt_h(const tps &H, const double J_max, const double delta)
 {
   int           i, j;
   ss_vect<tps>  ps;
-  ofstream      of;
+  std::ofstream      of;
   
   file_wr(of, "h.dat");
-  of << "#  J_x    J_y    ||h||" << endl;
+  of << "#  J_x    J_y    ||h||" << std::endl;
   ps.zero(); ps[delta_] = delta;
   for (i = -n_steps; i <= n_steps; i++) {
     ps[x_] = i*sqrt(2.0*J_max)/n_steps;
     for (j = -n_steps; j <= n_steps; j++) {
       ps[y_] = j*sqrt(2.0*J_max)/n_steps;
-      of << scientific << setprecision(2)
-	 << setw(10) << ps[x_].cst() << setw(10) << ps[y_].cst()
-	//	 << setw(10) << (H*ps).cst() << endl;
-	 << setw(10) << ((K-Take(K, 2))*ps).cst() << endl;
+      of << std::scientific << std::setprecision(2)
+	 << std::setw(10) << ps[x_].cst() << std::setw(10) << ps[y_].cst()
+	//	 << std::setw(10) << (H*ps).cst() << std::endl;
+	 << std::setw(10) << ((K-Take(K, 2))*ps).cst() << std::endl;
     }
-    of << endl;
+    of << std::endl;
   }
   of.close();
 }
@@ -206,7 +207,7 @@ void get_Map_N(const int n)
     Map2 = Map*Map; Map4 = Map2*Map2; Map = Map4*Map4*Map4*Map2*Map;
     break;
   default:
-    cout << "get_Map_N: n not defined " << n << endl;
+    std::cout << "get_Map_N: n not defined " << n << std::endl;
     exit(1);
     break;
   }
@@ -322,8 +323,8 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
       L = get_L(prms[i-1], 1);
       if (L == 0.0) L = 1.0;
       if (false && (strcmp(get_Name(prms[i-1]), "om1") == 0)) {
-	cout << endl;
-	cout << get_Name(prms[i-1]) << ": bnL_max set to 1.0" << endl;
+	std::cout << std::endl;
+	std::cout << get_Name(prms[i-1]) << ": bnL_max set to 1.0" << std::endl;
 	bn_max[i] = 1.0/L; 
       } else
 	bn_max[i] = bnL_max[bns[i-1]]/L; 
@@ -336,12 +337,12 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
   if (first) {
     // store initial sextupole strengths
     first = false;
-    cout << endl;
-    cout << "initial b3s:" << endl;
+    std::cout << std::endl;
+    std::cout << "initial b3s:" << std::endl;
     for (i = 1; i <= n_prm; i++) {
       b3s[i-1] = get_bnL_s(prms[i-1], 1, bns[i-1]);
-      cout << scientific << setprecision(3)
-	   << setw(11) << b3s[i-1] << setw(2) << bns[i-1] << endl;
+      std::cout << std::scientific << std::setprecision(3)
+	   << std::setw(11) << b3s[i-1] << std::setw(2) << bns[i-1] << std::endl;
     }
 
     select_h();
@@ -354,7 +355,7 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
   n = 0;
   do {
     n++;
-    cout << endl;
+    std::cout << std::endl;
     for (i1 = 1; i1 <= n_prm; i1++) {
       if (prms[i1-1] > 0)
 	set_bn_par(prms[i1-1], bns[i1-1], 7);
@@ -386,8 +387,8 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
 		  A[++m1][i1] = scl_L*h_ijklm_p(g_im, i, j, k, l, m, 7);
 
 		  if (m1 >= m_max) {
-		    cout << "m_max reached " << m1 << "(" << m_max << ")"
-			 << endl;
+		    std::cout << "m_max reached " << m1 << "(" << m_max << ")"
+			 << std::endl;
 		    exit(1);
 		  }
 
@@ -606,146 +607,146 @@ void H_zero(const double prm_tol, const int n_max, const bool prt_iter)
     m1 -= 2;
 
     if (prt) {
-      cout << endl;
-      cout << n << " Ax = b:" << endl;
-      cout << endl;
+      std::cout << std::endl;
+      std::cout << n << " Ax = b:" << std::endl;
+      std::cout << std::endl;
       for (i = 1; i <= m1; i++) {
-	cout  << setw(3) << i << " " << hs[i-1];
+	std::cout  << std::setw(3) << i << " " << hs[i-1];
 	for (j = 1; j <= n_prm; j++)
-	  cout << scientific << setprecision(2) << setw(10) << A[i][j];
-	cout << scientific << setprecision(2) << setw(10) << b[i] << endl;
+	  std::cout << std::scientific << std::setprecision(2) << std::setw(10) << A[i][j];
+	std::cout << std::scientific << std::setprecision(2) << std::setw(10) << b[i] << std::endl;
       }
     }
     
-    cout << endl;
-    cout << scientific << setprecision(3)
+    std::cout << std::endl;
+    std::cout << std::scientific << std::setprecision(3)
 	 << "dnux/dJx:    "
-	 << setw(10) << h_ijklm(K_re, 2, 2, 0, 0, 0)
-	 << " + " << setw(10) << 3.0*h_ijklm(K_re, 3, 3, 0, 0, 0)*dnudJ_twoJx
+	 << std::setw(10) << h_ijklm(K_re, 2, 2, 0, 0, 0)
+	 << " + " << std::setw(10) << 3.0*h_ijklm(K_re, 3, 3, 0, 0, 0)*dnudJ_twoJx
 	 << " + "
-	 << setw(10) << 6.0*h_ijklm(K_re, 4, 4, 0, 0, 0)*sqr(dnudJ_twoJx)
-	 << " = " << setw(10) << -b[m1-5]/scl_dnudJ << endl;
-    cout << scientific << setprecision(3)
+	 << std::setw(10) << 6.0*h_ijklm(K_re, 4, 4, 0, 0, 0)*sqr(dnudJ_twoJx)
+	 << " = " << std::setw(10) << -b[m1-5]/scl_dnudJ << std::endl;
+    std::cout << std::scientific << std::setprecision(3)
 	 << "dnuy/dJx:    "
-	 << setw(10) << h_ijklm(K_re, 1, 1, 1, 1, 0)
-	 << " + " << setw(10) << 2.0*h_ijklm(K_re, 2, 2, 1, 1, 0)*dnudJ_twoJx
+	 << std::setw(10) << h_ijklm(K_re, 1, 1, 1, 1, 0)
+	 << " + " << std::setw(10) << 2.0*h_ijklm(K_re, 2, 2, 1, 1, 0)*dnudJ_twoJx
 	 << " + "
-	 << setw(10) << 3.0*h_ijklm(K_re, 3, 3, 1, 1, 0)*sqr(dnudJ_twoJx)
-	 << " = " << setw(10) << -b[m1-4]/scl_dnudJ << endl;
+	 << std::setw(10) << 3.0*h_ijklm(K_re, 3, 3, 1, 1, 0)*sqr(dnudJ_twoJx)
+	 << " = " << std::setw(10) << -b[m1-4]/scl_dnudJ << std::endl;
 
-    cout << scientific << setprecision(3)
+    std::cout << std::scientific << std::setprecision(3)
 	 << "dnux/ddelta: "
-	 << setw(10) << h_ijklm(K_re, 1, 1, 0, 0, 1)
+	 << std::setw(10) << h_ijklm(K_re, 1, 1, 0, 0, 1)
 	 << " + "
-	 << setw(10) << 3.0*h_ijklm(K_re, 1, 1, 0, 0, 3)*sqr(dnuddelta_delta)
+	 << std::setw(10) << 3.0*h_ijklm(K_re, 1, 1, 0, 0, 3)*sqr(dnuddelta_delta)
 	 << " + "
-	 << setw(10)
+	 << std::setw(10)
 	 << 5.0*h_ijklm(K_re, 1, 1, 0, 0, 5)*pow(dnuddelta_delta, 4)
-	 << " = " << setw(10) << -b[m1-3]/scl_dnuddelta << endl;
-    cout << scientific << setprecision(3)
+	 << " = " << std::setw(10) << -b[m1-3]/scl_dnuddelta << std::endl;
+    std::cout << std::scientific << std::setprecision(3)
 	 << "dnuy/ddelta: "
-	 << setw(10) << h_ijklm(K_re, 0, 0, 1, 1, 1)
+	 << std::setw(10) << h_ijklm(K_re, 0, 0, 1, 1, 1)
 	 << " + "
-	 << setw(10) << 3.0*h_ijklm(K_re, 0, 0, 1, 1, 3)*sqr(dnuddelta_delta)
+	 << std::setw(10) << 3.0*h_ijklm(K_re, 0, 0, 1, 1, 3)*sqr(dnuddelta_delta)
 	 << " + "
-	 << setw(10)
+	 << std::setw(10)
 	 << 5.0*h_ijklm(K_re, 0, 0, 1, 1, 5)*pow(dnuddelta_delta, 4)
-	 << " = " << setw(10) << -b[m1-2]/scl_dnuddelta << endl;
+	 << " = " << std::setw(10) << -b[m1-2]/scl_dnuddelta << std::endl;
 
-    cout << "excluded" << endl;
+    std::cout << "excluded" << std::endl;
 
-    cout << scientific << setprecision(3)
+    std::cout << std::scientific << std::setprecision(3)
 	 << "dnux/dJy:    "
-	 << setw(10) << h_ijklm(K_re, 1, 1, 1, 1, 0)
-	 << " + " << setw(10) << 2.0*h_ijklm(K_re, 1, 1, 2, 2, 0)*dnudJ_twoJy
+	 << std::setw(10) << h_ijklm(K_re, 1, 1, 1, 1, 0)
+	 << " + " << std::setw(10) << 2.0*h_ijklm(K_re, 1, 1, 2, 2, 0)*dnudJ_twoJy
 	 << " + "
-	 << setw(10) << 3.0*h_ijklm(K_re, 1, 1, 3, 3, 0)*sqr(dnudJ_twoJy)
-	 << " = " << setw(10) << -b[m1-1]/scl_dnudJ << endl;
-    cout << scientific << setprecision(3)
+	 << std::setw(10) << 3.0*h_ijklm(K_re, 1, 1, 3, 3, 0)*sqr(dnudJ_twoJy)
+	 << " = " << std::setw(10) << -b[m1-1]/scl_dnudJ << std::endl;
+    std::cout << std::scientific << std::setprecision(3)
 	 << "dnuy/dJy:    "
-	 << setw(10) << h_ijklm(K_re, 0, 0, 2, 2, 0)
-	 << " + " << setw(10) << 3.0*h_ijklm(K_re, 0, 0, 3, 3, 0)*dnudJ_twoJy
+	 << std::setw(10) << h_ijklm(K_re, 0, 0, 2, 2, 0)
+	 << " + " << std::setw(10) << 3.0*h_ijklm(K_re, 0, 0, 3, 3, 0)*dnudJ_twoJy
 	 << " + "
-	 << setw(10) << 6.0*h_ijklm(K_re, 0, 0, 4, 4, 0)*sqr(dnudJ_twoJy)
-	 << " = " << setw(10) << -b[m1]/scl_dnudJ << endl;
+	 << std::setw(10) << 6.0*h_ijklm(K_re, 0, 0, 4, 4, 0)*sqr(dnudJ_twoJy)
+	 << " = " << std::setw(10) << -b[m1]/scl_dnudJ << std::endl;
 
     SVD_lim(m1, n_prm, A, b, bn_max, 1e-11, bn, dbn);
 
-    cout << endl;
-    cout << "dcorr. (int):" << endl;
+    std::cout << std::endl;
+    std::cout << "dcorr. (int):" << std::endl;
     dprm_max = 0.0;
     for (i = 1; i <= n_prm; i++) {
       if (prms[i-1] > 0) {
 	L = get_L(prms[i-1], 1);
 	if (L == 0.0) L = 1.0;
 	dprm_max = max(fabs(step*dbn[i]*L), dprm_max);
-	cout << scientific << setprecision(3) << setw(11) << step*dbn[i]*L;
+	std::cout << std::scientific << std::setprecision(3) << std::setw(11) << step*dbn[i]*L;
       } else {
 	dprm_max = max(fabs(step*scl_ds*dbn[i]), dprm_max);
-	cout << scientific << setprecision(3)
-	     << setw(11) << step*scl_ds*dbn[i];
+	std::cout << std::scientific << std::setprecision(3)
+	     << std::setw(11) << step*scl_ds*dbn[i];
       }
-      if (i % n_prt == 0) cout << endl;
+      if (i % n_prt == 0) std::cout << std::endl;
     }
-    if (n_prm % n_prt != 0) cout << endl;
+    if (n_prm % n_prt != 0) std::cout << std::endl;
 
-    cout << endl;
-    cout << "corr.:" << endl;
+    std::cout << std::endl;
+    std::cout << "corr.:" << std::endl;
     for (i = 1; i <= n_prm; i++) {
       set_dbn_s(prms[i-1], bns[i-1], step*dbn[i]);
       bn[i] = get_bn_s(prms[i-1], 1, bns[i-1]);
-      cout << scientific << setprecision(3)
-	   << setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1]);
-      if (i % n_prt == 0) cout << endl;
+      std::cout << std::scientific << std::setprecision(3)
+	   << std::setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1]);
+      if (i % n_prt == 0) std::cout << std::endl;
     }
-    if (n_prm % n_prt != 0) cout << endl;
+    if (n_prm % n_prt != 0) std::cout << std::endl;
 
     if (prt_iter) {
-      sext_out << endl;
-      sext_out << "n = " << n << ":" << endl;
+      sext_out << std::endl;
+      sext_out << "n = " << n << ":" << std::endl;
       for (i = 1; i <= n_prm; i++)
 	for (j = 1; j <= get_n_Kids(abs(prms[i-1])); j++) {
 	  if (prms[i-1] > 0) 
-	    sext_out << fixed << setprecision(7) 
-		     << setw(9) << get_Name(abs(prms[i-1]))
+	    sext_out << std::fixed << std::setprecision(7) 
+		     << std::setw(9) << get_Name(abs(prms[i-1]))
 		     << "(" << j << ") = "
-		     << setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1])
-		     << setw(2) << bns[i-1] << endl;
+		     << std::setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1])
+		     << std::setw(2) << bns[i-1] << std::endl;
 	  else {
 	    sprintf(str, "du_%s", get_Name(abs(prms[i-1])));
-	    sext_out << fixed << setprecision(7) 
-		     << setw(9) << str << "(" << j << ") = "
-		     << setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1])
-		     << setw(2) << 0 << endl;
+	    sext_out << std::fixed << std::setprecision(7) 
+		     << std::setw(9) << str << "(" << j << ") = "
+		     << std::setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1])
+		     << std::setw(2) << 0 << std::endl;
 	    sprintf(str, "dd_%s", get_Name(abs(prms[i-1])));
-	    sext_out << fixed << setprecision(7) 
-		     << setw(9) << str << "(" << j << ") = "
-		     << setw(11) << -get_bnL_s(prms[i-1], 1, bns[i-1])
-		     << setw(2) << 0 << endl;
+	    sext_out << std::fixed << std::setprecision(7) 
+		     << std::setw(9) << str << "(" << j << ") = "
+		     << std::setw(11) << -get_bnL_s(prms[i-1], 1, bns[i-1])
+		     << std::setw(2) << 0 << std::endl;
 	  }
 	}
       sext_out.flush();
     }
 
-    cout << endl;
-    cout << scientific << setprecision(1)
-	 << setw(2) << n << " chi2: " << chi2;
+    std::cout << std::endl;
+    std::cout << std::scientific << std::setprecision(1)
+	 << std::setw(2) << n << " chi2: " << chi2;
 
     chi2 = 0.0;
     for (i = 1; i <= m1; i++)
       chi2 += sqr(b[i]);
 
-    cout << scientific << setprecision(1)
-	 << " -> " << chi2 << endl;
+    std::cout << std::scientific << std::setprecision(1)
+	 << " -> " << chi2 << std::endl;
   } while ((dprm_max > prm_tol) && (n < n_max));
 
   if (!prt_iter) {
     for (i = 1; i <= n_prm; i++)
       for (j = 1; j <= get_n_Kids(abs(prms[i-1])); j++) {
-	sext_out << fixed << setprecision(7) 
-		 << setw(6) << get_Name(abs(prms[i-1])) << "(" << j << ") = "
-		 << setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1])
-		 << setw(2) << bns[i-1] << endl;
+	sext_out << std::fixed << std::setprecision(7) 
+		 << std::setw(6) << get_Name(abs(prms[i-1])) << "(" << j << ") = "
+		 << std::setw(11) << get_bnL_s(prms[i-1], 1, bns[i-1])
+		 << std::setw(2) << bns[i-1] << std::endl;
       }
     sext_out.flush();
   }
@@ -767,13 +768,13 @@ double get_fixed_points(const double Ax, const double Ay, const double delta,
   double           dphi[2], phi[2], D[2], twoJ0, twoJ1, r_max, S;
   ss_vect<double>  ps0, ps1;
   ss_vect<tps>     ps0_Fl, ps1_Fl;
-  ofstream         outf;
+  std::ofstream         outf;
 
   const bool    Floq    = false;
   const int     n_turn  = 10;
   const double  D_max   = 10.0, dtwoJ_max = 100e-2;
 
-  if (prt) file_wr(outf, "fixed_points.out");
+  if (prt) file_wr(outf, "std::fixed_points.out");
 
   r_max = sqrt(sqr(Ax)+sqr(Ay));
   n1 = 0; S = 0.0;
@@ -833,22 +834,22 @@ double get_fixed_points(const double Ax, const double Ay, const double delta,
 
       if (prt) {
 	if (!Floq)
-	  outf << fixed << setprecision(3) << setw(3) << n1
-	       << setw(8) << 1e3*ps0[x_] << setw(8) << 1e3*ps0[y_];
+	  outf << std::fixed << std::setprecision(3) << std::setw(3) << n1
+	       << std::setw(8) << 1e3*ps0[x_] << std::setw(8) << 1e3*ps0[y_];
 	else
-	  outf << fixed << setprecision(3) << setw(3) << n1
-	       << setw(8) << 1e3*ps0_Fl[x_].cst()
-	       << setw(8) << 1e3*ps0_Fl[y_].cst();
-	outf << scientific << setw(10)
-	     << setw(10) << log(1.0+1e3*sqrt(dr2))
-	     << setw(10) << log(1.0+sqrt(dJ2))
-	     << fixed << setprecision(5)
-	     << setw(8) << phi[0]/(2.0*M_PI) << setw(8) << phi[1]/(2.0*M_PI)
-	     << scientific << setprecision(3)
-	     << setw(10) << D[0] << setw(10) << D[1] << endl;
+	  outf << std::fixed << std::setprecision(3) << std::setw(3) << n1
+	       << std::setw(8) << 1e3*ps0_Fl[x_].cst()
+	       << std::setw(8) << 1e3*ps0_Fl[y_].cst();
+	outf << std::scientific << std::setw(10)
+	     << std::setw(10) << log(1.0+1e3*sqrt(dr2))
+	     << std::setw(10) << log(1.0+sqrt(dJ2))
+	     << std::fixed << std::setprecision(5)
+	     << std::setw(8) << phi[0]/(2.0*M_PI) << std::setw(8) << phi[1]/(2.0*M_PI)
+	     << std::scientific << std::setprecision(3)
+	     << std::setw(10) << D[0] << std::setw(10) << D[1] << std::endl;
       }
     }
-    if (prt) outf << endl;
+    if (prt) outf << std::endl;
   }
   if (prt) outf.close();
 
@@ -860,15 +861,15 @@ void prt_scan(const int n, const double nu_x, const double nu_y,
 	      const double DA, const double x_min[], const double x_max[])
 {
 
-  tune_out << fixed << setprecision(4)
-	   << "n = " << setw(4) << n
+  tune_out << std::fixed << std::setprecision(4)
+	   << "n = " << std::setw(4) << n
 	   << ", nu_x= " << nu_x << ", nu_y= " << nu_y
-	   << setprecision(1)
-	   << ", DA^= " << setw(6) << 1e6*DA
-	   << ", x^= " << setw(5) << 1e3*x_min[X_] << " - "
-	   << setw(4) << 1e3*x_max[X_] << " mm"
-	   << ", y^= " << setw(5) << 1e3*x_min[Y_] << " - "
-	   << setw(4) << 1e3*x_max[Y_] << " mm" << endl;
+	   << std::setprecision(1)
+	   << ", DA^= " << std::setw(6) << 1e6*DA
+	   << ", x^= " << std::setw(5) << 1e3*x_min[X_] << " - "
+	   << std::setw(4) << 1e3*x_max[X_] << " mm"
+	   << ", y^= " << std::setw(5) << 1e3*x_min[Y_] << " - "
+	   << std::setw(4) << 1e3*x_max[Y_] << " mm" << std::endl;
 }
 
 
@@ -880,9 +881,9 @@ void get_DA(const int n, const double nu_x, const double nu_y,
   DA_m = 0.0;
 
   if (delta != 0.0) {
-    cout << endl;
-    cout << fixed << setprecision(4)
-	 << "#n = " << setw(4) << n
+    std::cout << std::endl;
+    std::cout << std::fixed << std::setprecision(4)
+	 << "#n = " << std::setw(4) << n
 	 << ", nu_x = " << nu_x << ", nu_y = " << nu_y << ", "; 
 
     DA = get_dynap(10e-3, -delta, n_track, 0.1e-3, n_aper,
@@ -893,8 +894,8 @@ void get_DA(const int n, const double nu_x, const double nu_y,
       prt_scan(n, nu_x, nu_y, DA, x_min, x_max);
     }
 
-    cout << fixed << setprecision(3)
-	 << "#n = " << setw(4) << n
+    std::cout << std::fixed << std::setprecision(3)
+	 << "#n = " << std::setw(4) << n
 	 << ", nu_x = " << nu_x << ", nu_y = " << nu_y << ", "; 
     DA = get_dynap(10e-3, delta, n_track, 0.1e-3, n_aper,
 		   x_min, x_max, false); 
@@ -905,8 +906,8 @@ void get_DA(const int n, const double nu_x, const double nu_y,
     }
   }
 	
-  cout << fixed << setprecision(3)
-       << " n = " << setw(4) << n
+  std::cout << std::fixed << std::setprecision(3)
+       << " n = " << std::setw(4) << n
        << ", nu_x = " << nu_x << ", nu_y = " << nu_y << ", "; 
   DA = get_dynap(10e-3, 0.0, n_track, 0.1e-3, n_aper, x_min, x_max, false); 
   DA_m += DA;
@@ -929,33 +930,33 @@ void get_FP(const int n, const double nu_x, const double nu_y)
 
   DA_sum = DA;
 
-  tune_out << fixed << setprecision(5)
-	   << "#n = " << setw(4) << n
+  tune_out << std::fixed << std::setprecision(5)
+	   << "#n = " << std::setw(4) << n
 	   << ", nu_x= " << nu_x << ", nu_y= " << nu_y
-	   << setprecision(3)
-	   << ", S= " << setw(8) << DA << endl;
+	   << std::setprecision(3)
+	   << ", S= " << std::setw(8) << DA << std::endl;
 
   A1_inv = Inv(A1);
   DA = get_fixed_points(max_Ax, max_Ay, delta, 25, 15, false);
 
   DA_sum += DA;
 
-  tune_out << fixed << setprecision(5)
-	   << "#n = " << setw(4) << n
+  tune_out << std::fixed << std::setprecision(5)
+	   << "#n = " << std::setw(4) << n
 	   << ", nu_x= " << nu_x << ", nu_y= " << nu_y
-	   << setprecision(3)
-	   << ", S= " << setw(8) << DA << endl;
+	   << std::setprecision(3)
+	   << ", S= " << std::setw(8) << DA << std::endl;
 
   A1_inv = Inv(A1);
   DA = get_fixed_points(max_Ax, max_Ay, 0.0, 25, 15, false);
 
   DA_sum += DA; DA = DA_sum/3.0;
 
-  tune_out << fixed << setprecision(5)
-	   << " n = " << setw(4) << n
+  tune_out << std::fixed << std::setprecision(5)
+	   << " n = " << std::setw(4) << n
 	   << ", nu_x= " << nu_x << ", nu_y= " << nu_y
-	   << setprecision(3)
-	   << ", S= " << setw(8) << DA << endl;
+	   << std::setprecision(3)
+	   << ", S= " << std::setw(8) << DA << std::endl;
 }
 
 
@@ -971,7 +972,7 @@ void tune_scan(const int n_b2, const int b2s[], const bool opt)
   file_wr(quad_out, "quad.dat");
   file_wr(sext_out, "sext.dat");
 
-  cout << endl;
+  std::cout << std::endl;
   danot_(2);
   get_Map();
   //  get_COD(10, 1e-10, 0.0, true);
@@ -985,9 +986,9 @@ void tune_scan(const int n_b2, const int b2s[], const bool opt)
     nu_x = nu_x_min + i*dnu_x;
     for (j = 0; j < n_steps; j++) {
       n++; nu_y = nu_y_min + j*dnu_y;
-      cout << endl;
-      cout << fixed << setprecision(5)
-	   << "n = " << setw(4) << n
+      std::cout << std::endl;
+      std::cout << std::fixed << std::setprecision(5)
+	   << "n = " << std::setw(4) << n
 	   << ", nu_x = " << nu_x << ", nu_y = " << nu_y << ", "; 
       if (strcmp(lattice, "NSLS-II_BOOSTER") == 0)
 	fit_tune(nu_x, nu_y, n_b2, b2s, eps_nu, true);
@@ -998,32 +999,32 @@ void tune_scan(const int n_b2, const int b2s[], const bool opt)
 		 beta3[X_], beta3[Y_], beta_loc3,
 		 n_b2, b2s, eps_nu, true);
 
-      quad_out << endl;
-      quad_out << "n = " << n << ":" << endl;
+      quad_out << std::endl;
+      quad_out << "n = " << n << ":" << std::endl;
       for (k = 1; k <= n_b2; k++)
 	for (l = 1; l <= get_n_Kids(abs(b2s[k-1])); l++)
 	  if (b2s[k-1] > 0)
-	    quad_out << fixed << setprecision(7) 
-		     << setw(6) << get_Name(b2s[k-1]) << "(" << l << ") = "
-		     << setw(11) << get_bnL(b2s[k-1], l, Quad)
-		     << setw(2) << Quad << endl;
+	    quad_out << std::fixed << std::setprecision(7) 
+		     << std::setw(6) << get_Name(b2s[k-1]) << "(" << l << ") = "
+		     << std::setw(11) << get_bnL(b2s[k-1], l, Quad)
+		     << std::setw(2) << Quad << std::endl;
 	  else {
 	    loc = get_loc(abs(b2s[k-1]), l) - 1;
-	    quad_out << fixed << setprecision(7) 
-		     << setw(6) << get_Name(elem[loc-1].Fnum)
+	    quad_out << std::fixed << std::setprecision(7) 
+		     << std::setw(6) << get_Name(elem[loc-1].Fnum)
 		     << "(" << l << ") = "
-		     << setw(11) << get_L(elem[loc-1].Fnum, l)
-		     << setw(3) << -Quad << endl;
-	    quad_out << fixed << setprecision(7) 
-		     << setw(6) << get_Name(elem[loc+1].Fnum)
+		     << std::setw(11) << get_L(elem[loc-1].Fnum, l)
+		     << std::setw(3) << -Quad << std::endl;
+	    quad_out << std::fixed << std::setprecision(7) 
+		     << std::setw(6) << get_Name(elem[loc+1].Fnum)
 		     << "(" << l << ") = "
-		     << setw(11) << get_L(elem[loc+1].Fnum, l)
-		     << setw(3) << -Quad << endl;
+		     << std::setw(11) << get_L(elem[loc+1].Fnum, l)
+		     << std::setw(3) << -Quad << std::endl;
 	  }
 
  
-      sext_out << endl;
-      sext_out << "n = " << n << ":" << endl;
+      sext_out << std::endl;
+      sext_out << "n = " << n << ":" << std::endl;
 
       if (opt)
 	//	h_zero(no_tps, 5, nu_x, nu_y, false);
@@ -1034,8 +1035,8 @@ void tune_scan(const int n_b2, const int b2s[], const bool opt)
       else
 	get_FP(n, nu_x, nu_y);
     }
-    tune_out << endl;
-    cout << endl;
+    tune_out << std::endl;
+    std::cout << std::endl;
   }
   tune_out.close(); quad_out.close(); sext_out.close();
 }
@@ -1050,8 +1051,8 @@ void tune_scan(const bool opt)
   double        nu[2];
   double        b2s[b2s_max];
   ss_vect<tps>  nus;
-  ifstream      inf1, inf2;
-  ofstream      outf;
+  std::ifstream      inf1, inf2;
+  std::ofstream      outf;
 
   char  file_name1[] = "/home/bengtsson/projects/src/quad-K1_1.txt";
   char  file_name2[] = "/home/bengtsson/projects/src/quad-K1_2.txt";
@@ -1066,9 +1067,9 @@ void tune_scan(const bool opt)
     inf1.getline(line, max_str); inf2.getline(line, max_str);
   }
 
-  cout << endl;
+  std::cout << std::endl;
   n = 0;
-  while (inf1.getline(line, max_str) != NULL) {
+  while (inf1.getline(line, max_str)) {
     n++;
 
     sscanf(line, "%d %lf %lf %lf %lf %lf %lf",
@@ -1097,13 +1098,13 @@ void tune_scan(const bool opt)
     //    K = MapNorm(Map, g, A1, A0, Map_res, 1);
     //    nus = dHdJ(K); get_nu_ksi(nus, nu, ksi);
 
-    cout << endl;
-    cout << fixed << setprecision(4)
-	 << "n = " << setw(4) << n
+    std::cout << std::endl;
+    std::cout << std::fixed << std::setprecision(4)
+	 << "n = " << std::setw(4) << n
 	 << ", nu_x = " << nu[X_] << ", nu_y = " << nu[Y_] << ", "; 
 
-    sext_out << endl;
-    sext_out << "n = " << n << ":" << endl;
+    sext_out << std::endl;
+    sext_out << "n = " << n << ":" << std::endl;
 
     if (opt) H_zero(eps_ksi, 10, false);
 
@@ -1113,8 +1114,8 @@ void tune_scan(const bool opt)
       get_FP(n, nu[X_], nu[Y_]);
 
     if (n % n_grid == 0) {
-      tune_out << endl;
-      cout << endl;
+      tune_out << std::endl;
+      std::cout << std::endl;
     }
   }
 
@@ -1130,7 +1131,8 @@ tps g_renorm(const double nu0_x, const double nu0_y,
 {
   // Renormalize g: (1-R^-1)^-1 * h 
 
-  int           i, j, k, l, m, jj1[ss_dim], jj2[ss_dim];
+  long int      jj1[ss_dim], jj2[ss_dim];
+  int           i, j, k, l, m;
   double        re, im, cotan0, cotan1, cotan0_sqr;
   tps           h_re, h_im, g_re, g_im, G_re, G_im, mn1, mn2;
   ss_vect<tps>  Id;
@@ -1211,7 +1213,7 @@ void track_H(const char *file_name, const double Ax, const double Ay)
   tps              H, g_r, scl_tps;
   ss_vect<double>  ps, ps_Fl, ps_nl;
   ss_vect<tps>     nus, A1_inv, A_nl_inv, Id;
-  ofstream         H_out;
+  std::ofstream         H_out;
 
   const bool  relative = false;
 
@@ -1262,19 +1264,19 @@ void track_H(const char *file_name, const double Ax, const double Ay)
     phi2[Y_] = atan2(ps_nl[py_], ps_nl[y_]);
 
     if (!relative)
-      H_out << scientific << setprecision(5)
-	    << setw(5) << k
-	    << setw(13) << 1e3*ps_Fl[x_] << setw(13) << 1e3*ps_Fl[px_]
-	    << setw(13) << 1e3*ps_Fl[y_] << setw(13) << 1e3*ps_Fl[py_]
-	    << setw(13) << 1e6*J[X_] << setw(13) << phi[X_]
-	    << setw(13) << 1e6*J[Y_] << setw(13) << phi[Y_]
-	    << setw(13) << 1e6*J2[X_] << setw(13) << phi2[X_]
-	    << setw(13) << 1e6*J2[Y_] << setw(13) << phi2[Y_]
-	    << setw(13) << 1e6*fabs(h) << endl;
+      H_out << std::scientific << std::setprecision(5)
+	    << std::setw(5) << k
+	    << std::setw(13) << 1e3*ps_Fl[x_] << std::setw(13) << 1e3*ps_Fl[px_]
+	    << std::setw(13) << 1e3*ps_Fl[y_] << std::setw(13) << 1e3*ps_Fl[py_]
+	    << std::setw(13) << 1e6*J[X_] << std::setw(13) << phi[X_]
+	    << std::setw(13) << 1e6*J[Y_] << std::setw(13) << phi[Y_]
+	    << std::setw(13) << 1e6*J2[X_] << std::setw(13) << phi2[X_]
+	    << std::setw(13) << 1e6*J2[Y_] << std::setw(13) << phi2[Y_]
+	    << std::setw(13) << 1e6*fabs(h) << std::endl;
     else
-      H_out << fixed << setprecision(1)
-	    << setw(5) << k << setw(6) << 1e2*(J[X_]-J0[X_])/J0[X_]
-	    << setw(6) << 1e2*(h-h0)/h0 << endl;
+      H_out << std::fixed << std::setprecision(1)
+	    << std::setw(5) << k << std::setw(6) << 1e2*(J[X_]-J0[X_])/J0[X_]
+	    << std::setw(6) << 1e2*(h-h0)/h0 << std::endl;
   }
 
   H_out.close();
@@ -1287,7 +1289,7 @@ void track_map(const double J_max)
   double           phi, A, x, px;
   ss_vect<double>  ps;
   ss_vect<tps>     A1_inv, PS;
-  ofstream         ps_out;
+  std::ofstream         ps_out;
 
   const int     n_r = 10, n_phi = 50, n = 10;
 
@@ -1306,24 +1308,24 @@ void track_map(const double J_max)
 	ps.propagate(1, n_elem);
       ps = (A1_inv*ps).cst();
  
-      ps_out << scientific << setprecision(5)
-	     << setw(13) << ps[x_] << setw(13) << ps[px_]
-	     << setw(13) << ps[y_] << setw(13) << ps[py_]
-	     << setw(13) << ps[delta_] << setw(13) << ps[ct_];
+      ps_out << std::scientific << std::setprecision(5)
+	     << std::setw(13) << ps[x_] << std::setw(13) << ps[px_]
+	     << std::setw(13) << ps[y_] << std::setw(13) << ps[py_]
+	     << std::setw(13) << ps[delta_] << std::setw(13) << ps[ct_];
 
       PS[x_] = x; PS[px_] = px; PS[y_] = 0.0; PS[py_] = 0.0;
       PS[delta_] = 0.0; PS[ct_] = 0.0;
       for (k = 1; k <= n; k++)
 	PS = Map*PS;
 
-      ps_out << scientific << setprecision(5)
-	     << setw(13) << PS[x_].cst()-ps[x_]
-	     << setw(13) << PS[px_].cst()-ps[px_]
-	     << setw(13) << PS[y_].cst()-ps[y_]
-	     << setw(13) << PS[py_].cst()-ps[py_]
-	     << setw(13) << PS[delta_].cst()-ps[delta_]
-	     << setw(13) << PS[ct_].cst()-ps[ct_]
-	     << endl;
+      ps_out << std::scientific << std::setprecision(5)
+	     << std::setw(13) << PS[x_].cst()-ps[x_]
+	     << std::setw(13) << PS[px_].cst()-ps[px_]
+	     << std::setw(13) << PS[y_].cst()-ps[y_]
+	     << std::setw(13) << PS[py_].cst()-ps[py_]
+	     << std::setw(13) << PS[delta_].cst()-ps[delta_]
+	     << std::setw(13) << PS[ct_].cst()-ps[ct_]
+	     << std::endl;
     }
   }
 
@@ -1347,13 +1349,13 @@ void no_mpoles(void)
 {
   int j, k;
 
-  cout << endl;
-  cout << "zeroing multipoles" << endl;
-  cout << endl;
+  std::cout << std::endl;
+  std::cout << "zeroing multipoles" << std::endl;
+  std::cout << std::endl;
   for (j = 0; j < n_elem; j++)
     if (elem[j].kind == Mpole)
       for (k = Sext; k < mpole_max; k++) {
-	//	cout << "zeroing " << elem[j].Name << endl;
+	//	std::cout << "zeroing " << elem[j].Name << std::endl;
 	set_bn(elem[j].Fnum, elem[j].Knum, k, 0.0);
       }
 }
@@ -1362,7 +1364,7 @@ void no_mpoles(void)
 void get_prm(const char *file_name)
 {
   char      line[max_str];      
-  ifstream  prm_in;
+  std::ifstream  prm_in;
 
   file_rd(prm_in, file_name);
 
@@ -1434,53 +1436,54 @@ void get_prm(const char *file_name)
   prm_in.getline(line, max_str);
   sscanf(line, "%*s %lf", &step);
 
-  cout << endl;
-  cout << fixed << setprecision(6)
+  std::cout << std::endl;
+  std::cout << std::fixed << std::setprecision(6)
        << "fit_tune      = " << adj_tune
        << ", nu0_x  = " << nu0[X_] << ", nu0_y  = " << nu0[Y_]
-       << scientific << setprecision(1) << ", eps_nu = " << eps_nu << endl;
-  cout << fixed << setprecision(6)
+       << std::scientific << std::setprecision(1) << ", eps_nu = " << eps_nu << std::endl;
+  std::cout << std::fixed << std::setprecision(6)
        << "fit_chrom     = " << adj_chrom
        << ", ksi0_x = " << ksi1[X_] << ", ksi0_y = " << ksi1[Y_]
-       << scientific << setprecision(1) << ", eps_ksi = " << eps_ksi << endl;
-  cout << "check_range   = " << check_range << endl;
-  cout << endl;
-  cout << fixed << setprecision(6)
+       << std::scientific << std::setprecision(1) << ", eps_ksi = " << eps_ksi << std::endl;
+  std::cout << "check_range   = " << check_range << std::endl;
+  std::cout << std::endl;
+  std::cout << std::fixed << std::setprecision(6)
        << "n_steps   = " << n_steps
        << ", nu_x_min = " << nu_x_min << ", nu_x_max = " << nu_x_max
-       << ", nu_y_min = " << nu_y_min << ", nu_y_max = " << nu_y_max << endl;
-  cout << endl;
-  cout << "n_cell        = " << n_cell << endl;
-  cout << fixed << setprecision(2)
-       << "ds_max        = " << ds_max << endl;
-  cout << fixed << setprecision(1)
-       << "b2_max        = " << b2_max << endl;
-  cout << fixed << setprecision(1)
-       << "b3L_max       = " << bnL_max[Sext] << endl;
-  cout << fixed << setprecision(1)
-       << "b4L_max       = " << bnL_max[Oct] << endl;
-  cout << fixed << setprecision(1)
-       << "b5L_max       = " << bnL_max[Dec] << endl;
-  cout << fixed << setprecision(1)
-       << "scl_dnu       = " << scl_dnu << endl;
-  cout << fixed << setprecision(1)
-       << "scl_ksi1      = " << scl_ksi1 << endl;
-  cout << fixed << setprecision(1)
-       << "scl_ksi2      = " << scl_ksi2 << endl;
-  cout << fixed << setprecision(1)
-       << "scl_ksi_nl    = " << scl_ksi_nl << endl;
-  cout << scientific << setprecision(1)
-       << "scl_dnuddelta = " << scl_dnuddelta << endl;
-  cout << scientific << setprecision(1)
-       << "scl_dnuddJ    = " << scl_dnudJ << endl;
-  cout << fixed << setprecision(2)
-       << "step          = " << step << endl;
+       << ", nu_y_min = " << nu_y_min << ", nu_y_max = " << nu_y_max << std::endl;
+  std::cout << std::endl;
+  std::cout << "n_cell        = " << n_cell << std::endl;
+  std::cout << std::fixed << std::setprecision(2)
+       << "ds_max        = " << ds_max << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "b2_max        = " << b2_max << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "b3L_max       = " << bnL_max[Sext] << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "b4L_max       = " << bnL_max[Oct] << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "b5L_max       = " << bnL_max[Dec] << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "scl_dnu       = " << scl_dnu << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "scl_ksi1      = " << scl_ksi1 << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "scl_ksi2      = " << scl_ksi2 << std::endl;
+  std::cout << std::fixed << std::setprecision(1)
+       << "scl_ksi_nl    = " << scl_ksi_nl << std::endl;
+  std::cout << std::scientific << std::setprecision(1)
+       << "scl_dnuddelta = " << scl_dnuddelta << std::endl;
+  std::cout << std::scientific << std::setprecision(1)
+       << "scl_dnuddJ    = " << scl_dnudJ << std::endl;
+  std::cout << std::fixed << std::setprecision(2)
+       << "step          = " << step << std::endl;
 }
 
 
 void sxt_h1(void)
 {
-  int           i, jj[ss_dim];
+  long int      jj[ss_dim];
+  int           i;
   tps           h, h_re, h_im;
 
   danot_(no_tps-1);
@@ -1495,85 +1498,86 @@ void sxt_h1(void)
     jj[i] = 0;
 
   // linear chromaticity
-  cout << endl;
+  std::cout << std::endl;
   jj[x_] = 1; jj[px_] = 1; jj[y_] = 0; jj[py_] = 0; jj[delta_] = 1;
-  cout << scientific << setprecision(16)
-       << "h_11001:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_11001:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 0; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1; jj[delta_] = 1;
-  cout << scientific << setprecision(16)
-       << "h_00111:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_00111:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
 
   // first order chromatic terms
-  cout << endl;
+  std::cout << std::endl;
   jj[x_] = 2; jj[px_] = 0; jj[y_] = 0; jj[py_] = 0; jj[delta_] = 1;
-  cout << scientific << setprecision(16)
-       << "h_20001:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_20001:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 0; jj[px_] = 0; jj[y_] = 2; jj[py_] = 0;
-  cout << scientific << setprecision(16)
-       << "h_00201:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_00201:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 1; jj[px_] = 0; jj[y_] = 0; jj[py_] = 0; jj[delta_] = 2;
-  cout << scientific << setprecision(16)
-       << "h_10002:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_10002:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
 
   // normal sextupoles
-  cout << endl;
+  std::cout << std::endl;
   jj[x_] = 2; jj[px_] = 1; jj[y_] = 0; jj[py_] = 0; jj[delta_] = 0;
-  cout << scientific << setprecision(16)
-       << "h_21000:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_21000:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 3; jj[px_] = 0; jj[y_] = 0; jj[py_] = 0;
-  cout << scientific << setprecision(16)
-       << "h_30000:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_30000:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 1; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
-  cout << scientific << setprecision(16)
-       << "h_10110:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_10110:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 1; jj[px_] = 0; jj[y_] = 0; jj[py_] = 2;
-  cout << scientific << setprecision(16)
-       << "h_10020:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_10020:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 1; jj[px_] = 0; jj[y_] = 2; jj[py_] = 0;
-  cout << scientific << setprecision(16)
-       << "h_10200:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_10200:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
 
   if (false) {
     // skew sextupoles
-    cout << endl;
+    std::cout << std::endl;
     jj[x_] = 0; jj[px_] = 0; jj[y_] = 2; jj[py_] = 1;
-    cout << scientific << setprecision(2)
-	 << "h_00210:" << setw(10) << 2.0*h_re[jj] << setw(10) << 2.0*h_im[jj]
-	 << endl;
+    std::cout << std::scientific << std::setprecision(2)
+	      << "h_00210:" << std::setw(10) << 2.0*h_re[jj]
+	      << std::setw(10) << 2.0*h_im[jj]<< std::endl;
     jj[x_] = 0; jj[px_] = 0; jj[y_] = 3; jj[py_] = 0;
-    cout << scientific << setprecision(2)
-	 << "h_00300:" << setw(10) << 2.0*h_re[jj] << setw(10) << 2.0*h_im[jj]
-	 << endl;
+    std::cout << std::scientific << std::setprecision(2)
+	      << "h_00300:" << std::setw(10) << 2.0*h_re[jj]
+	      << std::setw(10) << 2.0*h_im[jj] << std::endl;
     jj[x_] = 1; jj[px_] = 1; jj[y_] = 1; jj[py_] = 0;
-    cout << scientific << setprecision(2)
-	 << "h_11100:" << setw(10) << 2.0*h_re[jj] << setw(10) << 2.0*h_im[jj]
-	 << endl;
-    cout << endl;
+    std::cout << std::scientific << std::setprecision(2)
+	      << "h_11100:" << std::setw(10) << 2.0*h_re[jj]
+	      << std::setw(10) << 2.0*h_im[jj] << std::endl;
+    std::cout << std::endl;
     jj[x_] = 0; jj[px_] = 2; jj[y_] = 1; jj[py_] = 0;
-    cout << scientific << setprecision(2)
-	 << "h_02100:" << setw(10) << 2.0*h_re[jj] << setw(10) << 2.0*h_im[jj]
-	 << endl;
+    std::cout << std::scientific << std::setprecision(2)
+	      << "h_02100:" << std::setw(10) << 2.0*h_re[jj]
+	      << std::setw(10) << 2.0*h_im[jj] << std::endl;
     jj[x_] = 2; jj[px_] = 0; jj[y_] = 1; jj[py_] = 0;
-    cout << scientific << setprecision(2)
-	 << "h_20100:" << setw(10) << 2.0*h_re[jj] << setw(10) << 2.0*h_im[jj]
-	 << endl;
+    std::cout << std::scientific << std::setprecision(2)
+	      << "h_20100:" << std::setw(10) << 2.0*h_re[jj]
+	      << std::setw(10) << 2.0*h_im[jj] << std::endl;
   }
 }
 
 
 void sxt_h2(void)
 {
-  int           i, jj[ss_dim];
+  long int      jj[ss_dim];
+  int           i;
   tps           K_re, K_im, h, h_re, h_im;
 
   danot_(no_tps-1);
@@ -1588,64 +1592,65 @@ void sxt_h2(void)
   for (i = 0; i < ss_dim; i++)
     jj[i] = 0;
 
-  cout << endl;
+  std::cout << std::endl;
   jj[x_] = 4; jj[px_] = 0; jj[y_] = 0; jj[py_] = 0;
-  cout << scientific << setprecision(16)
-       << "h_40000:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_40000:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 3; jj[px_] = 1; jj[y_] = 0; jj[py_] = 0;
-  cout << scientific << setprecision(16)
-       << "h_31000:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_31000:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 2; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
-  cout << scientific << setprecision(16)
-       << "h_20110:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_20110:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 2; jj[px_] = 0; jj[y_] = 0; jj[py_] = 2;
-  cout << scientific << setprecision(16)
-       << "h_20020:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_20020:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 2; jj[px_] = 0; jj[y_] = 2; jj[py_] = 0;
-  cout << scientific << setprecision(16)
-       << "h_20200:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_20200:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 1; jj[px_] = 1; jj[y_] = 2; jj[py_] = 0;
-  cout << scientific << setprecision(16)
-       << "h_11200:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_11200:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 0; jj[px_] = 0; jj[y_] = 3; jj[py_] = 1;
-  cout << scientific << setprecision(16)
-       << "h_00310:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_00310:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 0; jj[px_] = 0; jj[y_] = 4; jj[py_] = 0;
-  cout << scientific << setprecision(16)
-       << "h_00400:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_00400:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
 
-  cout << endl;
+  std::cout << std::endl;
   jj[x_] = 2; jj[px_] = 2; jj[y_] = 0; jj[py_] = 0;
-  cout << scientific << setprecision(16)
-       << "h_22000:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_22000:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj]
+	    << std::endl;
   jj[x_] = 1; jj[px_] = 1; jj[y_] = 1; jj[py_] = 1;
-  cout << scientific << setprecision(16)
-       << "h_11110:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_11110:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
   jj[x_] = 0; jj[px_] = 0; jj[y_] = 2; jj[py_] = 2;
-  cout << scientific << setprecision(16)
-       << "h_00220:" << setw(24) << 2.0*h_re[jj] << setw(24) << 2.0*h_im[jj]
-       << endl;
+  std::cout << std::scientific << std::setprecision(16)
+	    << "h_00220:" << std::setw(24) << 2.0*h_re[jj]
+	    << std::setw(24) << 2.0*h_im[jj] << std::endl;
 
-  cout << endl;
+  std::cout << std::endl;
   jj[x_] = 2; jj[px_] = 2; jj[y_] = 0; jj[py_] = 0;
-  cout << scientific << setprecision(16) << "a_xx ="
-       << setw(24) << K_re[jj]/M_PI << endl;
+  std::cout << std::scientific << std::setprecision(16) << "a_xx ="
+	    << std::setw(24) << K_re[jj]/M_PI << std::endl;
   jj[x_] = 1; jj[px_] = 1; jj[y_] = 1; jj[py_] = 1;
-  cout << scientific << setprecision(16) << "a_xy ="
-       << setw(24) << K_re[jj]/M_PI << endl;
+  std::cout << std::scientific << std::setprecision(16) << "a_xy ="
+	    << std::setw(24) << K_re[jj]/M_PI << std::endl;
   jj[x_] = 0; jj[px_] = 0; jj[y_] = 2; jj[py_] = 2;
-  cout << scientific << setprecision(16) << "a_yy ="
-       << setw(24) << K_re[jj]/M_PI << endl;
+  std::cout << std::scientific << std::setprecision(16) << "a_yy ="
+	    << std::setw(24) << K_re[jj]/M_PI << std::endl;
 }
 
 
@@ -1724,8 +1729,8 @@ void get_prms()
 
   n_prm = 0;
   if (strcmp(lattice, "NSLS-II_DBA") == 0) {
-    cout << endl;
-    cout << "NSLS-II_DBA:" << endl;
+    std::cout << std::endl;
+    std::cout << "NSLS-II_DBA:" << std::endl;
 
     prms[n_prm] = get_Fnum("sl1"); bns[n_prm++] = Sext;
     prms[n_prm] = get_Fnum("sl2"); bns[n_prm++] = Sext;
@@ -1751,19 +1756,20 @@ void get_prms()
   }
 
   if (n_prm > n_prm_max) {
-    cout << "get_prms: n_prm_max exceeded " << n_prm << "(" << n_prm_max
-	 << ")" << endl;
+    std::cout << "get_prms: n_prm_max exceeded " << n_prm << "(" << n_prm_max
+	 << ")" << std::endl;
     exit(0);
   }
 
-  cout << endl;
-  cout << "get_prms: no of multipole families " << n_prm << endl;
+  std::cout << std::endl;
+  std::cout << "get_prms: no of multipole families " << n_prm << std::endl;
 }
 
 
 void get_lin_map(void)
 {
-  int           i, jj[ss_dim];
+  long int      jj[ss_dim];
+  int           i;
   ss_vect<tps>  ps;
 
   rad_on = true; cavity_on = true;
@@ -1777,31 +1783,31 @@ void get_lin_map(void)
 
   ps.propagate(1, n_elem);
     
-  cout << endl;
-  cout << "fixed point:" << endl;
-  cout << endl;
-  cout << scientific << setprecision(5) << setw(24) << ps.cst() << endl;
+  std::cout << std::endl;
+  std::cout << "std::fixed point:" << std::endl;
+  std::cout << std::endl;
+  std::cout << std::scientific << std::setprecision(5) << std::setw(24) << ps.cst() << std::endl;
   
-  cout << endl;
-  cout << "linear map:" << endl;
-  cout << endl;
+  std::cout << std::endl;
+  std::cout << "linear map:" << std::endl;
+  std::cout << std::endl;
 
   for (i = 0; i < ss_dim; i++)
     jj[i] = 0;
   
   for (i = 0; i < 2*nd_tps; i++) {
     jj[x_] = 1;
-    cout << scientific << setprecision(5) << setw(24) << ps[i][jj];
+    std::cout << std::scientific << std::setprecision(5) << std::setw(24) << ps[i][jj];
     jj[x_] = 0; jj[px_] = 1;
-    cout << scientific << setprecision(5) << setw(24) << ps[i][jj];
+    std::cout << std::scientific << std::setprecision(5) << std::setw(24) << ps[i][jj];
     jj[px_] = 0; jj[y_] = 1;
-    cout << scientific << setprecision(5) << setw(24) << ps[i][jj];
+    std::cout << std::scientific << std::setprecision(5) << std::setw(24) << ps[i][jj];
     jj[y_] = 0; jj[py_] = 1;
-    cout << scientific << setprecision(5) << setw(24) << ps[i][jj];
+    std::cout << std::scientific << std::setprecision(5) << std::setw(24) << ps[i][jj];
     jj[py_] = 0; jj[delta_] = 1;
-    cout << scientific << setprecision(5) << setw(24) << ps[i][jj];
+    std::cout << std::scientific << std::setprecision(5) << std::setw(24) << ps[i][jj];
     jj[delta_] = 0; jj[ct_] = 1;
-    cout << scientific << setprecision(5) << setw(24) << ps[i][jj] << endl;
+    std::cout << std::scientific << std::setprecision(5) << std::setw(24) << ps[i][jj] << std::endl;
     jj[ct_] = 0;
   }
 
@@ -1842,10 +1848,10 @@ void chk_lat(double nu[], double ksi[])
   get_COD(10, 1e-10, 0.0, true);
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
   nus = dHdJ(K); get_nu_ksi(nus, nu, ksi); get_ab(alpha1, beta1, 0);
-  cout << endl;
-  cout << fixed << setprecision(3)
+  std::cout << std::endl;
+  std::cout << std::fixed << std::setprecision(3)
        << "alpha_x  = " << alpha1[X_] << ", alpha_y = " << alpha1[Y_]
-       << ", beta_x = " << beta1[X_] << ", beta_y  = " << beta1[Y_] << endl;
+       << ", beta_x = " << beta1[X_] << ", beta_y  = " << beta1[Y_] << std::endl;
   prt_nu(nus);
 }
 
@@ -1862,32 +1868,32 @@ void get_locs()
   if (strcmp(lattice, "SLS") == 0)
     beta_loc4 = get_loc(get_Fnum("ms"), 1); get_ab(alpha4, beta4, beta_loc4);
 
-  cout << endl;
-  cout << fixed << setprecision(3)
-       << "alpha1_x  = " << setw(6) << alpha1[X_]
-       << ", alpha1_y = " << setw(6) << alpha1[Y_]
-       << ", beta1_x = " << setw(6) << beta1[X_]
-       << ", beta1_y  = " << setw(6) << beta1[Y_]
-       << endl;
-  cout << fixed << setprecision(3)
-       << "alpha2_x  = " << setw(6) << alpha2[X_]
-       << ", alpha2_y = " << setw(6) << alpha2[Y_]
-       << ", beta2_x = " << setw(6) << beta2[X_]
-       << ", beta2_y  = " << setw(6) << beta2[Y_]
-       << endl;
-  cout << fixed << setprecision(3)
-       << "alpha3_x  = " << setw(6) << alpha3[X_]
-       << ", alpha3_y = " << setw(6) << alpha3[Y_]
-       << ", beta3_x = " << setw(6) << beta3[X_]
-       << ", beta3_y  = " << setw(6) << beta3[Y_]
-       << endl;
+  std::cout << std::endl;
+  std::cout << std::fixed << std::setprecision(3)
+       << "alpha1_x  = " << std::setw(6) << alpha1[X_]
+       << ", alpha1_y = " << std::setw(6) << alpha1[Y_]
+       << ", beta1_x = " << std::setw(6) << beta1[X_]
+       << ", beta1_y  = " << std::setw(6) << beta1[Y_]
+       << std::endl;
+  std::cout << std::fixed << std::setprecision(3)
+       << "alpha2_x  = " << std::setw(6) << alpha2[X_]
+       << ", alpha2_y = " << std::setw(6) << alpha2[Y_]
+       << ", beta2_x = " << std::setw(6) << beta2[X_]
+       << ", beta2_y  = " << std::setw(6) << beta2[Y_]
+       << std::endl;
+  std::cout << std::fixed << std::setprecision(3)
+       << "alpha3_x  = " << std::setw(6) << alpha3[X_]
+       << ", alpha3_y = " << std::setw(6) << alpha3[Y_]
+       << ", beta3_x = " << std::setw(6) << beta3[X_]
+       << ", beta3_y  = " << std::setw(6) << beta3[Y_]
+       << std::endl;
   if (strcmp(lattice, "SLS") == 0)
-    cout << fixed << setprecision(3)
-	 << "alpha4_x  = " << setw(6) << alpha4[X_]
-	 << ", alpha4_y = " << setw(6) << alpha4[Y_]
-	 << ", beta4_x = " << setw(6) << beta4[X_]
-	 << ", beta4_y  = " << setw(6) << beta4[Y_]
-	 << endl;
+    std::cout << std::fixed << std::setprecision(3)
+	 << "alpha4_x  = " << std::setw(6) << alpha4[X_]
+	 << ", alpha4_y = " << std::setw(6) << alpha4[Y_]
+	 << ", beta4_x = " << std::setw(6) << beta4[X_]
+	 << ", beta4_y  = " << std::setw(6) << beta4[Y_]
+	 << std::endl;
 }
 
 
@@ -1951,7 +1957,7 @@ void get_dnu(const int n_nu, const double max_Ax, const double max_Ay)
   double           Ax, Ay, twoJx, twoJy, nux, nuy, A;
   ss_vect<double>  x_Floq;
   ss_vect<tps>     x,  A_inv, nus;
-  ofstream         nus_out;
+  std::ofstream         nus_out;
 
   file_wr(nus_out, "dnu_dAx.dat");
   x.zero();
@@ -1960,14 +1966,14 @@ void get_dnu(const int n_nu, const double max_Ax, const double max_Ay)
     x_Floq = (A_inv*x).cst(); twoJx = sqr(x_Floq[0]) + sqr(x_Floq[1]);
     x[0] = sqrt(twoJx); x[1] = sqrt(twoJx);
     nux = (nus[3]*x).cst(); nuy = (nus[4]*x).cst();
-    nus_out << fixed << setprecision(3)
-	    << setw(7) << 1e3*Ax << " " << setw(7) << 1e6*twoJx/2.0
-	    << setprecision(5)
-	    << " " << setw(8) << nux << " " << setw(8) << nuy
-	    << setprecision(3)
-	    << " " << setw(8) << -(dHdJ(nus[0])[3]*x).cst()
-	    << " " << setw(8) << -(dHdJ(nus[1])[4]*x).cst()
-	    << endl;
+    nus_out << std::fixed << std::setprecision(3)
+	    << std::setw(7) << 1e3*Ax << " " << std::setw(7) << 1e6*twoJx/2.0
+	    << std::setprecision(5)
+	    << " " << std::setw(8) << nux << " " << std::setw(8) << nuy
+	    << std::setprecision(3)
+	    << " " << std::setw(8) << -(dHdJ(nus[0])[3]*x).cst()
+	    << " " << std::setw(8) << -(dHdJ(nus[1])[4]*x).cst()
+	    << std::endl;
   }
   nus_out.close();
   
@@ -1978,14 +1984,14 @@ void get_dnu(const int n_nu, const double max_Ax, const double max_Ay)
     x_Floq = (A_inv*x).cst(); twoJy = sqr(x_Floq[2]) + sqr(x_Floq[3]);
     x[2] = sqrt(twoJy); x[3] = sqrt(twoJy);
     nux = (nus[3]*x).cst(); nuy = (nus[4]*x).cst();
-    nus_out << fixed << setprecision(3)
-	    << setw(7) << 1e3*Ay << " " << setw(7) << 1e6*twoJy/2.0
-	    << setprecision(5)
-	    << " " << setw(8) << nux << " " << setw(8) << nuy
-	    << setprecision(3)
-	    << " " << setw(8) << -(dHdJ(nus[0])[3]*x).cst()
-	    << " " << setw(8) << -(dHdJ(nus[1])[4]*x).cst()
-	    << endl;
+    nus_out << std::fixed << std::setprecision(3)
+	    << std::setw(7) << 1e3*Ay << " " << std::setw(7) << 1e6*twoJy/2.0
+	    << std::setprecision(5)
+	    << " " << std::setw(8) << nux << " " << std::setw(8) << nuy
+	    << std::setprecision(3)
+	    << " " << std::setw(8) << -(dHdJ(nus[0])[3]*x).cst()
+	    << " " << std::setw(8) << -(dHdJ(nus[1])[4]*x).cst()
+	    << std::endl;
   }
   nus_out.close();
   
@@ -2003,17 +2009,17 @@ void get_dnu(const int n_nu, const double max_Ax, const double max_Ay)
       x[2] = sqrt(twoJy); x[3] = sqrt(twoJy);
       nux = (nus[3]*x).cst(); nuy = (nus[4]*x).cst();
       get_ampl(nux, nuy, 6, nx, ny, A);
-      nus_out << fixed << setprecision(3)
-	      << setw(7) << 1e3*Ax << " " << setw(7) << 1e3*Ay
-	      << " " << setw(7) << 1e6*twoJx/2.0
-	      << " " << setw(7) << 1e6*twoJy/2.0
-	      << setprecision(5)
-	      << " " << setw(8) << nux << " " << setw(8) << nuy
-	      << setprecision(3)
-	      << " " << setw(8) << log(A) << setw(3) << nx << setw(3) << ny
-	      << endl;
+      nus_out << std::fixed << std::setprecision(3)
+	      << std::setw(7) << 1e3*Ax << " " << std::setw(7) << 1e3*Ay
+	      << " " << std::setw(7) << 1e6*twoJx/2.0
+	      << " " << std::setw(7) << 1e6*twoJy/2.0
+	      << std::setprecision(5)
+	      << " " << std::setw(8) << nux << " " << std::setw(8) << nuy
+	      << std::setprecision(3)
+	      << " " << std::setw(8) << log(A) << std::setw(3) << nx << std::setw(3) << ny
+	      << std::endl;
     }
-    nus_out << endl;
+    nus_out << std::endl;
   }
   nus_out.close();
 }
@@ -2026,8 +2032,8 @@ void get_track(void)
   double           twoJx, twoJy;
   ss_vect<double>  x, x_Floq;
   ss_vect<tps>     A_inv;
-  ifstream         inf;
-  ofstream         J_out;
+  std::ifstream         inf;
+  std::ofstream         J_out;
 
   file_rd(inf, "/home/bengtsson/tracy_JB/NSLS-II/track.out");
   file_wr(J_out, "J.dat");
@@ -2050,11 +2056,11 @@ void get_track(void)
     twoJx = sqr(x_Floq[0]) + sqr(x_Floq[1]);
     twoJy = sqr(x_Floq[2]) + sqr(x_Floq[3]);
     
-    J_out << scientific << setprecision(3)
-	  << setw(4) << i
-	  << " " << setw(10) << 1e6*twoJx << " " << setw(10) << 1e6*twoJy
-	  << endl;
-  } while (inf.getline(line, max_str) != NULL);
+    J_out << std::scientific << std::setprecision(3)
+	  << std::setw(4) << i
+	  << " " << std::setw(10) << 1e6*twoJx << " " << std::setw(10) << 1e6*twoJy
+	  << std::endl;
+  } while (inf.getline(line, max_str));
   inf.close();
   J_out.close();
 }
@@ -2079,8 +2085,8 @@ float H_fun(float p[])
       set_bnL(prms[i-1], Sext, p[i]);
     else {
       H2 = 1e30;
-      cout << scientific << setprecision(3)
-	   << setw(4) << n_iter << setw(10) << H2 << endl;
+      std::cout << std::scientific << std::setprecision(3)
+	   << std::setw(4) << n_iter << std::setw(10) << H2 << std::endl;
       return H2;
     }
 
@@ -2095,7 +2101,7 @@ float H_fun(float p[])
   CtoR(H, H_re, H_im);
   H_re = H_re*Id_scl;
 
-  if (n_iter % n_prt == 0) cout << endl;
+  if (n_iter % n_prt == 0) std::cout << std::endl;
   H2 = 0.0; m1 = 0;
   for (i = 0; i <= no_tps-1; i++)
     for (j = 0; j <= no_tps-1; j++)
@@ -2156,42 +2162,43 @@ float H_fun(float p[])
 		       is_h_ijklm(1, 1, 2, 2, 1, i, j, k, l, m) ||
 		       is_h_ijklm(0, 0, 3, 3, 1, i, j, k, l, m))
 		// amplitude dependent chromaticity
-		if (!use_K)
+		if (!use_K) {
 		  dH *= scl_ksi_nl;
-		else
+		} else {
 		  dH = scl_ksi_nl*h_ijklm(K_re, i, j, k, l, m);
+		}
 
 	      H2 += sqr(dH);
 
 	      if (n_iter % n_prt == 0) {
 		sprintf(hs, "h_%d%d%d%d%d", i, j, k, l, m);
-		cout << setw(3) << m1 << " " << hs
-		     << scientific << setprecision(2)
-		     << setw(10) << dH << endl;
+		std::cout << std::setw(3) << m1 << " " << hs
+		     << std::scientific << std::setprecision(2)
+		     << std::setw(10) << dH << std::endl;
 	      }
 	    }
 	  }
 
   if (n_iter % n_prt == 0) {
-    cout << endl;
-    cout << scientific << setprecision(3)
-	 << setw(4) << n_iter << setw(10) << H2;
+    std::cout << std::endl;
+    std::cout << std::scientific << std::setprecision(3)
+	 << std::setw(4) << n_iter << std::setw(10) << H2;
 
     for (i = 1; i <= n_prm; i++) {
-      cout << fixed << setprecision(3) 
-	   << setw(7) << get_bnL(prms[i-1], 1, bns[i-1]);
-      if (i % n_fold == 0) cout << endl;
+      std::cout << std::fixed << std::setprecision(3) 
+	   << std::setw(7) << get_bnL(prms[i-1], 1, bns[i-1]);
+      if (i % n_fold == 0) std::cout << std::endl;
     }
-    if (n_prm % n_fold != 0) cout << endl;
+    if (n_prm % n_fold != 0) std::cout << std::endl;
 
-    sext_out << endl;
-    sext_out << "n = " << n_iter << ":" << endl;
+    sext_out << std::endl;
+    sext_out << "n = " << n_iter << ":" << std::endl;
     for (i = 1; i <= n_prm; i++)
       for (j = 1; j <= get_n_Kids(prms[i-1]); j++)
-	sext_out << fixed << setprecision(7)
-		 << setw(6) << get_Name(prms[i-1]) << "(" << j << ") = "
-		 << setw(11) << get_bnL(prms[i-1], 1, bns[i-1])
-		 << setw(2) << bns[i-1] << endl;
+	sext_out << std::fixed << std::setprecision(7)
+		 << std::setw(6) << get_Name(prms[i-1]) << "(" << j << ") = "
+		 << std::setw(11) << get_bnL(prms[i-1], 1, bns[i-1])
+		 << std::setw(2) << bns[i-1] << std::endl;
   }
 
   return H2;
@@ -2212,7 +2219,7 @@ void H_min(void)
       xi[i][j] = (i == j)? 0.1 : 0.0;
   }
 
-  cout << endl;
+  std::cout << std::endl;
   select_h(); n_iter = 0;
   powell(p, xi, n_prm, ftol, &iter, &fret, H_fun);
   n_iter = -1; H_fun(p);
@@ -2224,7 +2231,8 @@ void H_min(void)
 int main()
 {
   char             line[max_str];
-  int              i, j, jj[ss_dim], h_rf;
+  long int         jj[ss_dim];
+  int              i, j, h_rf;
   int              b2_Fams[n_prm_max], n_b2 = 0;
   long int         k1, k2;
   double           r, x_min[2], x_max[2], DA, nu[2], ksi[2], V_rf, f_rf;
@@ -2237,8 +2245,8 @@ int main()
   ss_vect<double>  x;
   ss_vect<tps>     A_inv, ps, ps_re, ps_im, nus, R, R_inv, Map2;
   ss_vect<tps>     Map_Fl, Mn, Mk, J, eta, M1, M2, M3, M4, Mp;
-  ofstream         outf, K_out, nus_out, A1_out, J_out;
-  ifstream         inf;
+  std::ofstream         outf, K_out, nus_out, A1_out, J_out;
+  std::ifstream         inf;
 
   const int     seed = 1005, m = 6, n = 4;
   const int     n_nu = 25;
@@ -2274,12 +2282,12 @@ int main()
   if (true) chk_lat(nu, ksi);
 
   get_ab(alpha, beta, 0);
-  cout << endl;
-  cout << fixed << setprecision(3)
-       << "alpha_x  = " << setw(6) << alpha[X_]
-       << ", alpha_y = " << setw(6) << alpha[Y_]
-       << ", beta_x = " << setw(6) << beta[X_]
-       << ", beta_y  = " << setw(6) << beta[Y_] << endl;
+  std::cout << std::endl;
+  std::cout << std::fixed << std::setprecision(3)
+       << "alpha_x  = " << std::setw(6) << alpha[X_]
+       << ", alpha_y = " << std::setw(6) << alpha[Y_]
+       << ", beta_x = " << std::setw(6) << beta[X_]
+       << ", beta_y  = " << std::setw(6) << beta[Y_] << std::endl;
 
   if (false &&
       (strcmp(lattice, "SLS") != 0) &&
@@ -2289,11 +2297,11 @@ int main()
     alpha[Y_] = -h_ijklm(ab1[Y_], 0, 0, 0, 1, 0);
     beta[X_]  =  h_ijklm(ab1[X_], 1, 0, 0, 0, 0);
     beta[Y_]  =  h_ijklm(ab1[Y_], 0, 0, 1, 0, 0);
-    cout << fixed << setprecision(3)
-	 << "alpha_x  = " << setw(6) << alpha[X_]
-	 << ", alpha_y = " << setw(6) << alpha[Y_]
-	 << ", beta_x = " << setw(6) << beta[X_]
-	 << ", beta_y  = " << setw(6) << beta[Y_] << endl;
+    std::cout << std::fixed << std::setprecision(3)
+	 << "alpha_x  = " << std::setw(6) << alpha[X_]
+	 << ", alpha_y = " << std::setw(6) << alpha[Y_]
+	 << ", beta_x = " << std::setw(6) << beta[X_]
+	 << ", beta_y  = " << std::setw(6) << beta[Y_] << std::endl;
   }
 
   /*  Id.identity(); Map2.identity();
@@ -2303,7 +2311,7 @@ int main()
       Map2[py_] += Id[y_]*Id[py_] + sqr(Id[py_]);
 
       Map2.propagate(1, n_elem);
-      cout << Map2;*/
+      std::cout << Map2;*/
 
   if (false) {
     n_b2 = 0;
@@ -2349,15 +2357,17 @@ int main()
   }
 
   Id_scl.identity();
-  Id_scl[x_] *= sqrt(2.0*Jx); Id_scl[px_] *= sqrt(2.0*Jx);
-  Id_scl[y_] *= sqrt(2.0*Jy); Id_scl[py_] *= sqrt(2.0*Jy);
-  Id_scl[delta_] *= delta;
+  // Id_scl[x_] *= sqrt(2.0*Jx); Id_scl[px_] *= sqrt(2.0*Jx);
+  // Id_scl[y_] *= sqrt(2.0*Jy); Id_scl[py_] *= sqrt(2.0*Jy);
+  // Id_scl[delta_] *= delta;
 
   if (false) { get_lin_map(); exit(0); }
 
-  if (false) sxt_h1();
-
-  if (false) { sxt_h2(); exit(0); }
+  if (!false) {
+    sxt_h1();
+    sxt_h2();
+    exit(0);
+  }
 
   get_prm("tune_scan.prm");
 
@@ -2487,20 +2497,20 @@ int main()
 
 	if (false) {
 	  // Random starting point for the non-chromatic sextupoles
-	  cout << endl;
-	  cout << "Random starting point for the non-chromatic sextupoles:"
-	       << endl;
+	  std::cout << std::endl;
+	  std::cout << "Random starting point for the non-chromatic sextupoles:"
+	       << std::endl;
 	  for (i = 0; i < 3; i++) {
 	    b3L = 2.0*bnL_max[Sext]*(ranf()-0.5);
 	    set_bnL(prms[i], bns[i], b3L);
-	    cout << scientific << setprecision(3) << setw(11) << b3L;
+	    std::cout << std::scientific << std::setprecision(3) << std::setw(11) << b3L;
 	  }
 	  for (i = 6; i < n_prm; i++) {
 	    b3L = 2.0*bnL_max[Sext]*(ranf()-0.5);
 	    set_bnL(prms[i], bns[i], b3L);
-	    cout << scientific << setprecision(3) << setw(11) << b3L;
+	    std::cout << std::scientific << std::setprecision(3) << std::setw(11) << b3L;
 	  }
-	  cout << endl;
+	  std::cout << std::endl;
 	}
 
 	H_zero(eps_ksi, 25, true);
@@ -2558,13 +2568,13 @@ int main()
 	      Map_Fl = Inv(A0*A1)*Map*A0*A1;
 	      danot_(1); R = Map_Fl;
 	      danot_(no_tps);
-	      cout << h*R-h*Map_Fl;
-	      cout << endl;
-	      cout << scientific << setprecision(14) << setw(22) << abs2(h) << endl;
-	      cout << scientific << setprecision(14)
-	      << setw(22) << abs2(h*Map_Fl) << endl;
-	      cout << scientific << setprecision(14)
-	      << setw(22) << abs2(h*Map_Fl*Map_Fl) << endl;*/
+	      std::cout << h*R-h*Map_Fl;
+	      std::cout << std::endl;
+	      std::cout << std::scientific << std::setprecision(14) << std::setw(22) << abs2(h) << std::endl;
+	      std::cout << std::scientific << std::setprecision(14)
+	      << std::setw(22) << abs2(h*Map_Fl) << std::endl;
+	      std::cout << std::scientific << std::setprecision(14)
+	      << std::setw(22) << abs2(h*Map_Fl*Map_Fl) << std::endl;*/
 
       //      h = h*Id;
       //      CtoR(h, h_re, h_im);
@@ -2591,7 +2601,7 @@ int main()
 
       h = 0.5*tps(0.0, 1) + 2.0*tps(0.0, 2);
       CtoR(h, h_re, h_im);
-      //      cout << h << h_re << h_im;
+      //      std::cout << h << h_re << h_im;
       exit(0);
     }
 
@@ -2617,7 +2627,7 @@ int main()
     //    prt_H_long(10, 180*pi/180.0, 6.2e-2, -359.4e3);
 
     // DIAMOND
-    prt_H_long(10, 180*M_PI/180.0, 11e-2, -1005.2e-3);
+    prt_H_long(10, 180*M_PI/180.0, 11e-2, -1005.2e-3, false);
   }
 
   exit(0);
@@ -2649,23 +2659,23 @@ int main()
 
   // requires map normal form
   //  H = get_H();
-  //  cout << H*Id;
+  //  std::cout << H*Id;
 
   //  get_dynap(5e-3, 0.0, n_track, 0.1e-3, n_aper, 0.491, 0.604,
   //       x_min, x_max, true);
 
-  //  cout << get_h()*Id;
+  //  std::cout << get_h()*Id;
 
   //  danot_(3);
   // requires map normal form
   //  H = get_H();
-  //  cout << H;
+  //  std::cout << H;
 
   exit(0);
 
-  cout << "O.K.? "; cin.get();  
+  std::cout << "O.K.? "; std::cin.get();  
 
-  //  cout << K; prt_dnu(nus);
+  //  std::cout << K; prt_dnu(nus);
 
   //  prt_h(H, 20e-3, 30e-3, 10);
 
@@ -2673,13 +2683,13 @@ int main()
   get_Map();
   // requires map normal form
   //  H = get_H();
-  cout << H;
+  std::cout << H;
 
   /*  gn = Take(g, 4);
       for (i = 5; i <= no_tps; i++) {
       pq = Take(g, i); gn = BCH(gn, pq, 3);
       }
-      cout << (H-K*LieExp(-gn, I()));*/
+      std::cout << (H-K*LieExp(-gn, I()));*/
 
   /*  // Transform map to Floquet space
       Map = Inv(A1*A2)*Map*A1*A2;
@@ -2691,10 +2701,10 @@ int main()
   /*  get_matrix(R, M); prt_matrix(M);
       nu_x = GetAngle(M[0][0], M[0][1])/(2.0*pi);
       nu_y = GetAngle(M[2][2], M[2][3])/(2.0*pi);
-      cout << endl;
-      cout << fixed << setprecision(5)
-      << "nux = " << setw(7) << nu_x
-      << " nuy = " << setw(7) << nu_y << endl;
+      std::cout << std::endl;
+      std::cout << std::fixed << std::setprecision(5)
+      << "nux = " << std::setw(7) << nu_x
+      << " nuy = " << std::setw(7) << nu_y << std::endl;
 
       ps.identity();
       H2 = - 2.0*pi*nu_x*(sqr(ps[x_])+sqr(ps[px_]))/2.0
@@ -2709,8 +2719,8 @@ int main()
       //  H = P - pq/4.0 + pqq/24.0 + (pqpp-pqqq)/192.0
       //      + (8.0*PB(pqqp, P)-15.0*PB(pqpp, Q)+3.0*PB(pqqq, Q))/5760.0;
       H_num = BCH(H2, Hnl, 4);
-      cout << H_num;
-      cout << (H_num-H);*/
+      std::cout << H_num;
+      std::cout << (H_num-H);*/
   // Numerical search for the invariant
   /*  Id.identity(); Id[delta_] = tps(0.0, 0); Id[ct_] = tps(0.0, 0);
       H_num = H;
@@ -2718,12 +2728,12 @@ int main()
       dH = H_num - H_num*Map; dH = dH*Inv(Map-Id);
       H_num = H_num + dH;
       }
-      //  cout << H_num;
-      cout << dH;*/
+      //  std::cout << H_num;
+      std::cout << dH;*/
 
   // check the Lie generator
   //  danot_(no_tps); Map2 = LieExp(H_num, I());
   //  danot_(no_tps-1); TPSAEps(1e-9);
-  //  cout << (Map*Inv(Map2)); TPSAEps(eps);
+  //  std::cout << (Map*Inv(Map2)); TPSAEps(eps);
 }
 
