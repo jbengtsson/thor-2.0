@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #define NO 7
 
 #include "thor_lib.h"
@@ -29,13 +31,9 @@ const bool
   mpole_zero = false;
 
 const double
-#if 0
-  beta_inj[] = {2.7, 3.5},
-#else
-  beta_inj[] = {2.8, 2.8},
-#endif
+  beta_inj[] = {6.0, 5.0},
 
-  A_max[]    = {3e-3, 1.5e-3},
+  A_max[]    = {6e-3, 3e-3},
   delta_max  = 4e-2,
   twoJ[]     = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
 
@@ -44,7 +42,7 @@ const double
   bnL_max[]  = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
 
   scl_h      = 1e-1,
-  scl_ksi[]  = {0e0, 1e1, 0e0, 0e0, 0e-1},
+  scl_ksi[]  = {0e0, 1e1, 1e0, 0e0, 1e-1},
   scl_a[]    = {1e0, 1e0};
 
 
@@ -262,7 +260,7 @@ void prt_bend(FILE *outf, const int loc, const int n)
 	  "%-8s: multipole, l = %7.5f, t = %7.5f, t1 = %7.5f, t2 = %7.5f,\n"
 	  "          hom = (%d, %12.5e, 0e0,"
 	  " %d, %12.5e, 0e0),\n"
-	  "          n = nbend, Method = Meth;\n",
+	  "          n = nbend;\n",
 	  elemp->Name, elemp->L,
 	  elemp->L*elemp->mpole->h_bend*180e0/M_PI,
 	  elemp->mpole->edge1, elemp->mpole->edge2,
@@ -277,7 +275,7 @@ void prt_quad(FILE *outf, const int loc, const int n)
 	  "%-8s: multipole, l = %7.5f,\n"
 	  "          hom = (%d, %12.5e, 0e0,"
 	  " %d, %12.5e, 0e0),\n"
-	  "          n = nquad, Method = Meth;\n",
+	  "          n = nquad;\n",
 	  elem[loc-1].Name, elem[loc-1].L, Quad,
 	  get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Quad),
 	  n, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n));
@@ -290,7 +288,7 @@ void prt_sext(FILE *outf, const int loc, const int n)
     fprintf(outf,
 	    "%-8s: multipole, l = %7.5f,\n"
 	    "          hom = (%d, %12.5e, 0e0),\n"
-	    "          n = %d, Method = Meth;\n",
+	    "          n = %d;\n",
 	    elem[loc-1].Name, elem[loc-1].L, n,
 	    get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n),
 	    elem[loc-1].mpole->n_step);
@@ -300,7 +298,7 @@ void prt_sext(FILE *outf, const int loc, const int n)
 	    "          hom = (%d, %12.5e, 0e0,\n"
 	    "                 %d, %12.5e, 0e0,\n"
 	    "                 %d, %12.5e, 0e0),\n"
-	    "          n = %d, Method = Meth;\n",
+	    "          n = %d;\n",
 	    elem[loc-1].Name, elem[loc-1].L,
 	    Quad, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Quad),
 	    Sext, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Sext),
@@ -620,21 +618,40 @@ void no_mpoles(const int n)
 
 void get_bns(param_type &bns)
 {
+  const int lat = 1;
+
   if (mpole_zero) {
     no_mpoles(Sext);
     no_mpoles(Oct);
   }
 
-  if (false) {
-    bns.add_Fam("sf_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    bns.add_Fam("sd1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    bns.add_Fam("sd2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-  }
+  switch (lat) {
+  case 1:
+    // MAX 4U.
+    if (!false) {
+      bns.add_Fam("sf_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("sd1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("sd2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    }
 
-  if (!false) {
-    bns.add_Fam("oxxo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-    bns.add_Fam("oxyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-    bns.add_Fam("oyyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    if (!false) {
+      bns.add_Fam("oxxo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("oxyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("oyyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+    break;
+  case 2:
+    // MAX IV.
+    bns.add_Fam("sfm",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sfo",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sfi",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sd",    Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("sdend", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    break;
+  default:
+    printf("\nget_bns: undef. multipole family.\n");
+    assert(false);
+    break;
   }
 }
 
