@@ -28,14 +28,11 @@ typedef struct {
 
 
 const bool
-  mpole_zero = !false;
+  mpole_zero = false;
 
 const double
-  beta_inj[] = {6.0, 5.0},
-
   A_max[]    = {6e-3, 3e-3},
   delta_max  = 4e-2,
-  twoJ[]     = {sqr(A_max[X_])/beta_inj[X_], sqr(A_max[Y_])/beta_inj[Y_]},
 
   bnL_scl[]  = {0e0, 0e0, 0e0,  1e0,  1e2,    1e4},
   bnL_min[]  = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
@@ -95,9 +92,9 @@ tps get_H(const tps &g)
 
 
 void chk_lat(ss_vect<tps> &map, ss_vect<tps> &map_res,
-	     double nu[], double ksi[])
+	     double nu[], double ksi[], double beta[])
 {
-  double       alpha[2], beta[2];
+  double       alpha[2];
   ss_vect<tps> nus;
 
   danot_(2);
@@ -690,8 +687,7 @@ void set_state(void)
 
 int main(int argc, char *argv[])
 {
-  int                   k;
-  double                nu[3], ksi[3];
+  double                nu[3], ksi[3], beta[2], twoJ;
   ss_vect<tps>          Id_scl;
   param_type            bns;
   std::vector<Lie_term> k_ijklm;
@@ -713,12 +709,15 @@ int main(int argc, char *argv[])
 
   daeps_(1e-30);
 
-  Id_scl.identity();
-  for (k = 0; k < 4; k++)
-    Id_scl[k] *= sqrt(twoJ[k/2]);
-  Id_scl[delta_] *= delta_max;
+  chk_lat(Map, Map_res, nu, ksi, beta);
 
-  if (!false) chk_lat(Map, Map_res, nu, ksi);
+  Id_scl.identity();
+  for (int k = 0; k < 2; k++) {
+    twoJ = sqr(A_max[k])/beta[k];
+    Id_scl[2*k] *= sqrt(twoJ);
+    Id_scl[2*k+1] *= sqrt(twoJ);
+  }
+  Id_scl[delta_] *= delta_max;
 
   if (!false) {
     get_bns(bns);
@@ -726,7 +725,7 @@ int main(int argc, char *argv[])
     bns.print();
 
     printf("\n");
-    for (k = 1; k <= 30; k++) {
+    for (int k = 1; k <= 30; k++) {
       printf("\nk = %d:", k);
       analyze(Id_scl, bns, k_ijklm);
       correct(bns, k_ijklm, svd_cut, step);
