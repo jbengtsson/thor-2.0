@@ -28,7 +28,7 @@ typedef struct {
 
 
 const bool
-  mpole_zero = false;
+  mpole_zero = !false;
 
 const double
   beta_inj[] = {6.0, 5.0},
@@ -42,7 +42,7 @@ const double
   bnL_max[]  = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
 
   scl_h      = 1e-1,
-  scl_ksi[]  = {0e0, 1e1, 1e0, 0e0, 1e-1},
+  scl_ksi[]  = {0e0, 1e1, 1e0, 0e0, 0e-1},
   scl_a[]    = {1e0, 1e0};
 
 
@@ -284,26 +284,31 @@ void prt_quad(FILE *outf, const int loc, const int n)
 
 void prt_sext(FILE *outf, const int loc, const int n)
 {
+  std::string name;
+  int         n_step;
+  double      L, b_n;
+
   if (n == Sext)
     fprintf(outf,
-	    "%-8s: multipole, l = %7.5f,\n"
-	    "          hom = (%d, %12.5e, 0e0),\n"
-	    "          n = %d;\n",
-	    elem[loc-1].Name, elem[loc-1].L, n,
+	    "%-8s: sextupole, l = %7.5f, k = %12.5e, n = %d;\n",
+	    elem[loc-1].Name, elem[loc-1].L,
 	    get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n),
 	    elem[loc-1].mpole->n_step);
-  else
-    fprintf(outf,
-	    "%-8s: multipole, l = %7.5f,\n"
-	    "          hom = (%d, %12.5e, 0e0,\n"
-	    "                 %d, %12.5e, 0e0,\n"
-	    "                 %d, %12.5e, 0e0),\n"
-	    "          n = %d;\n",
-	    elem[loc-1].Name, elem[loc-1].L,
-	    Quad, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Quad),
-	    Sext, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Sext),
-	    n, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n),
-	    elem[loc-1].mpole->n_step);
+  else {
+    name = elem[loc-1].Name;
+    L = elem[loc-1].L;
+    fprintf(outf, "%-8s: multipole, l = %7.5f,\n          hom = (",
+	    name.c_str(), L);
+    for (int k = Sext; k <= n; k++) {
+      b_n = get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, k);
+      if (b_n != 0e0) {
+	n_step = elem[loc-1].mpole->n_step;
+	fprintf(outf, "%d, %cscl*%11.5e, 0e0",
+		k, (sgn(b_n) > 0e0)? ' ':'-', fabs(b_n));
+      }
+    }
+    fprintf(outf, "),\n          n = %d;\n", n_step);
+  }
 }
 
 
@@ -629,9 +634,9 @@ void get_bns(param_type &bns)
   case 1:
     // MAX 4U.
     if (!false) {
-      bns.add_Fam("sf_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sd1",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sd2",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("sd1",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("sd2",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     }
 
     if (!false) {
@@ -641,6 +646,21 @@ void get_bns(param_type &bns)
     }
     break;
   case 2:
+    // MAX 4U.
+    if (!false) {
+      bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("sd1",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("sd2",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    }
+
+    if (!false) {
+      bns.add_Fam("oxxo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("oxyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("oyyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+    break;
+  case 3:
     // MAX IV.
     bns.add_Fam("sfm",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     bns.add_Fam("sfo",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
