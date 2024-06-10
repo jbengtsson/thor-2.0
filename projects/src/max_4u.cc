@@ -29,7 +29,7 @@ typedef struct {
 
 
 const bool
-  mpole_zero = false;
+  mpole_zero = !false;
 
 const double
   A_max[]    = {6e-3, 3e-3},
@@ -280,32 +280,82 @@ void prt_quad(FILE *outf, const int loc, const int n)
 }
 
 
-void prt_sext(FILE *outf, const int loc, const int n)
+void prt_single_mult(FILE *outf, const int loc, const int n)
 {
   std::string name;
   int         n_step;
-  double      L, b_n;
+  double      L;
 
   switch (n) {
   case Sext:
     fprintf(outf,
 	    "%-8s: sextupole, l = %7.5f, k = %12.5e, n = %d;\n",
 	    elem[loc-1].Name, elem[loc-1].L,
-	    get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n),
+	    elem[loc-1].mpole->bn[Sext],
 	    elem[loc-1].mpole->n_step);
     break;
   case Oct:
     name = elem[loc-1].Name;
     L = elem[loc-1].L;
-    b_n = get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n);
     n_step = elem[loc-1].mpole->n_step;
     fprintf(outf,
-	    "%-8s: multipole, l = %7.5f, hom = (%d, %12.5e, 0e0), n = %d;\n",
-	    name.c_str(), L, n, b_n, n_step);
+	    "%-8s: multipole, l = %7.5f, hom = (%d, %12.5e, %12.5e), n = %d;\n",
+	    name.c_str(), L, n, elem[loc-1].mpole->bn[Oct],
+	    elem[loc-1].mpole->an[Oct], n_step);
     break;
   default:
-    printf("\nprt_sext - undefined multipole order: %d\n", n);
+    printf("\nprt_single_mult - undefined multipole order: %d\n", n);
     break;
+  }
+}
+
+
+int get_n_mpole(const int loc)
+{
+  int n_mpole = 0;
+
+  printf("\nget_n_mpole:\n  %d\n", elem[loc-1].mpole->order);
+  for (int k = 0; k < elem[loc-1].mpole->order; k++) {
+    printf("  %d %10.3e\n", k, elem[loc-1].mpole->bn[k]);
+    if ((elem[loc-1].mpole->bn[k] != 0e0)
+	|| (elem[loc-1].mpole->an[k] != 0e0))
+      n_mpole++;
+  }
+  printf("  %d\n", n_mpole);
+  return n_mpole;
+}
+
+
+void prt_mult(FILE *outf, const int loc, const int n)
+{
+  std::string name;
+  bool        first = true;
+  int         n_step;
+  double      L;
+
+  if (get_n_mpole(loc) == 1)
+    prt_single_mult(outf, loc, n);
+  else {
+    name = elem[loc-1].Name;
+    L = elem[loc-1].L;
+    fprintf(outf,
+	    "%-8s: multipole, l = %7.5f, hom = (", name.c_str(), L);
+    for (int k =  0; k < elem[loc-1].mpole->order; k++) {
+      if ((elem[loc-1].mpole->bn[k] != 0e0)
+	  || (elem[loc-1].mpole->an[k] != 0e0)) {
+	if (first) {
+	  fprintf(outf,
+		  "\n            %d, %12.5e, %12.5e",
+		  k, elem[loc-1].mpole->bn[k], elem[loc-1].mpole->an[k]);
+	  first = false;
+	} else
+	  fprintf(outf,
+		  ",\n            %d, %12.5e, %12.5e",
+		  k, elem[loc-1].mpole->bn[k], elem[loc-1].mpole->an[k]);
+      }
+    }
+    n_step = elem[loc-1].mpole->n_step;
+    fprintf(outf, "), n = %d;\n", n_step);
   }
 }
 
@@ -328,7 +378,7 @@ void prt_bn(const param_type &bns)
     else if (elem[loc-1].mpole->n_design == Quad)
       prt_quad(outf, loc, bns.n[k]);
     else
-      prt_sext(outf, loc, bns.n[k]);
+      prt_mult(outf, loc, bns.n[k]);
   }
 
   fclose(outf);
@@ -635,9 +685,14 @@ void get_bns(param_type &bns)
       bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
       bns.add_Fam("sd1",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
       bns.add_Fam("sd2",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+
+      bns.add_Fam("oxxo",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("oxyo",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("oyyo",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     }
 
     if (!false) {
+
       bns.add_Fam("oxxo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("oxyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("oyyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
