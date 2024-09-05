@@ -36,7 +36,7 @@ sxt_resp_mat_SOURCES  = sxt_resp_mat.cc
 max_4u_SOURCES        = max_4u.cc param_type.cc
 # sext_resp_mat_SOURCES = sext_resp_mat.c
 
-GSL_INCLUDE = /usr/local/Cellar/gsl/2.7.1
+GSL_INCLUDE = /usr/local/Cellar/gsl/2.8
 # GSL_INCLUDE = /net/home/lli/OPAL/OPAL-2.0.1
 
 LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
@@ -44,7 +44,7 @@ LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
 	  -lstdc++ \
           -lm \
 	  -L$(GSL_INCLUDE)/lib -lgsl \
-	  -L/usr/local/opt/gfortran/lib/gcc/13 \
+	  -L/usr/local/opt/gfortran/lib/gcc/14 \
           -lgfortran
 
 #INCLUDES = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc -I$(HOME)/R-2.8.1/include \
