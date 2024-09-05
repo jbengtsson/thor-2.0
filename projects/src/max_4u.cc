@@ -29,11 +29,13 @@ typedef struct {
 
 
 const bool
-  mpole_zero = !false;
+  b_3_zero = false,
+  b_4_zero = !false;
 
 const double
   A_max[]    = {6e-3, 3e-3},
-  delta_max  = 4e-2,
+  delta_max  = 3e-2,
+  beta_inj[] = {3.0, 3.0},
 
   bnL_scl[]  = {0e0, 0e0, 0e0,  1e0,  1e2,    1e4},
   bnL_min[]  = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
@@ -289,9 +291,9 @@ void prt_single_mult(FILE *outf, const int loc, const int n)
   switch (n) {
   case Sext:
     fprintf(outf,
-	    "%-8s: sextupole, l = %7.5f, k = %12.5e, n = %d;\n",
+	    "%-8s: sextupole, l = %7.5f, b_3 = %12.5e, n = %d;\n",
 	    elem[loc-1].Name, elem[loc-1].L,
-	    elem[loc-1].mpole->bn[Sext],
+	    elem[loc-1].mpole->bn[Sext-1],
 	    elem[loc-1].mpole->n_step);
     break;
   case Oct:
@@ -300,7 +302,7 @@ void prt_single_mult(FILE *outf, const int loc, const int n)
     n_step = elem[loc-1].mpole->n_step;
     fprintf(outf,
 	    "%-8s: multipole, l = %7.5f, hom = (%d, %12.5e, %12.5e), n = %d;\n",
-	    name.c_str(), L, n, elem[loc-1].mpole->bn[Oct],
+	    name.c_str(), L, n, elem[loc-1].mpole->bn[Oct-1],
 	    elem[loc-1].mpole->an[Oct], n_step);
     break;
   default:
@@ -314,14 +316,11 @@ int get_n_mpole(const int loc)
 {
   int n_mpole = 0;
 
-  printf("\nget_n_mpole:\n  %d\n", elem[loc-1].mpole->order);
   for (int k = 0; k < elem[loc-1].mpole->order; k++) {
-    printf("  %d %10.3e\n", k, elem[loc-1].mpole->bn[k]);
     if ((elem[loc-1].mpole->bn[k] != 0e0)
 	|| (elem[loc-1].mpole->an[k] != 0e0))
       n_mpole++;
   }
-  printf("  %d\n", n_mpole);
   return n_mpole;
 }
 
@@ -346,12 +345,12 @@ void prt_mult(FILE *outf, const int loc, const int n)
 	if (first) {
 	  fprintf(outf,
 		  "\n            %d, %12.5e, %12.5e",
-		  k, elem[loc-1].mpole->bn[k], elem[loc-1].mpole->an[k]);
+		  k+1, elem[loc-1].mpole->bn[k], elem[loc-1].mpole->an[k]);
 	  first = false;
 	} else
 	  fprintf(outf,
 		  ",\n            %d, %12.5e, %12.5e",
-		  k, elem[loc-1].mpole->bn[k], elem[loc-1].mpole->an[k]);
+		  k+1, elem[loc-1].mpole->bn[k], elem[loc-1].mpole->an[k]);
       }
     }
     n_step = elem[loc-1].mpole->n_step;
@@ -671,85 +670,25 @@ void no_mpoles(const int n)
 
 void get_bns(param_type &bns)
 {
-  const int lat = 1;
-
-  if (mpole_zero) {
+  if (b_3_zero)
     no_mpoles(Sext);
+  if (b_4_zero)
     no_mpoles(Oct);
+
+  if (false) {
+    bns.add_Fam("s1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("s2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+  }
+  if (!false) {
+    bns.add_Fam("s3", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    bns.add_Fam("s4", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
   }
 
-  switch (lat) {
-  case 1:
-    // MAX 4U.
-    if (!false) {
-      bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sd1",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sd2",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-
-      bns.add_Fam("oxxo",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("oxyo",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("oyyo",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+  if (!false) {
+    bns.add_Fam("o1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    bns.add_Fam("o2",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    bns.add_Fam("o3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     }
-
-    if (!false) {
-
-      bns.add_Fam("oxxo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("oxyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("oyyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-    }
-    break;
-  case 2:
-    // MAX 4U.
-    if (!false) {
-      bns.add_Fam("sf_h",  Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sf2_h", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sd1",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sd2",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    }
-
-    if (!false) {
-      bns.add_Fam("oxxo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("oxyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("oyyo",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-    }
-    break;
-  case 3:
-    // max_iv_ddr.lat.
-    if (!false) {
-      bns.add_Fam("sd",     Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sdends", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sfms",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sfos",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sfis",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    }
-
-    if (!false) {
-      bns.add_Fam("oxx", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("oxy", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("oyy", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-    }
-    break;
-  case 4:
-    // max_iv_ref.lat.
-    if (!false) {
-      bns.add_Fam("sd",     Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sdend", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sfm",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sfo",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("sfi",   Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    }
-
-    if (!false) {
-      bns.add_Fam("oxxo", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("oxyo", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("oyyo", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-    }
-    break;
-  default:
-    printf("\nget_bns: undef. multipole family.\n");
-    assert(false);
-    break;
-  }
 }
 
 
@@ -793,7 +732,7 @@ int main(int argc, char *argv[])
 
   Id_scl.identity();
   for (int k = 0; k < 2; k++) {
-    twoJ = sqr(A_max[k])/beta[k];
+    twoJ = sqr(A_max[k])/beta_inj[k];
     Id_scl[2*k] *= sqrt(twoJ);
     Id_scl[2*k+1] *= sqrt(twoJ);
   }
@@ -809,6 +748,8 @@ int main(int argc, char *argv[])
       printf("\nk = %d:", k);
       analyze(Id_scl, bns, k_ijklm);
       correct(bns, k_ijklm, svd_cut, step);
+
+      prt_mfile("flat_file.fit");
     }
     analyze(Id_scl, bns, k_ijklm);
   }
