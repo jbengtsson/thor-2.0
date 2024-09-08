@@ -120,6 +120,7 @@ class tps {
   friend tps LieFact_DF(const ss_vect<tps> &, ss_vect<tps> &);
   friend ss_vect<tps> FlowFact(const ss_vect<tps> &);
   friend tps Intd(const ss_vect<tps> &, const double);
+  friend ss_vect<tps> Taked(const ss_vect<tps> &, const int);
  private:
   long int intptr; // index used by Fortran implementation
   double   r;      // floating-point calc. if intptr = 0
@@ -241,6 +242,7 @@ template<typename T> class ss_vect {
   friend tps LieFact(const ss_vect<tps> &);
   friend ss_vect<tps> FlowFact(const ss_vect<tps> &);
   friend tps Intd(const ss_vect<tps> &, const double);
+  friend ss_vect<tps> Taked(const ss_vect<tps> &, const int);
 
   bool propagate(const long int, const long int);
  private:

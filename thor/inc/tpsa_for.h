@@ -80,6 +80,7 @@ extern "C" {
   void intd_(const long int [], long int &, double &);
   void etpoi_(const long int &, const long int &, long int &);
   void take_(const long int &, const long int &, long int &);
+  void taked_(const long int [], const long int &, long int []);
   void gettura_(double [], double []);
   void etmtree_(const long int [], long int []);
   void etppush2_(const long int [], const ss_vect<double> &, ss_vect<double> &);

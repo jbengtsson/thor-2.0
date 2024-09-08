@@ -946,6 +946,20 @@ tps Take(const tps &H, const int n)
   return Hn;
 }
 
+ss_vect<tps> Taked(const ss_vect<tps> &H, const int n)
+{
+  int          i;
+  long int     Hintptrs[nv_tps], Hnintptrs[nv_tps];
+  ss_vect<tps> Hn;
+
+  for (i = 0; i < nv_tps; i++) {
+    Hintptrs[i] = H[i].intptr; Hnintptrs[i] = Hn[i].intptr;
+  }
+  taked_(Hintptrs, n, Hnintptrs);
+  return Hn;
+}
+
+
 std::istream& operator>>(std::istream &is, tps &a)
 {
   int      i, n, no1, nv1;
