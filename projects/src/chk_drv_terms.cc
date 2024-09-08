@@ -19,7 +19,8 @@ inline long int* vec2arr(const std::vector<long int> &vec)
 
 
 void prt_drv_term
-(const std::vector<long int> &vec, const tps &h_re, const tps &h_im)
+(const char h, const std::vector<long int> &vec, const tps &h_re,
+ const tps &h_im)
 {
   std::string index;
 
@@ -27,8 +28,8 @@ void prt_drv_term
   for (auto k = 0; k < 6; k++)
     index += '0' + jj[k];
   std::cout << std::scientific << std::setprecision(16)
-	    << "h_" << index << " = [" << std::setw(16) << h_re[jj] << ", "
-	    << std::setw(16) <<  h_im[jj] << "]\n";
+	    << h << "_" << index << " = [" << std::setw(23) << h_re[jj] << ", "
+	    << std::setw(23) <<  h_im[jj] << "]\n";
 }
 
 
@@ -36,36 +37,36 @@ void sxt_h1(const tps &h_re, const tps &h_im)
 {
   // Linear chromaticity.
   std::cout << "\n";
-  prt_drv_term({1, 1, 0, 0, 1, 0, 0}, h_re, h_im);
-  prt_drv_term({0, 0, 1, 1, 1, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {1, 1, 0, 0, 1, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {0, 0, 1, 1, 1, 0, 0}, h_re, h_im);
 
   // First order chromatic terms.
   std::cout << "\n";
-  prt_drv_term({2, 0, 0, 0, 1, 0, 0}, h_re, h_im);
-  prt_drv_term({0, 0, 2, 0, 1, 0, 0}, h_re, h_im);
-  prt_drv_term({1, 0, 0, 0, 2, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {2, 0, 0, 0, 1, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {0, 0, 2, 0, 1, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {1, 0, 0, 0, 2, 0, 0}, h_re, h_im);
 
   // Normal sextupoles.
   std::cout << "\n";
-  prt_drv_term({2, 1, 0, 0, 0, 0, 0}, h_re, h_im);
-  prt_drv_term({3, 0, 0, 0, 0, 0, 0}, h_re, h_im);
-  prt_drv_term({1, 0, 1, 1, 0, 0, 0}, h_re, h_im);
-  prt_drv_term({1, 0, 2, 0, 0, 0, 0}, h_re, h_im);
-  prt_drv_term({1, 0, 0, 2, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {2, 1, 0, 0, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {3, 0, 0, 0, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {1, 0, 1, 1, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {1, 0, 2, 0, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {1, 0, 0, 2, 0, 0, 0}, h_re, h_im);
 
   if (false) {
     // Skew sextupoles.
     std::cout << "\n";
-    prt_drv_term({0, 0, 2, 1, 0, 0, 0}, h_re, h_im);
-    prt_drv_term({0, 0, 3, 0, 0, 0, 0}, h_re, h_im);
-    prt_drv_term({1, 1, 1, 0, 0, 0, 0}, h_re, h_im);
-    prt_drv_term({0, 2, 1, 0, 0, 0, 0}, h_re, h_im);
-    prt_drv_term({2, 0, 1, 0, 0, 0, 0}, h_re, h_im);
+    prt_drv_term('h', {0, 0, 2, 1, 0, 0, 0}, h_re, h_im);
+    prt_drv_term('h', {0, 0, 3, 0, 0, 0, 0}, h_re, h_im);
+    prt_drv_term('h', {1, 1, 1, 0, 0, 0, 0}, h_re, h_im);
+    prt_drv_term('h', {0, 2, 1, 0, 0, 0, 0}, h_re, h_im);
+    prt_drv_term('h', {2, 0, 1, 0, 0, 0, 0}, h_re, h_im);
   }
 }
 
 
-void sxt_h2(const tps &h_re, const tps &h_im, const tps K_re)
+void sxt_h2(const tps &h_re, const tps &h_im, const tps &K_re, const tps &K_im)
 {
   long int jj[ss_dim];
 
@@ -119,15 +120,10 @@ void sxt_h2(const tps &h_re, const tps &h_im, const tps K_re)
 	    << "h_00220:" << std::setw(24) << h_re[jj]
 	    << std::setw(24) << h_im[jj] << "\n";
 
-  jj[x_] = 2; jj[px_] = 2; jj[y_] = 0; jj[py_] = 0;
-  std::cout << std::scientific << std::setprecision(16) << "\na_xx ="
-	    << std::setw(24) << K_re[jj]/M_PI << "\n";
-  jj[x_] = 1; jj[px_] = 1; jj[y_] = 1; jj[py_] = 1;
-  std::cout << std::scientific << std::setprecision(16) << "a_xy ="
-	    << std::setw(24) << K_re[jj]/M_PI << "\n";
-  jj[x_] = 0; jj[px_] = 0; jj[y_] = 2; jj[py_] = 2;
-  std::cout << std::scientific << std::setprecision(16) << "a_yy ="
-	    << std::setw(24) << K_re[jj]/M_PI << "\n";
+  std::cout << "\n";
+  prt_drv_term('K', {2, 2, 0, 0, 0, 0, 0}, K_re, K_im);
+  prt_drv_term('K', {1, 1, 1, 1, 0, 0, 0}, K_re, K_im);
+  prt_drv_term('K', {0, 0, 2, 2, 0, 0, 0}, K_re, K_im);
 }
 
 
@@ -218,17 +214,9 @@ void compute_drv_terms(void)
   tps          K, K_re, K_im, h, h_re, h_im;
   ss_vect<tps> Id_scl, M_Fl;
 
-  Id_scl.identity();
-  // Id_scl[x_] *= sqrt(2e0*Jx); Id_scl[px_] *= sqrt(2e0*Jx);
-  // Id_scl[y_] *= sqrt(2e0*Jy); Id_scl[py_] *= sqrt(2e0*Jy);
-  // Id_scl[delta_] *= delta;
-
   danot_(no_tps-1);
-
   get_Map();
-
   prt_lin_map(3, Map);
-
   danot_(no_tps);
 
   K = MapNorm(Map, g, A1, A0, Map_res, 1);
@@ -242,12 +230,11 @@ void compute_drv_terms(void)
 
   M_Fl = Inv(A0*A1)*Map*A0*A1;
 
-  h = get_h_local(M_Fl, false);
-  h = h*Id_scl;
+  h = get_h_local(M_Fl, !false);
   CtoR(h, h_re, h_im);
 
   sxt_h1(h_re, h_im);
-  sxt_h2(h_re, h_im, K_re);
+  sxt_h2(h_re, h_im, K_re, K_im);
 }
 
 
