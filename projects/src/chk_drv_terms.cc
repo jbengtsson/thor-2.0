@@ -27,9 +27,11 @@ void prt_drv_term
   auto jj = vec2arr(vec);
   for (auto k = 0; k < 6; k++)
     index += '0' + jj[k];
-  std::cout << std::scientific << std::setprecision(16)
-	    << h << "_" << index << " = [" << std::setw(23) << h_re[jj] << ", "
-	    << std::setw(23) <<  h_im[jj] << "]\n";
+  auto h_abs = sqrt(sqr(h_re[jj])+sqr(h_im[jj]));
+  auto h_arg = atan2(h_im[jj], h_re[jj])*180e0/M_PI;
+  auto sgn_h_im = (fabs(h_im[jj]) > 0e0)? '+' : '-';
+  printf("  %c_%s = (%23.16e %c i%22.16e)  %9.3e |_ %6.1f\n",
+	 h, index.c_str(), h_re[jj], sgn_h_im, fabs(h_im[jj]), h_abs, h_arg);
 }
 
 
@@ -68,57 +70,20 @@ void sxt_h1(const tps &h_re, const tps &h_im)
 
 void sxt_h2(const tps &h_re, const tps &h_im, const tps &K_re, const tps &K_im)
 {
-  long int jj[ss_dim];
+  std::cout << "\n";
+  prt_drv_term('h', {4, 0, 0, 0, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {3, 1, 0, 0, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {2, 0, 1, 1, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {2, 0, 0, 2, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {2, 0, 2, 0, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {1, 1, 2, 0, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {0, 0, 3, 1, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {0, 0, 4, 0, 0, 0, 0}, h_re, h_im);
 
-  for (int k = 0; k < ss_dim; k++)
-    jj[k] = 0;
-
-  jj[x_] = 4; jj[px_] = 0; jj[y_] = 0; jj[py_] = 0;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "\nh_40000:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj] << "\n";
-  jj[x_] = 3; jj[px_] = 1; jj[y_] = 0; jj[py_] = 0;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "h_31000:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj] << "\n";
-  jj[x_] = 2; jj[px_] = 0; jj[y_] = 1; jj[py_] = 1;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "h_20110:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj] << "\n";
-  jj[x_] = 2; jj[px_] = 0; jj[y_] = 0; jj[py_] = 2;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "h_20020:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj] << "\n";
-  jj[x_] = 2; jj[px_] = 0; jj[y_] = 2; jj[py_] = 0;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "h_20200:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj] << "\n";
-  jj[x_] = 1; jj[px_] = 1; jj[y_] = 2; jj[py_] = 0;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "h_11200:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj] << "\n";
-  jj[x_] = 0; jj[px_] = 0; jj[y_] = 3; jj[py_] = 1;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "h_00310:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj] << "\n";
-  jj[x_] = 0; jj[px_] = 0; jj[y_] = 4; jj[py_] = 0;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "h_00400:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj] << "\n";
-
-  jj[x_] = 2; jj[px_] = 2; jj[y_] = 0; jj[py_] = 0;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "\nh_22000:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj]
-	    << "\n";
-  jj[x_] = 1; jj[px_] = 1; jj[y_] = 1; jj[py_] = 1;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "h_11110:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj] << "\n";
-  jj[x_] = 0; jj[px_] = 0; jj[y_] = 2; jj[py_] = 2;
-  std::cout << std::scientific << std::setprecision(16)
-	    << "h_00220:" << std::setw(24) << h_re[jj]
-	    << std::setw(24) << h_im[jj] << "\n";
+  std::cout << "\n";
+  prt_drv_term('h', {2, 2, 0, 0, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {1, 1, 1, 1, 0, 0, 0}, h_re, h_im);
+  prt_drv_term('h', {0, 0, 2, 2, 0, 0, 0}, h_re, h_im);
 
   std::cout << "\n";
   prt_drv_term('K', {2, 2, 0, 0, 0, 0, 0}, K_re, K_im);
