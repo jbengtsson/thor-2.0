@@ -670,25 +670,47 @@ void no_mpoles(const int n)
 
 void get_bns(param_type &bns)
 {
+  const int lat = 2;
+
   if (b_3_zero)
     no_mpoles(Sext);
   if (b_4_zero)
     no_mpoles(Oct);
 
-  if (false) {
-    bns.add_Fam("s1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    bns.add_Fam("s2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-  }
-  if (!false) {
-    bns.add_Fam("s3", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    bns.add_Fam("s4", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-  }
-
-  if (!false) {
-    bns.add_Fam("o1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-    bns.add_Fam("o2",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-    bns.add_Fam("o3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+  switch (lat) {
+  case 1:
+    if (!false) {
+      bns.add_Fam("s1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     }
+    if (!false) {
+      bns.add_Fam("s3", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s4", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    }
+
+    if (!false) {
+      bns.add_Fam("o1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o2",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+    break;
+  case 2:
+    if (!false) {
+      bns.add_Fam("s1_f1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s2_f1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    }
+    if (!false) {
+      bns.add_Fam("s3_f1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s4_f1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    }
+
+    if (!false) {
+      bns.add_Fam("o1_f1_sl",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o2_f1_sl",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o3_f1_sl",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+    break;
+  }
 }
 
 
