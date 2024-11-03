@@ -1,3 +1,11 @@
+// Optimise higher-order-achromat:
+//
+//   1. Linear chromatic correction with sextupoles by SVD.
+//   2. Optimise sextupoles - beware of singular values.
+//   3. Include octupoles & optimise octupoles.
+//   4. Optimise sextupoles & octupoles.
+
+
 #include <assert.h>
 
 #define NO 7
@@ -17,20 +25,15 @@ extern tps          K, g;
 extern ss_vect<tps> Map, A0, A1, Map_res;
 
 
-typedef struct {
-  std::string
-    label;
-  double
-    cst_scl,
-    cst;
-  std::vector<double>
-    Jacobian;
-} Lie_term;
-
-
 const bool
+  b_3_opt  = !false,
+  b_4_opt  = !false,
   b_3_zero = false,
-  b_4_zero = !false;
+  b_4_zero = false;
+
+const int
+  max_iter  = 100,
+  svd_n_cut = 0;
 
 const double
   A_max[]    = {6e-3, 3e-3},
@@ -41,9 +44,22 @@ const double
   bnL_min[]  = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
   bnL_max[]  = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
 
-  scl_h      = 1e-1,
-  scl_ksi[]  = {0e0, 1e1, 1e0, 5e0, 0e0},
-  scl_a[]    = {1e0, 5e0};
+  scl_h      = 1e-2,
+  scl_ksi[]  = {0e0, 1e2, 1e0, 5e0, 0e0},
+  scl_a[]    = {1e0, 5e0},
+
+  step       = 0.3;
+
+
+typedef struct {
+  std::string
+    label;
+  double
+    cst_scl,
+    cst;
+  std::vector<double>
+    Jacobian;
+} Lie_term;
 
 
 tps get_h(ss_vect<tps> &map)
@@ -191,14 +207,14 @@ void get_A(const int m, const int n, const std::vector<Lie_term> &k_ijklm,
 }
 
 
-void get_sing_val(const int n, double w[], const double svd_cut)
+void get_sing_val(const int n, double w[], const int svd_n_cut)
 {
   int k;
 
   printf("\nsingular values:\n");
   for (k = 1; k <= n; k++) {
     printf("  %9.3e", w[k]);
-    if (w[k] < svd_cut) {
+    if (k > n-svd_n_cut) {
       w[k] = 0e0;
       printf(" (zeroed)");
     }
@@ -291,7 +307,7 @@ void prt_single_mult(FILE *outf, const int loc, const int n)
   switch (n) {
   case Sext:
     fprintf(outf,
-	    "%-8s: sextupole, l = %7.5f, b_3 = %12.5e, n = %d;\n",
+	    "%-8s: Sextupole, L = %7.5f, B_3 = %12.5e, N = %d;\n",
 	    elem[loc-1].Name, elem[loc-1].L,
 	    elem[loc-1].mpole->bn[Sext-1],
 	    elem[loc-1].mpole->n_step);
@@ -301,9 +317,10 @@ void prt_single_mult(FILE *outf, const int loc, const int n)
     L = elem[loc-1].L;
     n_step = elem[loc-1].mpole->n_step;
     fprintf(outf,
-	    "%-8s: multipole, l = %7.5f, hom = (%d, %12.5e, %12.5e), n = %d;\n",
-	    name.c_str(), L, n, elem[loc-1].mpole->bn[Oct-1],
-	    elem[loc-1].mpole->an[Oct], n_step);
+	    "%-8s: Octupole, L = %7.5f, B_4 = %12.5e, N = %d;\n",
+	    elem[loc-1].Name, elem[loc-1].L,
+	    elem[loc-1].mpole->bn[Oct-1],
+	    elem[loc-1].mpole->n_step);
     break;
   default:
     printf("\nprt_single_mult - undefined multipole order: %d\n", n);
@@ -385,7 +402,7 @@ void prt_bn(const param_type &bns)
 
 
 void correct(param_type &bns, const std::vector<Lie_term> &k_ijklm,
-	     const double svd_cut, const double scl)
+	     const int svd_n_cut, const double scl)
 {
   int    k, Fnum;
   double **A, **U, **V, *w, *b, *dbnL, *bnL_max, *bnL;
@@ -405,7 +422,7 @@ void correct(param_type &bns, const std::vector<Lie_term> &k_ijklm,
 #if 1
   dmcopy(A, m, n, U);
   dsvdcmp(U, m, n, w, V);
-  get_sing_val(n, w, svd_cut);
+  get_sing_val(n, w, svd_n_cut);
 
   dsvbksb(U, w, V, m, n, b, dbnL);
 #else
@@ -417,7 +434,7 @@ void correct(param_type &bns, const std::vector<Lie_term> &k_ijklm,
     bnL[k+1] = get_bnL(Fnum, 1, bns.n[k])/bns.bnL_scl[k];
   }
 
-  SVD_lim(m, n, A, b, bnL_max, svd_cut, bnL, dbnL);
+  SVD_lim(m, n, A, b, bnL_max, 1e-11, bnL, dbnL);
 
 #endif
 
@@ -679,32 +696,28 @@ void get_bns(param_type &bns)
 
   switch (lat) {
   case 1:
-    if (!false) {
+    if (b_3_opt) {
       bns.add_Fam("s1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
       bns.add_Fam("s2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    }
-    if (!false) {
       bns.add_Fam("s3", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
       bns.add_Fam("s4", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     }
 
-    if (!false) {
+    if (b_4_opt) {
       bns.add_Fam("o1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("o2",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("o3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     }
     break;
   case 2:
-    if (!false) {
+    if (b_3_opt) {
       bns.add_Fam("s1_f1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
       bns.add_Fam("s2_f1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-    }
-    if (!false) {
       bns.add_Fam("s3_f1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
       bns.add_Fam("s4_f1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     }
 
-    if (!false) {
+    if (b_4_opt) {
       bns.add_Fam("o1_f1_sl",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("o2_f1_sl",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("o3_f1_sl",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
@@ -732,10 +745,6 @@ int main(int argc, char *argv[])
   ss_vect<tps>          Id_scl;
   param_type            bns;
   std::vector<Lie_term> k_ijklm;
-
-  const double
-    step    = 0.3,
-    svd_cut = 1e-11;
 
   set_state();
 
@@ -766,10 +775,10 @@ int main(int argc, char *argv[])
     bns.print();
 
     printf("\n");
-    for (int k = 1; k <= 30; k++) {
+    for (int k = 1; k <= max_iter; k++) {
       printf("\nk = %d:", k);
       analyze(Id_scl, bns, k_ijklm);
-      correct(bns, k_ijklm, svd_cut, step);
+      correct(bns, k_ijklm, svd_n_cut, step);
 
       prt_mfile("flat_file.fit");
     }
