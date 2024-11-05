@@ -450,15 +450,16 @@ void correct(param_type &bns, const std::vector<Lie_term> &k_ijklm,
 }
 
 
-void get_h2_ijklm(const tps &h, const double scl, const int i, const int j,
-		  const int k, const int l, const int m,
-		  std::vector<Lie_term> &h2_ijklm)
+void get_h2_ijklm
+(const std::string label, const tps &h, const double scl, const int i,
+ const int j, const int k, const int l, const int m,
+ std::vector<Lie_term> &h2_ijklm)
 {
   Lie_term           h2;
   std::ostringstream str;
 
   h2.cst_scl = scl;
-  str << "k_" << i << j << k << l << m;
+  str << label << i << j << k << l << m;
   h2.label = str.str();
   h2.cst = h2.cst_scl*h_ijklm(h, i, j, k, l, m);
   h2_ijklm.push_back(h2);
@@ -493,36 +494,36 @@ void get_constr(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
 
   k_ijklm.clear();
 
-  get_h2_ijklm(K_re, scl_ksi[1], 1, 1, 0, 0, 1, k_ijklm);
-  get_h2_ijklm(K_re, scl_ksi[1], 0, 0, 1, 1, 1, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_ksi[1], 1, 1, 0, 0, 1, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_ksi[1], 0, 0, 1, 1, 1, k_ijklm);
 
-  get_h2_ijklm(g_im, scl_h, 1, 0, 0, 0, 2, k_ijklm);
-  get_h2_ijklm(g_im, scl_h, 2, 0, 0, 0, 1, k_ijklm);
-  get_h2_ijklm(g_im, scl_h, 0, 0, 2, 0, 1, k_ijklm);
+  get_h2_ijklm("g_", g_im, scl_h, 1, 0, 0, 0, 2, k_ijklm);
+  get_h2_ijklm("g_", g_im, scl_h, 2, 0, 0, 0, 1, k_ijklm);
+  get_h2_ijklm("g_", g_im, scl_h, 0, 0, 2, 0, 1, k_ijklm);
 
-  get_h2_ijklm(g_im, scl_h, 1, 0, 1, 1, 0, k_ijklm);
-  get_h2_ijklm(g_im, scl_h, 2, 1, 0, 0, 0, k_ijklm);
-  get_h2_ijklm(g_im, scl_h, 3, 0, 0, 0, 0, k_ijklm);
-  get_h2_ijklm(g_im, scl_h, 1, 0, 0, 2, 0, k_ijklm);
-  get_h2_ijklm(g_im, scl_h, 1, 0, 2, 0, 0, k_ijklm);
+  get_h2_ijklm("g_", g_im, scl_h, 1, 0, 1, 1, 0, k_ijklm);
+  get_h2_ijklm("g_", g_im, scl_h, 2, 1, 0, 0, 0, k_ijklm);
+  get_h2_ijklm("g_", g_im, scl_h, 3, 0, 0, 0, 0, k_ijklm);
+  get_h2_ijklm("g_", g_im, scl_h, 1, 0, 0, 2, 0, k_ijklm);
+  get_h2_ijklm("g_", g_im, scl_h, 1, 0, 2, 0, 0, k_ijklm);
 
-  get_h2_ijklm(K_re, scl_a[0], 2, 2, 0, 0, 0, k_ijklm);
-  get_h2_ijklm(K_re, scl_a[0], 1, 1, 1, 1, 0, k_ijklm);
-  get_h2_ijklm(K_re, scl_a[0], 0, 0, 2, 2, 0, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_a[0], 2, 2, 0, 0, 0, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_a[0], 1, 1, 1, 1, 0, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_a[0], 0, 0, 2, 2, 0, k_ijklm);
 
-  get_h2_ijklm(K_re, scl_a[1], 3, 3, 0, 0, 0, k_ijklm);
-  get_h2_ijklm(K_re, scl_a[1], 2, 2, 1, 1, 0, k_ijklm);
-  get_h2_ijklm(K_re, scl_a[1], 1, 1, 2, 2, 0, k_ijklm);
-  get_h2_ijklm(K_re, scl_a[1], 0, 0, 3, 3, 0, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_a[1], 3, 3, 0, 0, 0, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_a[1], 2, 2, 1, 1, 0, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_a[1], 1, 1, 2, 2, 0, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_a[1], 0, 0, 3, 3, 0, k_ijklm);
 
-  get_h2_ijklm(K_re, scl_ksi[2], 1, 1, 0, 0, 2, k_ijklm);
-  get_h2_ijklm(K_re, scl_ksi[2], 0, 0, 1, 1, 2, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_ksi[2], 1, 1, 0, 0, 2, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_ksi[2], 0, 0, 1, 1, 2, k_ijklm);
 
-  get_h2_ijklm(K_re, scl_ksi[3], 1, 1, 0, 0, 3, k_ijklm);
-  get_h2_ijklm(K_re, scl_ksi[3], 0, 0, 1, 1, 3, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_ksi[3], 1, 1, 0, 0, 3, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_ksi[3], 0, 0, 1, 1, 3, k_ijklm);
 
-  get_h2_ijklm(K_re, scl_ksi[4], 1, 1, 0, 0, 4, k_ijklm);
-  get_h2_ijklm(K_re, scl_ksi[4], 0, 0, 1, 1, 4, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_ksi[4], 1, 1, 0, 0, 4, k_ijklm);
+  get_h2_ijklm("k_", K_re, scl_ksi[4], 0, 0, 1, 1, 4, k_ijklm);
 }
 
 
@@ -718,9 +719,9 @@ void get_bns(param_type &bns)
     }
 
     if (b_4_opt) {
-      bns.add_Fam("o1_f1_sl",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("o2_f1_sl",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("o3_f1_sl",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o1_f1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o2_f1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o3_f1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     }
     break;
   }
