@@ -1,10 +1,12 @@
-#SUBDIRS      = Powell
+AUTOMAKE_OPTIONS = subdir-objects
 
-bin_PROGRAMS = thor H_min max_iv_match max_iv_uc max_iv_dnu \
-	       vlad vlad_2 vlad_3 vlad_4 vlad_5 sls_2 diamond_ii delta \
-               delta_lo delta_lo2 quad2d quad3d tune_conf tune_conf_2 \
-	       tune_conf_3 tbs get_dnu mpole_scheme poincare_map \
-               chk_drv_terms sxt_resp_mat max_4u
+#SUBDIRS = Powell
+
+bin_PROGRAMS = \
+	thor H_min max_iv_match max_iv_uc max_iv_dnu vlad vlad_2 vlad_3 vlad_4 \
+	vlad_5 sls_2 diamond_ii delta delta_lo delta_lo2 quad2d quad3d \
+	tune_conf tune_conf_2 tune_conf_3 tbs get_dnu mpole_scheme \
+	poincare_map chk_drv_terms sxt_resp_mat max_4u
 #               sext_resp_mat
 
 thor_SOURCES          = thor.cc
@@ -36,27 +38,30 @@ sxt_resp_mat_SOURCES  = sxt_resp_mat.cc
 max_4u_SOURCES        = max_4u.cc param_type.cc
 # sext_resp_mat_SOURCES = sext_resp_mat.c
 
-GSL_INCLUDE = /usr/local/Cellar/gsl/2.8
-# GSL_INCLUDE = /net/home/lli/OPAL/OPAL-2.0.1
+LOCAL = /usr/local
 
-LIBS	= -L$(THOR_LIB)/thor/lib -lthor \
-	  -L$(NUM_REC)/lib -lnum_rec \
-	  -lstdc++ \
-          -lm \
-	  -L$(GSL_INCLUDE)/lib -lgsl \
-	  -L/usr/local/opt/gfortran/lib/gcc/14 \
-          -lgfortran
+LIBS =	-L$(THOR_LIB)/thor/lib -lthor \
+	-L$(NUM_REC)/lib -lnum_rec \
+	-L$(LOCAL)/opt/gsl/lib -lgsl \
+	-L$(LOCAL)/opt/gfortran/lib/gcc/current -lgfortran
 
-#INCLUDES = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc -I$(HOME)/R-2.8.1/include \
-#	   -I/usr/local/include -I/usr/include/openmpi
+# C Preprocessor flags.
+AM_CPPFLAGS = \
+	-I$(THOR_LIB)/thor/inc \
+	-I$(NUM_REC)/inc
 
-AM_CPPFLAGS = -I$(THOR_LIB)/thor/inc -I$(NUM_REC)/inc  \
-              -I$(HOME)/R-2.8.1/include \
-	      -I/usr/local/include -I/usr/include/openmpi \
-              -I$(GSL_INCLUDE)/include
+# FORTRAN 77 flags (The package maintainer’s variant of FFLAGS).
+AM_FFLAGS = -g -Og -fbacktrace -Wall -fbounds-check
 
-AM_FFLAGS   = -g -O0 -Wall -fbounds-check
+# C++ flags.
+AM_CXXFLAGS = -g -Og -Wall -fPIC -std=c++11
 
-AM_CXXFLAGS = -g -O2 -Wall -fPIC -std=c++11
+AM_LDFLAGS = -F/System/Library/Frameworks -framework CoreServices
 
 UNLIMIT_RESOURCES = datasize memorysize stacksize
+# System limit:
+#   ulimit -a
+# Stack size:
+#   ulimit -s
+# Set stack size:
+#  ulimit -s <size>

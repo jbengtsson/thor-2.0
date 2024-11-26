@@ -12,7 +12,7 @@ make distclean
 mkdir -p config
 
 # Configure libtool (for shared libraries).
-libtoolize
+#libtoolize
 
 ./bootstrap
 ./configure --prefix=$dir/thor
