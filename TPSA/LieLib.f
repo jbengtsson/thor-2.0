@@ -472,8 +472,11 @@
       return
       end subroutine
 
-      subroutine trx(h,rh,y)
+      subroutine trx(h,rh,y) bind(C, name="trx_")
+      use iso_c_binding
       implicit none
+      integer(C_LONG) h,rh
+      integer(C_LONG) y(*)
       integer i,ie,iv,ndim,ndim2,nt,ntt
 !  :RH: = Y :H: Y^-1 =  :HoY:
       parameter (ndim=3)
@@ -482,8 +485,6 @@
       dimension ie(ntt),iv(ntt)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
-      integer h,rh
-      integer y(*)
 !
       nt=nv-nd2
       if(nt.gt.0) then
@@ -1161,13 +1162,14 @@
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
       integer b1,h
-      call etall1(b1)
-      call etall1(h)
+!     J.B. 01/02/23: Changed etall1 to etallnom1.
+      call etallnom1(b1, 'B1        ')
+      call etallnom1(h, 'H         ')
       call dacop(h1,h)
       do i=1,nd
         call dader(2*i-1,h,v(2*i))
         call dader(2*i,h,b1)
-        call   dacmu(b1,sca,v(2*i-1))
+        call dacmu(b1,sca,v(2*i-1))
       enddo
       call dadal1(h)
       call dadal1(b1)
@@ -3430,8 +3432,10 @@
       return
       end function
 
-      subroutine cpart(h,ch)
+      subroutine cpart(h,ch) bind(C, name="cpart_")
+      use iso_c_binding
       implicit none
+      integer(C_LONG) h,ch
       integer ndim,ntt
       double precision rext
       parameter (ndim=3)
@@ -3439,19 +3443,19 @@
       external rext
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
-      integer h,ch
       call dacfu(h,rext,ch)
       return
       end subroutine
 
-      subroutine ctoi(f1,f2)
+      subroutine ctoi(f1,f2) bind(C, name="ctoi_")
+      use iso_c_binding
       implicit none
+      integer(C_LONG) f1,f2
       integer ndim2,ntt
       parameter (ndim2=6)
       parameter (ntt=40)
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
-      integer f1,f2
       integer b1,x(ndim2)
 !
 !
@@ -3487,8 +3491,10 @@
       return
       end subroutine
 
-      subroutine etrtc(x)
+      subroutine etrtc(x) bind(C, name="etrtc_")
+      use iso_c_binding
       implicit none
+      integer(C_LONG) x(*)
       integer i,ndim,ndim2,ntt
       parameter (ndim=3)
       parameter (ndim2=6)
@@ -3497,7 +3503,6 @@
       common /ii/no,nv,nd,nd2
       integer ndc,ndc2,ndpt,ndt
       common /coast/ndc,ndc2,ndt,ndpt
-      integer x(*)
 
       integer rel(ndim2)
 !
@@ -3514,8 +3519,10 @@
       return
       end subroutine
 
-      subroutine etctr(x)
+      subroutine etctr(x) bind(C, name="etctr_")
+      use iso_c_binding
       implicit none
+      integer(C_LONG) x(*)
       integer i,ndim,ndim2,ntt
       parameter (ndim=3)
       parameter (ndim2=6)
@@ -3524,7 +3531,6 @@
       common /ii/no,nv,nd,nd2
       integer ndc,ndc2,ndpt,ndt
       common /coast/ndc,ndc2,ndt,ndpt
-      integer x(*)
       integer rel(ndim2)
 !
 !
@@ -3540,8 +3546,10 @@
       return
       end subroutine
 
-      subroutine etcjg(x)
+      subroutine etcjg(x) bind(C, name="etcjg_")
+      use iso_c_binding
       implicit none
+      integer(C_LONG) x(*)
       integer i,ndim,ndim2,ntt
       parameter (ndim=3)
       parameter (ndim2=6)
@@ -3552,7 +3560,6 @@
       common /ii/no,nv,nd,nd2
       integer ndc,ndc2,ndpt,ndt
       common /coast/ndc,ndc2,ndt,ndpt
-      integer x(*)
 
       integer rel(ndim2)
 !
