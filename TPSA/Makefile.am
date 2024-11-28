@@ -10,7 +10,11 @@ libLieLib_a_SOURCES  = LieLib.f
 # Option "large" is not supported for the memory model.
 FFLAGS = \
 	-g -Og -Wall -fbounds-check -fdefault-integer-8 -mcmodel=medium \
-	-w -fallow-argument-mismatch
+	-w -fallow-argument-mismatch \
+	-fmax-stack-var-size=1000000
+
+# -fmax-stack-var-size=10
+# -stackvar
 
 #AM_FFLAGS = -g -O2 -Wall -fbounds-check -fPIC -mcmodel=medium
 #AM_FFLAGS = -g -O2 -Wall -fbounds-check -fPIC -mcmodel=large -fstack-arrays

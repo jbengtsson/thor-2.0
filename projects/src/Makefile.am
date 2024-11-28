@@ -51,17 +51,21 @@ AM_CPPFLAGS = \
 	-I$(NUM_REC)/inc
 
 # FORTRAN 77 flags (The package maintainer’s variant of FFLAGS).
-AM_FFLAGS = -g -Og -fbacktrace -Wall -fbounds-check
+AM_FFLAGS = \
+	-g -Og -fbacktrace -Wall -fbounds-check-fmax \
+	-stack-var-size=1000000
 
 # C++ flags.
 AM_CXXFLAGS = -g -Og -Wall -fPIC -std=c++11
 
-AM_LDFLAGS = -F/System/Library/Frameworks -framework CoreServices
+# Allocate on heap & set stack size to 1 GB.
+AM_LDFLAGS = \
+	-F/System/Library/Frameworks -framework CoreServices \
+	-Wl,-stack_size -Wl,0x40000000
 
 UNLIMIT_RESOURCES = datasize memorysize stacksize
 # System limit:
 #   ulimit -a
-# Stack size:
+# Stack size for shell to hard limit (can only be changed once):
+#   ulimit -s hard
 #   ulimit -s
-# Set stack size:
-#  ulimit -s <size>
