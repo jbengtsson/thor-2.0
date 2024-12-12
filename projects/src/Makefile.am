@@ -60,14 +60,10 @@ AM_CXXFLAGS = -g -Og -Wall -fPIC -std=c++11
 # Allocate on heap & set stack size to 1 GB.
 AM_LDFLAGS = \
 	-F/System/Library/Frameworks -framework CoreServices
-#	-Wl,-stack_size -Wl,0x100000000
-#	-Wl,-stack_size -Wl,0x4000
-#	-Wl,-pagezero_size,0x10000
-#	-Wl,-stack_size -Wl,0x40000000
 
 UNLIMIT_RESOURCES = datasize memorysize stacksize
 # System limit:
 #   ulimit -a
-# Stack size for shell to hard limit (can only be changed once):
+# Set stack size for shell to hard limit (can only be changed once):
 #   ulimit -s hard
 #   ulimit -s
