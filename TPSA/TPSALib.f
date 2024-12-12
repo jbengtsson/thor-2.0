@@ -178,12 +178,16 @@
 !
 !     LDA: MAXIMUM NUMBER OF DA-VECTORS;    CAN BE CHANGED QUITE ARBITRARILY
 !     LST: LENGTH OF MAIN STORAGE STACK;    CAN BE CHANGED QUITE ARBITRARILY
-!     LEA: MAXIMUM NUMBER OF MONOMIALS;     CAN BE INCREASED FOR LARGE NO, NV ( (no+nv) over no )
-!     LIA: DIMENSION OF IA1, IA2;           CAN BE INCREASED FOR LARGE NO, NV ( (no+1)^nv/2 )
+!     LEA: MAXIMUM NUMBER OF MONOMIALS;     CAN BE INCREASED FOR LARGE NO, NV
+!     ( (no+nv) over no )
+!     LIA: DIMENSION OF IA1, IA2;           CAN BE INCREASED FOR LARGE NO, NV
+!     ( (no+1)^nv/2 )
 !     LNO: MAXIMUM ORDER;                   CAN BE INCREASED TO ABOUT 1000
 !     LNV: MAXIMUM NUMBER OF VARIABLES;     CAN BE INCREASED TO ABOUT 1000
 !
 !-----------------------------------------------------------------------------1
+
+      implicit none
 
       integer lda, lea, lia, lno, lnv
 !     Fortran-77 restriction: integer*4 for array index.
@@ -194,47 +198,63 @@
 !      parameter (lda=100000, lst=1700000000, lea=500000, lia=80000,      &
 !     &           lno=11, lnv=7)
 
+!     For Laptop, NO = 5.
+!      parameter (lda=60000,  lst=88000000,  lea=500000, lia=80000,         &
 !     For Laptop, NO = 7.
-!      parameter (lda=100000, lst=300000000, lea=500000, lia=80000,          &
-!     &           lno=10, lnv=7)
+      parameter (lda=100000, lst=300000000, lea=500000, lia=80000,          &
 !      parameter (lda=100000, lst=390000000, lea=500000, lia=80000,          &
-!     &           lno=10, lnv=7)
 !      parameter (lda=100000, lst=400000000, lea=500000, lia=80000,         &
-!     &           lno=10, lnv=7)
 !     For Laptop, NO = 9.
-      parameter (lda=60000,  lst=88000000,  lea=500000, lia=80000,         &
 !      parameter (lda=100000, lst=700000000, lea=500000, lia=80000,         &
-     &           lno=10, lnv=7)
 !     For Workstation.
 !      parameter (lda=100000, lst=900000000, lea=500000, lia=80000,         &
-!     &           lno=10, lnv=7)
 !     For Cluster, NO = 11. Increase virtual memory for SGE by:
 !       qsub -l mem_free=50G,h_vmem=50G -q...
 !      parameter (lda=100000, lst=2000000000, lea=500000, lia=80000,        &
-!     &           lno=11, lnv=7)
+     &           lno=10, lnv=7)
 
 
       integer         nda, ndamaxi
       common /fordes/ nda, ndamaxi
 
-      double precision cc, eps, epsmac
-      common /da/      cc(lst), eps, epsmac
+      double precision eps, epsmac
+      common /da/ eps, epsmac
 
-      integer      i1, i2, ie1, ie2, ieo
-      integer      ia1, ia2, ifi, idano
-      integer      idanv, idalm, idall
-      integer      idapo
       integer      nst, nomax, nvmax, nmmax, nocut, lfi
-      common /dai/ i1(lst), i2(lst), ie1(lea), ie2(lea), ieo(lea),         &
-     &             ia1(0:lia), ia2(0:lia), ifi(lea), idano(lda),           &
-     &             idanv(lda), idapo(lda), idalm(lda), idall(lda),         &
-     &             nst, nomax, nvmax, nmmax, nocut, lfi
+      common /dai/ nst, nomax, nvmax, nmmax, nocut, lfi
 
-      double precision facint
-      common /factor/  facint(0:lno)
+      double precision, dimension(:), allocatable ::                       &
+     &     cc, facint
+      integer, dimension(:), allocatable ::                                &
+     &     idanv, idapo, idalm, idall,                                     &
+     &     ie1, ie2, ieo, i1, i2, ia1, ia2, ifi, idano
+
+      contains
+
+      subroutine alloc_shared_data()
+      allocate(cc(lst))
+
+      allocate(i1(lst))
+      allocate(i2(lst))
+      allocate(ie1(lea))
+      allocate(ie2(lea))
+      allocate(ieo(lea))
+      allocate(ia1(0:lia))
+      allocate(ia2(0:lia))
+      allocate(ifi(lea))
+      allocate(idano(lda))
+      allocate(idanv(lda))
+      allocate(idapo(lda))
+      allocate(idalm(lda))
+      allocate(idall(lda))
+
+      allocate(facint(0:lno))
+      end subroutine alloc_shared_data
+
 !-----------------------------------------------------------------------------9
 
       end module shared_data
+
 
       module tpsa
       contains
@@ -274,6 +294,7 @@
 !
       write(*, 200) 'daini:    no = ', no, ', nv = ', nv
  200  format(2(a, i0))
+      call alloc_shared_data()
       if(eps.le.0.d0) eps=1.d-38
 !      if(EPS.le.0.d0) eps=1.d-90
       epsmac=1.d-7
