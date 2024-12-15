@@ -40,7 +40,7 @@ const double
   delta_max  = 3e-2,
   beta_inj[] = {3.0, 3.0},
 
-  bnL_scl[]  = {0e0, 0e0, 0e0,  1e0,  1e2,    1e4},
+  bnL_scl[]  = {0e0, 0e0, 0e0,  1e0,  5e1,    1e4},
   bnL_min[]  = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
   bnL_max[]  = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
 
@@ -48,7 +48,7 @@ const double
   scl_ksi[]  = {0e0, 1e2, 1e0, 5e0, 0e0},
   scl_a[]    = {1e0, 5e0},
 
-  step       = 0.3;
+  step       = 0.15;
 
 
 typedef struct {
@@ -273,10 +273,10 @@ void prt_bend(FILE *outf, const int loc, const int n)
   const elem_type<double> *elemp = &elem[loc-1];
 
   fprintf(outf,
-	  "%-8s: multipole, l = %7.5f, t = %7.5f, t1 = %7.5f, t2 = %7.5f,\n"
-	  "          hom = (%d, %12.5e, 0e0,"
-	  " %d, %12.5e, 0e0),\n"
-	  "          n = nbend;\n",
+	  "%-8s: Multipole, L = %7.5f, Phi = %7.5f, Phi_1 = %7.5f"
+	  ", Phi_2 = %7.5f,\n"
+	  "          HOM = (%d, %12.5e, 0e0, %d, %12.5e, 0e0),\n"
+	  "          N = nbend;\n",
 	  elemp->Name, elemp->L,
 	  elemp->L*elemp->mpole->h_bend*180e0/M_PI,
 	  elemp->mpole->edge1, elemp->mpole->edge2,
@@ -288,10 +288,10 @@ void prt_bend(FILE *outf, const int loc, const int n)
 void prt_quad(FILE *outf, const int loc, const int n)
 {
   fprintf(outf,
-	  "%-8s: multipole, l = %7.5f,\n"
-	  "          hom = (%d, %12.5e, 0e0,"
+	  "%-8s: Multipole, L = %7.5f,\n"
+	  "          HOM = (%d, %12.5e, 0e0,"
 	  " %d, %12.5e, 0e0),\n"
-	  "          n = nquad;\n",
+	  "          N = nquad;\n",
 	  elem[loc-1].Name, elem[loc-1].L, Quad,
 	  get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Quad),
 	  n, get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n));
@@ -688,7 +688,7 @@ void no_mpoles(const int n)
 
 void get_bns(param_type &bns)
 {
-  const int lat = 2;
+  const int lat = 1;
 
   if (b_3_zero)
     no_mpoles(Sext);
@@ -722,6 +722,20 @@ void get_bns(param_type &bns)
       bns.add_Fam("o1_f1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("o2_f1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("o3_f1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+    break;
+  case 3:
+    if (b_3_opt) {
+      bns.add_Fam("s1_h1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s2_h1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s3_h1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s4_h1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    }
+
+    if (b_4_opt) {
+      bns.add_Fam("o1_h1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o2_h1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o3_h1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     }
     break;
   }
