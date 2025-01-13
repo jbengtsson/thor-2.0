@@ -9,12 +9,12 @@ libLieLib_a_SOURCES  = LieLib.f
 #FFLAGS = -g -O2 -Wall -fbounds-check -fdefault-integer-8 -mcmodel=large 
 # Option "large" is not supported for the memory model.
 FFLAGS = \
-	-g -Og -Wall -fbounds-check -fdefault-integer-8 -mcmodel=medium \
-	-w -fallow-argument-mismatch -fmax-stack-var-size=10
+	-g -Og -Wall -fbounds-check -std=gnu -fdefault-integer-8 \
+	-mcmodel=medium
 
 # -fmax-stack-var-size=10
 # -stackvar
 
 #AM_FFLAGS = -g -O2 -Wall -fbounds-check -fPIC -mcmodel=medium
 #AM_FFLAGS = -g -O2 -Wall -fbounds-check -fPIC -mcmodel=large -fstack-arrays
-AM_FFLAGS = -g -Og -fbacktrace -Wall -fbounds-check -fPIC
+AM_FFLAGS = -ggdb -Og -fbacktrace -Wall -fbounds-check -fPIC
