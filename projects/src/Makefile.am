@@ -40,8 +40,9 @@ max_4u_SOURCES        = max_4u.cc param_type.cc
 
 LOCAL = /usr/local
 
-LIBS =	-L$(THOR_LIB)/thor/lib -lthor \
-	-L$(NUM_REC)/lib -lnum_rec \
+LIBS =	-L$(NUM_REC)/lib -lnum_rec \
+	$(THOR_LIB)/thor/lib/libthor.a \
+	$(THOR_LIB)/thor/lib/libTPSALib.a $(THOR_LIB)/thor/lib/libLieLib.a \
 	-L$(LOCAL)/opt/gsl/lib -lgsl \
 	-L$(LOCAL)/opt/gfortran/lib/gcc/current -lgfortran
 
