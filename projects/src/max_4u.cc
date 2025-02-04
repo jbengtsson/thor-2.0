@@ -33,7 +33,7 @@ const bool
 
 const int
   max_iter  = 100,
-  svd_n_cut = 0;
+  svd_n_cut = 2;
 
 const double
   A_max[]    = {6e-3, 3e-3},
@@ -688,7 +688,7 @@ void no_mpoles(const int n)
 
 void get_bns(param_type &bns)
 {
-  const int lat = 1;
+  const int lat = 4;
 
   if (b_3_zero)
     no_mpoles(Sext);
@@ -736,6 +736,20 @@ void get_bns(param_type &bns)
       bns.add_Fam("o1_h1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("o2_h1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("o3_h1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+    break;
+  case 4:
+    if (b_3_opt) {
+      bns.add_Fam("s1_h2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s2_h2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s3_h2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s4_h2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    }
+
+    if (b_4_opt) {
+      bns.add_Fam("o1_h2",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o2_h2",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o3_h2",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     }
     break;
   }
