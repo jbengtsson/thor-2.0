@@ -8,7 +8,7 @@
 
 #include <assert.h>
 
-#define NO 7
+#define NO 9
 
 #include "thor_lib.h"
 
@@ -26,10 +26,11 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 
 const bool
-  b_3_opt  = !false,
-  b_4_opt  = !false,
-  b_3_zero = false,
-  b_4_zero = false;
+  b_3_opt   = !false,
+  b_4_opt   = !false,
+  b_3_zero  = false,
+  b_4_zero  = false,
+  K_8_terms = !false;
 
 const int
   max_iter  = 100,
@@ -47,7 +48,7 @@ const double
 
   scl_h      = 1e-2,
   scl_ksi[]  = {0e0, 1e2, 1e0, 5e0, 0e0},
-  scl_a[]    = {1e0, 5e0},
+  scl_a[]    = {1e0, 5e0, 1e0},
 
   step       = 0.15;
 
@@ -145,51 +146,45 @@ void prt_Lie_term(const Lie_term &k_ijklm)
 }
 
 
+int prt_Lie(const std::string &str, const int n, const int offset,
+	    const std::vector<Lie_term> &k_ijklm)
+{
+  int j = offset;
+
+  printf("\n%s\n", str.c_str());
+  for (auto k = 0; k < n; k++) {
+    j++;
+    prt_Lie_term(k_ijklm[offset+k]);
+  }
+  return j;
+}
+
+
 void prt_K_ijklm(const param_type &bns, const std::vector<Lie_term> &k_ijklm)
 {
-  int k;
+  int j;
 
   printf("\n           scl.      cst.");
-  for (k = 0; k < bns.n_prm; k++)
+  for (auto k = 0; k < bns.n_prm; k++)
     printf("      %-5s", bns.name[k].c_str());
   printf("\n                         ");
-  for (k = 0; k < bns.n_prm; k++)
+  for (auto k = 0; k < bns.n_prm; k++)
     printf("       %1d   ", bns.n[k]);
   printf("\n                         ");
-  for (k = 0; k < bns.n_prm; k++)
+  for (auto k = 0; k < bns.n_prm; k++)
     printf("    %7.1e", bns.bnL_scl[k]);
 
-  printf("\nLinear chromaticity:\n");
-  for (k = 0; k < 2; k++)
-    prt_Lie_term(k_ijklm[k]);
-
-  printf("\nChromatic terms:\n");
-  for (k = 2; k < 5; k++)
-    prt_Lie_term(k_ijklm[k]);
-
-  printf("\nGeometric terms:\n");
-  for (k = 5; k < 10; k++)
-    prt_Lie_term(k_ijklm[k]);
-
-  printf("\nAnharmonic terms:\n");
-  for (k = 10; k < 13; k++)
-    prt_Lie_term(k_ijklm[k]);
-
-  printf("\nAnharmonic terms:\n");
-  for (k = 13; k < 17; k++)
-    prt_Lie_term(k_ijklm[k]);
-
-  printf("\n2nd order chromaticity:\n");
-  for (k = 17; k < 19; k++)
-    prt_Lie_term(k_ijklm[k]);
-
-  printf("\n3rd order chromaticity:\n");
-  for (k = 19; k < 21; k++)
-    prt_Lie_term(k_ijklm[k]);
-
-  printf("\n4th order chromaticity:\n");
-  for (k = 21; k < 23; k++)
-    prt_Lie_term(k_ijklm[k]);
+  j = 0;
+  j = prt_Lie("Linear chromaticity:",    2, j, k_ijklm);
+  j = prt_Lie("Chromatic terms:",        3, j, k_ijklm);
+  j = prt_Lie("Geometric terms:",        5, j, k_ijklm);
+  j = prt_Lie("Anharmonic terms:",       3, j, k_ijklm);
+  j = prt_Lie("Anharmonic terms:",       4, j, k_ijklm);
+  if (K_8_terms)
+    j = prt_Lie("Anharmonic terms:",     5, j, k_ijklm);
+  j = prt_Lie("2nd order chromaticity:", 2, j, k_ijklm);
+  j = prt_Lie("3rd order chromaticity:", 2, j, k_ijklm);
+  j = prt_Lie("4th order chromaticity:", 2, j, k_ijklm);
 }
 
 
@@ -517,6 +512,14 @@ void get_constr(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
   get_h2_ijklm("k_", K_re, scl_a[1], 1, 1, 2, 2, 0, k_ijklm);
   get_h2_ijklm("k_", K_re, scl_a[1], 0, 0, 3, 3, 0, k_ijklm);
 
+  if (K_8_terms) {
+    get_h2_ijklm("k_", K_re, scl_a[2], 4, 4, 0, 0, 0, k_ijklm);
+    get_h2_ijklm("k_", K_re, scl_a[2], 3, 3, 1, 1, 0, k_ijklm);
+    get_h2_ijklm("k_", K_re, scl_a[2], 2, 2, 2, 2, 0, k_ijklm);
+    get_h2_ijklm("k_", K_re, scl_a[2], 1, 1, 3, 3, 0, k_ijklm);
+    get_h2_ijklm("k_", K_re, scl_a[2], 0, 0, 4, 4, 0, k_ijklm);
+  }
+
   get_h2_ijklm("k_", K_re, scl_ksi[2], 1, 1, 0, 0, 2, k_ijklm);
   get_h2_ijklm("k_", K_re, scl_ksi[2], 0, 0, 1, 1, 2, k_ijklm);
 
@@ -609,7 +612,7 @@ void get_K_ijklm(const param_type &bns, const int k, const ss_vect<tps> &Id_scl,
   get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 2, 2, 0, bn_scl, k_ijklm[i++]);
   get_h1_ijklm(K_re, bns.name[k], n, 0, 0, 3, 3, 0, bn_scl, k_ijklm[i++]);
 
-  if (false) {
+  if (K_8_terms) {
     get_h1_ijklm(K_re, bns.name[k], n, 4, 4, 0, 0, 0, bn_scl, k_ijklm[i++]);
     get_h1_ijklm(K_re, bns.name[k], n, 3, 3, 1, 1, 0, bn_scl, k_ijklm[i++]);
     get_h1_ijklm(K_re, bns.name[k], n, 2, 2, 2, 2, 0, bn_scl, k_ijklm[i++]);
