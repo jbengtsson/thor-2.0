@@ -8,7 +8,7 @@
 
 #include <assert.h>
 
-#define NO 9
+#define NO 11
 
 #include "thor_lib.h"
 
@@ -26,21 +26,22 @@ extern ss_vect<tps> Map, A0, A1, Map_res;
 
 
 const bool
-  b_3_opt   = !false,
-  b_4_opt   = !false,
-  b_3_zero  = false,
-  b_4_zero  = false,
-  K_8_terms = !false;
+  b_3_opt    = !false,
+  b_4_opt    = !false,
+  b_3_zero   = false,
+  b_4_zero   = false,
+  K_8_terms  = !false,
+  K_10_terms = !false;
 
 const int
   max_iter  = 100,
   
-  svd_n_cut = 2;
+  svd_n_cut = 0;
 
 const double
-  A_max[]    = {6e-3, 3e-3},
+  A_max[]    = {7e-3, 3e-3},
   delta_max  = 3e-2,
-  beta_inj[] = {3.0, 3.0},
+  beta_inj[] = {9.8, 1.4},
 
   bnL_scl[]  = {0e0, 0e0, 0e0,  1e0,  5e1,    1e4},
   bnL_min[]  = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
@@ -48,7 +49,7 @@ const double
 
   scl_h      = 1e-2,
   scl_ksi[]  = {0e0, 1e2, 1e0, 5e0, 0e0},
-  scl_a[]    = {1e0, 5e0, 1e0},
+  scl_a[]    = {1e0, 1e0, 1e0, 1e0},
 
   step       = 0.15;
 
@@ -520,6 +521,15 @@ void get_constr(const ss_vect<tps> &Id_scl, std::vector<Lie_term> &k_ijklm)
     get_h2_ijklm("k_", K_re, scl_a[2], 0, 0, 4, 4, 0, k_ijklm);
   }
 
+  if (K_10_terms) {
+    get_h2_ijklm("k_", K_re, scl_a[3], 5, 5, 0, 0, 0, k_ijklm);
+    get_h2_ijklm("k_", K_re, scl_a[3], 4, 4, 1, 1, 0, k_ijklm);
+    get_h2_ijklm("k_", K_re, scl_a[3], 3, 3, 2, 2, 0, k_ijklm);
+    get_h2_ijklm("k_", K_re, scl_a[3], 2, 2, 3, 3, 0, k_ijklm);
+    get_h2_ijklm("k_", K_re, scl_a[3], 1, 1, 4, 4, 0, k_ijklm);
+    get_h2_ijklm("k_", K_re, scl_a[3], 0, 0, 5, 5, 0, k_ijklm);
+  }
+
   get_h2_ijklm("k_", K_re, scl_ksi[2], 1, 1, 0, 0, 2, k_ijklm);
   get_h2_ijklm("k_", K_re, scl_ksi[2], 0, 0, 1, 1, 2, k_ijklm);
 
@@ -618,6 +628,15 @@ void get_K_ijklm(const param_type &bns, const int k, const ss_vect<tps> &Id_scl,
     get_h1_ijklm(K_re, bns.name[k], n, 2, 2, 2, 2, 0, bn_scl, k_ijklm[i++]);
     get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 3, 3, 0, bn_scl, k_ijklm[i++]);
     get_h1_ijklm(K_re, bns.name[k], n, 0, 0, 4, 4, 0, bn_scl, k_ijklm[i++]);
+  }
+
+  if (K_10_terms) {
+    get_h1_ijklm(K_re, bns.name[k], n, 5, 5, 0, 0, 0, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 4, 4, 1, 1, 0, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 3, 3, 2, 2, 0, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 2, 2, 3, 3, 0, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 4, 4, 0, bn_scl, k_ijklm[i++]);
+    get_h1_ijklm(K_re, bns.name[k], n, 0, 0, 5, 5, 0, bn_scl, k_ijklm[i++]);
   }
 
   get_h1_ijklm(K_re, bns.name[k], n, 1, 1, 0, 0, 2, bn_scl, k_ijklm[i++]);
