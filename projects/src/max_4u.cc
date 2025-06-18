@@ -5,9 +5,11 @@
 //   4. Optimise both sextupoles & octupoles.
 
 
+#include <algorithm>
+
 #include <assert.h>
 
-#define NO 11
+#define NO 7
 
 #include "thor_lib.h"
 
@@ -25,16 +27,13 @@ extern double b2_max;
 const bool
   b_3_opt    = !false,
   b_4_opt    = !false,
-  b_3_zero   = false,
-  b_4_zero   = false,
-  K_6_terms  = (NO >= 7)?  true : false,
-  K_8_terms  = (NO >= 9)?  true : false,
-  K_10_terms = (NO >= 11)? true : false;
+  b_3_zero   = !false,
+  b_4_zero   = !false;
 
 const int
   max_iter  = 100,
   
-  svd_n_cut = 1;
+  svd_n_cut = 0;
 
 const double
   A_max[]    = {7e-3, 3e-3},
@@ -211,7 +210,7 @@ std::vector<Lie_gen_class> get_Lie_gen(const ss_vect<tps> &Id_scl)
   Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[1], 1, 1, 2, 2, 0));
   Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[1], 0, 0, 3, 3, 0));
 
-  if (K_8_terms) {
+  if (NO >= 9) {
     Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[2], 4, 4, 0, 0, 0));
     Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[2], 3, 3, 1, 1, 0));
     Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[2], 2, 2, 2, 2, 0));
@@ -219,7 +218,7 @@ std::vector<Lie_gen_class> get_Lie_gen(const ss_vect<tps> &Id_scl)
     Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[2], 0, 0, 4, 4, 0));
   }
 
-  if (K_10_terms) {
+  if (NO >= 11) {
     Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[3], 5, 5, 0, 0, 0));
     Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[3], 4, 4, 1, 1, 0));
     Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[3], 3, 3, 2, 2, 0));
@@ -236,6 +235,11 @@ std::vector<Lie_gen_class> get_Lie_gen(const ss_vect<tps> &Id_scl)
 
   Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[4], 1, 1, 0, 0, 4));
   Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[4], 0, 0, 1, 1, 4));
+
+  if (NO >= 8) {
+    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[4], 1, 1, 0, 0, 5));
+    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[4], 0, 0, 1, 1, 5));
+  }
 
   return Lie_gen;
 }
@@ -362,11 +366,11 @@ void prt_system
   k += 3;
   prt_Lie_gen("Anharmonic terms:",       k, 4, Lie_gen);
   k += 4;
-  if (K_8_terms) {
+  if (NO >= 9) {
     prt_Lie_gen("Anharmonic terms:",     k, 5, Lie_gen);
     k += 5;
   }
-  if (K_10_terms) {
+  if (NO >= 11) {
     prt_Lie_gen("Anharmonic terms:",     k, 6, Lie_gen);
     k += 6;
   }
@@ -376,6 +380,10 @@ void prt_system
   k += 2;
   prt_Lie_gen("4th order chromaticity:", k, 2, Lie_gen);
   k += 2;
+  if (NO >= 8) {
+    prt_Lie_gen("5th order chromaticity:", k, 2, Lie_gen);
+    k += 2;
+  }
 
   prt_Lie_gen("Sigma{K}:", k, 1, Lie_gen);
 }
@@ -395,9 +403,22 @@ std::vector<Lie_gen_class> analyze
 }
 
 
+std::vector<int> sort_sing_val(const int n, const double w[])
+{
+  std::vector<int> index;
+
+  for (auto k = 0; k < n; k++)
+    index.push_back(k);
+  std::sort(index.begin(), index.end(), [&w](int a, int b) {
+    return w[a] < w[b];
+  });
+
+  return index;
+}
+
+
 void get_sing_val(const int n, double w[], const int svd_n_cut)
 {
-  printf("\nsingular values:\n");
   for (auto k = 1; k <= n; k++) {
     printf("  %9.3e", w[k]);
     if (k > n-svd_n_cut) {
