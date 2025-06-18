@@ -40,7 +40,7 @@ max_4u_SOURCES        = max_4u.cc param_type.cc
 
 LOCAL = /usr/local
 
-LIBS =	-L$(NUM_REC)/lib -lnum_rec \
+LIBS =	$(NUM_REC)/lib/libnum_rec.a \
 	$(THOR_LIB)/thor/lib/libthor.a \
 	$(THOR_LIB)/thor/lib/libTPSALib.a $(THOR_LIB)/thor/lib/libLieLib.a \
 	-L$(LOCAL)/opt/gsl/lib -lgsl \
