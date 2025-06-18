@@ -27,13 +27,13 @@ extern double b2_max;
 const bool
   b_3_opt    = !false,
   b_4_opt    = !false,
-  b_3_zero   = !false,
-  b_4_zero   = !false;
+  b_3_zero   = false,
+  b_4_zero   = false;
 
 const int
   max_iter  = 100,
   
-  svd_n_cut = 0;
+  svd_n_cut = 1;
 
 const double
   A_max[]    = {7e-3, 3e-3},
@@ -46,11 +46,11 @@ const double
 
 #if 0
   scl_h      = 1e-2,
-  scl_ksi[]  = {0e0, 1e2, 1e0, 5e0, 1e0},
+  scl_ksi[]  = {0e0, 1e2, 1e0, 5e0, 1e0, 1e0},
   scl_a[]    = {1e0, 1e0, 1e0, 1e0},
 #else
   scl_h      = 1e-2,
-  scl_ksi[]  = {0e0, 1e2, 1e-1, 1e-1, 1e-1},
+  scl_ksi[]  = {0e0, 1e2, 1e-1, 1e-1, 1e-1, 1e-1},
   scl_a[]    = {1e-1, 1e-1, 1e-1, 1e-1},
 #endif
 
@@ -237,8 +237,8 @@ std::vector<Lie_gen_class> get_Lie_gen(const ss_vect<tps> &Id_scl)
   Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[4], 0, 0, 1, 1, 4));
 
   if (NO >= 8) {
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[4], 1, 1, 0, 0, 5));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[4], 0, 0, 1, 1, 5));
+    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[5], 1, 1, 0, 0, 5));
+    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[5], 0, 0, 1, 1, 5));
   }
 
   return Lie_gen;
@@ -591,7 +591,7 @@ void correct
 
   get_system(m, n, Lie_gen, A, b);
 
-#if 1
+#if 0
   dmcopy(A, m, n, U);
   dsvdcmp(U, m, n, w, V);
   get_sing_val(n, w, svd_n_cut);
@@ -697,6 +697,12 @@ void get_bns(param_type &bns)
       bns.add_Fam("o1_h3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("o2_h3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
       bns.add_Fam("o3_h3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+
+      if (false) {
+	bns.add_Fam("o1_h3",  Dec, bnL_min[Dec], bnL_max[Dec], bnL_scl[Dec]);
+	bns.add_Fam("o2_h3",  Dec, bnL_min[Dec], bnL_max[Dec], bnL_scl[Dec]);
+	bns.add_Fam("o3_h3",  Dec, bnL_min[Dec], bnL_max[Dec], bnL_scl[Oct]);
+      }
     }
     break;
   case 5:
