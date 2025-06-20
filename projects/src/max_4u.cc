@@ -27,13 +27,12 @@ extern double b2_max;
 const bool
   b_3_opt    = !false,
   b_4_opt    = !false,
-  b_3_zero   = false,
-  b_4_zero   = false;
+  b_3_zero   = !false,
+  b_4_zero   = !false;
 
 const int
-  max_iter  = 100,
-  
-  svd_n_cut = 1;
+  max_iter  = 100,  
+  svd_n_cut = 0;
 
 const double
   A_max[]    = {7e-3, 3e-3},
@@ -48,10 +47,12 @@ const double
   scl_h      = 1e-2,
   scl_ksi[]  = {0e0, 1e2, 1e0, 5e0, 1e0, 1e0},
   scl_a[]    = {1e0, 1e0, 1e0, 1e0},
+  scl_K_sum  = 1e0,
 #else
   scl_h      = 1e-2,
-  scl_ksi[]  = {0e0, 1e2, 1e-1, 1e-1, 1e-1, 1e-1},
-  scl_a[]    = {1e-1, 1e-1, 1e-1, 1e-1},
+  scl_ksi[]  = {0e0, 1e2, 1e-5, 1e-5, 1e-5, 1e-5},
+  scl_a[]    = {1e-5, 1e-5, 1e-5, 1e-5},
+  scl_K_sum  = 1e1,
 #endif
 
   step       = 0.15;
@@ -286,8 +287,12 @@ void get_Jacobian
   clr_bn_par(bns.Fnum[k], n);
 
   for (auto j = 0; j < (int)Lie_gen.size(); j++) {
-      Lie_gen[j].Jacobian.push_back(bn_scl*h_ijklm_p(K_re, Lie_gen[j].index));
-      Lie_gen[j].Jacobian[k] *= Lie_gen[j].cst_scl;
+    if ((j >= 2) and (j <= 9))
+      Lie_gen[j].Jacobian.push_back
+	(bn_scl*Lie_gen[j].cst_scl*h_ijklm_p(g_im, Lie_gen[j].index));
+    else
+      Lie_gen[j].Jacobian.push_back
+	(bn_scl*Lie_gen[j].cst_scl*h_ijklm_p(K_re, Lie_gen[j].index));
   }
 }
 
@@ -323,7 +328,7 @@ Lie_gen_class get_Lie_gen_sum
   Lie_gen_class Lie_gen_sum;
 
   Lie_gen_sum.label = "K_sum  ";
-  Lie_gen_sum.cst_scl = 1e0;
+  Lie_gen_sum.cst_scl = scl_K_sum;
   Lie_gen_sum.cst = 0e0;
   for (auto k = 0; k < (int)Lie_gen[0].Jacobian.size(); k++)
     Lie_gen_sum.Jacobian.push_back(0e0);
@@ -405,13 +410,22 @@ std::vector<Lie_gen_class> analyze
 
 std::vector<int> sort_sing_val(const int n, const double w[])
 {
+  const bool prt = false;
+
   std::vector<int> index;
 
   for (auto k = 0; k < n; k++)
-    index.push_back(k);
+    index.push_back(k+1);
   std::sort(index.begin(), index.end(), [&w](int a, int b) {
-    return w[a] < w[b];
+    return w[a] > w[b];
   });
+
+  if (prt) {
+    printf("\n");
+    for (auto k = 0; k < n; k++)
+      printf(" %d", index[k]);
+    printf("\n");
+  }
 
   return index;
 }
@@ -419,15 +433,20 @@ std::vector<int> sort_sing_val(const int n, const double w[])
 
 void get_sing_val(const int n, double w[], const int svd_n_cut)
 {
+  const int n_prt = 8;
+
+  std::vector<int> ind;
+
+  ind = sort_sing_val(n, w);
   for (auto k = 1; k <= n; k++) {
-    printf("  %9.3e", w[k]);
+    printf("  %9.3e", w[ind[k-1]]);
     if (k > n-svd_n_cut) {
-      w[k] = 0e0;
+      w[ind[k-1]] = 0e0;
       printf(" (zeroed)");
     }
-    if (k % 6 == 0) printf("\n");
+    if (k % n_prt == 0) printf("\n");
   }
-  if (n % 6 != 0) printf("\n");
+  if (n % n_prt != 0) printf("\n");
 }
 
 
@@ -591,7 +610,7 @@ void correct
 
   get_system(m, n, Lie_gen, A, b);
 
-#if 0
+#if 1
   dmcopy(A, m, n, U);
   dsvdcmp(U, m, n, w, V);
   get_sing_val(n, w, svd_n_cut);
@@ -685,24 +704,18 @@ void get_bns(param_type &bns)
     break;
   case 4:
     if (b_3_opt) {
-      bns.add_Fam("s1_h3", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("s2_h3", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("s3_h3", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
-      bns.add_Fam("s4_h3", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s1_h2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s2_h2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s3_h2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s4_h2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
       if (false)
-	bns.add_Fam("s5_h3", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+	bns.add_Fam("s5_h2", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
     }
 
     if (b_4_opt) {
-      bns.add_Fam("o1_h3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("o2_h3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-      bns.add_Fam("o3_h3",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
-
-      if (false) {
-	bns.add_Fam("o1_h3",  Dec, bnL_min[Dec], bnL_max[Dec], bnL_scl[Dec]);
-	bns.add_Fam("o2_h3",  Dec, bnL_min[Dec], bnL_max[Dec], bnL_scl[Dec]);
-	bns.add_Fam("o3_h3",  Dec, bnL_min[Dec], bnL_max[Dec], bnL_scl[Oct]);
-      }
+      bns.add_Fam("o1_h2",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o2_h2",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o3_h2",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
     }
     break;
   case 5:
