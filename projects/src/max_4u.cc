@@ -27,32 +27,32 @@ extern double b2_max;
 const bool
   b_3_opt    = !false,
   b_4_opt    = !false,
-  b_3_zero   = !false,
+  b_3_zero   = false,
   b_4_zero   = !false;
 
 const int
   max_iter  = 100,  
-  svd_n_cut = 0;
+  svd_n_cut = 3;
 
 const double
-  A_max[]    = {7e-3, 3e-3},
-  delta_max  = 3e-2,
-  beta_inj[] = {9.8, 1.4},
+  A_max[]     = {6e-3, 3e-3},
+  delta_max   = 6e-2,
+  beta_inj[]  = {3.7, 3.9},
 
-  bnL_scl[]  = {0e0, 0e0, 0e0,  1e0,  5e1,    1e4},
-  bnL_min[]  = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
-  bnL_max[]  = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
+  bnL_scl[]   = {0e0, 0e0, 0e0,  1e0,  5e1,    1e4},
+  bnL_min[]   = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
+  bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
 
 #if 0
-  scl_h      = 1e-2,
-  scl_ksi[]  = {0e0, 1e2, 1e0, 5e0, 1e0, 1e0},
-  scl_a[]    = {1e0, 1e0, 1e0, 1e0},
-  scl_K_sum  = 1e0,
+  scl_h       = 1e-2,
+  scl_ksi[]   = {0e0, 1e2, 1e0, 5e0, 1e0, 1e0},
+  scl_a[]     = {1e0, 1e0, 1e0, 1e0},
+  scl_K_sum[] = {1e0, 1e0},
 #else
-  scl_h      = 1e-2,
-  scl_ksi[]  = {0e0, 1e2, 1e-5, 1e-5, 1e-5, 1e-5},
-  scl_a[]    = {1e-5, 1e-5, 1e-5, 1e-5},
-  scl_K_sum  = 1e1,
+  scl_h       = 1e-2,
+  scl_ksi[]   = {0e0, 1e2, 1e-15, 1e-15, 1e-15, 1e-15},
+  scl_a[]     = {1e-15, 1e-15, 1e-15, 1e-15},
+  scl_K_sum[] = {1e1, 1e1},
 #endif
 
   step       = 0.15;
@@ -85,7 +85,8 @@ public:
    std::vector<Lie_gen_class> &Lie_gen);
 
   friend Lie_gen_class get_Lie_gen_sum
-  (const int index, const std::vector<Lie_gen_class> &Lie_gen);
+  (const std::string &name, const double scl, const int index[],
+   const std::vector<Lie_gen_class> &Lie_gen);
 };
 
 
@@ -323,24 +324,26 @@ void get_system
 
 
 Lie_gen_class get_Lie_gen_sum
-(const int index, const std::vector<Lie_gen_class> &Lie_gen)
+(const std::string &name, const double scl, const int index[],
+ const std::vector<Lie_gen_class> &Lie_gen)
 {
   Lie_gen_class Lie_gen_sum;
 
-  Lie_gen_sum.label = "K_sum  ";
-  Lie_gen_sum.cst_scl = scl_K_sum;
+  Lie_gen_sum.label = name;
+  Lie_gen_sum.cst_scl = scl;
   Lie_gen_sum.cst = 0e0;
   for (auto k = 0; k < (int)Lie_gen[0].Jacobian.size(); k++)
     Lie_gen_sum.Jacobian.push_back(0e0);
 
-  for (auto j = index; j < (int)Lie_gen.size(); j++) {
+  for (auto j = index[0]; j <= index[1]; j++) {
     if (Lie_gen[j].cst_scl == 0e0) {
-      printf("\nget_Lie_gen_sum - cst_scl = 0 %s\n", Lie_gen[j].label.c_str());
+      printf("\nget_Lie_gen_sum: cst_scl = 0 %s\n", Lie_gen[j].label.c_str());
       assert(false);
     }
-    Lie_gen_sum.cst += Lie_gen[j].cst/Lie_gen[j].cst_scl;
+    Lie_gen_sum.cst += Lie_gen_sum.cst_scl*Lie_gen[j].cst/Lie_gen[j].cst_scl;
     for (auto k = 0; k < (int)Lie_gen[j].Jacobian.size(); k++)
-      Lie_gen_sum.Jacobian[k] += Lie_gen[j].Jacobian[k]/Lie_gen[j].cst_scl;
+      Lie_gen_sum.Jacobian[k] +=
+	Lie_gen_sum.cst_scl*Lie_gen[j].Jacobian[k]/Lie_gen[j].cst_scl;
   }
 
   return Lie_gen_sum;
@@ -390,17 +393,26 @@ void prt_system
     k += 2;
   }
 
-  prt_Lie_gen("Sigma{K}:", k, 1, Lie_gen);
+  prt_Lie_gen("Sigma{K_dnu}:", k, 1, Lie_gen);
+  k += 1;
+  prt_Lie_gen("Sigma{K_dxi}:", k, 1, Lie_gen);
 }
 
 
 std::vector<Lie_gen_class> analyze
-(const int index, const ss_vect<tps> &Id_scl, const param_type &bns)
+(const ss_vect<tps> &Id_scl, const param_type &bns)
 {
+  const int
+    index_dnu[] = {10, 16},
+    index_dxi[] = {17, 22};
+
   auto Lie_gen = get_Lie_gen(Id_scl);
   get_Jacobian(Id_scl, bns, Lie_gen);
 
-  Lie_gen.push_back(get_Lie_gen_sum(index, Lie_gen));
+  Lie_gen.push_back(get_Lie_gen_sum
+		    ("K_sum  ", scl_K_sum[0], index_dnu, Lie_gen));
+  Lie_gen.push_back(get_Lie_gen_sum
+		    ("K_sum  ", scl_K_sum[1], index_dxi, Lie_gen));
 
   prt_system(bns, Lie_gen);
 
@@ -811,10 +823,10 @@ int main(int argc, char *argv[])
   printf("\n");
   for (auto k = 1; k <= max_iter; k++) {
     printf("\nk = %d:", k);
-    Lie_gen = analyze(10, Id_scl, bns);
+    Lie_gen = analyze(Id_scl, bns);
     correct(bns, Lie_gen, svd_n_cut, step);
 
     prt_mfile("flat_file.fit");
   }
-  Lie_gen = analyze(10, Id_scl, bns);
+  Lie_gen = analyze(Id_scl, bns);
 }
