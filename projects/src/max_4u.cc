@@ -26,13 +26,13 @@ extern double b2_max;
 
 const bool
   b_3_opt    = !false,
-  b_4_opt    = false,
-  b_3_zero   = !false,
-  b_4_zero   = false;
+  b_4_opt    = !false,
+  b_3_zero   = false,
+  b_4_zero   = !false;
 
 const int
   max_iter  = 50,
-  svd_n_cut = 0;
+  svd_n_cut = 2;
 
 const double
   A_max[]     = {3e-3, 1e-3},
@@ -70,17 +70,13 @@ private:
   std::vector<double>
     Jacobian;
 public:
-  void prt_Lie_gen(void) const;
+  void print(void) const;
 
   friend Lie_gen_class get_Lie_gen
   (const std::string label, const tps &h, const double scl, const int i,
    const int j, const int k, const int l, const int m);
 
-  friend void get_system
-  (const int m, const int n, const std::vector<Lie_gen_class> &Lie_gen,
-   double **A, double *b);
-
-  friend void get_Jacobian
+  friend void compute_Jacobian
   (const param_type &bns, const int k, const ss_vect<tps> &Id_scl,
    std::vector<Lie_gen_class> &Lie_gen);
 
@@ -90,6 +86,15 @@ public:
 
   friend std::vector<Lie_gen_class> analyze
   (const ss_vect<tps> &Id_scl, const param_type &bns);
+
+  friend void get_system
+  (const int m, const int n, const std::vector<Lie_gen_class> &Lie_gen,
+   double **A, double *b);
+
+  friend Lie_gen_class get_Lie_two_gen_avg
+  (const std::string label, const tps &k, const double scl,
+   const int i1, const int j1, const int k1, const int l1, const int m1,
+   const int i2, const int j2, const int k2, const int l2, const int m2);
 };
 
 
@@ -126,9 +131,9 @@ void get_ab
 
 //==============================================================================
 
-void Lie_gen_class::prt_Lie_gen(void) const
+void Lie_gen_class::print(void) const
 {
-  printf(" %s", label.c_str());
+  printf(" %s_", label.c_str());
   for (auto k = 0; k < (int)index.size(); k++)
     printf("%d", index[k]);
   printf(" %6.1e %10.3e", cst_scl, cst);
@@ -138,31 +143,57 @@ void Lie_gen_class::prt_Lie_gen(void) const
 }
 
 
+inline double h_ijklm(const tps &h, const std::vector<int> &ind)
+{
+  return h_ijklm(h, ind[x_], ind[px_], ind[y_], ind[py_], ind[delta_]);
+}
+
+
 Lie_gen_class get_Lie_gen
 (const std::string label, const tps &h, const double scl, const int i,
  const int j, const int k, const int l, const int m)
 {
-  const std::vector<int> index = {i, j, k, l, m};
+  const std::vector<int> ind = {i, j, k, l, m};
 
   Lie_gen_class      Lie_term;
   std::ostringstream str;
 
   Lie_term.label = label;
-  Lie_term.index = index;
+  Lie_term.index = ind;
   Lie_term.cst_scl = scl;
   // Don't scale yet.
-  Lie_term.cst = h_ijklm(h, i, j, k, l, m);
+  Lie_term.cst = h_ijklm(h, ind);
   return Lie_term;
 }
 
 
-void prt_Lie_gen
+void prt_Lie_genb
 (const std::string &str, const int i0, const int n,
  const std::vector<Lie_gen_class> &Lie_gen)
 {
   printf("\n%s\n", str.c_str());
   for (auto k = i0; k < i0+n; k++)
     Lie_gen[k].prt_Lie_gen();
+}
+
+
+Lie_gen_class get_Lie_two_gen_avg
+(const std::string label, const tps &k, const double scl,
+ const int i1, const int j1, const int k1, const int l1, const int m1,
+ const int i2, const int j2, const int k2, const int l2, const int m2)
+{
+  const std::vector<int>
+    ind_1 = {i1, j1, k1, l1, m1},
+    ind_2 = {i2, j2, k2, l2, m2};
+
+  Lie_gen_class      Lie_term;
+  std::ostringstream str;
+
+  Lie_term.label = label;
+  Lie_term.cst_scl = scl;
+  // Don't scale yet.
+  Lie_term.cst = (h_ijklm(k, ind_1)+h_ijklm(k, ind_1))/2e0;
+  return Lie_term;
 }
 
 
@@ -194,72 +225,79 @@ std::vector<Lie_gen_class> get_Lie_gen(const ss_vect<tps> &Id_scl)
 
   Lie_gen.clear();
 
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[1], 1, 1, 0, 0, 1));
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[1], 0, 0, 1, 1, 1));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[1], 1, 1, 0, 0, 1));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[1], 0, 0, 1, 1, 1));
 
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[0], 1, 0, 0, 0, 2));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[0], 2, 0, 0, 0, 1));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[0], 0, 0, 2, 0, 1));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 1, 0, 0, 0, 2));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 2, 0, 0, 0, 1));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 0, 0, 2, 0, 1));
 
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[0], 1, 0, 1, 1, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[0], 2, 1, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[0], 3, 0, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[0], 1, 0, 0, 2, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[0], 1, 0, 2, 0, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 1, 0, 1, 1, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 2, 1, 0, 0, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 3, 0, 0, 0, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 1, 0, 0, 2, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 1, 0, 2, 0, 0));
 
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[1], 4, 0, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[1], 3, 1, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[1], 2, 0, 2, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[1], 1, 1, 2, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[1], 2, 0, 1, 1, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[1], 0, 0, 3, 1, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[1], 2, 0, 0, 2, 0));
-  Lie_gen.push_back(get_Lie_gen("g_", g_im, scl_h[1], 0, 0, 4, 0, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 4, 0, 0, 0, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 3, 1, 0, 0, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 2, 0, 2, 0, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 1, 1, 2, 0, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 2, 0, 1, 1, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 0, 0, 3, 1, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 2, 0, 0, 2, 0));
+  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 0, 0, 4, 0, 0));
 
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[0], 2, 2, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[0], 1, 1, 1, 1, 0));
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[0], 0, 0, 2, 2, 0));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[0], 2, 2, 0, 0, 0));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[0], 1, 1, 1, 1, 0));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[0], 0, 0, 2, 2, 0));
 
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[1], 3, 3, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[1], 2, 2, 1, 1, 0));
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[1], 1, 1, 2, 2, 0));
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[1], 0, 0, 3, 3, 0));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[1], 3, 3, 0, 0, 0));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[1], 2, 2, 1, 1, 0));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[1], 1, 1, 2, 2, 0));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[1], 0, 0, 3, 3, 0));
 
   if (NO >= 9) {
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[2], 4, 4, 0, 0, 0));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[2], 3, 3, 1, 1, 0));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[2], 2, 2, 2, 2, 0));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[2], 1, 1, 3, 3, 0));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[2], 0, 0, 4, 4, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[2], 4, 4, 0, 0, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[2], 3, 3, 1, 1, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[2], 2, 2, 2, 2, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[2], 1, 1, 3, 3, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[2], 0, 0, 4, 4, 0));
   }
 
   if (NO >= 11) {
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[3], 5, 5, 0, 0, 0));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[3], 4, 4, 1, 1, 0));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[3], 3, 3, 2, 2, 0));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[3], 2, 2, 3, 3, 0));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[3], 1, 1, 4, 4, 0));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_a[3], 0, 0, 5, 5, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 5, 5, 0, 0, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 4, 4, 1, 1, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 3, 3, 2, 2, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 2, 2, 3, 3, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 1, 1, 4, 4, 0));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 0, 0, 5, 5, 0));
   }
 
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[2], 1, 1, 0, 0, 2));
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[2], 0, 0, 1, 1, 2));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[2], 1, 1, 0, 0, 2));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[2], 0, 0, 1, 1, 2));
 
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[3], 1, 1, 0, 0, 3));
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[3], 0, 0, 1, 1, 3));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[3], 1, 1, 0, 0, 3));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[3], 0, 0, 1, 1, 3));
 
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[4], 1, 1, 0, 0, 4));
-  Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[4], 0, 0, 1, 1, 4));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[4], 1, 1, 0, 0, 4));
+  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[4], 0, 0, 1, 1, 4));
 
   if (NO >= 8) {
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[5], 1, 1, 0, 0, 5));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[5], 0, 0, 1, 1, 5));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[5], 1, 1, 0, 0, 5));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[5], 0, 0, 1, 1, 5));
   }
 
   if (NO >= 9) {
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[6], 1, 1, 0, 0, 6));
-    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[6], 0, 0, 1, 1, 6));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[6], 1, 1, 0, 0, 6));
+    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[6], 0, 0, 1, 1, 6));
   }
+
+  // Lie_gen.push_back(get_Lie_two_gen_avg("k_2&4", K_re, scl_avg[0],
+  // 					1, 1, 0, 0, 2,
+  // 					1, 1, 0, 0, 4));
+  // Lie_gen.push_back(get_Lie_two_gen_avg("k_2&4", K_re, scl_avg[1],
+  // 					1, 1, 0, 0, 1,
+  // 					1, 1, 0, 0, 3));
 
   return Lie_gen;
 }
@@ -272,7 +310,7 @@ inline double h_ijklm_p
 }
 
 
-void get_Jacobian
+void compute_Jacobian
 (const param_type &bns, const int k, const ss_vect<tps> &Id_scl,
  std::vector<Lie_gen_class> &Lie_gen)
 {
@@ -282,7 +320,6 @@ void get_Jacobian
     name    = bns.name[k];
   const int
     // Driving terms.
-    index[] = {2, 17},
     n       = bns.n[k];
   const double
     bn_scl  = (bns.L[k] == 0e0)? 1e0 : bns.bnL_scl[k]/bns.L[k];
@@ -308,20 +345,29 @@ void get_Jacobian
   clr_bn_par(bns.Fnum[k], n);
 
   for (auto j = 0; j < (int)Lie_gen.size(); j++) {
-    if ((j >= index[0]) and (j <= index[1]))
+    switch (Lie_gen[j].label[0]) {
+    case 'g':
       Lie_gen[j].Jacobian.push_back(bn_scl*h_ijklm_p(g_im, Lie_gen[j].index));
-    else
+      break;
+    case 'k':
       Lie_gen[j].Jacobian.push_back(bn_scl*h_ijklm_p(K_re, Lie_gen[j].index));
+      break;
+    default:
+	printf("\ncompute_Jacobian - undefined case: %c\n",
+	       Lie_gen[j].label[0]);
+	exit(1);
+	break;
+    }
   }
 }
 
 
-void get_Jacobian
+void compute_Jacobian
 (const ss_vect<tps> &Id_scl, const param_type &bns,
  std::vector<Lie_gen_class> &Lie_gen)
 {
   for (auto k = 0; k < bns.n_prm; k++)
-    get_Jacobian(bns, k, Id_scl, Lie_gen);
+    compute_Jacobian(bns, k, Id_scl, Lie_gen);
 }
 
 
@@ -431,7 +477,7 @@ std::vector<Lie_gen_class> analyze
   }
 
   auto Lie_gen = get_Lie_gen(Id_scl);
-  get_Jacobian(Id_scl, bns, Lie_gen);
+  compute_Jacobian(Id_scl, bns, Lie_gen);
 
   Lie_gen.push_back
     (compute_Lie_gen_sum("k_sum_J", scl_k_sum[0], index_dnu, Lie_gen));
