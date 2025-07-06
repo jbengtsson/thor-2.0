@@ -167,13 +167,13 @@ Lie_gen_class get_Lie_gen
 }
 
 
-void prt_Lie_genb
+void prt_Lie_gen
 (const std::string &str, const int i0, const int n,
  const std::vector<Lie_gen_class> &Lie_gen)
 {
   printf("\n%s\n", str.c_str());
   for (auto k = i0; k < i0+n; k++)
-    Lie_gen[k].prt_Lie_gen();
+    Lie_gen[k].print();
 }
 
 
@@ -390,13 +390,13 @@ Lie_gen_class compute_Lie_gen_sum
     printf("\ncompute_Lie_gen_sum:\n");
   for (auto j = index[0]; j <= index[1]; j++) {
     if (debug)
-      Lie_gen[j].prt_Lie_gen();
+      Lie_gen[j].print();
     Lie_gen_sum.cst += Lie_gen[j].cst;
     for (auto k = 0; k < (int)Lie_gen[j].Jacobian.size(); k++)
       Lie_gen_sum.Jacobian[k] += Lie_gen[j].Jacobian[k];
   }
   if (debug)
-    Lie_gen_sum.prt_Lie_gen();
+    Lie_gen_sum.print();
 
   return Lie_gen_sum;
 }
