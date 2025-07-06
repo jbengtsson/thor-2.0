@@ -9,7 +9,7 @@
 
 #include <assert.h>
 
-#define NO 9
+#define NO 8
 
 #include "thor_lib.h"
 
@@ -26,33 +26,33 @@ extern double b2_max;
 
 const bool
   b_3_opt    = !false,
-  b_4_opt    = !false,
-  b_3_zero   = false,
+  b_4_opt    = false,
+  b_3_zero   = !false,
   b_4_zero   = false;
 
 const int
-  max_iter  = 100,  
-  svd_n_cut = 3;
+  max_iter  = 50,
+  svd_n_cut = 0;
 
 const double
-  A_max[]     = {6e-3, 3e-3},
+  A_max[]     = {3e-3, 1e-3},
   delta_max   = 6e-2,
-  beta_inj[]  = {3.7, 3.9},
+  beta_inj[]  = {4.1, 3.8},
 
   bnL_scl[]   = {0e0, 0e0, 0e0,  1e0,  5e1,    1e4},
   bnL_min[]   = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
   bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
 
-#if 0
+#if 1
   scl_h[]     = {1e-2, 1e-2},
-  scl_ksi[]   = {0e0, 1e2, 1e0, 5e0, 1e0, 1e0},
+  scl_ksi[]   = {0e0, 1e2, 5e0, 5e0, 5e0, 1e0, 1e0},
   scl_a[]     = {1e0, 1e0, 1e0, 1e0},
-  scl_K_sum[] = {1e0, 1e0},
+  scl_k_sum[] = {0e0, 0e0},
 #else
-  scl_h[]     = {1e0, 1e0},
-  scl_ksi[]   = {0e0, 1e2, 1e-15, 1e-15, 1e-15, 1e-15},
-  scl_a[]     = {1e-15, 1e-15, 1e-15, 1e-15},
-  scl_K_sum[] = {1e1, 1e1},
+  scl_h[]     = {1e-30, 1e-30},
+  scl_ksi[]   = {0e0, 1e2, 1e-30, 1e-30, 1e-30, 1e-30, 1e-30},
+  scl_a[]     = {1e-30, 1e-30, 1e-30, 1e-30},
+  scl_k_sum[] = {1e0, 1e0},
 #endif
 
   step       = 0.15;
@@ -84,9 +84,12 @@ public:
   (const param_type &bns, const int k, const ss_vect<tps> &Id_scl,
    std::vector<Lie_gen_class> &Lie_gen);
 
-  friend Lie_gen_class get_Lie_gen_sum
+  friend Lie_gen_class compute_Lie_gen_sum
   (const std::string &name, const double scl, const int index[],
    const std::vector<Lie_gen_class> &Lie_gen);
+
+  friend std::vector<Lie_gen_class> analyze
+  (const ss_vect<tps> &Id_scl, const param_type &bns);
 };
 
 
@@ -141,14 +144,15 @@ Lie_gen_class get_Lie_gen
 {
   const std::vector<int> index = {i, j, k, l, m};
 
-  Lie_gen_class     Lt;
+  Lie_gen_class      Lie_term;
   std::ostringstream str;
 
-  Lt.label = label;
-  Lt.index = index;
-  Lt.cst_scl = scl;
-  Lt.cst = Lt.cst_scl*h_ijklm(h, i, j, k, l, m);
-  return Lt;
+  Lie_term.label = label;
+  Lie_term.index = index;
+  Lie_term.cst_scl = scl;
+  // Don't scale yet.
+  Lie_term.cst = h_ijklm(h, i, j, k, l, m);
+  return Lie_term;
 }
 
 
@@ -164,9 +168,9 @@ void prt_Lie_gen
 
 std::vector<Lie_gen_class> get_Lie_gen(const ss_vect<tps> &Id_scl)
 {
-  double                      nu[3], ksi[3];
-  tps                         g, g_re, g_im, K_re, K_im;
-  ss_vect<tps>                M, A1, A0, M_res;
+  double                     nu[3], ksi[3];
+  tps                        g, g_re, g_im, K_re, K_im;
+  ss_vect<tps>               M, A1, A0, M_res;
   Lie_gen_class              h;
   std::vector<Lie_gen_class> Lie_gen;
 
@@ -252,6 +256,11 @@ std::vector<Lie_gen_class> get_Lie_gen(const ss_vect<tps> &Id_scl)
     Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[5], 0, 0, 1, 1, 5));
   }
 
+  if (NO >= 9) {
+    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[6], 1, 1, 0, 0, 6));
+    Lie_gen.push_back(get_Lie_gen("k_", K_re, scl_ksi[6], 0, 0, 1, 1, 6));
+  }
+
   return Lie_gen;
 }
 
@@ -300,11 +309,9 @@ void get_Jacobian
 
   for (auto j = 0; j < (int)Lie_gen.size(); j++) {
     if ((j >= index[0]) and (j <= index[1]))
-      Lie_gen[j].Jacobian.push_back
-	(bn_scl*Lie_gen[j].cst_scl*h_ijklm_p(g_im, Lie_gen[j].index));
+      Lie_gen[j].Jacobian.push_back(bn_scl*h_ijklm_p(g_im, Lie_gen[j].index));
     else
-      Lie_gen[j].Jacobian.push_back
-	(bn_scl*Lie_gen[j].cst_scl*h_ijklm_p(K_re, Lie_gen[j].index));
+      Lie_gen[j].Jacobian.push_back(bn_scl*h_ijklm_p(K_re, Lie_gen[j].index));
   }
 }
 
@@ -318,44 +325,32 @@ void get_Jacobian
 }
 
 
-void get_system
-(const int m, const int n, const std::vector<Lie_gen_class> &Lie_gen,
- double **A, double *b)
-{
-  const bool prt = false;
-
-  for (auto j = 0; j < m; j++) {
-    b[j+1] = -Lie_gen[j].cst;
-    for (auto k = 0; k < n; k++)
-      A[j+1][k+1] = Lie_gen[j].Jacobian[k];
-  }
-
-  if (prt) dmdump(stdout, (char *)"\nA:", A, m, n, (char *)" %10.3e");
-}
-
-
-Lie_gen_class get_Lie_gen_sum
+Lie_gen_class compute_Lie_gen_sum
 (const std::string &name, const double scl, const int index[],
  const std::vector<Lie_gen_class> &Lie_gen)
 {
+  // Compute sum of anharmonic and nonlinear chromatic terms.
+  const bool debug = false;
+
   Lie_gen_class Lie_gen_sum;
 
   Lie_gen_sum.label = name;
   Lie_gen_sum.cst_scl = scl;
-  Lie_gen_sum.cst = 0e0;
-  for (auto k = 0; k < (int)Lie_gen[0].Jacobian.size(); k++)
-    Lie_gen_sum.Jacobian.push_back(0e0);
 
+  Lie_gen_sum.cst = 0e0;
+  auto n = Lie_gen[0].Jacobian.size();
+  Lie_gen_sum.Jacobian.resize(n);
+  if (debug)
+    printf("\ncompute_Lie_gen_sum:\n");
   for (auto j = index[0]; j <= index[1]; j++) {
-    if (Lie_gen[j].cst_scl == 0e0) {
-      printf("\nget_Lie_gen_sum: cst_scl = 0 %s\n", Lie_gen[j].label.c_str());
-      assert(false);
-    }
-    Lie_gen_sum.cst += Lie_gen_sum.cst_scl*Lie_gen[j].cst/Lie_gen[j].cst_scl;
+    if (debug)
+      Lie_gen[j].prt_Lie_gen();
+    Lie_gen_sum.cst += Lie_gen[j].cst;
     for (auto k = 0; k < (int)Lie_gen[j].Jacobian.size(); k++)
-      Lie_gen_sum.Jacobian[k] +=
-	Lie_gen_sum.cst_scl*Lie_gen[j].Jacobian[k]/Lie_gen[j].cst_scl;
+      Lie_gen_sum.Jacobian[k] += Lie_gen[j].Jacobian[k];
   }
+  if (debug)
+    Lie_gen_sum.prt_Lie_gen();
 
   return Lie_gen_sum;
 }
@@ -405,6 +400,10 @@ void prt_system
     prt_Lie_gen("5th Order Chromaticity:",      k,  2, Lie_gen);
     k += 2;
   }
+  if (NO >= 9) {
+    prt_Lie_gen("6th Order Chromaticity:",      k,  2, Lie_gen);
+    k += 2;
+  }
 
   prt_Lie_gen("Sigma{K_dnu}:",                k, 1, Lie_gen);
   k += 1;
@@ -424,24 +423,47 @@ std::vector<Lie_gen_class> analyze
   else if (NO == 9) {
     index_dnu[1] += 5;
     index_dxi[0] += 5;
-    index_dxi[1] += 5 + 2;
+    index_dxi[1] += 5 + 4;
   } else if (NO == 11) {
     index_dnu[1] += 11;
     index_dxi[0] += 11;
-    index_dxi[1] += 11 + 2;
+    index_dxi[1] += 11 + 4;
   }
 
   auto Lie_gen = get_Lie_gen(Id_scl);
   get_Jacobian(Id_scl, bns, Lie_gen);
 
-  Lie_gen.push_back(get_Lie_gen_sum
-		    ("K_sum  ", scl_K_sum[0], index_dnu, Lie_gen));
-  Lie_gen.push_back(get_Lie_gen_sum
-		    ("K_sum  ", scl_K_sum[1], index_dxi, Lie_gen));
+  Lie_gen.push_back
+    (compute_Lie_gen_sum("k_sum_J", scl_k_sum[0], index_dnu, Lie_gen));
+  Lie_gen.push_back
+    (compute_Lie_gen_sum("k_sum_d", scl_k_sum[1], index_dxi, Lie_gen));
+
+  // Now do the scaling.
+  for (auto j = 0; j < (int)Lie_gen.size(); j++) {
+    Lie_gen[j].cst *= Lie_gen[j].cst_scl;
+    for (auto k = 0; k < (int)Lie_gen[j].Jacobian.size(); k++)
+      Lie_gen[j].Jacobian[k] *= Lie_gen[j].cst_scl;
+  }
 
   prt_system(bns, Lie_gen);
 
   return Lie_gen;
+}
+
+
+void get_system
+(const int m, const int n, const std::vector<Lie_gen_class> &Lie_gen,
+ double **A, double *b)
+{
+  const bool prt = false;
+
+  for (auto j = 0; j < m; j++) {
+    b[j+1] = -Lie_gen[j].cst;
+    for (auto k = 0; k < n; k++)
+      A[j+1][k+1] = Lie_gen[j].Jacobian[k];
+  }
+
+  if (prt) dmdump(stdout, (char *)"\nA:", A, m, n, (char *)" %10.3e");
 }
 
 
