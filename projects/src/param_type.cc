@@ -119,7 +119,7 @@ void param_type::print(void) const
 {
   int k;
 
-  printf("\nFam. Name     b_n       b_n*L   n      min        max\n");
+  printf("\nFam. Name      b_n       b_n*L   n      min        max\n");
   for (k = 0; k < n_prm; k++)
     print(k);
 }
