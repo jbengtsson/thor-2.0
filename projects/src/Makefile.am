@@ -6,7 +6,7 @@ bin_PROGRAMS = \
 	thor H_min max_iv_match max_iv_uc max_iv_dnu vlad vlad_2 vlad_3 vlad_4 \
 	vlad_5 sls_2 diamond_ii delta delta_lo delta_lo2 quad2d quad3d \
 	tune_conf tune_conf_2 tune_conf_3 tbs get_dnu mpole_scheme \
-	poincare_map chk_drv_terms sxt_resp_mat max_4u
+	poincare_map chk_drv_terms sxt_resp_mat max_4u max_4u_2
 #               sext_resp_mat
 
 thor_SOURCES          = thor.cc
@@ -36,6 +36,7 @@ poincare_map_SOURCES  = poincare_map.cc
 chk_drv_terms_SOURCES = chk_drv_terms.cc
 sxt_resp_mat_SOURCES  = sxt_resp_mat.cc
 max_4u_SOURCES        = max_4u.cc param_type.cc
+max_4u_2_SOURCES      = max_4u_2.cc param_type.cc
 # sext_resp_mat_SOURCES = sext_resp_mat.c
 
 LOCAL = /usr/local
@@ -49,7 +50,8 @@ LIBS =	$(NUM_REC)/lib/libnum_rec.a \
 # C Preprocessor flags.
 AM_CPPFLAGS = \
 	-I$(THOR_LIB)/thor/inc \
-	-I$(NUM_REC)/inc
+	-I$(NUM_REC)/inc \
+	-I$(LOCAL)/opt/boost/include
 
 # FORTRAN 77 flags (The package maintainer’s variant of FFLAGS).
 AM_FFLAGS = \
