@@ -65,14 +65,24 @@ class Lie_gen_class {
 private:
   std::map<std::string, boost::any> g;
 
-public:
-  Lie_gen_class() {
-    g["label"]   = std::string{};
-    g["index"]   = std::vector<int>{};
-    g["cst_scl"] = double{0};
-    g["cst"]     = double{0};
-    g["Jacob"]   = std::vector<double>{};
+  template<typename T>
+  T& get_ref(const std::string& key) {
+    return boost::any_cast<T&>(g[key]);
   }
+
+  template<typename T>
+  const T& get_ref(const std::string& key) const {
+    return boost::any_cast<const T&>(g.at(key));
+  }
+
+public:
+  Lie_gen_class() : g ({
+      {"label",   std::string{}},
+      {"index",   std::vector<int>{}},
+      {"cst_scl", double{0}},
+      {"cst",     double{0}},
+      {"Jacob",   std::vector<double>{}},
+    }) {}
 
   // Generic - requires templete type, e.g.:
   //   .get<std::string>("label").
@@ -80,6 +90,12 @@ public:
   T get(const std::string& key) const {
     return boost::any_cast<T>(g.at(key));
   }
+
+  template<typename T>
+  void set(const std::string& key, const T& value) {
+    g[key] = value;
+  }
+
   std::string get_label(void) const { return get<std::string>("label"); }
 
   std::vector<int> get_index(void) const {
@@ -90,28 +106,27 @@ public:
 
   double get_cst(void) const { return get<double>("cst"); }
 
-  template<typename T>
-  void set(const std::string& key, const T& value) {
-    g[key] = value;
-  }
-
   std::vector<double> get_Jacob(void) const {
     return get<std::vector<double>>("Jacob");
   }
 
-  void set_Jacob(const int k, const double val) {
-    auto& jacob = boost::any_cast<std::vector<double>&>(g["Jacob"]);
-    jacob[k] = val;
+  void set_Jacob(int k, double val) {
+    auto& jacob = get_ref<std::vector<double>>("Jacob");
+    if (k >= 0 && static_cast<size_t>(k) < jacob.size()) {
+      jacob[k] = val;
+    } else {
+      throw std::out_of_range
+	("set_Jacob: index " + std::to_string(k) +
+	 " out of range (size = " + std::to_string(jacob.size()) + ")");
+    }
   }
 
   void resize_Jacob(const int n) {
-    auto& jacob = boost::any_cast<std::vector<double>&>(g["Jacob"]);
-    jacob.resize(n);
+    get_ref<std::vector<double>>("Jacob").resize(n);
   }
 
   void append_Jacob(const double value) {
-    auto& jacob = boost::any_cast<std::vector<double>&>(g["Jacob"]);
-    jacob.push_back(value);
+    get_ref<std::vector<double>>("Jacob").push_back(value);
   }
 
   void print(void) const;
@@ -181,50 +196,19 @@ void get_ab
 //==============================================================================
 
 #if 0
-void Lie_gen_class::print(void) const {
-  try {
-    std::cout << "label: " << get<std::string>("label") << "\n";
-  } catch (...) {
-    std::cout << "label: <not set>\n";
-  }
-
-  try {
-    std::cout << "cst_scl: " << get<double>("cst_scl") << "\n";
-  } catch (...) {
-    std::cout << "cst_scl: <not set>\n";
-  }
-
-  try {
-    std::cout << "cst: " << get<double>("cst") << "\n";
-  } catch (...) {
-    std::cout << "cst: <not set>\n";
-  }
-
-  try {
-    auto idx = get<std::vector<int>>("index");
-    std::cout << "index: [";
-    for (size_t i = 0; i < idx.size(); ++i) {
-      std::cout << idx[i] << (i + 1 < idx.size() ? ", " : "");
-    }
-    std::cout << "]\n";
-  } catch (...) {
-    std::cout << "index: <not set>\n";
-  }
-
-  try {
-    auto jac = get<boost::numeric::ublas::vector<double>>("Jacob");
-    std::cout << "Jacob: [";
-    for (std::size_t i = 0; i < jac.size(); ++i) {
-      std::cout << jac[i] << (i + 1 < jac.size() ? ", " : "");
-    }
-    std::cout << "]\n";
-  } catch (...) {
-    std::cout << "Jacob: <not set>\n";
-  }
+void print() const {
+  std::cout << "Label: " << get_label() << "\n";
+  std::cout << "Index: ";
+  for (int idx : get_index()) std::cout << idx << " ";
+  std::cout << "\nCst Scl: " << get_cst_scl()
+	    << "\nCst: " << get_cst()
+	    << "\nJacob: ";
+  for (double val : get_Jacob()) std::cout << val << " ";
+  std::cout << std::endl;
 }
 
 #else
-void Lie_gen_class::print(void) const
+  void Lie_gen_class::print(void) const
 {
   printf(" %s_", get_label().c_str());
   for (auto k = 0; k < (int)get_index().size(); k++)
