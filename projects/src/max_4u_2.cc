@@ -121,12 +121,22 @@ public:
     }
   }
 
-  void resize_Jacob(const int n) {
-    get_ref<std::vector<double>>("Jacob").resize(n);
+  void resize_Jacob(int n) {
+    if (n < 0) {
+      throw std::invalid_argument
+	("resize_Jacob: size cannot be negative (" + std::to_string(n) + ")");
+    }
+    get_ref<std::vector<double>>("Jacob").resize(static_cast<size_t>(n));
   }
 
-  void append_Jacob(const double value) {
-    get_ref<std::vector<double>>("Jacob").push_back(value);
+  void append_Jacob(double value) {
+    auto& jacob = get_ref<std::vector<double>>("Jacob");
+    if (!jacob.empty() || jacob.capacity() > 0) {
+      jacob.push_back(value);
+    } else {
+      throw std::runtime_error
+	("append_Jacob: Jacob vector is not initialized or has zero capacity");
+    }
   }
 
   void print(void) const;
