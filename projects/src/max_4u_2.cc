@@ -29,9 +29,9 @@ extern double b2_max;
 
 const bool
   b_3_opt    = !false,
-  b_4_opt    = false,
+  b_4_opt    = !false,
   b_3_zero   = false,
-  b_4_zero   = !false;
+  b_4_zero   = false;
 
 const int
   max_iter  = 50,
@@ -90,16 +90,26 @@ public:
 
   double get_cst(void) const { return get<double>("cst"); }
 
-  std::vector<double> get_Jacob(void) const {
-    return get<std::vector<double>>("Jacob");
-  }
-
   template<typename T>
   void set(const std::string& key, const T& value) {
     g[key] = value;
   }
 
-  void append_to_Jacob(const double value) {
+  std::vector<double> get_Jacob(void) const {
+    return get<std::vector<double>>("Jacob");
+  }
+
+  void set_Jacob(const int k, const double val) {
+    auto& jacob = boost::any_cast<std::vector<double>&>(g["Jacob"]);
+    jacob[k] = val;
+  }
+
+  void resize_Jacob(const int n) {
+    auto& jacob = boost::any_cast<std::vector<double>&>(g["Jacob"]);
+    jacob.resize(n);
+  }
+
+  void append_Jacob(const double value) {
     auto& jacob = boost::any_cast<std::vector<double>&>(g["Jacob"]);
     jacob.push_back(value);
   }
@@ -431,11 +441,11 @@ void compute_Jacob
   for (auto j = 0; j < (int)Lie_gen.size(); j++) {
     switch (Lie_gen[j].get_label()[0]) {
     case 'g':
-      Lie_gen[j].append_to_Jacob
+      Lie_gen[j].append_Jacob
 	(bn_scl*h_ijklm_p(g_im, Lie_gen[j].get<std::vector <int> >("index")));
       break;
     case 'k':
-      Lie_gen[j].append_to_Jacob
+      Lie_gen[j].append_Jacob
 	(bn_scl*h_ijklm_p(K_re, Lie_gen[j].get<std::vector <int> >("index")));
       break;
     default:
@@ -469,8 +479,8 @@ Lie_gen_class compute_Lie_gen_sum
   Lie_gen_sum.set("label", name);
   Lie_gen_sum.set("cst_scl", scl);
   Lie_gen_sum.set("cst", 0e0);
-  auto n = Lie_gen[0].get<std::vector<int> >("Jacob").size();
-  Lie_gen_sum.get<std::vector<int> >("Jacob").resize(n);
+  auto n = Lie_gen[0].get_Jacob().size();
+  Lie_gen_sum.resize_Jacob(n);
   if (debug)
     printf("\ncompute_Lie_gen_sum:\n");
   for (auto j = index[0]; j <= index[1]; j++) {
@@ -573,7 +583,8 @@ std::vector<Lie_gen_class> analyze
   for (auto j = 0; j < (int)Lie_gen.size(); j++) {
     Lie_gen[j].set("cst", Lie_gen[j].get_cst_scl()*Lie_gen[j].get_cst());
     for (auto k = 0; k < (int)Lie_gen[j].get_Jacob().size(); k++)
-      Lie_gen[j].get_Jacob()[k] *= Lie_gen[j].get_cst_scl();
+      Lie_gen[j].set_Jacob
+	(k, Lie_gen[j].get_cst_scl()*Lie_gen[j].get_Jacob()[k]);
   }
 
   prt_system(bns, Lie_gen);
