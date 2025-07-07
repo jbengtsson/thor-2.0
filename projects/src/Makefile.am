@@ -61,8 +61,7 @@ AM_FFLAGS = \
 AM_CXXFLAGS = -g -Og -Wall -fPIC -std=c++11
 
 # Allocate on heap & set stack size to 1 GB.
-AM_LDFLAGS = \
-	-F/System/Library/Frameworks -framework CoreServices
+AM_LDFLAGS = -F/System/Library/Frameworks -framework CoreServices
 
 UNLIMIT_RESOURCES = datasize memorysize stacksize
 # System limit:
