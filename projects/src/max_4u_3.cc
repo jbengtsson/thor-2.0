@@ -35,32 +35,32 @@ const bool
   b_4_zero   = false;
 
 const int
-  max_iter  = 50,
-  svd_n_cut = 3;
+  max_iter      = 50,
+  svd_n_cut     = 3;
 
 const double
-  A_max[]     = {6e-3, 3e-3},
-  delta_max   = 6e-2,
-  beta_inj[]  = {3.7, 3.9},
+  A_max[]       = {6e-3, 3e-3},
+  delta_max     = 6e-2,
+  beta_inj[]    = {3.7, 3.9},
 
-  bnL_scl[]   = {0e0, 0e0, 0e0,  1e0,  5e1,    5*1e4},
-  bnL_min[]   = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
-  bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
+  bnL_scl[]     = {0e0, 0e0, 0e0,  1e0,  5e1,    5*1e4},
+  bnL_min[]     = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
+  bnL_max[]     = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
 
 #if 1
-  scl_h[]     = {1e-2, 1e-2},
-  scl_ksi[]   = {0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 1e0},
-  scl_a[]     = {1e0, 1e0, 1e0, 1e0},
-  scl_k_sum[] = {0e0, 0e0},
-  scl_avg_2   = 1e0,
+  scl_h[]       = {1e-2, 1e-2},
+  scl_ksi[]     = {0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 1e0},
+  scl_a[]       = {1e0, 1e0, 1e0, 1e0},
+  scl_k_sum[]   = {0e0, 0e0},
+  scl_K_avg_2[] = {1e0},
 #else
-  scl_h[]     = {1e-30, 1e-30},
-  scl_ksi[]   = {0e0, 1e2, 1e-30, 1e-30, 1e-30, 1e-30, 1e-30},
-  scl_a[]     = {1e-30, 1e-30, 1e-30, 1e-30},
-  scl_k_sum[] = {1e0, 1e0},
+  scl_h[]       = {1e-30, 1e-30},
+  scl_ksi[]     = {0e0, 1e2, 1e-30, 1e-30, 1e-30, 1e-30, 1e-30},
+  scl_a[]       = {1e-30, 1e-30, 1e-30, 1e-30},
+  scl_k_sum[]   = {1e0, 1e0},
 #endif
 
-  step       = 0.15;
+  step          = 0.15;
 
 
 class Lie_gen_class {
@@ -387,21 +387,36 @@ void prt_xi(const param_type &bns, const std::vector<Lie_gen_class> &xi)
 
 
 Lie_gen_class get_Lie_K_avg_2_gen
-(const std::string label, const tps &g, const double scl, const int i,
- const int j, const int k, const int l, const int m)
+(const std::string label, const tps &K_avg_2, const double scl,
+ const int i1, const int j1, const int k1, const int l1, const int m1,
+ const int i2, const int j2, const int k2, const int l2, const int m2)
 {
-  const std::vector<int> ind = {i, j, k, l, m};
+  const std::vector<int>
+    ind_1 = {i1, j1, k1, l1, m1},
+    ind_2 = {i2, j2, k2, l2, m2};
 
   Lie_gen_class      Lie_term;
   std::ostringstream str;
 
   Lie_term.set("label",   label);
-  Lie_term.set("index_1", ind);
+  Lie_term.set("index_1", ind_1);
+  Lie_term.set("index_2", ind_2);
   Lie_term.set("cst_scl", scl);
   // Don't scale yet.
-  Lie_term.set("cst",     h_ijklm(g, ind));
+  Lie_term.set("cst", K_avg_2);
 
   return Lie_term;
+}
+
+
+void prt_Lie_K_avg_2_gen
+(const std::string &str, int &i0, const int n,
+ const std::vector<Lie_gen_class> &Lie_gen)
+{
+  printf("\n%s\n", str.c_str());
+  for (int k = i0; k < i0+n; k++)
+    Lie_gen[k].print();
+  i0 += n;
 }
 
 
@@ -410,8 +425,14 @@ std::vector<Lie_gen_class> get_K_avg_2(const tps &K)
   tps                        avg;
   std::vector<Lie_gen_class> K_avg_2;
 
-
-  K_avg_2.push_back(get_Lie_gen("K_avg_2", K, scl_h[0], 1, 0, 0, 0, 2));
+  K_avg_2.push_back
+    (get_Lie_K_avg_2_gen("K_avg_2", K, scl_K_avg_2[0],
+		 1, 1, 0, 0, 2,
+		 1, 1, 0, 0, 4));
+  K_avg_2.push_back
+    (get_Lie_K_avg_2_gen("K_avg_2", K, scl_K_avg_2[0],
+		 1, 1, 0, 0, 3,
+		 1, 1, 0, 0, 5));
 
   return K_avg_2;
 }
@@ -421,28 +442,28 @@ void prt_K_avg_2
 (const param_type &bns, const std::vector<Lie_gen_class> &K_avg_2)
 {
   int k = 0;
-  prt_Lie_gen("K_avg_2 Terms:", k, 1, K_avg_2);
+  prt_Lie_K_avg_2_gen("K_avg_2 Terms:", k, 2, K_avg_2);
 }
 
 
 void compute_Jacob
-(const param_type &bns, const int k, const ss_vect<tps> &Id_scl,
+(const param_type &bns, const int prm_no, const ss_vect<tps> &Id_scl,
  std::vector<Lie_gen_class> &Lie_gen)
 {
   const bool
     debug     = false;
   const std::string
-    name    = bns.name[k];
+    name    = bns.name[prm_no];
   const int
     // Driving terms.
-    n       = bns.n[k];
+    n       = bns.n[prm_no];
   const double
-    bn_scl  = (bns.L[k] == 0e0)? 1e0 : bns.bnL_scl[k]/bns.L[k];
+    bn_scl  = (bns.L[prm_no] == 0e0)? 1e0 : bns.bnL_scl[prm_no]/bns.L[prm_no];
 
   tps          g_re, g_im, K_re, K_im;
   ss_vect<tps> A1, A0, M_res;
 
-  set_bn_par(bns.Fnum[k], n, 7);
+  set_bn_par(bns.Fnum[prm_no], n, 7);
 
   danot_(no_tps-1);
   auto M = get_map();
@@ -454,10 +475,10 @@ void compute_Jacob
   if (debug)
     std::cout << std::scientific << std::setprecision(3)
 	      << "\n" << std::setw(8) << name <<
-      std::setw(4) << bns.Fnum[k] << ":\n"
+      std::setw(4) << bns.Fnum[prm_no] << ":\n"
 	      << std::scientific << std::setprecision(3) << K_re << K_im;
  
-  clr_bn_par(bns.Fnum[k], n);
+  clr_bn_par(bns.Fnum[prm_no], n);
   for (auto& term : Lie_gen) {
     const auto& label   = term.get_label();
     const auto& index_1 = term.get<std::vector<int>>("index_1");
@@ -484,29 +505,6 @@ inline void compute_Jacob
 {
   for (int k = 0; k < bns.n_prm; k++)
     compute_Jacob(bns, k, Id_scl, Lie_gen);
-}
-
-
-Lie_gen_class get_Lie_gen_avg_2
-(const std::string label, const tps &k, const double scl,
- const int i1, const int j1, const int k1, const int l1, const int m1,
- const int i2, const int j2, const int k2, const int l2, const int m2)
-{
-  const std::vector<int>
-    ind_1 = {i1, j1, k1, l1, m1},
-    ind_2 = {i2, j2, k2, l2, m2};
-
-  Lie_gen_class      Lie_term;
-  std::ostringstream str;
-
-  Lie_term.set("label",   label);
-  Lie_term.set("index_1", ind_1);
-  Lie_term.set("index_2", ind_2);
-  Lie_term.set("cst_scl", scl);
-  // Don't scale yet.
-  Lie_term.set("cst", (h_ijklm(k, ind_1)+h_ijklm(k, ind_2))/2e0);
-
-  return Lie_term;
 }
 
 
