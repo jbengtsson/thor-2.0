@@ -202,6 +202,13 @@ inline double h_ijklm(const tps &h, const std::vector<int> &ind)
 }
 
 
+inline double h_ijklm_p
+(const tps &h, const std::vector<int> &ind)
+{
+  return h_ijklm_p(h, ind[x_], ind[px_], ind[y_], ind[py_], ind[delta_], 7);
+}
+
+
 Lie_gen_class get_Lie_gen
 (const std::string label, const tps &h, const double scl, const int i,
  const int j, const int k, const int l, const int m)
@@ -216,17 +223,145 @@ Lie_gen_class get_Lie_gen
   Lie_term.set("cst_scl", scl);
   // Don't scale yet.
   Lie_term.set("cst", h_ijklm(h, ind));
+
   return Lie_term;
 }
 
 
 void prt_Lie_gen
-(const std::string &str, const int i0, const int n,
+(const std::string &str, int &i0, const int n,
  const std::vector<Lie_gen_class> &Lie_gen)
 {
   printf("\n%s\n", str.c_str());
   for (auto k = i0; k < i0+n; k++)
     Lie_gen[k].print();
+  i0 += n;
+}
+
+
+std::vector<Lie_gen_class> get_rdts(const ss_vect<tps> &Id_scl, tps &g)
+{
+  std::vector<Lie_gen_class> rdts;
+
+  rdts.push_back(get_Lie_gen("g", g, scl_h[0], 1, 0, 0, 0, 2));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[0], 2, 0, 0, 0, 1));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[0], 0, 0, 2, 0, 1));
+
+  rdts.push_back(get_Lie_gen("g", g, scl_h[0], 1, 0, 1, 1, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[0], 2, 1, 0, 0, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[0], 3, 0, 0, 0, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[0], 1, 0, 0, 2, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[0], 1, 0, 2, 0, 0));
+
+  rdts.push_back(get_Lie_gen("g", g, scl_h[1], 4, 0, 0, 0, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[1], 3, 1, 0, 0, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[1], 2, 0, 2, 0, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[1], 1, 1, 2, 0, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[1], 2, 0, 1, 1, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[1], 0, 0, 3, 1, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[1], 2, 0, 0, 2, 0));
+  rdts.push_back(get_Lie_gen("g", g, scl_h[1], 0, 0, 4, 0, 0));
+
+  return rdts;
+}
+
+
+void prt_rdts(const param_type &bns, const std::vector<Lie_gen_class> &rdts)
+{
+  auto k = 0;
+  prt_Lie_gen("3rd Order Chromatic terms:", k, 3, rdts);
+  prt_Lie_gen("3rd Order Geometric terms:", k, 5, rdts);
+  prt_Lie_gen("4th Order Geometric terms:", k, 8, rdts);
+}
+
+
+std::vector<Lie_gen_class> get_adts(const ss_vect<tps> &Id_scl, tps &K)
+{
+  std::vector<Lie_gen_class> adts;
+
+  adts.push_back(get_Lie_gen("k", K, scl_a[0], 2, 2, 0, 0, 0));
+  adts.push_back(get_Lie_gen("k", K, scl_a[0], 1, 1, 1, 1, 0));
+  adts.push_back(get_Lie_gen("k", K, scl_a[0], 0, 0, 2, 2, 0));
+
+  adts.push_back(get_Lie_gen("k", K, scl_a[1], 3, 3, 0, 0, 0));
+  adts.push_back(get_Lie_gen("k", K, scl_a[1], 2, 2, 1, 1, 0));
+  adts.push_back(get_Lie_gen("k", K, scl_a[1], 1, 1, 2, 2, 0));
+  adts.push_back(get_Lie_gen("k", K, scl_a[1], 0, 0, 3, 3, 0));
+
+  if (NO >= 9) {
+    adts.push_back(get_Lie_gen("k", K, scl_a[2], 4, 4, 0, 0, 0));
+    adts.push_back(get_Lie_gen("k", K, scl_a[2], 3, 3, 1, 1, 0));
+    adts.push_back(get_Lie_gen("k", K, scl_a[2], 2, 2, 2, 2, 0));
+    adts.push_back(get_Lie_gen("k", K, scl_a[2], 1, 1, 3, 3, 0));
+    adts.push_back(get_Lie_gen("k", K, scl_a[2], 0, 0, 4, 4, 0));
+  }
+
+  if (NO >= 11) {
+    adts.push_back(get_Lie_gen("k", K, scl_a[3], 5, 5, 0, 0, 0));
+    adts.push_back(get_Lie_gen("k", K, scl_a[3], 4, 4, 1, 1, 0));
+    adts.push_back(get_Lie_gen("k", K, scl_a[3], 3, 3, 2, 2, 0));
+    adts.push_back(get_Lie_gen("k", K, scl_a[3], 2, 2, 3, 3, 0));
+    adts.push_back(get_Lie_gen("k", K, scl_a[3], 1, 1, 4, 4, 0));
+    adts.push_back(get_Lie_gen("k", K, scl_a[3], 0, 0, 5, 5, 0));
+  }
+
+  return adts;
+}
+
+
+void prt_adts(const param_type &bns, const std::vector<Lie_gen_class> &adts)
+{
+  auto k = 0;
+  prt_Lie_gen("4th Order Anharmonic terms:",  k, 3, adts);
+  prt_Lie_gen("6th Order Anharmonic terms:",  k, 4, adts);
+  if (NO >= 9)
+    prt_Lie_gen("8th Order Anharmonic terms:",  k, 5, adts);
+  if (NO >= 11)
+    prt_Lie_gen("10th Order Anharmonic terms:", k, 6, adts);
+}
+
+
+std::vector<Lie_gen_class> get_xi(const ss_vect<tps> &Id_scl, tps &K)
+{
+  std::vector<Lie_gen_class> xi;
+
+  xi.push_back(get_Lie_gen("k", K, scl_ksi[1], 1, 1, 0, 0, 1));
+  xi.push_back(get_Lie_gen("k", K, scl_ksi[1], 0, 0, 1, 1, 1));
+
+  xi.push_back(get_Lie_gen("k", K, scl_ksi[2], 1, 1, 0, 0, 2));
+  xi.push_back(get_Lie_gen("k", K, scl_ksi[2], 0, 0, 1, 1, 2));
+
+  xi.push_back(get_Lie_gen("k", K, scl_ksi[3], 1, 1, 0, 0, 3));
+  xi.push_back(get_Lie_gen("k", K, scl_ksi[3], 0, 0, 1, 1, 3));
+
+  xi.push_back(get_Lie_gen("k", K, scl_ksi[4], 1, 1, 0, 0, 4));
+  xi.push_back(get_Lie_gen("k", K, scl_ksi[4], 0, 0, 1, 1, 4));
+
+  if (NO >= 8) {
+    xi.push_back(get_Lie_gen("k", K, scl_ksi[5], 1, 1, 0, 0, 5));
+    xi.push_back(get_Lie_gen("k", K, scl_ksi[5], 0, 0, 1, 1, 5));
+  }
+
+  if (NO >= 9) {
+    xi.push_back(get_Lie_gen("k", K, scl_ksi[6], 1, 1, 0, 0, 6));
+    xi.push_back(get_Lie_gen("k", K, scl_ksi[6], 0, 0, 1, 1, 6));
+  }
+
+  return xi;
+}
+
+
+void prt_xi(const param_type &bns, const std::vector<Lie_gen_class> &xi)
+{
+  auto k = 0;
+  prt_Lie_gen("Linear chromaticity:",      k, 2, xi);
+  prt_Lie_gen("2nd Order Chromaticity:",   k, 2, xi);
+  prt_Lie_gen("3rd Order Chromaticity:",   k, 2, xi);
+  prt_Lie_gen("4th Order Chromaticity:",   k, 2, xi);
+  if (NO >= 8)
+    prt_Lie_gen("5th Order Chromaticity:", k, 2, xi);
+  if (NO >= 9)
+    prt_Lie_gen("6th Order Chromaticity:", k, 2, xi);
 }
 
 
@@ -250,116 +385,47 @@ void prt_Lie_gen
 // }
 
 
-std::vector<Lie_gen_class> get_Lie_gen(const ss_vect<tps> &Id_scl)
+// Lie_gen_class compute_Lie_gen_sum
+// (const std::string &name, const double scl, const int index[],
+//  const std::vector<Lie_gen_class> &Lie_gen)
+// {
+//   // Compute sum of anharmonic and nonlinear chromatic terms.
+//   const bool debug = false;
+
+//   Lie_gen_class Lie_gen_sum;
+
+//   Lie_gen_sum.set("label", name);
+//   Lie_gen_sum.set("cst_scl", scl);
+//   Lie_gen_sum.set("cst", 0e0);
+//   auto n = Lie_gen[0].get_Jacob().size();
+//   Lie_gen_sum.resize_Jacob(n);
+//   if (debug)
+//     printf("\ncompute_Lie_gen_sum:\n");
+//   for (auto j = index[0]; j <= index[1]; j++) {
+//     if (debug)
+//       Lie_gen[j].print();
+//     Lie_gen_sum.set("cst", Lie_gen_sum.get_cst()+Lie_gen[j].get_cst());
+//     for (auto k = 0; k < (int)Lie_gen[j].get_Jacob().size(); k++)
+//       Lie_gen_sum.get_Jacob()[k] += Lie_gen[j].get_Jacob()[k];
+//   }
+//   if (debug)
+//     Lie_gen_sum.print();
+
+//   return Lie_gen_sum;
+// }
+
+
+void prt_system(const param_type &bns)
 {
-  double                     nu[3], ksi[3];
-  tps                        g, g_re, g_im, K_re, K_im;
-  ss_vect<tps>               M, A1, A0, M_res;
-  Lie_gen_class              h;
-  std::vector<Lie_gen_class> Lie_gen;
-
-  danot_(no_tps-1);
-  M = get_map();
-  danot_(no_tps);
-  auto K = MapNorm(M, g, A1, A0, M_res, 1);
-  auto nus = dHdJ(K);
-  get_nu_ksi(nus, nu, ksi);
-
-  CtoR(g*Id_scl, g_re, g_im);
-  CtoR(K*Id_scl, K_re, K_im);
-
-  if (false)
-    std::cout << std::scientific << std::setprecision(3)
-	      << "\nK:\n" << K_re << "\ng:\n" << g_im;
-
-  if (false)
-    printf("\n  nu  = [%6.3f, %6.3f]\n  ksi = [%6.3f, %6.3f]\n",
-	   nu[X_], nu[Y_], ksi[X_], ksi[Y_]);
-
-  Lie_gen.clear();
-
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[1], 1, 1, 0, 0, 1));
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[1], 0, 0, 1, 1, 1));
-
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 1, 0, 0, 0, 2));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 2, 0, 0, 0, 1));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 0, 0, 2, 0, 1));
-
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 1, 0, 1, 1, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 2, 1, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 3, 0, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 1, 0, 0, 2, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[0], 1, 0, 2, 0, 0));
-
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 4, 0, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 3, 1, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 2, 0, 2, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 1, 1, 2, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 2, 0, 1, 1, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 0, 0, 3, 1, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 2, 0, 0, 2, 0));
-  Lie_gen.push_back(get_Lie_gen("g", g_im, scl_h[1], 0, 0, 4, 0, 0));
-
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[0], 2, 2, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[0], 1, 1, 1, 1, 0));
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[0], 0, 0, 2, 2, 0));
-
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[1], 3, 3, 0, 0, 0));
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[1], 2, 2, 1, 1, 0));
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[1], 1, 1, 2, 2, 0));
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[1], 0, 0, 3, 3, 0));
-
-  if (NO >= 9) {
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[2], 4, 4, 0, 0, 0));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[2], 3, 3, 1, 1, 0));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[2], 2, 2, 2, 2, 0));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[2], 1, 1, 3, 3, 0));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[2], 0, 0, 4, 4, 0));
-  }
-
-  if (NO >= 11) {
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 5, 5, 0, 0, 0));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 4, 4, 1, 1, 0));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 3, 3, 2, 2, 0));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 2, 2, 3, 3, 0));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 1, 1, 4, 4, 0));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_a[3], 0, 0, 5, 5, 0));
-  }
-
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[2], 1, 1, 0, 0, 2));
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[2], 0, 0, 1, 1, 2));
-
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[3], 1, 1, 0, 0, 3));
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[3], 0, 0, 1, 1, 3));
-
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[4], 1, 1, 0, 0, 4));
-  Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[4], 0, 0, 1, 1, 4));
-
-  if (NO >= 8) {
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[5], 1, 1, 0, 0, 5));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[5], 0, 0, 1, 1, 5));
-  }
-
-  if (NO >= 9) {
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[6], 1, 1, 0, 0, 6));
-    Lie_gen.push_back(get_Lie_gen("k", K_re, scl_ksi[6], 0, 0, 1, 1, 6));
-  }
-
-  // Lie_gen.push_back(get_Lie_two_gen_avg("k_2&4", K_re, scl_avg[0],
-  // 					1, 1, 0, 0, 2,
-  // 					1, 1, 0, 0, 4));
-  // Lie_gen.push_back(get_Lie_two_gen_avg("k_2&4", K_re, scl_avg[1],
-  // 					1, 1, 0, 0, 1,
-  // 					1, 1, 0, 0, 3));
-
-  return Lie_gen;
-}
-
-
-inline double h_ijklm_p
-(const tps &h, const std::vector<int> &ind)
-{
-  return h_ijklm_p(h, ind[x_], ind[px_], ind[y_], ind[py_], ind[delta_], 7);
+  printf("\n           scl.      cst.");
+  for (auto k = 0; k < bns.n_prm; k++)
+    printf("      %-5s", bns.name[k].c_str());
+  printf("\n                         ");
+  for (auto k = 0; k < bns.n_prm; k++)
+    printf("       %1d   ", bns.n[k]);
+  printf("\n                         ");
+  for (auto k = 0; k < bns.n_prm; k++)
+    printf("    %7.1e", bns.bnL_scl[k]);
 }
 
 
@@ -378,12 +444,12 @@ void compute_Jacob
     bn_scl  = (bns.L[k] == 0e0)? 1e0 : bns.bnL_scl[k]/bns.L[k];
 
   tps          g_re, g_im, K_re, K_im;
-  ss_vect<tps> M, A1, A0, M_res;
+  ss_vect<tps> A1, A0, M_res;
 
   set_bn_par(bns.Fnum[k], n, 7);
 
   danot_(no_tps-1);
-  M = get_map();
+  auto M = get_map();
   danot_(no_tps);
   auto K = MapNorm(M, g, A1, A0, M_res, 1);
   CtoR(g*Id_scl, g_re, g_im);
@@ -396,7 +462,6 @@ void compute_Jacob
 	      << std::scientific << std::setprecision(3) << K_re << K_im;
  
   clr_bn_par(bns.Fnum[k], n);
-
   for (auto j = 0; j < (int)Lie_gen.size(); j++) {
     switch (Lie_gen[j].get_label()[0]) {
     case 'g':
@@ -417,7 +482,7 @@ void compute_Jacob
 }
 
 
-void compute_Jacob
+inline void compute_Jacob
 (const ss_vect<tps> &Id_scl, const param_type &bns,
  std::vector<Lie_gen_class> &Lie_gen)
 {
@@ -426,127 +491,72 @@ void compute_Jacob
 }
 
 
-Lie_gen_class compute_Lie_gen_sum
-(const std::string &name, const double scl, const int index[],
- const std::vector<Lie_gen_class> &Lie_gen)
+void Lie_gen_scl(std::vector<Lie_gen_class> &Lie_gen)
 {
-  // Compute sum of anharmonic and nonlinear chromatic terms.
-  const bool debug = false;
-
-  Lie_gen_class Lie_gen_sum;
-
-  Lie_gen_sum.set("label", name);
-  Lie_gen_sum.set("cst_scl", scl);
-  Lie_gen_sum.set("cst", 0e0);
-  auto n = Lie_gen[0].get_Jacob().size();
-  Lie_gen_sum.resize_Jacob(n);
-  if (debug)
-    printf("\ncompute_Lie_gen_sum:\n");
-  for (auto j = index[0]; j <= index[1]; j++) {
-    if (debug)
-      Lie_gen[j].print();
-    Lie_gen_sum.set("cst", Lie_gen_sum.get_cst()+Lie_gen[j].get_cst());
-    for (auto k = 0; k < (int)Lie_gen[j].get_Jacob().size(); k++)
-      Lie_gen_sum.get_Jacob()[k] += Lie_gen[j].get_Jacob()[k];
-  }
-  if (debug)
-    Lie_gen_sum.print();
-
-  return Lie_gen_sum;
-}
-
-
-void prt_system
-(const param_type &bns, const std::vector<Lie_gen_class> &Lie_gen)
-{
-  printf("\n           scl.      cst.");
-  for (auto k = 0; k < bns.n_prm; k++)
-    printf("      %-5s", bns.name[k].c_str());
-  printf("\n                         ");
-  for (auto k = 0; k < bns.n_prm; k++)
-    printf("       %1d   ", bns.n[k]);
-  printf("\n                         ");
-  for (auto k = 0; k < bns.n_prm; k++)
-    printf("    %7.1e", bns.bnL_scl[k]);
-
-  auto k = 0;
-  prt_Lie_gen("Linear chromaticity:",         k, 2, Lie_gen);
-  k += 2;
-  prt_Lie_gen("3rd Order Chromatic terms:",   k, 3, Lie_gen);
-  k += 3;
-  prt_Lie_gen("3rd Order Geometric terms:",   k, 5, Lie_gen);
-  k += 5;
-  prt_Lie_gen("4th Order Geometric terms:",   k, 8, Lie_gen);
-  k += 8;
-  prt_Lie_gen("4th Order Anharmonic terms:",  k, 3, Lie_gen);
-  k += 3;
-  prt_Lie_gen("6th Order Anharmonic terms:",  k, 4, Lie_gen);
-  k += 4;
-  if (NO >= 9) {
-    prt_Lie_gen("8th Order Anharmonic terms:",  k, 5, Lie_gen);
-    k += 5;
-  }
-  if (NO >= 11) {
-    prt_Lie_gen("10th Order Anharmonic terms:", k, 6, Lie_gen);
-    k += 6;
-  }
-  prt_Lie_gen("2nd Order Chromaticity:",      k, 2, Lie_gen);
-  k += 2;
-  prt_Lie_gen("3rd Order Chromaticity:",      k, 2, Lie_gen);
-  k += 2;
-  prt_Lie_gen("4th Order Chromaticity:",      k, 2, Lie_gen);
-  k += 2;
-  if (NO >= 8) {
-    prt_Lie_gen("5th Order Chromaticity:",      k,  2, Lie_gen);
-    k += 2;
-  }
-  if (NO >= 9) {
-    prt_Lie_gen("6th Order Chromaticity:",      k,  2, Lie_gen);
-    k += 2;
-  }
-
-  prt_Lie_gen("Sigma{K_dnu}:",                k, 1, Lie_gen);
-  k += 1;
-  prt_Lie_gen("Sigma{K_dxi}:",                k, 1, Lie_gen);
-}
-
-
-std::vector<Lie_gen_class> analyze
-(const ss_vect<tps> &Id_scl, const param_type &bns)
-{
-  int
-    index_dnu[] = {18, 24},
-    index_dxi[] = {25, 30};
-
-  if (NO == 8)
-    index_dxi[1] += 2;
-  else if (NO == 9) {
-    index_dnu[1] += 5;
-    index_dxi[0] += 5;
-    index_dxi[1] += 5 + 4;
-  } else if (NO == 11) {
-    index_dnu[1] += 11;
-    index_dxi[0] += 11;
-    index_dxi[1] += 11 + 4;
-  }
-
-  auto Lie_gen = get_Lie_gen(Id_scl);
-  compute_Jacob(Id_scl, bns, Lie_gen);
-
-  Lie_gen.push_back
-    (compute_Lie_gen_sum("k_sum_J", scl_k_sum[0], index_dnu, Lie_gen));
-  Lie_gen.push_back
-    (compute_Lie_gen_sum("k_sum_d", scl_k_sum[1], index_dxi, Lie_gen));
-
-  // Now do the scaling.
   for (auto j = 0; j < (int)Lie_gen.size(); j++) {
     Lie_gen[j].set("cst", Lie_gen[j].get_cst_scl()*Lie_gen[j].get_cst());
     for (auto k = 0; k < (int)Lie_gen[j].get_Jacob().size(); k++)
       Lie_gen[j].set_Jacob
 	(k, Lie_gen[j].get_cst_scl()*Lie_gen[j].get_Jacob()[k]);
   }
+}
 
-  prt_system(bns, Lie_gen);
+
+void get_Lie_gen
+(std::vector<Lie_gen_class> &Lie_gens,
+ const std::vector<Lie_gen_class> &Lie_gen)
+{
+  for (auto k = 0; k < (int)Lie_gen.size(); k++)
+    Lie_gens.push_back(Lie_gen[k]);
+}
+
+
+std::vector<Lie_gen_class> compute_Lie_gen
+(const ss_vect<tps> &Id_scl, const param_type &bns)
+{
+  double                     nu[3], xi[2];
+  tps                        g, g_re, g_im, K_re, K_im;
+  ss_vect<tps>               A1, A0, M_res;
+  std::vector<Lie_gen_class> Lie_gen;
+
+  danot_(no_tps-1);
+  auto M = get_map();
+  danot_(no_tps);
+  auto K = MapNorm(M, g, A1, A0, M_res, 1);
+  auto nus = dHdJ(K);
+  get_nu_ksi(nus, nu, xi);
+
+  CtoR(g*Id_scl, g_re, g_im);
+  CtoR(K*Id_scl, K_re, K_im);
+
+  if (false)
+    std::cout << std::scientific << std::setprecision(3)
+	      << "\nK:\n" << K_re << "\ng:\n" << g_im;
+  if (false)
+    printf("\n  nu  = [%6.3f, %6.3f]\n  ksi = [%6.3f, %6.3f]\n",
+	   nu[X_], nu[Y_], xi[X_], xi[Y_]);
+
+  auto rdts = get_rdts(Id_scl, g_im);
+  compute_Jacob(Id_scl, bns, rdts);
+  // Now do the scaling.
+  Lie_gen_scl(rdts);
+
+  auto adts = get_adts(Id_scl, K_re);
+  compute_Jacob(Id_scl, bns, adts);
+  Lie_gen_scl(adts);
+ 
+  auto xi_nl = get_xi(Id_scl, K_re);
+  compute_Jacob(Id_scl, bns, xi_nl);
+  Lie_gen_scl(xi_nl);
+
+  prt_system(bns);
+  prt_rdts(bns, rdts);
+  prt_adts(bns, adts);
+  prt_xi(bns, xi_nl);
+
+  get_Lie_gen(Lie_gen, rdts);
+  get_Lie_gen(Lie_gen, adts);
+  get_Lie_gen(Lie_gen, xi_nl);
 
   return Lie_gen;
 }
@@ -970,10 +980,10 @@ int main(int argc, char *argv[])
   printf("\n");
   for (auto k = 1; k <= max_iter; k++) {
     printf("\nk = %d:", k);
-    Lie_gen = analyze(Id_scl, bns);
+    Lie_gen = compute_Lie_gen(Id_scl, bns);
     correct(bns, Lie_gen, svd_n_cut, step);
 
     prt_mfile("flat_file.fit");
   }
-  Lie_gen = analyze(Id_scl, bns);
+  Lie_gen = compute_Lie_gen(Id_scl, bns);
 }
