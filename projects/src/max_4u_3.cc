@@ -10,6 +10,7 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <algorithm>
 #include <assert.h>
+#include <numeric>
 #include <typeinfo>
 
 #define NO 8
@@ -108,7 +109,7 @@ public:
     return get<std::vector<double>>("Jacob");
   }
 
-  void set_Jacob(int k, double val) {
+  void set_Jacob(const int k, double val) {
     auto& jacob = get_ref<std::vector<double>>("Jacob");
     if (k >= 0 && static_cast<size_t>(k) < jacob.size()) {
       jacob[k] = val;
@@ -186,10 +187,10 @@ void print() const {
   void Lie_gen_class::print(void) const
 {
   printf(" %s_", get_label().c_str());
-  for (auto k = 0; k < (int)get_index().size(); k++)
+  for (int k = 0; k < (int)get_index().size(); k++)
     printf("%d", get_index()[k]);
   printf(" %6.1e %10.3e", get_cst_scl(), get_cst());
-  for (auto k = 0; k < (int)get_Jacob().size(); k++)
+  for (int k = 0; k < (int)get_Jacob().size(); k++)
     printf(" %10.3e", get_Jacob()[k]);
   printf("\n");
 }
@@ -210,7 +211,7 @@ inline double h_ijklm_p
 
 
 Lie_gen_class get_Lie_gen
-(const std::string label, const tps &h, const double scl, const int i,
+(const std::string label, const tps &g, const double scl, const int i,
  const int j, const int k, const int l, const int m)
 {
   const std::vector<int> ind = {i, j, k, l, m};
@@ -222,7 +223,7 @@ Lie_gen_class get_Lie_gen
   Lie_term.set("index", ind);
   Lie_term.set("cst_scl", scl);
   // Don't scale yet.
-  Lie_term.set("cst", h_ijklm(h, ind));
+  Lie_term.set("cst", h_ijklm(g, ind));
 
   return Lie_term;
 }
@@ -233,13 +234,13 @@ void prt_Lie_gen
  const std::vector<Lie_gen_class> &Lie_gen)
 {
   printf("\n%s\n", str.c_str());
-  for (auto k = i0; k < i0+n; k++)
+  for (int k = i0; k < i0+n; k++)
     Lie_gen[k].print();
   i0 += n;
 }
 
 
-std::vector<Lie_gen_class> get_rdts(const ss_vect<tps> &Id_scl, tps &g)
+std::vector<Lie_gen_class> get_rdts(const ss_vect<tps> &Id_scl, const tps &g)
 {
   std::vector<Lie_gen_class> rdts;
 
@@ -268,14 +269,14 @@ std::vector<Lie_gen_class> get_rdts(const ss_vect<tps> &Id_scl, tps &g)
 
 void prt_rdts(const param_type &bns, const std::vector<Lie_gen_class> &rdts)
 {
-  auto k = 0;
+  int k = 0;
   prt_Lie_gen("3rd Order Chromatic terms:", k, 3, rdts);
   prt_Lie_gen("3rd Order Geometric terms:", k, 5, rdts);
   prt_Lie_gen("4th Order Geometric terms:", k, 8, rdts);
 }
 
 
-std::vector<Lie_gen_class> get_adts(const ss_vect<tps> &Id_scl, tps &K)
+std::vector<Lie_gen_class> get_adts(const ss_vect<tps> &Id_scl, const tps &K)
 {
   std::vector<Lie_gen_class> adts;
 
@@ -311,7 +312,7 @@ std::vector<Lie_gen_class> get_adts(const ss_vect<tps> &Id_scl, tps &K)
 
 void prt_adts(const param_type &bns, const std::vector<Lie_gen_class> &adts)
 {
-  auto k = 0;
+  int k = 0;
   prt_Lie_gen("4th Order Anharmonic terms:",  k, 3, adts);
   prt_Lie_gen("6th Order Anharmonic terms:",  k, 4, adts);
   if (NO >= 9)
@@ -321,7 +322,7 @@ void prt_adts(const param_type &bns, const std::vector<Lie_gen_class> &adts)
 }
 
 
-std::vector<Lie_gen_class> get_xi(const ss_vect<tps> &Id_scl, tps &K)
+std::vector<Lie_gen_class> get_xi(const ss_vect<tps> &Id_scl, const tps &K)
 {
   std::vector<Lie_gen_class> xi;
 
@@ -353,7 +354,7 @@ std::vector<Lie_gen_class> get_xi(const ss_vect<tps> &Id_scl, tps &K)
 
 void prt_xi(const param_type &bns, const std::vector<Lie_gen_class> &xi)
 {
-  auto k = 0;
+  int k = 0;
   prt_Lie_gen("Linear chromaticity:",      k, 2, xi);
   prt_Lie_gen("2nd Order Chromaticity:",   k, 2, xi);
   prt_Lie_gen("3rd Order Chromaticity:",   k, 2, xi);
@@ -365,67 +366,17 @@ void prt_xi(const param_type &bns, const std::vector<Lie_gen_class> &xi)
 }
 
 
-// Lie_gen_class get_Lie_two_gen_avg
-// (const std::string label, const tps &k, const double scl,
-//  const int i1, const int j1, const int k1, const int l1, const int m1,
-//  const int i2, const int j2, const int k2, const int l2, const int m2)
-// {
-//   const std::vector<int>
-//     ind_1 = {i1, j1, k1, l1, m1},
-//     ind_2 = {i2, j2, k2, l2, m2};
-
-//   Lie_gen_class      Lie_term;
-//   std::ostringstream str;
-
-//   Lie_term.label = label;
-//   Lie_term.cst_scl = scl;
-//   // Don't scale yet.
-//   Lie_term.cst = (h_ijklm(k, ind_1)+h_ijklm(k, ind_1))/2e0;
-//   return Lie_term;
-// }
-
-
-// Lie_gen_class compute_Lie_gen_sum
-// (const std::string &name, const double scl, const int index[],
-//  const std::vector<Lie_gen_class> &Lie_gen)
-// {
-//   // Compute sum of anharmonic and nonlinear chromatic terms.
-//   const bool debug = false;
-
-//   Lie_gen_class Lie_gen_sum;
-
-//   Lie_gen_sum.set("label", name);
-//   Lie_gen_sum.set("cst_scl", scl);
-//   Lie_gen_sum.set("cst", 0e0);
-//   auto n = Lie_gen[0].get_Jacob().size();
-//   Lie_gen_sum.resize_Jacob(n);
-//   if (debug)
-//     printf("\ncompute_Lie_gen_sum:\n");
-//   for (auto j = index[0]; j <= index[1]; j++) {
-//     if (debug)
-//       Lie_gen[j].print();
-//     Lie_gen_sum.set("cst", Lie_gen_sum.get_cst()+Lie_gen[j].get_cst());
-//     for (auto k = 0; k < (int)Lie_gen[j].get_Jacob().size(); k++)
-//       Lie_gen_sum.get_Jacob()[k] += Lie_gen[j].get_Jacob()[k];
-//   }
-//   if (debug)
-//     Lie_gen_sum.print();
-
-//   return Lie_gen_sum;
-// }
-
-
 void prt_system(const param_type &bns)
 {
   printf("\n           scl.      cst.");
-  for (auto k = 0; k < bns.n_prm; k++)
-    printf("      %-5s", bns.name[k].c_str());
+  for (const auto& name : bns.name)
+    printf("      %-5s", name.c_str());
   printf("\n                         ");
-  for (auto k = 0; k < bns.n_prm; k++)
-    printf("       %1d   ", bns.n[k]);
+  for (const auto& val : bns.n)
+    printf("       %1d   ", val);
   printf("\n                         ");
-  for (auto k = 0; k < bns.n_prm; k++)
-    printf("    %7.1e", bns.bnL_scl[k]);
+  for (const auto& scl : bns.bnL_scl)
+    printf("    %7.1e", scl);
 }
 
 
@@ -462,21 +413,22 @@ void compute_Jacob
 	      << std::scientific << std::setprecision(3) << K_re << K_im;
  
   clr_bn_par(bns.Fnum[k], n);
-  for (auto j = 0; j < (int)Lie_gen.size(); j++) {
-    switch (Lie_gen[j].get_label()[0]) {
+  for (auto& term : Lie_gen) {
+    const auto& label = term.get_label();
+    const auto& index = term.get<std::vector<int>>("index");
+
+    switch (label[0]) {
     case 'g':
-      Lie_gen[j].append_Jacob
-	(bn_scl*h_ijklm_p(g_im, Lie_gen[j].get<std::vector <int> >("index")));
+      term.append_Jacob(
+			bn_scl * h_ijklm_p(g_im, index));
       break;
     case 'k':
-      Lie_gen[j].append_Jacob
-	(bn_scl*h_ijklm_p(K_re, Lie_gen[j].get<std::vector <int> >("index")));
+      term.append_Jacob(
+			bn_scl * h_ijklm_p(K_re, index));
       break;
     default:
-	printf("\ncompute_Jacob - undefined case: %c\n",
-	       Lie_gen[j].get<std::string>("label")[0]);
-	exit(1);
-	break;
+      std::fprintf(stderr, "\ncompute_Jacob - undefined case: %c\n", label[0]);
+      std::exit(1);
     }
   }
 }
@@ -486,8 +438,84 @@ inline void compute_Jacob
 (const ss_vect<tps> &Id_scl, const param_type &bns,
  std::vector<Lie_gen_class> &Lie_gen)
 {
-  for (auto k = 0; k < bns.n_prm; k++)
+  for (int k = 0; k < bns.n_prm; k++)
     compute_Jacob(bns, k, Id_scl, Lie_gen);
+}
+
+
+Lie_gen_class get_Lie_gen_avg_2
+(const std::string label, const tps &k, const double scl,
+ const int i1, const int j1, const int k1, const int l1, const int m1,
+ const int i2, const int j2, const int k2, const int l2, const int m2)
+{
+  const std::vector<int>
+    ind_1 = {i1, j1, k1, l1, m1},
+    ind_2 = {i2, j2, k2, l2, m2};
+
+  Lie_gen_class      Lie_term;
+  std::ostringstream str;
+
+  Lie_term.set("label", label);
+  Lie_term.set("index", ind_1);
+  Lie_term.set("cst_scl", scl);
+  // Don't scale yet.
+  Lie_term.set("cst", (h_ijklm(k, ind_1)+h_ijklm(k, ind_1))/2e0);
+
+  return Lie_term;
+}
+
+
+void compute_Jacob_avg_2
+(const param_type &bns, const int k, const ss_vect<tps> &Id_scl,
+ std::vector<Lie_gen_class> &Lie_gen)
+{
+  const bool
+    prt     = false;
+  const std::string
+    name    = bns.name[k];
+  const int
+    // Driving terms.
+    n       = bns.n[k];
+  const double
+    bn_scl  = (bns.L[k] == 0e0)? 1e0 : bns.bnL_scl[k]/bns.L[k];
+
+  tps          g_re, g_im, K_re, K_im;
+  ss_vect<tps> A1, A0, M_res;
+
+  set_bn_par(bns.Fnum[k], n, 7);
+
+  danot_(no_tps-1);
+  auto M = get_map();
+  danot_(no_tps);
+  auto K = MapNorm(M, g, A1, A0, M_res, 1);
+  CtoR(g*Id_scl, g_re, g_im);
+  CtoR(K*Id_scl, K_re, K_im);
+
+  if (prt)
+    std::cout << std::scientific << std::setprecision(3)
+	      << "\n" << std::setw(8) << name <<
+      std::setw(4) << bns.Fnum[k] << ":\n"
+	      << std::scientific << std::setprecision(3) << K_re << K_im;
+ 
+  clr_bn_par(bns.Fnum[k], n);
+  for (auto& term : Lie_gen) {
+    const auto& label = term.get_label();
+    const auto& index = term.get<std::vector<int>>("index");
+
+    switch (label[0]) {
+    case 'g':
+      term.append_Jacob(
+			bn_scl * h_ijklm_p(g_im, index));
+      break;
+    case 'k':
+      term.append_Jacob(
+			bn_scl * h_ijklm_p(K_re, index));
+      break;
+    default:
+      std::fprintf(stderr, "\ncompute_Jacob - undefined case: %c\n", label[0]);
+      std::exit(1);
+    }
+  }
 }
 
 
@@ -495,7 +523,7 @@ void Lie_gen_scl(std::vector<Lie_gen_class> &Lie_gen)
 {
   for (auto j = 0; j < (int)Lie_gen.size(); j++) {
     Lie_gen[j].set("cst", Lie_gen[j].get_cst_scl()*Lie_gen[j].get_cst());
-    for (auto k = 0; k < (int)Lie_gen[j].get_Jacob().size(); k++)
+    for (int k = 0; k < (int)Lie_gen[j].get_Jacob().size(); k++)
       Lie_gen[j].set_Jacob
 	(k, Lie_gen[j].get_cst_scl()*Lie_gen[j].get_Jacob()[k]);
   }
@@ -506,8 +534,8 @@ void get_Lie_gen
 (std::vector<Lie_gen_class> &Lie_gens,
  const std::vector<Lie_gen_class> &Lie_gen)
 {
-  for (auto k = 0; k < (int)Lie_gen.size(); k++)
-    Lie_gens.push_back(Lie_gen[k]);
+  for (const auto& lg : Lie_gen)
+    Lie_gens.push_back(lg);
 }
 
 
@@ -538,7 +566,7 @@ std::vector<Lie_gen_class> compute_Lie_gen
 
   auto rdts = get_rdts(Id_scl, g_im);
   compute_Jacob(Id_scl, bns, rdts);
-  // Now do the scaling.
+  // Now scale.
   Lie_gen_scl(rdts);
 
   auto adts = get_adts(Id_scl, K_re);
@@ -568,12 +596,18 @@ void get_system
 {
   const bool prt = false;
 
-  for (auto j = 0; j < m; j++) {
-    b[j+1] = -Lie_gen[j].get_cst();
-    for (auto k = 0; k < n; k++)
-      A[j+1][k+1] = Lie_gen[j].get_Jacob()[k];
-  }
+  auto j1 = 1;
+  for (const auto& term : Lie_gen) {
+    b[j1] = -term.get_cst();
 
+    int k1 = 1;
+    for (const auto& jac : term.get_Jacob()) {
+      A[j1][k1] = jac;
+      ++k1;
+    }
+    ++j1;
+  }
+ 
   if (prt) dmdump(stdout, (char *)"\nA:", A, m, n, (char *)" %10.3e");
 }
 
@@ -582,19 +616,18 @@ std::vector<int> sort_sing_val(const int n, const double w[])
 {
   const bool prt = false;
 
-  std::vector<int> index;
+  std::vector<int> index(n);
+  std::iota(index.begin(), index.end(), 1); // fill with 1..n
 
-  for (auto k = 0; k < n; k++)
-    index.push_back(k+1);
   std::sort(index.begin(), index.end(), [&w](int a, int b) {
     return w[a] > w[b];
   });
 
   if (prt) {
-    printf("\n");
-    for (auto k = 0; k < n; k++)
-      printf(" %d", index[k]);
-    printf("\n");
+    std::cout << "\n";
+    for (const auto& idx : index)
+      std::cout << " " << idx;
+    std::cout << "\n";
   }
 
   return index;
@@ -608,7 +641,7 @@ void get_sing_val(const int n, double w[], const int svd_n_cut)
   std::vector<int> ind;
 
   ind = sort_sing_val(n, w);
-  for (auto k = 1; k <= n; k++) {
+  for (int k = 1; k <= n; k++) {
     printf("  %9.3e", w[ind[k-1]]);
     if (k > n-svd_n_cut) {
       w[ind[k-1]] = 0e0;
@@ -634,7 +667,7 @@ void set_Fam(param_type &bns, const int k, const double scl, const double *dbnL)
 
 void set_bnL(const double scl, const double *dbnL, param_type &bns)
 {
-  for (auto k = 0; k < bns.n_prm; k++)
+  for (std::size_t k = 0; k < static_cast<std::size_t>(bns.n_prm); ++k)
     set_Fam(bns, k, scl, dbnL);
 }
 
@@ -696,10 +729,11 @@ int get_n_mpole(const int loc)
 {
   int n_mpole = 0;
 
-  for (auto k = 0; k < elem[loc-1].mpole->order; k++) {
+  for (int k = 0; k < elem[loc-1].mpole->order; k++) {
     if ((elem[loc-1].mpole->bn[k] != 0e0) || (elem[loc-1].mpole->an[k] != 0e0))
       n_mpole++;
   }
+
   return n_mpole;
 }
 
@@ -718,7 +752,7 @@ void prt_mult(FILE *outf, const int loc, const int n)
     L = elem[loc-1].L;
     fprintf
       (outf, "%-8s: multipole, l = %7.5f, hom = (", name.c_str(), L);
-    for (auto k =  0; k < elem[loc-1].mpole->order; k++) {
+    for (int k =  0; k < elem[loc-1].mpole->order; k++) {
       if ((elem[loc-1].mpole->bn[k] != 0e0)
 	  || (elem[loc-1].mpole->an[k] != 0e0)) {
 	if (first) {
@@ -747,7 +781,7 @@ void prt_bn(const param_type &bns)
   outf = file_write(file_name.c_str());
 
   fprintf(outf, "\n");
-  for (auto k = 0; k < bns.n_prm; k++) {
+  for (int k = 0; k < bns.n_prm; k++) {
     auto loc = (bns.Fnum[k] > 0)? get_loc(bns.Fnum[k], 1) : bns.locs[k][0];
     if (elem[loc-1].mpole->n_design == Dip)
       prt_bend(outf, loc, bns.n[k]);
@@ -786,7 +820,7 @@ void correct
 
   dsvbksb(U, w, V, m, n, b, dbnL);
 #else
-  for (auto k = 0; k < n; k++) {
+  for (int k = 0; k < n; k++) {
     auto Fnum = bns.Fnum[k];
     bnL_max[k+1] = (bns.L[k] == 0e0)?
       bns.bnL_max[k]/bns.bnL_scl[k] :
@@ -958,7 +992,7 @@ int main(int argc, char *argv[])
   // Initialize the symplectic integrator after the energy has been defined.
   ini_si();
 
-  // Disable from TPSALib & LieLib log messages
+  // Disable log messages from TPSALib & LieLib.
   idprset(-1);
 
   daeps_(1e-30);
@@ -966,7 +1000,7 @@ int main(int argc, char *argv[])
   chk_lat();
 
   Id_scl.identity();
-  for (auto k = 0; k < 2; k++) {
+  for (int k = 0; k < 2; k++) {
     twoJ = sqr(A_max[k])/beta_inj[k];
     Id_scl[2*k] *= sqrt(twoJ);
     Id_scl[2*k+1] *= sqrt(twoJ);
@@ -978,7 +1012,7 @@ int main(int argc, char *argv[])
   bns.print();
 
   printf("\n");
-  for (auto k = 1; k <= max_iter; k++) {
+  for (int k = 1; k <= max_iter; k++) {
     printf("\nk = %d:", k);
     Lie_gen = compute_Lie_gen(Id_scl, bns);
     correct(bns, Lie_gen, svd_n_cut, step);
