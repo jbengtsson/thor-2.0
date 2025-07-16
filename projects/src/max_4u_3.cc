@@ -9,11 +9,15 @@
 #include <boost/any.hpp>
 #include <boost/numeric/ublas/vector.hpp>
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <numeric>
 #include <typeinfo>
 
-#define NO 8
+#define ASSERT_MSG(cond, msg) \
+    do { if (!(cond)) { fprintf(stderr, "Assertion failed: %s\n", msg); std::abort(); } } while(0)
+
+
+#define NO 6
 
 #include "thor_lib.h"
 
@@ -35,32 +39,33 @@ const bool
   b_4_zero   = false;
 
 const int
-  max_iter      = 50,
-  svd_n_cut     = 3;
+  max_iter    = 50,
+  svd_n_cut   = 3;
 
 const double
-  A_max[]       = {6e-3, 3e-3},
-  delta_max     = 6e-2,
-  beta_inj[]    = {3.7, 3.9},
+  A_max[]     = {6e-3, 3e-3},
+  delta_max   = 6e-2,
+  beta_inj[]  = {3.7, 3.9},
 
-  bnL_scl[]     = {0e0, 0e0, 0e0,  1e0,  5e1,    5*1e4},
-  bnL_min[]     = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
-  bnL_max[]     = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
+  bnL_scl[]   = {0e0, 0e0, 0e0,  1e0,  5e1,    5*1e4},
+  bnL_min[]   = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
+  bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
 
 #if 1
-  scl_h[]       = {1e-2, 1e-2},
-  scl_ksi[]     = {0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 1e0},
-  scl_a[]       = {1e0, 1e0, 1e0, 1e0},
-  scl_k_sum[]   = {0e0, 0e0},
-  scl_K_avg_2[] = {1e0},
+  scl_h[]     = {1e-2, 1e-2},
+  scl_ksi[]   = {0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 1e0},
+  scl_a[]     = {1e0, 1e0, 1e0, 1e0},
+  scl_k_sum[] = {0e0, 0e0},
+  scl_K_avg[] = {1e2},
 #else
-  scl_h[]       = {1e-30, 1e-30},
-  scl_ksi[]     = {0e0, 1e2, 1e-30, 1e-30, 1e-30, 1e-30, 1e-30},
-  scl_a[]       = {1e-30, 1e-30, 1e-30, 1e-30},
-  scl_k_sum[]   = {1e0, 1e0},
+  scl_h[]     = {1e-30, 1e-30},
+  scl_ksi[]   = {0e0, 1e2, 1e-30, 1e-30, 1e-30, 1e-30, 1e-30},
+  scl_a[]     = {1e-30, 1e-30, 1e-30, 1e-30},
+  scl_k_sum[] = {1e0, 1e0},
+  scl_K_avg[] = {1e0},
 #endif
 
-  step          = 0.15;
+  step        = 0.15;
 
 
 class Lie_gen_class {
@@ -138,6 +143,12 @@ public:
     get_ref<std::vector<double>>("Jacob").push_back(value);
   }
 
+  void print_label(void) const;
+  void print_index_1(void) const;
+  void print_index_2(void) const;
+  void print_cst_scl(void) const;
+  void print_cst(void) const;
+  void print_Jacob(void) const;
   void print(void) const;
 };
 
@@ -180,7 +191,7 @@ void get_ab
 #if 0
 void print() const {
   std::cout << "Label: " << get_label() << "\n";
-  std::cout << "Index: ";
+  std::cout << "Index_1: ";
   for (int idx : get_index_1()) std::cout << idx << " ";
   std::cout << "\nCst Scl: " << get_cst_scl()
 	    << "\nCst: " << get_cst()
@@ -190,14 +201,53 @@ void print() const {
 }
 
 #else
-  void Lie_gen_class::print(void) const
+
+void Lie_gen_class::print_label(void) const
 {
-  printf(" %s_", get_label().c_str());
+  printf(" %5s", get_label().c_str());
+}
+
+void Lie_gen_class::print_index_1(void) const
+{
+  printf(" [");
   for (int k = 0; k < (int)get_index_1().size(); k++)
-    printf("%d", get_index_1()[k]);
-  printf(" %6.1e %10.3e", get_cst_scl(), get_cst());
+    printf(" %d", get_index_1()[k]);
+  printf("]");
+}
+
+void Lie_gen_class::print_index_2(void) const
+{
+  printf(" [");
+  for (int k = 0; k < (int)get_index_2().size(); k++)
+    printf(" %d", get_index_2()[k]);
+  printf("]");
+}
+
+void Lie_gen_class::print_cst_scl(void) const
+{
+  printf(" %6.1e", get_cst_scl());
+}
+
+void Lie_gen_class::print_cst(void) const
+{
+  printf(" %10.3e", get_cst());
+}
+
+void Lie_gen_class::print_Jacob(void) const
+{
   for (int k = 0; k < (int)get_Jacob().size(); k++)
     printf(" %10.3e", get_Jacob()[k]);
+}
+
+void Lie_gen_class::print(void) const
+{
+  print_label();
+  print_index_1();
+  // print_index_2();
+  printf("             ");
+  print_cst_scl();
+  print_cst();
+  print_Jacob();
   printf("\n");
 }
 #endif
@@ -222,8 +272,7 @@ Lie_gen_class get_Lie_gen
 {
   const std::vector<int> ind = {i, j, k, l, m};
 
-  Lie_gen_class      Lie_term;
-  std::ostringstream str;
+  Lie_gen_class Lie_term;
 
   Lie_term.set("label",   label);
   Lie_term.set("index_1", ind);
@@ -248,13 +297,13 @@ void prt_Lie_gen
 
 void prt_system(const param_type &bns)
 {
-  printf("\n           scl.      cst.");
+  printf("\n                                   scl.      cst.");
   for (const auto& name : bns.name)
     printf("      %-5s", name.c_str());
-  printf("\n                         ");
+  printf("\n                                                 ");
   for (const auto& val : bns.n)
     printf("       %1d   ", val);
-  printf("\n                         ");
+  printf("\n                                                 ");
   for (const auto& scl : bns.bnL_scl)
     printf("    %7.1e", scl);
 }
@@ -304,10 +353,12 @@ std::vector<Lie_gen_class> get_adts(const tps &K)
   adts.push_back(get_Lie_gen("K", K, scl_a[0], 1, 1, 1, 1, 0));
   adts.push_back(get_Lie_gen("K", K, scl_a[0], 0, 0, 2, 2, 0));
 
-  adts.push_back(get_Lie_gen("K", K, scl_a[1], 3, 3, 0, 0, 0));
-  adts.push_back(get_Lie_gen("K", K, scl_a[1], 2, 2, 1, 1, 0));
-  adts.push_back(get_Lie_gen("K", K, scl_a[1], 1, 1, 2, 2, 0));
-  adts.push_back(get_Lie_gen("K", K, scl_a[1], 0, 0, 3, 3, 0));
+  if (NO >= 6) {
+    adts.push_back(get_Lie_gen("K", K, scl_a[1], 3, 3, 0, 0, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[1], 2, 2, 1, 1, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[1], 1, 1, 2, 2, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[1], 0, 0, 3, 3, 0));
+  }
 
   if (NO >= 9) {
     adts.push_back(get_Lie_gen("K", K, scl_a[2], 4, 4, 0, 0, 0));
@@ -334,7 +385,8 @@ void prt_adts(const param_type &bns, const std::vector<Lie_gen_class> &adts)
 {
   int k = 0;
   prt_Lie_gen("4th Order Anharmonic ADTs:",  k, 3, adts);
-  prt_Lie_gen("6th Order Anharmonic ADTs:",  k, 4, adts);
+  if (NO >= 6)
+    prt_Lie_gen("6th Order Anharmonic ADTs:",  k, 4, adts);
   if (NO >= 9)
     prt_Lie_gen("8th Order Anharmonic ADTs:",  k, 5, adts);
   if (NO >= 11)
@@ -352,11 +404,15 @@ std::vector<Lie_gen_class> get_xi(const tps &K)
   xi.push_back(get_Lie_gen("K", K, scl_ksi[2], 1, 1, 0, 0, 2));
   xi.push_back(get_Lie_gen("K", K, scl_ksi[2], 0, 0, 1, 1, 2));
 
-  xi.push_back(get_Lie_gen("K", K, scl_ksi[3], 1, 1, 0, 0, 3));
-  xi.push_back(get_Lie_gen("K", K, scl_ksi[3], 0, 0, 1, 1, 3));
+  if (NO >= 6) {
+    xi.push_back(get_Lie_gen("K", K, scl_ksi[3], 1, 1, 0, 0, 3));
+    xi.push_back(get_Lie_gen("K", K, scl_ksi[3], 0, 0, 1, 1, 3));
+  }
 
-  xi.push_back(get_Lie_gen("K", K, scl_ksi[4], 1, 1, 0, 0, 4));
-  xi.push_back(get_Lie_gen("K", K, scl_ksi[4], 0, 0, 1, 1, 4));
+  if (NO >= 7) {
+    xi.push_back(get_Lie_gen("K", K, scl_ksi[4], 1, 1, 0, 0, 4));
+    xi.push_back(get_Lie_gen("K", K, scl_ksi[4], 0, 0, 1, 1, 4));
+  }
 
   if (NO >= 8) {
     xi.push_back(get_Lie_gen("K", K, scl_ksi[5], 1, 1, 0, 0, 5));
@@ -377,8 +433,10 @@ void prt_xi(const param_type &bns, const std::vector<Lie_gen_class> &xi)
   int k = 0;
   prt_Lie_gen("Linear Chromaticity:",      k, 2, xi);
   prt_Lie_gen("2nd Order Chromaticity:",   k, 2, xi);
-  prt_Lie_gen("3rd Order Chromaticity:",   k, 2, xi);
-  prt_Lie_gen("4th Order Chromaticity:",   k, 2, xi);
+  if (NO >= 6)
+    prt_Lie_gen("3rd Order Chromaticity:",   k, 2, xi);
+  if (NO >= 7)
+    prt_Lie_gen("4th Order Chromaticity:",   k, 2, xi);
   if (NO >= 8)
     prt_Lie_gen("5th Order Chromaticity:", k, 2, xi);
   if (NO >= 9)
@@ -386,8 +444,8 @@ void prt_xi(const param_type &bns, const std::vector<Lie_gen_class> &xi)
 }
 
 
-Lie_gen_class get_Lie_K_avg_2_gen
-(const std::string label, const tps &K_avg_2, const double scl,
+Lie_gen_class get_Lie_K_avg_gen
+(const std::string label, const tps &K, const double scl,
  const int i1, const int j1, const int k1, const int l1, const int m1,
  const int i2, const int j2, const int k2, const int l2, const int m2)
 {
@@ -395,8 +453,9 @@ Lie_gen_class get_Lie_K_avg_2_gen
     ind_1 = {i1, j1, k1, l1, m1},
     ind_2 = {i2, j2, k2, l2, m2};
 
-  Lie_gen_class      Lie_term;
-  std::ostringstream str;
+  Lie_gen_class Lie_term;
+
+  auto K_avg_2 = (h_ijklm(K, ind_1)+h_ijklm(K, ind_2))/2e0;
 
   Lie_term.set("label",   label);
   Lie_term.set("index_1", ind_1);
@@ -409,40 +468,48 @@ Lie_gen_class get_Lie_K_avg_2_gen
 }
 
 
-void prt_Lie_K_avg_2_gen
+void prt_Lie_K_avg_gen
 (const std::string &str, int &i0, const int n,
  const std::vector<Lie_gen_class> &Lie_gen)
 {
   printf("\n%s\n", str.c_str());
-  for (int k = i0; k < i0+n; k++)
-    Lie_gen[k].print();
+  for (int k = i0; k < i0+n; k++) {
+    Lie_gen[k].print_label();
+    Lie_gen[k].print_index_1();
+    Lie_gen[k].print_index_2();
+    Lie_gen[k].print_cst_scl();
+    Lie_gen[k].print_cst();
+    Lie_gen[k].print_Jacob();
+    printf("\n");
+  }
   i0 += n;
 }
 
 
-std::vector<Lie_gen_class> get_K_avg_2(const tps &K)
+std::vector<Lie_gen_class> get_K_avg(const tps &K)
 {
   tps                        avg;
   std::vector<Lie_gen_class> K_avg_2;
 
   K_avg_2.push_back
-    (get_Lie_K_avg_2_gen("K_avg_2", K, scl_K_avg_2[0],
-		 1, 1, 0, 0, 2,
-		 1, 1, 0, 0, 4));
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[0], 1, 1, 0, 0, 2, 1, 1, 0, 0, 4));
   K_avg_2.push_back
-    (get_Lie_K_avg_2_gen("K_avg_2", K, scl_K_avg_2[0],
-		 1, 1, 0, 0, 3,
-		 1, 1, 0, 0, 5));
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[0], 1, 1, 0, 0, 3, 1, 1, 0, 0, 5));
+
+  K_avg_2.push_back
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[0], 0, 0, 1, 1, 2, 0, 0, 1, 1, 4));
+  K_avg_2.push_back
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[0], 0, 0, 1, 1, 3, 0, 0, 1, 1, 5));
 
   return K_avg_2;
 }
 
 
-void prt_K_avg_2
-(const param_type &bns, const std::vector<Lie_gen_class> &K_avg_2)
+void prt_K_avg
+(const param_type &bns, const std::vector<Lie_gen_class> &K_avg)
 {
   int k = 0;
-  prt_Lie_K_avg_2_gen("K_avg_2 Terms:", k, 2, K_avg_2);
+  prt_Lie_K_avg_gen("<K> Terms:", k, 2, K_avg);
 }
 
 
@@ -488,7 +555,7 @@ void compute_Jacob
       term.append_Jacob(bn_scl*h_ijklm_p(g_im, index_1));
     else if (label == "K")
       term.append_Jacob(bn_scl*h_ijklm_p(K_re, index_1));
-    else if (label == "K_avg_2")
+    else if (label == "<K>")
       term.append_Jacob
 	(bn_scl*(h_ijklm_p(K_re, index_1)+h_ijklm_p(K_re, index_2)));
     else {
@@ -566,14 +633,20 @@ std::vector<Lie_gen_class> compute_Lie_gen
   compute_Jacob(Id_scl, bns, xi_nl);
   Lie_gen_scl(xi_nl);
 
+  auto K_avg = get_K_avg(K_re);
+  compute_Jacob(Id_scl, bns, K_avg);
+  Lie_gen_scl(K_avg);
+
   prt_system(bns);
   prt_rdts(bns, rdts);
   prt_adts(bns, adts);
   prt_xi(bns, xi_nl);
+  prt_K_avg(bns, K_avg);
 
   get_Lie_gen(Lie_gen, rdts);
   get_Lie_gen(Lie_gen, adts);
   get_Lie_gen(Lie_gen, xi_nl);
+  get_Lie_gen(Lie_gen, K_avg);
 
   return Lie_gen;
 }
