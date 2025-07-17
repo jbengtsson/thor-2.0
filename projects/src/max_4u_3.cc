@@ -35,11 +35,12 @@ extern double b2_max;
 const bool
   b_3_opt    = !false,
   b_4_opt    = !false,
-  b_3_zero   = !false,
-  b_4_zero   = !false;
+  b_3_zero   = false,
+  b_4_zero   = false;
 
 const int
   max_iter    = 50,
+  // Start with zero(, then increase one-by-one).
   svd_n_cut   = 0;
 
 const double
@@ -53,16 +54,17 @@ const double
 
 #if 1
   scl_h[]     = {1e-2, 1e-2},
-  scl_ksi[]   = {0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 1e0},
+  scl_ksi[]   = {0e0, 1e2, 1e0, 1e0, 1e0, 1e0, 1e0},
   scl_a[]     = {1e0, 1e0, 1e0, 1e0},
   scl_k_sum[] = {0e0, 0e0},
-  scl_K_avg[] = {1e2, 1e2},
+  // Start with 1e2 for the chromatic terms.
+  scl_K_avg[] = {1e-3, 1e-3, 1e-3, 1e2, 1e2},
 #else
   scl_h[]     = {1e-30, 1e-30},
   scl_ksi[]   = {0e0, 1e2, 1e-30, 1e-30, 1e-30, 1e-30, 1e-30},
   scl_a[]     = {1e-30, 1e-30, 1e-30, 1e-30},
   scl_k_sum[] = {1e0, 1e0},
-  scl_K_avg[] = {1e0},
+  scl_K_avg[] = {0e0, 0e0, 0e0, 1e1, 1e1},
 #endif
 
   step        = 0.15;
@@ -492,14 +494,25 @@ std::vector<Lie_gen_class> get_K_avg(const tps &K)
   std::vector<Lie_gen_class> K_avg_2;
 
   K_avg_2.push_back
-    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[0], 1, 1, 0, 0, 2, 1, 1, 0, 0, 4));
-  K_avg_2.push_back
-    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[0], 1, 1, 0, 0, 3, 1, 1, 0, 0, 5));
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[0], 2, 2, 0, 0, 0, 4, 4, 0, 0, 0));
 
   K_avg_2.push_back
-    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[1], 0, 0, 1, 1, 2, 0, 0, 1, 1, 4));
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[1], 0, 0, 2, 2, 0, 0, 0, 4, 4, 0));
+
   K_avg_2.push_back
-    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[1], 0, 0, 1, 1, 3, 0, 0, 1, 1, 5));
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[2], 1, 1, 1, 1, 0, 2, 2, 1, 1, 0));
+  K_avg_2.push_back
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[2], 1, 1, 1, 1, 0, 1, 1, 2, 2, 0));
+
+  K_avg_2.push_back
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[3], 1, 1, 0, 0, 2, 1, 1, 0, 0, 4));
+  K_avg_2.push_back
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[3], 1, 1, 0, 0, 3, 1, 1, 0, 0, 5));
+
+  K_avg_2.push_back
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[4], 0, 0, 1, 1, 2, 0, 0, 1, 1, 4));
+  K_avg_2.push_back
+    (get_Lie_K_avg_gen("<K>", K, scl_K_avg[4], 0, 0, 1, 1, 3, 0, 0, 1, 1, 5));
 
   return K_avg_2;
 }
@@ -509,7 +522,7 @@ void prt_K_avg
 (const param_type &bns, const std::vector<Lie_gen_class> &K_avg)
 {
   int k = 0;
-  prt_Lie_K_avg_gen("<K> Terms:", k, 4, K_avg);
+  prt_Lie_K_avg_gen("<K> Terms:", k, 8, K_avg);
 }
 
 
