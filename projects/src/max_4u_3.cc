@@ -40,8 +40,8 @@ const bool
 
 const int
   max_iter    = 50,
-  // Start with zero(, then increase one-by-one).
-  svd_n_cut   = 0;
+  // Start with zero, then increase to 3, or 4.
+  svd_n_cut   = 4;
 
 const double
   A_max[]     = {6e-3, 3e-3},
@@ -56,8 +56,11 @@ const double
   scl_h[]     = {1e-2, 1e-2},
   scl_ksi[]   = {0e0, 1e2, 1e0, 1e0, 1e0, 1e0, 1e0},
   scl_a[]     = {1e0, 1e0, 1e0, 1e0},
-  scl_k_sum[] = {0e0, 0e0},
-  // Start with 1e2 for the chromatic terms.
+  scl_k_sum[] = {0e2, 0e2},
+  // Start with:
+  //   scl_K_avg = [1e3, 1e3],    scl_ksi[] = 5e0,
+  // then reduce to:
+  //   scl_K_avg = [1e2, 1e2],    scl_ksi[] = 1e0,
   scl_K_avg[] = {1e-3, 1e-3, 1e-3, 1e2, 1e2},
 #else
   scl_h[]     = {1e-30, 1e-30},
