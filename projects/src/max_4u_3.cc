@@ -32,12 +32,6 @@ int
 extern double b2_max;
 
 
-const bool
-  b_3_opt     = !false,
-  b_4_opt     = !false,
-  b_3_zero    = !false,
-  b_4_zero    = !false;
-
 const int
   max_iter    = 50;
 
@@ -56,8 +50,16 @@ const double
   //   scl_ksi[] = [0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 5e0],
   //   scl_  a   = [1e0, 1e0, 1e0, 1e0],
   //   scl_K_avg = [1e-3, 1e-3, 1e-3, 1e3, 1e3].
+
+const bool
+  b_3_opt     = true,
+  b_4_opt     = true,
+  b_3_zero    = true,
+  b_4_zero    = true;
+
 const int
   svd_n_cut   = 0;
+
 const double
   scl_h[]     = {1e-2, 1e-2},
   scl_ksi[]   = {0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 5e0},
@@ -70,8 +72,16 @@ const double
   //   scl_ksi[] = [0e0, 1e2, 1e0, 1e0, 1e0, 1e0, 1e].
   //   scl_a     = [5e0, 5e0, 5e0, 5e0],
   //   scl_K_avg = [1e-3, 1e-3, 1e-3, 1e2, 1e2].
+
+const bool
+  b_3_opt     = true,
+  b_4_opt     = true,
+  b_3_zero    = false,
+  b_4_zero    = false;
+
 const int
-  svd_n_cut   = 0;
+  svd_n_cut   = 0*2;
+
 const double
   scl_h[]     = {1e-2, 1e-2},
   scl_ksi[]   = {0e0, 1e2, 1e0, 1e0, 1e0, 1e0, 1e0},
