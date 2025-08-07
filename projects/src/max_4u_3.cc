@@ -33,15 +33,13 @@ extern double b2_max;
 
 
 const bool
-  b_3_opt    = !false,
-  b_4_opt    = !false,
-  b_3_zero   = !false,
-  b_4_zero   = !false;
+  b_3_opt     = !false,
+  b_4_opt     = !false,
+  b_3_zero    = !false,
+  b_4_zero    = !false;
 
 const int
-  max_iter    = 50,
-  // There appears to two singular values.
-  svd_n_cut   = 0;
+  max_iter    = 50;
 
 const double
   A_max[]     = {6e-3, 3e-3},
@@ -50,14 +48,17 @@ const double
 
   bnL_scl[]   = {0e0, 0e0, 0e0,  1e0,  5e1,    5*1e4},
   bnL_min[]   = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
-  bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
+  bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5};
 
-#if 1
+#if 0
   // Start with:
   //   svd_n_cut = 0,
   //   scl_ksi[] = [0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 5e0],
   //   scl_  a   = [1e0, 1e0, 1e0, 1e0],
   //   scl_K_avg = [1e-3, 1e-3, 1e-3, 1e3, 1e3].
+const int
+  svd_n_cut   = 0;
+const double
   scl_h[]     = {1e-2, 1e-2},
   scl_ksi[]   = {0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 5e0},
   scl_a[]     = {1e0, 1e0, 1e0, 1e0},
@@ -69,6 +70,9 @@ const double
   //   scl_ksi[] = [0e0, 1e2, 1e0, 1e0, 1e0, 1e0, 1e].
   //   scl_a     = [5e0, 5e0, 5e0, 5e0],
   //   scl_K_avg = [1e-3, 1e-3, 1e-3, 1e2, 1e2].
+const int
+  svd_n_cut   = 0;
+const double
   scl_h[]     = {1e-2, 1e-2},
   scl_ksi[]   = {0e0, 1e2, 1e0, 1e0, 1e0, 1e0, 1e0},
   scl_a[]     = {5e0, 5e0, 5e0, 5e0},
