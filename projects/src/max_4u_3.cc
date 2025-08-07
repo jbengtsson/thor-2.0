@@ -778,7 +778,7 @@ void prt_bend(FILE *outf, const int loc, const int n)
 	  "%-8s: Multipole, L = %7.5f, Phi = %7.5f, Phi_1 = %7.5f"
 	  ", Phi_2 = %7.5f,\n"
 	  "          HOM = (%d, %12.5e, 0e0, %d, %12.5e, 0e0),\n"
-	  "          N = nbend;\n",
+	  "          N = n_bend;\n",
 	  elemp->Name, elemp->L,
 	  elemp->L*elemp->mpole->h_bend*180e0/M_PI,
 	  elemp->mpole->edge1, elemp->mpole->edge2,
@@ -792,7 +792,7 @@ void prt_quad(FILE *outf, const int loc, const int n)
   fprintf
     (outf,
      "%-8s: Multipole, L = %7.5f,\n          HOM = (%d, %12.5e, 0e0,"
-     " %d, %12.5e, 0e0),\n          N = nquad;\n",
+     " %d, %12.5e, 0e0),\n          N = n_quad;\n",
      elem[loc-1].Name, elem[loc-1].L, Quad,
      get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, Quad), n,
      get_bn(elem[loc-1].Fnum, elem[loc-1].Knum, n));
@@ -805,9 +805,8 @@ void prt_single_mult(FILE *outf, const int loc, const int n)
   case Sext:
     fprintf
       (outf,
-       "%-8s: Sextupole, L = %7.5f, B_3 = %12.5e, N = %d;\n",
-       elem[loc-1].Name, elem[loc-1].L, elem[loc-1].mpole->bn[Sext-1],
-       elem[loc-1].mpole->n_step);
+       "%-8s: Sextupole, L = %7.5f, B_3 = %12.5e, N = n_sext;\n",
+       elem[loc-1].Name, elem[loc-1].L, elem[loc-1].mpole->bn[Sext-1]);
     break;
   case Oct:
     fprintf
