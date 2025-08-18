@@ -33,20 +33,20 @@ extern double b2_max;
 
 
 const int
-  max_iter    = 50;
+  max_iter    = 100;
 
 const double
   A_max[]     = {6e-3, 3e-3},
   delta_max   = 6e-2,
   beta_inj[]  = {3.7, 3.9},
 
-  bnL_scl[]   = {0e0, 0e0, 0e0,  1e0,  5e1,    5*1e4},
+  bnL_scl[]   = {0e0, 0e0, 0e0,  1e0,  5e1/1e2,    5*1e4},
   bnL_min[]   = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
   bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5};
 
 #if 0
   // Start with:
-  //   svd_n_cut = 0,
+  //   svd_n_cut = 0 or 1,
   //   scl_ksi[] = [0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 5e0],
   //   scl_  a   = [1e0, 1e0, 1e0, 1e0],
   //   scl_K_avg = [1e-3, 1e-3, 1e-3, 1e3, 1e3].
@@ -64,11 +64,13 @@ const double
   scl_h[]     = {1e-2, 1e-2},
   scl_ksi[]   = {0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 5e0},
   scl_a[]     = {1e0, 1e0, 1e0, 1e0},
+  // scl_ksi[]   = {0e0, 5*1e2, 1e0, 1e0, 1e0, 1e0, 1e0},
+  // scl_a[]     = {2e-1, 2e-1, 2e-1, 2e-1},
   scl_K_avg[] = {1e-3, 1e-3, 1e-3, 1e3, 1e3},
   scl_k_sum[] = {0e2, 0e2},
 #else
   // Then proceed with:
-  //   svd_n_cut = 2,
+  //   svd_n_cut = 0,
   //   scl_ksi[] = [0e0, 1e2, 1e0, 1e0, 1e0, 1e0, 1e].
   //   scl_a     = [5e0, 5e0, 5e0, 5e0],
   //   scl_K_avg = [1e-3, 1e-3, 1e-3, 1e2, 1e2].
@@ -80,7 +82,7 @@ const bool
   b_4_zero    = false;
 
 const int
-  svd_n_cut   = 0*2;
+  svd_n_cut   = 0;
 
 const double
   scl_h[]     = {1e-2, 1e-2},
