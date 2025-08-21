@@ -42,7 +42,8 @@ const double
 
   bnL_scl[]   = {0e0, 0e0, 0e0,  1e0,  5e1/1e2,    5*1e4},
   bnL_min[]   = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
-  bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5};
+  bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
+  scl_svd[]   = {1e0, 1e0, 1e0, 1e0, 1e1, 1e1, 1e1};
 
 #if 0
   // Start with:
@@ -736,20 +737,23 @@ std::vector<int> sort_sing_val(const int n, const double w[])
 
 void get_sing_val(const int n, double w[], const int svd_n_cut)
 {
-  const int n_prt = 8;
-
   std::vector<int> ind;
 
   ind = sort_sing_val(n, w);
+  printf("\n");
   for (int k = 1; k <= n; k++) {
     printf("  %9.3e", w[ind[k-1]]);
-    if (k > n-svd_n_cut) {
+    if (k <= n-svd_n_cut)
+      w[ind[k-1]] *= scl_svd[k-1];
+    else {
       w[ind[k-1]] = 0e0;
       printf(" (zeroed)");
     }
-    if (k % n_prt == 0) printf("\n");
   }
-  if (n % n_prt != 0) printf("\n");
+  printf("\n");
+  for (int k = 1; k <= n; k++)
+    printf("  %9.3e", w[ind[k-1]]);
+  printf("\n");
 }
 
 
