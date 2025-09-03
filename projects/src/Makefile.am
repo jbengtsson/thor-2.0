@@ -44,9 +44,9 @@ max_4u_4_SOURCES      = max_4u_4.cc param_type.cc
 
 LOCAL = /usr/local
 
-LIBS =	$(NUM_REC)/lib/libnum_rec.a \
-	$(THOR_LIB)/thor/lib/libthor.a \
+LIBS =	$(THOR_LIB)/thor/lib/libthor.a \
 	$(THOR_LIB)/thor/lib/libTPSALib.a $(THOR_LIB)/thor/lib/libLieLib.a \
+	$(NUM_REC)/lib/libnum_rec.a \
 	-L$(LOCAL)/opt/gsl/lib -lgsl \
 	-L$(LOCAL)/opt/gfortran/lib/gcc/current -lgfortran
 
@@ -64,7 +64,7 @@ AM_FFLAGS = \
 AM_CXXFLAGS = -g -Og -Wall -fPIC -std=c++11
 
 # Allocate on heap & set stack size to 1 GB.
-AM_LDFLAGS = -F/System/Library/Frameworks -framework CoreServices
+#AM_LDFLAGS = -F/System/Library/Frameworks -framework CoreServices
 
 UNLIMIT_RESOURCES = datasize memorysize stacksize
 # System limit:
