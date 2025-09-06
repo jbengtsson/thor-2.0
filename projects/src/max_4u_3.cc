@@ -33,7 +33,7 @@ extern double b2_max;
 
 
 const int
-  max_iter    = 100;
+  max_iter    = 300;
 
 const double
   A_max[]     = {6e-3, 3e-3},
@@ -43,7 +43,7 @@ const double
   bnL_scl[]   = {0e0, 0e0, 0e0,  1e0,  5e1/1e2,    5*1e4},
   bnL_min[]   = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
   bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
-  scl_svd[]   = {1e0, 1e0, 1e0, 1e0, 1e1, 1e1, 1e1};
+  scl_svd[]   = {1e0, 1e0, 1e0, 1e0, 5e2, 5e2, 5e2};
 
 #if 0
   // Start with:
@@ -80,7 +80,7 @@ const bool
   b_3_opt     = true,
   b_4_opt     = true,
   b_3_zero    = false,
-  b_4_zero    = false;
+  b_4_zero    = !false;
 
 const int
   svd_n_cut   = 0;
@@ -93,7 +93,7 @@ const double
   scl_k_sum[] = {0e2, 0e2},
 #endif
 
-  step        = 0.15;
+  step        = 4*0.15;
 
 
 class Lie_gen_class {
@@ -381,11 +381,22 @@ std::vector<Lie_gen_class> get_adts(const tps &K)
   adts.push_back(get_Lie_gen("K", K, scl_a[0], 1, 1, 1, 1, 0));
   adts.push_back(get_Lie_gen("K", K, scl_a[0], 0, 0, 2, 2, 0));
 
+  adts.push_back(get_Lie_gen("K", K, scl_a[0], 2, 2, 0, 0, 1));
+  adts.push_back(get_Lie_gen("K", K, scl_a[0], 1, 1, 1, 1, 1));
+  adts.push_back(get_Lie_gen("K", K, scl_a[0], 0, 0, 2, 2, 1));
+
   if (NO >= 6) {
     adts.push_back(get_Lie_gen("K", K, scl_a[1], 3, 3, 0, 0, 0));
     adts.push_back(get_Lie_gen("K", K, scl_a[1], 2, 2, 1, 1, 0));
     adts.push_back(get_Lie_gen("K", K, scl_a[1], 1, 1, 2, 2, 0));
     adts.push_back(get_Lie_gen("K", K, scl_a[1], 0, 0, 3, 3, 0));
+  }
+
+  if (NO >= 7) {
+    adts.push_back(get_Lie_gen("K", K, scl_a[1], 3, 3, 0, 0, 1));
+    adts.push_back(get_Lie_gen("K", K, scl_a[1], 2, 2, 1, 1, 1));
+    adts.push_back(get_Lie_gen("K", K, scl_a[1], 1, 1, 2, 2, 1));
+    adts.push_back(get_Lie_gen("K", K, scl_a[1], 0, 0, 3, 3, 1));
   }
 
   if (NO >= 9) {
@@ -413,8 +424,11 @@ void prt_adts(const param_type &bns, const std::vector<Lie_gen_class> &adts)
 {
   int k = 0;
   prt_Lie_gen("4th Order Anharmonic ADTs:",  k, 3, adts);
+  prt_Lie_gen("4th Order Anharmonic Cross Terms:",  k, 3, adts);
   if (NO >= 6)
     prt_Lie_gen("6th Order Anharmonic ADTs:",  k, 4, adts);
+  if (NO >= 7)
+    prt_Lie_gen("6th Order Anharmonic Cross Terms:",  k, 4, adts);
   if (NO >= 9)
     prt_Lie_gen("8th Order Anharmonic ADTs:",  k, 5, adts);
   if (NO >= 11)
