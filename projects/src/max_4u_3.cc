@@ -45,7 +45,7 @@ const double
   bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
   scl_svd[]   = {1e0, 1e0, 1e0, 1e0, 5e2, 5e2, 5e2};
 
-#if 0
+#if 1
   // Start with:
   //   svd_n_cut = 0 or 1,
   //   scl_ksi[] = [0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 5e0],
@@ -972,7 +972,7 @@ void no_mpoles(const int n)
 
 void get_bns(param_type &bns)
 {
-  const int lat = 4;
+  const int lat = 5;
 
   if (b_3_zero)
     no_mpoles(Sext);
@@ -1039,6 +1039,20 @@ void get_bns(param_type &bns)
     }
     break;
   case 5:
+    if (b_3_opt) {
+      bns.add_Fam("s1_n1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s2_n1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s3_n1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+      bns.add_Fam("s4_n1", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
+    }
+
+    if (b_4_opt) {
+      bns.add_Fam("o1_n1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o2_n1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+      bns.add_Fam("o3_n1",  Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+    }
+    break;
+  case 6:
     if (b_3_opt) {
       bns.add_Fam("sfm", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
       bns.add_Fam("sfi", Sext, bnL_min[Sext], bnL_max[Sext], bnL_scl[Sext]);
