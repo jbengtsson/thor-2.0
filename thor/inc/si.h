@@ -81,9 +81,9 @@ typedef struct {
   char   file_name[100];               // filename for insertion description
   double scl;                          // scale factor
   int    nx, nz;                       // hor/ver no of points
-  double tabx[IDXMAX], tabz[IDZMAX], // hor/ver spacing
+  double tabx[IDXMAX], tabz[IDZMAX],   // hor/ver spacing
          thetax[IDZMAX][IDXMAX],
-         thetax1[IDZMAX][IDXMAX],    // first order => 1
+         thetax1[IDZMAX][IDXMAX],      // first order => 1
          thetaz[IDZMAX][IDXMAX],
          thetaz1[IDZMAX][IDXMAX],
          **tx, **tz,
@@ -150,8 +150,9 @@ extern Family            Families[];
 
 extern bool lost;
 
-extern bool rad_on, H_exact, totpath_on, cavity_on, quad_fringe_on;
-extern bool emittance_on, IBS_on;
+extern bool
+  trace_on, rad_on, H_exact, totpath_on, cavity_on, quad_fringe_on,
+  emittance_on, IBS_on, EPU_on;
 
 void ini_si(void);
 

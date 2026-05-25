@@ -14,9 +14,10 @@ double E0, dE, beta0, gamma0;
 tps    I2, I4, I5, dcurly_H, dI4;
 tps    D_[3]; // diff. coeff. for the linear invarient
 
-bool rad_on    = false, H_exact        = false, totpath_on   = false;
-bool cavity_on = false, quad_fringe_on = false, emittance_on = false;
-bool IBS_on    = false;
+bool
+  trace_on     = false, rad_on     = false, H_exact        = false,
+  totpath_on   = false, cavity_on  = false, quad_fringe_on = false,
+  emittance_on = false, IBS_on     = false, EPU_on         = false;
 
 
 /* initialize symplectic integrator */
@@ -378,6 +379,7 @@ void bend_HE_fringe(double h_bend, double phi, double gap, ss_vect<T> &x)
     // warning: => diverging Taylor map (see SSC-141)
     // x[py_] -=
     //   h_bend*tan(dtor(phi)-get_psi(h_bend, phi, gap))*x[y_]/(1.0+x[delta_]);
+    // Leading order correction.
     x[py_] -=
       h_bend*tan(dtor(phi)-get_psi(h_bend, phi, gap))*x[y_]*(1.0-x[delta_]);
   } else
@@ -615,8 +617,9 @@ void get_Axy(const wiggler_type *W, const T z, const ss_vect<T> &x,
   }
 }
 
+
 template<typename T>
-void wiggler_pass(const elem_type<T> &elem, ss_vect<T> &x)
+void wiggler_pass_EF(const elem_type<T> &elem, ss_vect<T> &x)
 {
   // first order symplectic integrator for wiggler using expanded Hamiltonian
 
@@ -625,19 +628,30 @@ void wiggler_pass(const elem_type<T> &elem, ss_vect<T> &x)
   T           B[3], AxoBrho, AyoBrho, AxoBrhop[3], AyoBrhop[3];
   T           hops0, ps0;
   
-  h = elem.L/elem.wiggler->n_step; z = 0.0;
+  h = elem.L/elem.wiggler->n_step;
+  z = 0.0;
   for (i = 1; i <= elem.wiggler->n_step; ++i) {
     get_Axy(elem.wiggler, z, x, AxoBrho, AyoBrho, AxoBrhop, AyoBrhop);
-    ps0 = 1.0 + x[delta_]; hops0 = h/ps0;
-    a11 = hops0*AxoBrhop[X_]; a12 = hops0*AyoBrhop[X_];
-    a21 = hops0*AxoBrhop[Y_]; a22 = hops0*AyoBrhop[Y_];
+    ps0 = 1.0 + x[delta_];
+    hops0 = h/ps0;
+    a11 = hops0*AxoBrhop[X_];
+    a12 = hops0*AyoBrhop[X_];
+    a21 = hops0*AxoBrhop[Y_];
+    a22 = hops0*AyoBrhop[Y_];
     det = 1.0 - a11 - a22 + a11*a22 - a12*a21;
-    d1 = hops0*AxoBrho*AxoBrhop[X_]; d2 = hops0*AxoBrho*AxoBrhop[Y_];
-    c11 = (1.0-a22)/det; c12 = a12/det; c21 = a21/det; c22 = (1.0-a11)/det;
+    d1 = hops0*AxoBrho*AxoBrhop[X_];
+    d2 = hops0*AxoBrho*AxoBrhop[Y_];
+    c11 = (1.0-a22)/det;
+    c12 = a12/det;
+    c21 = a21/det;
+    c22 = (1.0-a11)/det;
     x2 = c11*(x[px_]-d1) + c12*(x[py_]-d2);
-    x[py_] = c21*(x[px_]-d1) + c22*(x[py_]-d2); x[px_] = x2;
-    x[x_] += hops0*(x[px_]-AxoBrho); x[y_] += hops0*x[py_];
-    d1 = (x[px_]-AxoBrho)/ps0; d2 = (x[py_]-AyoBrho)/ps0;
+    x[py_] = c21*(x[px_]-d1) + c22*(x[py_]-d2);
+    x[px_] = x2;
+    x[x_] += hops0*(x[px_]-AxoBrho);
+    x[y_] += hops0*x[py_];
+    d1 = (x[px_]-AxoBrho)/ps0;
+    d2 = (x[py_]-AyoBrho)/ps0;
     x[ct_] += h*(sqr(d1)+sqr(d2))/2.0;
 
     if (totpath_on) x[ct_] += h;
@@ -646,6 +660,128 @@ void wiggler_pass(const elem_type<T> &elem, ss_vect<T> &x)
       B[X_] = -AyoBrhop[Z_]; B[Y_] = AxoBrhop[Z_];
       B[Z_] = AyoBrhop[X_] - AxoBrhop[Y_];
       radiate(x, h, 0.0, B);
+    }
+
+    z += h;
+  }
+}
+
+
+template<typename T>
+inline void get_Axy2
+(const T z, const double kxV, const double kxH, const double kz,
+ const double BoBrhoV, const double BoBrhoH, const double phi,
+ ss_vect<T> &x, T AxoBrho[], T AyoBrho[])
+{
+  // Vector potential for helical undulator.
+  int i;
+  T   cx, sx, cz1, cz2, sz1, sz2, chy, shy, kyH, kyV, chx, shx, cy, sy;
+
+  for (i = 0; i <= 3; ++i) {
+    AxoBrho[i] = 0e0;
+    AyoBrho[i] = 0e0;
+  }
+
+  kyV = sqrt(sqr(kz)+sqr(kxV));
+  kyH = sqrt(sqr(kz)+sqr(kxH));
+  if (trace_on) {
+    printf("\nget_Axy2:\n");
+    printf("  kz = %10.3e kxH = %10.3e kxV = %10.3e\n",
+	   is_double<T>::cst(kz), is_double<T>::cst(kxH),
+	   is_double<T>::cst(kxV));
+    printf("                  kyH = %10.3e kyV = %10.3e\n",
+	   is_double<T>::cst(kyH), is_double<T>::cst(kyV));
+  }
+  cx =  cos(kxV*x[x_]);
+  sx =  sin(kxV*x[x_]);
+  cy =  cos(kxH*x[y_]);
+  sy =  sin(kxH*x[y_]);
+  chx = cosh(kyH*x[x_]);
+  shx = sinh(kyH*x[x_]);
+  chy = cosh(kyV*x[y_]);
+  shy = sinh(kyV*x[y_]);
+  sz1 = sin(kz*z);
+  sz2 = sin(kz*z+phi);
+
+  AxoBrho[0] += BoBrhoV/kz*cx*chy*sz1;
+  AxoBrho[0] -= BoBrhoH*kxH/(kyH*kz)*shx*sy*sz2;
+  AyoBrho[0] += BoBrhoV*kxV/(kyV*kz)*sx*shy*sz1;
+  AyoBrho[0] -= BoBrhoH/kz*chx*cy*sz2;
+
+  /* derivatives with respect to x */
+  AxoBrho[1] -= BoBrhoV*kxV/kz*sx*chy*sz1;
+  AxoBrho[1] -= BoBrhoH*kxH/kz*chx*sy*sz2;
+  AyoBrho[1] += BoBrhoV*sqr(kxV)/(kyV*kz)*cx*shy*sz1;
+  AyoBrho[1] -= BoBrhoH*kyH/kz*shx*cy*sz2;
+
+  /* derivatives with respect to y */
+  AxoBrho[2] += BoBrhoV*kyV/kz*cx*shy*sz1;
+  AxoBrho[2] -= BoBrhoH*sqr(kxH)/(kyH*kz)*shx*cy*sz2;
+  AyoBrho[2] += BoBrhoV*kxV/kz*sx*chy*sz1;
+  AyoBrho[2] += BoBrhoH*kxH/kz*chx*sy*sz2;
+
+  if (rad_on) {
+    cz1 = cos(kz*z);
+    cz2=cos(kz*z+phi);
+    /* derivatives with respect to z */
+    AxoBrho[3] += BoBrhoV*cx*chy*cz1;
+    AxoBrho[3] -= BoBrhoH*kxH/kyH*shx*sy*cz2;
+    AyoBrho[3] += BoBrhoV*kxV/kyV*sx*shy*cz1;
+    AyoBrho[3] -= BoBrhoH*chx*cy*cz2;
+  }
+}
+
+
+template<typename T>
+void wiggler_pass_EF2
+(int nstep, T L, double kxV, double kxH, double kz, double BoBrhoV,
+ double BoBrhoH, double phi, ss_vect<T> &x)
+{
+  // First order symplectic integrator for wiggler using expanded Hamiltonian
+
+  int i;
+  T   h, z, hodp, B[3], px1, px2, px3, py1, py2, AxoBrho[4], AyoBrho[4], psi;
+
+  h = L/nstep;
+  z = 0e0;
+  for (i = 1; i <= nstep; ++i) {
+    get_Axy2(z, kxV, kxH, kz, BoBrhoV, BoBrhoH, phi, x, AxoBrho, AyoBrho);
+
+    psi = 1e0 + x[delta_];
+    hodp = h/psi;
+
+    px1 =
+      (x[px_]-(AxoBrho[0]*AxoBrho[1]+AyoBrho[0]*AyoBrho[1])*hodp)
+      *(1-AyoBrho[2]*hodp);
+    px2 =
+      (x[py_]-(AxoBrho[0]*AxoBrho[2]+AyoBrho[0]*AyoBrho[2])*hodp)
+      *AyoBrho[1]*hodp;
+    px3 =
+      (1-AxoBrho[1]*hodp)*(1-AyoBrho[2]*hodp)
+      - AxoBrho[2]*AyoBrho[1]*hodp*hodp;
+
+    py1 =
+      (x[py_]-(AxoBrho[0]*AxoBrho[2]+AyoBrho[0]*AyoBrho[2])*hodp)
+      *(1-AxoBrho[1]*hodp);
+    py2 =
+      (x[px_]-(AxoBrho[0]*AxoBrho[1]+AyoBrho[0]*AyoBrho[1])*hodp)
+      *AxoBrho[2]*hodp;
+
+    x[px_] = (px1+px2)/px3;
+    x[py_] = (py1+py2)/px3;
+
+    x[x_] += hodp*(x[px_]-AxoBrho[0]);
+    x[y_] += hodp*(x[py_]-AyoBrho[0]);
+    x[ct_] +=
+      h*(sqr((x[px_]-AxoBrho[0])/psi) + sqr((x[py_]-AyoBrho[0])/psi))/2e0;
+
+    if (totpath_on) x[ct_] += h;
+
+    if (rad_on || emittance_on) {
+      B[X_] = -AyoBrho[3];
+      B[Y_] = AxoBrho[3];
+      B[Z_] = AyoBrho[1] - AxoBrho[2];
+      radiate(x, h, 0e0, B);
     }
 
     z += h;
@@ -988,7 +1124,14 @@ bool si(const long int i0, const long int i1, ss_vect<T> &x,
     case Wiggler:
       switch (elem[i-1].wiggler->method) {
       case 1:
-	wiggler_pass(elem[i-1], x);
+	if (!EPU_on)
+	  wiggler_pass_EF(elem[i-1], x);
+	else
+	  wiggler_pass_EF2
+	    (elem[i-1].wiggler->n_step, elem[i-1].L, elem[i-1].wiggler->kxV[0],
+	     elem[i-1].wiggler->kxH[0], 2e0*M_PI/elem[i-1].wiggler->lambda,
+	     elem[i-1].wiggler->BoBrhoV[0], elem[i-1].wiggler->BoBrhoH[0],
+	     elem[i-1].wiggler->phi[0], x);
 	break;
       case 2:
 	wiggler_pass_Wu(elem[i-1], x);
