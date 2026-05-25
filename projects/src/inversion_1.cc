@@ -18,7 +18,7 @@
 	std::abort(); } } while(0)
 
 
-#define NO 4
+#define NO 5
 
 #include "thor_lib.h"
 
@@ -45,8 +45,7 @@ const double
   bnL_min[]   = {0e0, 0e0, 0e0, -5e2, -5.0e4, -1.5e5},
   bnL_max[]   = {0e0, 0e0, 0e0,  5e2,  5.0e4,  1.5e5},
   // Compensate for different units.
-  // scl_svd[]   = {1e0, 1e0, 1e0, 1e0, 5e2, 5e2, 5e2};
-  scl_svd[]   = {1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 5e2, 5e2, 5e2};
+  scl_svd[]   = {5e2, 5e2, 5e2, 5e2, 5e2};
 
   // Start with:
   //   svd_n_cut = 0 or 1,
@@ -55,23 +54,17 @@ const double
   //   scl_K_avg = [1e-3, 1e-3, 1e-3, 1e3, 1e3].
 
 const bool
-  b_3_opt     = true,
-  b_4_opt     = true,
   b_3_zero    = true,
   b_4_zero    = true;
 
 const int
-  svd_n_cut   = 0;
+  svd_n_cut   = 1;
 
 const double
-  scl_h[]     = {1e-2, 1e-2},
-  scl_ksi[]   = {0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 5e0},
+  scl_h[]     = {0e-2, 1e-2},
+  scl_ksi[]   = {0e0, 0e2, 5e0, 5e0, 5e0, 5e0, 5e0},
   scl_a[]     = {1e0, 1e0, 1e0, 1e0},
-  // scl_ksi[]   = {0e0, 5*1e2, 1e0, 1e0, 1e0, 1e0, 1e0},
-  // scl_a[]     = {2e-1, 2e-1, 2e-1, 2e-1},
-  // scl_K_avg[] = {1e-3, 1e-3, 1e-3, 1e3, 1e3},
-  scl_K_avg[] = {1e-3, 1e-3, 1e-3, 5e3, 5e3},
-  scl_k_sum[] = {0e2, 0e2},
+  scl_K_avg[] = {0e-3, 0e-3, 0e-3, 0e3, 0e3},
 
   step        = 4*0.15;
 
@@ -960,6 +953,8 @@ void get_bns(param_type &bns)
   bns.add_Fam("oct_1", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
   bns.add_Fam("oct_2", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
   bns.add_Fam("oct_3", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+  bns.add_Fam("oct_4", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
+  bns.add_Fam("oct_5", Oct, bnL_min[Oct], bnL_max[Oct], bnL_scl[Oct]);
 }
 
 
@@ -976,11 +971,10 @@ void chk_lat(void)
   nus = dHdJ(K);
   get_nu_ksi(nus, nu, ksi);
   get_ab(A1, alpha, beta, 0);
+  prt_lin_map(3, M);
   printf
-    ("\n  alpha = [%6.3f, %6.3f]\n  beta  = [%6.3f, %6.3f]\n"
-     "  nu    = [%6.3f, %6.3f]\n  ksi   = [%6.3f, %6.3f]\n",
-     alpha[X_], alpha[Y_], beta[X_], beta[Y_], nu[X_], nu[Y_], ksi[X_],
-     ksi[Y_]);
+    ("\n  nu  = [%19.16f, %19.16f]\n  ksi = [%-19.6f, %-19.6f]\n",
+     nu[X_], nu[Y_], ksi[X_], ksi[Y_]);
 }
 
 
@@ -993,6 +987,7 @@ void set_state(void)
   quad_fringe_on = false;
   emittance_on   = false;
   IBS_on         = false;
+  EPU_on         = true;
 }
 
 
