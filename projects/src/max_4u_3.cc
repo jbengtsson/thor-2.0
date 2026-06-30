@@ -70,7 +70,7 @@ const double
   // scl_ksi[]   = {0e0, 5*1e2, 1e0, 1e0, 1e0, 1e0, 1e0},
   // scl_a[]     = {2e-1, 2e-1, 2e-1, 2e-1},
   // scl_K_avg[] = {1e-3, 1e-3, 1e-3, 1e3, 1e3},
-  scl_K_avg[] = {1e-3, 1e-3, 5e-3, 5e3, 5e3},
+  scl_K_avg[] = {1e-3, 1e-3, 1e-3, 5e3, 5e3},
   scl_k_sum[] = {0e2, 0e2},
 #else
   // Then proceed with:
