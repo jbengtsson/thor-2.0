@@ -37,8 +37,8 @@ const int
   max_iter    = 300;
 
 const double
-  A_max[]     = {6e-3, 3e-3},
-  delta_max   = 6e-2,
+  A_max[]     = {6e-3, 6e-3},
+  delta_max   = 3e-2,
   beta_inj[]  = {3.7, 3.9},
 
   bnL_scl[]   = {0e0, 0e0, 0e0,  1e0,  5e1/1e2,    5*1e4},
@@ -47,23 +47,17 @@ const double
   // Compensate for different units.
   scl_svd[]   = {5e2, 5e2, 5e2, 5e2, 5e2};
 
-  // Start with:
-  //   svd_n_cut = 0 or 1,
-  //   scl_ksi[] = [0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 5e0],
-  //   scl_  a   = [1e0, 1e0, 1e0, 1e0],
-  //   scl_K_avg = [1e-3, 1e-3, 1e-3, 1e3, 1e3].
-
 const bool
   b_3_zero    = true,
   b_4_zero    = true;
 
 const int
-  svd_n_cut   = 1;
+  svd_n_cut   = 0;
 
 const double
   scl_h[]     = {0e-2, 1e-2},
-  scl_ksi[]   = {0e0, 0e2, 5e0, 5e0, 5e0, 5e0, 5e0},
-  scl_a[]     = {1e0, 1e0, 1e0, 1e0},
+  scl_ksi[]   = {0e0, 0e2, 0e0, 0e0, 0e0, 0e0, 0e0},
+  scl_a[]     = {1e0, 0e0, 0e0, 0e0, 0e0, 0e0},
   scl_K_avg[] = {0e-3, 0e-3, 0e-3, 0e3, 0e3},
 
   step        = 4*0.15;
@@ -354,39 +348,39 @@ std::vector<Lie_gen_class> get_adts(const tps &K)
   adts.push_back(get_Lie_gen("K", K, scl_a[0], 1, 1, 1, 1, 0));
   adts.push_back(get_Lie_gen("K", K, scl_a[0], 0, 0, 2, 2, 0));
 
-  adts.push_back(get_Lie_gen("K", K, scl_a[0], 2, 2, 0, 0, 1));
-  adts.push_back(get_Lie_gen("K", K, scl_a[0], 1, 1, 1, 1, 1));
-  adts.push_back(get_Lie_gen("K", K, scl_a[0], 0, 0, 2, 2, 1));
+  adts.push_back(get_Lie_gen("K", K, scl_a[1], 2, 2, 0, 0, 1));
+  adts.push_back(get_Lie_gen("K", K, scl_a[1], 1, 1, 1, 1, 1));
+  adts.push_back(get_Lie_gen("K", K, scl_a[1], 0, 0, 2, 2, 1));
 
   if (NO >= 6) {
-    adts.push_back(get_Lie_gen("K", K, scl_a[1], 3, 3, 0, 0, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[1], 2, 2, 1, 1, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[1], 1, 1, 2, 2, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[1], 0, 0, 3, 3, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[2], 3, 3, 0, 0, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[2], 2, 2, 1, 1, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[2], 1, 1, 2, 2, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[2], 0, 0, 3, 3, 0));
   }
 
   if (NO >= 7) {
-    adts.push_back(get_Lie_gen("K", K, scl_a[1], 3, 3, 0, 0, 1));
-    adts.push_back(get_Lie_gen("K", K, scl_a[1], 2, 2, 1, 1, 1));
-    adts.push_back(get_Lie_gen("K", K, scl_a[1], 1, 1, 2, 2, 1));
-    adts.push_back(get_Lie_gen("K", K, scl_a[1], 0, 0, 3, 3, 1));
+    adts.push_back(get_Lie_gen("K", K, scl_a[3], 3, 3, 0, 0, 1));
+    adts.push_back(get_Lie_gen("K", K, scl_a[3], 2, 2, 1, 1, 1));
+    adts.push_back(get_Lie_gen("K", K, scl_a[3], 1, 1, 2, 2, 1));
+    adts.push_back(get_Lie_gen("K", K, scl_a[3], 0, 0, 3, 3, 1));
   }
 
   if (NO >= 9) {
-    adts.push_back(get_Lie_gen("K", K, scl_a[2], 4, 4, 0, 0, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[2], 3, 3, 1, 1, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[2], 2, 2, 2, 2, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[2], 1, 1, 3, 3, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[2], 0, 0, 4, 4, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[4], 4, 4, 0, 0, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[4], 3, 3, 1, 1, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[4], 2, 2, 2, 2, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[4], 1, 1, 3, 3, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[4], 0, 0, 4, 4, 0));
   }
 
   if (NO >= 11) {
-    adts.push_back(get_Lie_gen("K", K, scl_a[3], 5, 5, 0, 0, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[3], 4, 4, 1, 1, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[3], 3, 3, 2, 2, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[3], 2, 2, 3, 3, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[3], 1, 1, 4, 4, 0));
-    adts.push_back(get_Lie_gen("K", K, scl_a[3], 0, 0, 5, 5, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[5], 5, 5, 0, 0, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[5], 4, 4, 1, 1, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[5], 3, 3, 2, 2, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[5], 2, 2, 3, 3, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[5], 1, 1, 4, 4, 0));
+    adts.push_back(get_Lie_gen("K", K, scl_a[5], 0, 0, 5, 5, 0));
   }
 
   return adts;
