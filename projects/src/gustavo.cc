@@ -47,7 +47,7 @@ const double
   // scl_svd[]   = {1e0, 1e0, 1e0, 1e0, 5e2, 5e2, 5e2};
   scl_svd[]   = {1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 5e2, 5e2, 5e2};
 
-#if 0
+#if 1
   // Start with:
   //   svd_n_cut = 0 or 1,
   //   scl_ksi[] = [0e0, 1e2, 5e0, 5e0, 5e0, 5e0, 5e0],
@@ -975,7 +975,7 @@ void no_mpoles(const int n)
 
 void get_bns(param_type &bns)
 {
-  const int lat = 52;
+  const int lat = 51;
 
   if (b_3_zero)
     no_mpoles(Sext);
